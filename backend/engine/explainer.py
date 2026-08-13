@@ -4,8 +4,8 @@
 (always available). `explain()` optionally asks an LLM (Gemini, then Ollama) to
 rewrite those steps in friendlier language; the LLM never invents new math.
 """
-from . import llm
-from .solver import format_z, solve
+from engine import llm
+from engine.solver import format_z, solve
 
 
 def build_text(question_type, a, b, solution):
@@ -18,10 +18,12 @@ def build_text(question_type, a, b, solution):
     return "\n".join(lines)
 
 
-def explain(question_type, a, b, use_ai=False):
+async def explain(question_type, a, b, use_ai=False):
     solution = solve(question_type, a, b)
     steps_text = build_text(question_type, a, b, solution)
-    ai = llm.narrate(steps_text) if use_ai else None
+    ai = None
+    if use_ai:
+        ai, _ = await llm.narrate(steps_text)
     return {
         "question_type": question_type,
         "deterministic": steps_text,

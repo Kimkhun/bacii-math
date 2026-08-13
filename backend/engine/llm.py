@@ -1,42 +1,37 @@
-"""Unified LLM access: Gemini (Vertex AI) primary, local Ollama fallback.
+"""Unified async LLM access: Gemini (Vertex AI) primary, local Ollama fallback.
 
-Every function here is best-effort: on any error it returns `None` so callers can
-fall back to the next provider or to deterministic output. The math itself is never
-produced by an LLM — SymPy remains the source of truth.
+Every function here is best-effort: on error it returns `None` so callers can fall
+back. The math itself is never produced by an LLM — SymPy remains the source of truth.
 """
 import json
 import os
 
-import requests
+import httpx
 from google import genai
 from google.genai import types
 from google.oauth2 import service_account
 
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/generate")
-TEXT_MODEL = os.environ.get("TEXT_MODEL", "qwen2.5:3b")
-
-GEMINI_PROJECT = os.environ.get("GEMINI_PROJECT")
-GEMINI_LOCATION = os.environ.get("GEMINI_LOCATION", "global")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
-CREDENTIALS_PATH = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+from core.config import settings
 
 _client = None
 
 
 def _credentials():
-    if CREDENTIALS_PATH and os.path.exists(CREDENTIALS_PATH):
+    path = settings.google_application_credentials
+    if path and os.path.exists(path):
         return service_account.Credentials.from_service_account_file(
-            CREDENTIALS_PATH,
+            path,
             scopes=["https://www.googleapis.com/auth/cloud-platform"],
         )
     return None
 
 
 def _project():
-    if GEMINI_PROJECT:
-        return GEMINI_PROJECT
-    if CREDENTIALS_PATH and os.path.exists(CREDENTIALS_PATH):
-        with open(CREDENTIALS_PATH) as f:
+    if settings.gemini_project:
+        return settings.gemini_project
+    path = settings.google_application_credentials
+    if path and os.path.exists(path):
+        with open(path) as f:
             return json.load(f)["project_id"]
     return None
 
@@ -47,48 +42,54 @@ def _gemini_client():
         _client = genai.Client(
             vertexai=True,
             project=_project(),
-            location=GEMINI_LOCATION,
+            location=settings.gemini_location,
             credentials=_credentials(),
         )
     return _client
 
 
-def _gemini_generate(prompt, json_mode=False):
+async def _gemini_generate(prompt: str, json_mode: bool = False) -> str:
     config = types.GenerateContentConfig(response_mime_type="application/json") if json_mode else None
-    resp = _gemini_client().models.generate_content(
-        model=GEMINI_MODEL, contents=prompt, config=config
+    resp = await _gemini_client().aio.models.generate_content(
+        model=settings.gemini_model, contents=prompt, config=config
     )
     return resp.text
 
 
-def _ollama_generate(prompt):
-    resp = requests.post(
-        OLLAMA_URL,
-        json={"model": TEXT_MODEL, "prompt": prompt, "stream": False},
-        timeout=120,
-    )
-    resp.raise_for_status()
-    return resp.json().get("response", "").strip()
+async def _ollama_generate(prompt: str) -> str:
+    async with httpx.AsyncClient(timeout=120) as client:
+        resp = await client.post(
+            settings.ollama_url,
+            json={"model": settings.text_model, "prompt": prompt, "stream": False},
+        )
+        resp.raise_for_status()
+        return resp.json().get("response", "").strip()
 
 
-def narrate(steps_text):
+async def narrate(steps_text: str, allow_gemini: bool = True) -> tuple[str | None, str | None]:
     prompt = (
         "You are a patient high-school math tutor. Explain the solution below "
         "step by step in plain language, explaining the reasoning and any formulas "
         "used. Do not invent new math; follow the given steps exactly.\n\n"
         f"{steps_text}\n\nWrite a clear, friendly explanation."
     )
-    for backend in (_gemini_generate, _ollama_generate):
+    if allow_gemini:
         try:
-            text = backend(prompt).strip()
+            text = (await _gemini_generate(prompt)).strip()
             if text:
-                return text
+                return text, "gemini"
         except Exception:
-            continue
-    return None
+            pass
+    try:
+        text = (await _ollama_generate(prompt)).strip()
+        if text:
+            return text, "ollama"
+    except Exception:
+        pass
+    return None, None
 
 
-def propose_problem(topic, difficulty):
+async def propose_problem(topic: str, difficulty: str) -> dict | None:
     prompt = (
         "You generate practice problems for a high-school math app. "
         f"Generate one {topic} problem at {difficulty} difficulty. "
@@ -99,7 +100,7 @@ def propose_problem(topic, difficulty):
         '"a": <int>, "b": <int>}'
     )
     try:
-        text = _gemini_generate(prompt, json_mode=True)
+        text = await _gemini_generate(prompt, json_mode=True)
         data = json.loads(text)
         return {
             "question_type": str(data["question_type"]),

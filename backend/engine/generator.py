@@ -7,8 +7,8 @@ recomputes/validates the answer.
 """
 import random
 
-from . import llm
-from .solver import QUESTION_TYPES, format_z, z_latex
+from engine import llm
+from engine.solver import QUESTION_TYPES, format_z, z_latex
 
 _MODULUS_POOLS = {
     "easy": [(3, 4), (4, 3), (6, 8), (8, 6)],
@@ -29,7 +29,7 @@ _PROMPTS = {
 }
 
 
-def _build(question_type, a, b, difficulty):
+def _build(question_type, a, b, difficulty, source):
     z = format_z(a, b)
     return {
         "topic": "complex",
@@ -40,6 +40,7 @@ def _build(question_type, a, b, difficulty):
         "z_display": z,
         "z_latex": z_latex(a, b),
         "prompt": _PROMPTS[question_type](z),
+        "source": source,
     }
 
 
@@ -71,11 +72,11 @@ def _generate_templates(difficulty, seed, question_type):
         while b == 0:
             b = rng.randint(-hi, hi)
 
-    return _build(qt, a, b, difficulty)
+    return _build(qt, a, b, difficulty, "template")
 
 
-def _generate_gemini(difficulty):
-    candidate = llm.propose_problem("complex", difficulty)
+async def _generate_gemini(difficulty):
+    candidate = await llm.propose_problem("complex", difficulty)
     if not candidate:
         return None
     qt, a, b = candidate["question_type"], candidate["a"], candidate["b"]
@@ -83,12 +84,12 @@ def _generate_gemini(difficulty):
         return None
     if not (-20 <= a <= 20 and -20 <= b <= 20 and b != 0):
         return None
-    return _build(qt, a, b, difficulty)
+    return _build(qt, a, b, difficulty, "gemini")
 
 
-def generate(difficulty="medium", seed=None, question_type=None, generation_mode="templates"):
+async def generate(difficulty="medium", seed=None, question_type=None, generation_mode="templates"):
     if generation_mode == "gemini":
-        problem = _generate_gemini(difficulty)
+        problem = await _generate_gemini(difficulty)
         if problem is not None:
             return problem
     return _generate_templates(difficulty, seed, question_type)

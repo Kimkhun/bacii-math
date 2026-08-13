@@ -1,18 +1,41 @@
 services:
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=bacii
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
   backend:
     build: ./backend
     ports:
       - "8016:8000"
+    depends_on:
+      - postgres
+      - redis
     environment:
-      # Native Ollama runs on the host; reach it through the Docker gateway.
       - OLLAMA_URL=http://host.docker.internal:11434
       - TEXT_MODEL=qwen2.5:3b
-      # Vertex AI (Gemini)
       - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gemini-service-account.json
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.5-flash}
       - GEMINI_LOCATION=${GEMINI_LOCATION:-global}
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/bacii
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-me}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./backend:/app
       - ./backend/credentials:/run/secrets:ro
+
+volumes:
+  pgdata:

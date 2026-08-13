@@ -3,3 +3,11 @@ uvicorn[standard]
 sympy
 requests
 google-genai
+sqlalchemy[asyncio]
+asyncpg
+alembic
+redis
+pyjwt
+bcrypt
+pydantic-settings
+psycopg[binary]

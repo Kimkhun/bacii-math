@@ -1,8 +1,8 @@
 """BACII math practice app.
 
-Generates a complex-number question from the backend, lets the user answer by
-drawing on the canvas (handwriting -> Ollama vision transcription) or by typing,
-grades the answer via the backend, and shows a step-by-step explanation.
+Logs in (or signs up), generates a complex-number question from the backend, lets
+the user answer by drawing on the canvas (handwriting -> Ollama vision) or typing,
+grades the answer, and shows a step-by-step explanation.
 """
 import json
 import threading
@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageOps, ImageTk
 
-from backend_client import explain, generate_question, grade
+from backend_client import explain, generate_question, grade, login, signup
 from vision_client import recognize_math
 
 CANVAS_W, CANVAS_H = 700, 400
@@ -27,6 +27,7 @@ class MathWritingApp:
         self.root = root
         self.root.title("BACII Math Practice")
         self.question = None
+        self.logged_in = False
 
         self._build_ui()
 
@@ -43,6 +44,19 @@ class MathWritingApp:
         main = ttk.Frame(self.root, padding=8)
         main.pack(fill="both", expand=True)
 
+        auth = ttk.Frame(main)
+        auth.pack(fill="x", pady=(0, 6))
+        ttk.Label(auth, text="Email:").pack(side="left")
+        self.email_var = tk.StringVar()
+        ttk.Entry(auth, textvariable=self.email_var, width=24).pack(side="left", padx=(2, 8))
+        ttk.Label(auth, text="Password:").pack(side="left")
+        self.password_var = tk.StringVar()
+        ttk.Entry(auth, textvariable=self.password_var, width=18, show="*").pack(side="left", padx=(2, 8))
+        ttk.Button(auth, text="Login", command=self._login).pack(side="left")
+        ttk.Button(auth, text="Sign up", command=self._signup).pack(side="left", padx=(4, 12))
+        self.auth_var = tk.StringVar(value="Not logged in")
+        ttk.Label(auth, textvariable=self.auth_var, foreground="gray").pack(side="left")
+
         left = ttk.Frame(main)
         left.pack(side="left", fill="both", expand=True)
 
@@ -56,7 +70,7 @@ class MathWritingApp:
         ttk.Combobox(controls, textvariable=self.diff_var, values=["easy", "medium", "hard"],
                      width=8, state="readonly").pack(side="left")
 
-        self.question_var = tk.StringVar(value="Click 'New Question' to start.")
+        self.question_var = tk.StringVar(value="Log in, then click 'New Question'.")
         ttk.Label(left, textvariable=self.question_var, font=("TkDefaultFont", 14, "bold"),
                   foreground="#222", wraplength=CANVAS_W).pack(anchor="w", pady=(0, 4))
 
@@ -102,6 +116,45 @@ class MathWritingApp:
         self.json_box = tk.Text(right, width=48, height=10, wrap="word")
         self.json_box.pack(fill="both", expand=True)
 
+    def _login(self):
+        email = self.email_var.get().strip()
+        password = self.password_var.get()
+        if not email or not password:
+            self.auth_var.set("Enter email and password")
+            return
+        self.auth_var.set("Logging in...")
+        threading.Thread(target=self._run_auth, args=(email, password, False), daemon=True).start()
+
+    def _signup(self):
+        email = self.email_var.get().strip()
+        password = self.password_var.get()
+        if not email or not password:
+            self.auth_var.set("Enter email and password")
+            return
+        self.auth_var.set("Signing up...")
+        threading.Thread(target=self._run_auth, args=(email, password, True), daemon=True).start()
+
+    def _run_auth(self, email, password, is_signup):
+        try:
+            if is_signup:
+                data = signup(email, password)
+            else:
+                data = login(email, password)
+            user = data.get("user", {}).get("email", email)
+            error = None
+        except Exception as exc:
+            user = None
+            error = str(exc)
+        self.root.after(0, self._on_auth, user, error)
+
+    def _on_auth(self, user, error):
+        if error:
+            self.auth_var.set(f"Error: {error}")
+            self.logged_in = False
+            return
+        self.logged_in = True
+        self.auth_var.set(f"Logged in as {user}")
+
     def _on_press(self, event):
         self.last_x, self.last_y = event.x, event.y
         self._cancel_idle_timer()
@@ -144,6 +197,9 @@ class MathWritingApp:
         self.status_var.set("Idle")
 
     def _new_question(self):
+        if not self.logged_in:
+            self.status_var.set("Log in first.")
+            return
         mode = self.mode_var.get()
         diff = self.diff_var.get()
         self.status_var.set("Generating question...")
@@ -246,13 +302,13 @@ class MathWritingApp:
         if not self.question:
             self.status_var.set("Generate a question first.")
             return
-        question = self.question
+        question_id = self.question["id"]
         self.status_var.set("Grading...")
-        threading.Thread(target=self._run_grade, args=(question, user_answer), daemon=True).start()
+        threading.Thread(target=self._run_grade, args=(question_id, user_answer), daemon=True).start()
 
-    def _run_grade(self, question, user_answer):
+    def _run_grade(self, question_id, user_answer):
         try:
-            result = grade(question["question_type"], question["a"], question["b"], user_answer)
+            result = grade(question_id, user_answer)
             error = None
         except Exception as exc:
             result = None
@@ -263,24 +319,28 @@ class MathWritingApp:
         if error:
             self.status_var.set(f"Grade error: {error}")
             return
+        self.explain_box.delete("1.0", tk.END)
         if result["correct"]:
             self.result_var.set("Correct")
             self.status_var.set("Correct")
         else:
             self.result_var.set(f"Incorrect - expected {result['expected']}")
             self.status_var.set("Incorrect")
+        explanation = result.get("explanation")
+        if explanation:
+            self.explain_box.insert("1.0", explanation.get("content") or "")
 
     def _explain(self):
         if not self.question:
             self.status_var.set("Generate a question first.")
             return
-        question = self.question
+        question_id = self.question["id"]
         self.status_var.set("Explaining...")
-        threading.Thread(target=self._run_explain, args=(question,), daemon=True).start()
+        threading.Thread(target=self._run_explain, args=(question_id,), daemon=True).start()
 
-    def _run_explain(self, question):
+    def _run_explain(self, question_id):
         try:
-            result = explain(question["question_type"], question["a"], question["b"], use_ai=True)
+            result = explain(question_id)
             error = None
         except Exception as exc:
             result = None
@@ -291,9 +351,8 @@ class MathWritingApp:
         if error:
             self.status_var.set(f"Explain error: {error}")
             return
-        text = result.get("ai") or result.get("deterministic") or ""
         self.explain_box.delete("1.0", tk.END)
-        self.explain_box.insert("1.0", text)
+        self.explain_box.insert("1.0", result.get("content") or "")
         self.status_var.set("Explanation ready.")
 
 
