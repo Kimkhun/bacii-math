@@ -8,7 +8,7 @@ import os
 import requests
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/generate")
-MODEL = os.environ.get("VISION_MODEL", "qwen2.5vl:3b")
+MODEL = os.environ.get("VISION_MODEL", "qwen2.5vl:7b")
 
 PROMPT = """You are looking at an image of digital handwriting/drawing on a canvas.
 The writer is only writing numbers, math symbols, operators, or math functions

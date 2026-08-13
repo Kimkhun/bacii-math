@@ -7,10 +7,10 @@ grades the answer via the backend, and shows a step-by-step explanation.
 import json
 import threading
 import tkinter as tk
-from tkinter import ttk
+from tkinter import filedialog, ttk
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageOps, ImageTk
 
 from backend_client import explain, generate_question, grade
 from vision_client import recognize_math
@@ -37,6 +37,7 @@ class MathWritingApp:
         self.idle_job = None
         self.has_new_strokes = False
         self.detecting = False
+        self.canvas_photo = None
 
     def _build_ui(self):
         main = ttk.Frame(self.root, padding=8)
@@ -69,6 +70,7 @@ class MathWritingApp:
         btns.pack(fill="x")
         ttk.Button(btns, text="Clear", command=self._clear).pack(side="left")
         ttk.Button(btns, text="Detect Now", command=self._trigger_detect).pack(side="left", padx=6)
+        ttk.Button(btns, text="Upload Image...", command=self._upload_image).pack(side="left", padx=(0, 6))
         ttk.Button(btns, text="Explain", command=self._explain).pack(side="left")
 
         typed = ttk.Frame(left)
@@ -164,6 +166,38 @@ class MathWritingApp:
         self._clear()
         self.question_var.set(question["prompt"])
         self.status_var.set("Write your answer, then pause.")
+
+    def _upload_image(self):
+        path = filedialog.askopenfilename(
+            title="Select an image of your equation",
+            filetypes=[
+                ("Images", "*.png *.jpg *.jpeg *.gif *.bmp *.tiff *.webp"),
+                ("All files", "*.*"),
+            ],
+        )
+        if not path:
+            return
+
+        try:
+            uploaded = Image.open(path).convert("RGB")
+        except Exception as exc:
+            self.status_var.set(f"Error loading image: {exc}")
+            return
+
+        fitted = ImageOps.contain(uploaded, (CANVAS_W, CANVAS_H))
+        canvas_image = Image.new("RGB", (CANVAS_W, CANVAS_H), "white")
+        offset = ((CANVAS_W - fitted.width) // 2, (CANVAS_H - fitted.height) // 2)
+        canvas_image.paste(fitted, offset)
+
+        self.image = canvas_image
+        self.draw = ImageDraw.Draw(self.image)
+
+        self.canvas.delete("all")
+        self.canvas_photo = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, anchor="nw", image=self.canvas_photo)
+
+        self.has_new_strokes = True
+        self._trigger_detect()
 
     def _trigger_detect(self):
         self.idle_job = None
