@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Secrets
+backend/credentials/
+
+# Runtime artifacts
+detect_writing/scratchpad/
+
+# Backup of the old nested git repo
+detect_writing/.git.old/

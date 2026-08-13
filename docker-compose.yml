@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8016:8000"
+    environment:
+      # Native Ollama runs on the host; reach it through the Docker gateway.
+      - OLLAMA_URL=http://host.docker.internal:11434
+      - TEXT_MODEL=qwen2.5:3b
+      # Vertex AI (Gemini)
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gemini-service-account.json
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.5-flash}
+      - GEMINI_LOCATION=${GEMINI_LOCATION:-global}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend:/app
+      - ./backend/credentials:/run/secrets:ro
