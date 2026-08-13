@@ -23,8 +23,9 @@ services:
       - postgres
       - redis
     environment:
-      - OLLAMA_URL=http://host.docker.internal:11434
+      - OLLAMA_URL=http://host.docker.internal:11434/api/generate
       - TEXT_MODEL=qwen2.5:3b
+      - VISION_MODEL=qwen2.5vl:3b
       - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gemini-service-account.json
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.5-flash}
       - GEMINI_LOCATION=${GEMINI_LOCATION:-global}
@@ -36,6 +37,18 @@ services:
     volumes:
       - ./backend:/app
       - ./backend/credentials:/run/secrets:ro
+
+  web:
+    build: ./web
+    ports:
+      - "3016:3000"
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8016
+    volumes:
+      - ./web:/app
+      - /app/node_modules
 
 volumes:
   pgdata:

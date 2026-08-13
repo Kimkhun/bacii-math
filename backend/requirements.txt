@@ -11,3 +11,4 @@ pyjwt
 bcrypt
 pydantic-settings
 psycopg[binary]
+pillow

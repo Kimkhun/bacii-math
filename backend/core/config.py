@@ -19,6 +19,7 @@ class Settings(BaseSettings):
 
     ollama_url: str = "http://localhost:11434/api/generate"
     text_model: str = "qwen2.5:3b"
+    vision_model: str = "qwen2.5vl:3b"
 
     gemini_rate_limit_per_minute: int = 10
     explanation_cache_ttl_seconds: int = 86400

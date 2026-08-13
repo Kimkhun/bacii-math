@@ -68,10 +68,13 @@ async def _ollama_generate(prompt: str) -> str:
 
 async def narrate(steps_text: str, allow_gemini: bool = True) -> tuple[str | None, str | None]:
     prompt = (
-        "You are a patient high-school math tutor. Explain the solution below "
-        "step by step in plain language, explaining the reasoning and any formulas "
-        "used. Do not invent new math; follow the given steps exactly.\n\n"
-        f"{steps_text}\n\nWrite a clear, friendly explanation."
+        "Explain the solution below in a concise, no-nonsense style.\n"
+        "For each step write ONE short line: the key computation and its result. "
+        "At most one sentence per step.\n"
+        "No greeting, no closing, no headings, no analogies, no encouragement, "
+        "no markdown. Just the math, step by step.\n"
+        "Follow the given steps exactly; do not invent new math.\n\n"
+        f"{steps_text}"
     )
     if allow_gemini:
         try:
