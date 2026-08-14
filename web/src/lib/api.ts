@@ -114,10 +114,26 @@ export interface Question {
 }
 
 export interface DetectResult {
+  lines: string[];
   raw_text: string;
   latex: string;
   tokens: string[];
   confidence: number;
+}
+
+export interface StepCheckLine {
+  line: number;
+  text: string;
+  checked: boolean;
+  correct?: boolean;
+  matches?: string;
+  reason?: string;
+}
+
+export interface StepCheck {
+  line_results: StepCheckLine[];
+  first_error_line: number | null;
+  reached_final_answer: boolean;
 }
 
 export interface Explanation {
@@ -126,6 +142,7 @@ export interface Explanation {
   intervened: boolean;
   trigger: string;
   work_check?: { content: string; provider: string } | null;
+  step_check?: StepCheck | null;
 }
 
 export interface GradeResult {
@@ -136,6 +153,7 @@ export interface GradeResult {
   expected: string;
   explanation?: Explanation;
   work_check?: { content: string; provider: string } | null;
+  step_check?: StepCheck | null;
 }
 
 export interface Attempt {
@@ -164,10 +182,10 @@ export const api = {
     request<Question>("/problems/generate", { method: "POST", body: { generation_mode, difficulty } }),
   detect: (image_base64: string) =>
     request<DetectResult>("/vision/detect", { method: "POST", body: { image_base64 } }),
-  grade: (question_id: string, user_answer: string) =>
-    request<GradeResult>("/problems/grade", { method: "POST", body: { question_id, user_answer } }),
-  explain: (question_id: string, user_answer?: string) =>
-    request<Explanation>("/problems/explain", { method: "POST", body: { question_id, user_answer } }),
+  grade: (question_id: string, user_answer: string, work_text?: string) =>
+    request<GradeResult>("/problems/grade", { method: "POST", body: { question_id, user_answer, work_text } }),
+  explain: (question_id: string, user_answer?: string, work_text?: string) =>
+    request<Explanation>("/problems/explain", { method: "POST", body: { question_id, user_answer, work_text } }),
   attempts: () => request<Attempt[]>("/attempts"),
   stats: () => request<Stats>("/stats"),
 };

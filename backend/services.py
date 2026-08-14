@@ -82,7 +82,7 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
     return {"content": content, "provider": provider, "intervened": intervened, "trigger": trigger}
 
 
-async def grade_question(db, user, question_id, user_answer) -> dict:
+async def grade_question(db, user, question_id, user_answer, work_text=None) -> dict:
     question = await db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
@@ -113,8 +113,15 @@ async def grade_question(db, user, question_id, user_answer) -> dict:
         resp["explanation"] = await _build_explanation(
             db, user, question, attempt.id, "incorrect", use_ai=True, steps_text=steps_text, allow_gemini=allowed
         )
+        step_check = None
+        if work_text:
+            step_check = grader.analyze_work(
+                question.question_type, question.spec["a"], question.spec["b"], work_text.split("\n")
+            )
+            resp["step_check"] = step_check
         check, provider = await llm.check_work(
-            question.prompt, user_answer, steps_text, str(question.expected_answer), allow_gemini=allowed
+            question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
+            allow_gemini=allowed, step_check=step_check,
         )
         if check:
             resp["work_check"] = {"content": check, "provider": provider}
@@ -123,7 +130,7 @@ async def grade_question(db, user, question_id, user_answer) -> dict:
     return resp
 
 
-async def explain_question(db, user, question_id, user_answer=None) -> dict:
+async def explain_question(db, user, question_id, user_answer=None, work_text=None) -> dict:
     question = await db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
@@ -131,8 +138,15 @@ async def explain_question(db, user, question_id, user_answer=None) -> dict:
     result = await _build_explanation(db, user, question, None, "manual", use_ai=True, steps_text=steps_text)
     if user_answer:
         allowed = await cache.allow_gemini(str(user.id))
+        step_check = None
+        if work_text:
+            step_check = grader.analyze_work(
+                question.question_type, question.spec["a"], question.spec["b"], work_text.split("\n")
+            )
+            result["step_check"] = step_check
         check, provider = await llm.check_work(
-            question.prompt, user_answer, steps_text, str(question.expected_answer), allow_gemini=allowed
+            question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
+            allow_gemini=allowed, step_check=step_check,
         )
         if check:
             result["work_check"] = {"content": check, "provider": provider}

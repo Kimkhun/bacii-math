@@ -43,8 +43,10 @@ class GenerateRequest(BaseModel):
 class GradeRequest(BaseModel):
     question_id: uuid.UUID
     user_answer: str
+    work_text: str | None = None
 
 
 class ExplainRequest(BaseModel):
     question_id: uuid.UUID
     user_answer: str | None = None
+    work_text: str | None = None

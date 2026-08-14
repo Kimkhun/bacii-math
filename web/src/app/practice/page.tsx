@@ -15,6 +15,7 @@ export default function PracticePage() {
   const [difficulty, setDifficulty] = useState("medium");
   const [typed, setTyped] = useState("");
   const [detected, setDetected] = useState<string | null>(null);
+  const [workText, setWorkText] = useState<string | null>(null);
   const [result, setResult] = useState<GradeResult | null>(null);
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [error, setError] = useState("");
@@ -33,6 +34,7 @@ export default function PracticePage() {
     setResult(null);
     setExplanation(null);
     setDetected(null);
+    setWorkText(null);
     setDetectResult(null);
     setTyped("");
     canvasRef.current?.clear();
@@ -70,6 +72,7 @@ export default function PracticePage() {
     setBusy(true);
     try {
       let answer = typed.trim();
+      let work: string | undefined;
       if (!answer) {
         const ink = canvasRef.current?.getImageBase64();
         if (!ink) {
@@ -79,13 +82,15 @@ export default function PracticePage() {
         const det = await api.detect(ink);
         setDetectResult(det);
         setDetected(det.raw_text || "(nothing detected)");
+        work = det.lines?.length ? det.lines.join("\n") : undefined;
+        setWorkText(work ?? null);
         if (!det.raw_text) {
           setError("Could not read the handwriting. Try writing larger or clearer.");
           return;
         }
         answer = det.raw_text;
       }
-      const res = await api.grade(question.id, answer);
+      const res = await api.grade(question.id, answer, work);
       setResult(res);
       if (res.explanation) setExplanation(res.explanation);
     } catch (err) {
@@ -99,7 +104,7 @@ export default function PracticePage() {
     if (!question) return;
     setBusy(true);
     try {
-      const exp = await api.explain(question.id, detected ?? undefined);
+      const exp = await api.explain(question.id, detected ?? undefined, workText ?? undefined);
       setExplanation(exp);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Explain failed");
@@ -180,6 +185,7 @@ export default function PracticePage() {
                 onClick={() => {
                   canvasRef.current?.clear();
                   setDetected(null);
+                  setWorkText(null);
                   setDetectResult(null);
                 }}
                 className="px-3 py-1.5 rounded border border-slate-300 text-sm hover:bg-slate-50"
@@ -265,7 +271,27 @@ export default function PracticePage() {
         <div className="fixed right-3 bottom-3 z-10 w-96 max-h-[55vh] overflow-y-auto pointer-events-auto space-y-3">
           {detected !== null && (
             <div className="bg-white/90 backdrop-blur border border-slate-200 rounded-lg p-3 shadow-md">
-              <div className="text-xs text-slate-500 uppercase font-medium">Detected</div>
+              {workText && workText.split("\n").length > 1 && (
+                <div className="mb-2 pb-2 border-b border-slate-200">
+                  <div className="text-xs text-slate-500 uppercase font-medium">Your work</div>
+                  <div className="mt-1 text-sm space-y-0.5">
+                    {workText.split("\n").map((line, idx) => {
+                      const errLine = result?.step_check?.first_error_line;
+                      const isError = errLine === idx + 1;
+                      return (
+                        <div
+                          key={idx}
+                          className={isError ? "text-red-700 font-semibold" : "text-slate-600"}
+                        >
+                          {isError ? "→ " : ""}
+                          {line}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              <div className="text-xs text-slate-500 uppercase font-medium">Detected answer</div>
               <div className="mt-1 text-lg font-semibold">{detected}</div>
             </div>
           )}
