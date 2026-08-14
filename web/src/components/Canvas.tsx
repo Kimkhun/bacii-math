@@ -31,15 +31,39 @@ const Canvas = forwardRef<CanvasHandle, { width?: number; height?: number; fulls
     const W = fullscreen ? FULL_W : width;
     const H = fullscreen ? FULL_H : height;
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    // Ink lives on its own transparent layer so erasing (destination-out) never
+    // touches the ruled background drawn underneath it.
+    const inkCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const strokesRef = useRef<Stroke[]>([]);
     const imageRef = useRef<HTMLImageElement | null>(null);
     const imageDataRef = useRef<string | null>(null);
     const drawing = useRef(false);
-    const last = useRef({ x: 0, y: 0 });
     const toolRef = useRef<CanvasTool>("pen");
 
-    const drawRuled = () => {
-      const ctx = canvasRef.current!.getContext("2d")!;
+    const getInkCanvas = () => {
+      if (!inkCanvasRef.current) {
+        const c = document.createElement("canvas");
+        c.width = W;
+        c.height = H;
+        inkCanvasRef.current = c;
+      }
+      return inkCanvasRef.current;
+    };
+
+    const strokeStyleFor = (ctx: CanvasRenderingContext2D, tool: CanvasTool) => {
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      if (tool === "eraser") {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.lineWidth = ERASER_WIDTH;
+      } else {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.strokeStyle = INK_COLOR;
+        ctx.lineWidth = 6;
+      }
+    };
+
+    const drawRuled = (ctx: CanvasRenderingContext2D) => {
       ctx.fillStyle = "#fdfdfd";
       ctx.fillRect(0, 0, W, H);
       ctx.lineWidth = 1;
@@ -57,24 +81,25 @@ const Canvas = forwardRef<CanvasHandle, { width?: number; height?: number; fulls
       }
     };
 
-    const replayStrokes = (ctx: CanvasRenderingContext2D, bgColor: string) => {
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
+    const replayStrokesToInk = () => {
+      const inkCanvas = getInkCanvas();
+      const ictx = inkCanvas.getContext("2d")!;
+      ictx.clearRect(0, 0, W, H);
       for (const stroke of strokesRef.current) {
         const points = stroke.points;
         if (points.length < 2) continue;
-        ctx.lineWidth = stroke.tool === "eraser" ? ERASER_WIDTH : 6;
-        ctx.strokeStyle = stroke.tool === "eraser" ? bgColor : INK_COLOR;
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
-        ctx.stroke();
+        strokeStyleFor(ictx, stroke.tool);
+        ictx.beginPath();
+        ictx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) ictx.lineTo(points[i].x, points[i].y);
+        ictx.stroke();
       }
+      ictx.globalCompositeOperation = "source-over";
     };
 
     const redraw = () => {
       const ctx = canvasRef.current!.getContext("2d")!;
-      drawRuled();
+      drawRuled(ctx);
       if (imageRef.current) {
         const img = imageRef.current;
         const scale = Math.min((W - 32) / img.width, (H - 32) / img.height);
@@ -83,11 +108,13 @@ const Canvas = forwardRef<CanvasHandle, { width?: number; height?: number; fulls
         ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
         return;
       }
-      replayStrokes(ctx, "#fdfdfd");
+      replayStrokesToInk();
+      ctx.drawImage(getInkCanvas(), 0, 0);
     };
 
     useEffect(() => {
-      drawRuled();
+      redraw();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const getPos = (e: React.PointerEvent) => {
@@ -103,30 +130,26 @@ const Canvas = forwardRef<CanvasHandle, { width?: number; height?: number; fulls
       e.preventDefault();
       drawing.current = true;
       const p = getPos(e);
-      last.current = p;
       strokesRef.current.push({ points: [p], tool: toolRef.current });
-      const ctx = canvasRef.current!.getContext("2d")!;
-      ctx.lineWidth = toolRef.current === "eraser" ? ERASER_WIDTH : 6;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.strokeStyle = toolRef.current === "eraser" ? "#fdfdfd" : INK_COLOR;
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
+      const ictx = getInkCanvas().getContext("2d")!;
+      strokeStyleFor(ictx, toolRef.current);
+      ictx.beginPath();
+      ictx.moveTo(p.x, p.y);
     };
 
     const move = (e: React.PointerEvent) => {
       if (!drawing.current) return;
       e.preventDefault();
       const p = getPos(e);
-      const ctx = canvasRef.current!.getContext("2d")!;
-      ctx.lineWidth = toolRef.current === "eraser" ? ERASER_WIDTH : 6;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.strokeStyle = toolRef.current === "eraser" ? "#fdfdfd" : INK_COLOR;
-      ctx.lineTo(p.x, p.y);
-      ctx.stroke();
-      last.current = p;
+      const ictx = getInkCanvas().getContext("2d")!;
+      strokeStyleFor(ictx, toolRef.current);
+      ictx.lineTo(p.x, p.y);
+      ictx.stroke();
       strokesRef.current[strokesRef.current.length - 1].points.push(p);
+
+      const ctx = canvasRef.current!.getContext("2d")!;
+      drawRuled(ctx);
+      ctx.drawImage(getInkCanvas(), 0, 0);
     };
 
     const end = () => {
@@ -137,13 +160,14 @@ const Canvas = forwardRef<CanvasHandle, { width?: number; height?: number; fulls
       getImageBase64: () => {
         if (imageDataRef.current) return imageDataRef.current.split(",")[1];
         if (!strokesRef.current.length) return null;
+        replayStrokesToInk();
         const off = document.createElement("canvas");
         off.width = W;
         off.height = H;
         const octx = off.getContext("2d")!;
         octx.fillStyle = "#ffffff";
         octx.fillRect(0, 0, W, H);
-        replayStrokes(octx, "#ffffff");
+        octx.drawImage(getInkCanvas(), 0, 0);
         return off.toDataURL("image/png").split(",")[1];
       },
       hasInk: () => strokesRef.current.length > 0 || !!imageDataRef.current,
