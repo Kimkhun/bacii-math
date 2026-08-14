@@ -84,6 +84,12 @@ def _solve_modulus(a, b):
         "answer_decimal": float(N(r, 8)),
         "answer_latex": latex(r),
         "steps": steps,
+        "checkpoints": [
+            ("a^2", a2),
+            ("b^2", b2),
+            ("a^2 + b^2", total),
+            ("sqrt(a^2 + b^2)", r),
+        ],
     }
 
 

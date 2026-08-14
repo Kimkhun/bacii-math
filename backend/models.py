@@ -53,7 +53,7 @@ class Attempt(Base):
     user_answer: Mapped[str] = mapped_column(Text)
     parsed_answer: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     correct: Mapped[bool] = mapped_column(Boolean)
-    reason: Mapped[str] = mapped_column(String(50))
+    reason: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

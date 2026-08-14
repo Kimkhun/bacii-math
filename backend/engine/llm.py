@@ -96,23 +96,48 @@ async def narrate(steps_text: str, allow_gemini: bool = True) -> tuple[str | Non
     return await _generate_with_fallback(prompt, allow_gemini)
 
 
+def _step_check_summary(step_check: dict | None) -> str:
+    if not step_check or not step_check.get("line_results"):
+        return ""
+    lines = []
+    for r in step_check["line_results"]:
+        if not r.get("checked"):
+            continue
+        verdict = "OK, matches " + r["matches"] if r.get("correct") else "WRONG at this step"
+        lines.append(f"  line {r['line']} (\"{r['text']}\"): {verdict}")
+    if not lines:
+        return ""
+    first_error = step_check.get("first_error_line")
+    header = (
+        f"\nVERIFIED STEP CHECK (computed exactly by SymPy, not a guess — trust this over your "
+        f"own judgment of the algebra):\n" + "\n".join(lines) + "\n"
+    )
+    if first_error:
+        header += f"The first line that is mathematically wrong is line {first_error}. Center your answer on that line.\n"
+    return header
+
+
 async def check_work(
     question_text: str,
     user_work: str,
     steps_text: str,
     answer: str,
     allow_gemini: bool = True,
+    step_check: dict | None = None,
 ) -> tuple[str | None, str | None]:
     prompt = (
         "You are a math teacher checking a student's handwritten work line by line.\n\n"
         f"QUESTION: {question_text}\n\n"
         f"STUDENT'S WORK (transcribed from handwriting):\n{user_work}\n\n"
         f"CORRECT SOLUTION, ONE STEP PER LINE:\n{steps_text}\n\n"
-        f"CORRECT ANSWER: {answer}\n\n"
+        f"CORRECT ANSWER: {answer}\n"
+        f"{_step_check_summary(step_check)}\n"
         "Check the student's work against the correct solution, step by step:\n"
         "- If the student's work is fully correct, say so in one short line.\n"
         "- Otherwise, point out the FIRST mistake: which line of the student's work "
-        "is wrong, why it is wrong, and what the correct value should be at that step.\n"
+        "is wrong, why it is wrong, and what the correct value should be at that step. "
+        "If a VERIFIED STEP CHECK is given above, that line number is authoritative — do not "
+        "second-guess it or pick a different line.\n"
         "- Mention what the student got right, if anything.\n"
         "Be concise: max 6 lines. No greeting, no closing, no markdown."
     )

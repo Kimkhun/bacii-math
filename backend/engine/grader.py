@@ -49,6 +49,70 @@ def _angle_close(user, expected, tol):
     return abs(d) <= tol
 
 
+def _is_given_restatement(lhs: str) -> bool:
+    return lhs.strip().lower() in ("z", "z bar", "z_bar", "z̄")
+
+
+def analyze_work(question_type, a, b, lines, tolerance=None) -> dict:
+    """Deterministically check each line of a student's work against the SymPy-computed
+    checkpoints for this solution, in order. Returns the first line whose claimed value
+    doesn't match the correct value at that point in the solution — a verified fact, not
+    an LLM guess. Lines that don't parse, or that just restate the given z, are skipped
+    rather than flagged (SymPy can't judge a definition, only a computation).
+    """
+    tol = tolerance if tolerance is not None else _DEFAULT_TOL
+    solution = solve(question_type, a, b)
+    checkpoints = list(solution.get("checkpoints", [])) + [("final answer", solution["answer_exact"])]
+
+    line_results = []
+    pointer = 0
+    first_error_line = None
+
+    for i, raw in enumerate(lines, 1):
+        text = raw.strip()
+        if not text:
+            continue
+
+        if "=" in text:
+            lhs, _, value_str = text.rpartition("=")
+            if _is_given_restatement(lhs):
+                line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
+                continue
+        else:
+            value_str = text
+
+        try:
+            value = parse_answer(value_str)
+        except Exception:
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "unparsed"})
+            continue
+
+        matched_label = None
+        for idx in range(pointer, len(checkpoints)):
+            label, expected = checkpoints[idx]
+            try:
+                ok = simplify(value - expected) == 0 or _numeric_close(value, expected, tol)
+            except Exception:
+                ok = False
+            if ok:
+                matched_label = label
+                pointer = idx + 1
+                break
+
+        if matched_label is not None:
+            line_results.append({"line": i, "text": raw, "checked": True, "correct": True, "matches": matched_label})
+        else:
+            line_results.append({"line": i, "text": raw, "checked": True, "correct": False})
+            if first_error_line is None:
+                first_error_line = i
+
+    return {
+        "line_results": line_results,
+        "first_error_line": first_error_line,
+        "reached_final_answer": pointer >= len(checkpoints),
+    }
+
+
 def grade(question_type, a, b, user_answer, tolerance=None):
     tol = tolerance if tolerance is not None else _DEFAULT_TOL
     solution = solve(question_type, a, b)

@@ -12,20 +12,29 @@ from PIL import Image
 
 from core.config import settings
 
-PROMPT = """You are reading a single handwritten math ANSWER that a student wrote on a canvas.
-The answer is short: a number, a fraction, or a small expression using digits 0-9 and
-symbols + - * / = ^ sqrt pi ( ) and the letter i (imaginary unit).
+PROMPT = """You are reading a student's HANDWRITTEN MATH WORK on a canvas. There may be just
+one line (the final answer alone) or several lines (scratch work leading up to a final answer),
+using digits 0-9 and symbols + - * / = ^ sqrt pi ( ) and the letter i (imaginary unit).
 
-Look closely at the ink strokes and transcribe the answer exactly as a math expression.
+Step 1: read every line of ink, top to bottom, exactly as written, into "lines" (one string
+per line, in the order they appear on the page). Do not merge separate lines together.
+
+Step 2: identify the FINAL ANSWER — usually the last line, or the value after "=" on the
+last line — and report it again on its own as a clean math expression in "raw_text"/"latex"/
+"tokens", the same way you would if it were the only thing written.
 
 Respond with ONLY a JSON object, no markdown, no extra text, in this exact shape:
-{"raw_text": "<the expression as plain text, e.g. 13 or -9+69 or pi/4 or 3-4i>",
- "latex": "<the same expression as LaTeX>",
- "tokens": ["<ordered individual symbols/numbers>"],
- "confidence": <float 0-1, your confidence>}
+{"lines": ["<line 1 as written>", "<line 2 as written>", ...],
+ "raw_text": "<final answer only, as plain text, e.g. 13 or -9+69 or pi/4 or 3-4i>",
+ "latex": "<final answer only, as LaTeX>",
+ "tokens": ["<ordered individual symbols/numbers of the final answer>"],
+ "confidence": <float 0-1, your confidence in the final answer>}
+
+Example — the canvas shows two lines, "z = 3 + 4i" then "|z| = 5":
+{"lines": ["z = 3 + 4i", "|z| = 5"], "raw_text": "5", "latex": "5", "tokens": ["5"], "confidence": 0.9}
 
 Only if the image is completely blank (no ink at all), respond with:
-{"raw_text": "", "latex": "", "tokens": [], "confidence": 0.0}
+{"lines": [], "raw_text": "", "latex": "", "tokens": [], "confidence": 0.0}
 """
 
 
@@ -100,6 +109,7 @@ async def detect_math(data: bytes) -> dict:
             "parse_error": True,
         }
 
+    parsed.setdefault("lines", [])
     parsed.setdefault("raw_text", "")
     parsed.setdefault("latex", "")
     parsed.setdefault("tokens", [])
