@@ -2,36 +2,49 @@ services:
   postgres:
     image: postgres:16
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=bacii
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-bacii}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-bacii}"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
 
   redis:
     image: redis:7
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
 
   backend:
     build: ./backend
     ports:
-      - "8016:8000"
+      - "${BACKEND_PORT:-8016}:8000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
-      - OLLAMA_URL=http://host.docker.internal:11434/api/generate
-      - TEXT_MODEL=qwen2.5:3b
-      - VISION_MODEL=qwen2.5vl:3b
-      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gemini-service-account.json
-      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.5-flash}
-      - GEMINI_LOCATION=${GEMINI_LOCATION:-global}
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/bacii
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-bacii}
       - REDIS_URL=redis://redis:6379/0
       - JWT_SECRET=${JWT_SECRET:-dev-secret-change-me}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      - GEMINI_PROJECT=${GEMINI_PROJECT:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.5-flash}
+      - GEMINI_LOCATION=${GEMINI_LOCATION:-global}
+      - GEMINI_RATE_LIMIT_PER_MINUTE=${GEMINI_RATE_LIMIT_PER_MINUTE:-10}
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gemini-service-account.json
+      - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434/api/generate}
+      - TEXT_MODEL=${TEXT_MODEL:-qwen2.5:3b}
+      - VISION_MODEL=${VISION_MODEL:-qwen2.5vl:3b}
+      - EXPLANATION_CACHE_TTL_SECONDS=${EXPLANATION_CACHE_TTL_SECONDS:-86400}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -41,11 +54,11 @@ services:
   web:
     build: ./web
     ports:
-      - "3016:3000"
+      - "${WEB_PORT:-3016}:3000"
     depends_on:
       - backend
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8016
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8016}
     volumes:
       - ./web:/app
       - /app/node_modules

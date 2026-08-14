@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
-import Canvas, { CanvasHandle } from "@/components/Canvas";
+import Canvas, { CanvasHandle, CanvasTool } from "@/components/Canvas";
 import QuestionCard from "@/components/QuestionCard";
 import { api, Question, GradeResult, Explanation, DetectResult } from "@/lib/api";
 
@@ -21,6 +21,12 @@ export default function PracticePage() {
   const [busy, setBusy] = useState(false);
   const [debug, setDebug] = useState(false);
   const [detectResult, setDetectResult] = useState<DetectResult | null>(null);
+  const [tool, setTool] = useState<CanvasTool>("pen");
+
+  const selectTool = (t: CanvasTool) => {
+    setTool(t);
+    canvasRef.current?.setTool(t);
+  };
 
   const newQuestion = async () => {
     setError("");
@@ -154,6 +160,22 @@ export default function PracticePage() {
               >
                 Upload image...
               </button>
+              <div className="flex rounded-md border border-slate-300 overflow-hidden text-sm">
+                <button
+                  onClick={() => selectTool("pen")}
+                  className={`px-3 py-1.5 ${tool === "pen" ? "bg-slate-900 text-white" : "hover:bg-slate-50"}`}
+                >
+                  Pen
+                </button>
+                <button
+                  onClick={() => selectTool("eraser")}
+                  className={`px-3 py-1.5 border-l border-slate-300 ${
+                    tool === "eraser" ? "bg-slate-900 text-white" : "hover:bg-slate-50"
+                  }`}
+                >
+                  Eraser
+                </button>
+              </div>
               <button
                 onClick={() => {
                   canvasRef.current?.clear();
