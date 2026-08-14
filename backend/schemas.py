@@ -47,3 +47,4 @@ class GradeRequest(BaseModel):
 
 class ExplainRequest(BaseModel):
     question_id: uuid.UUID
+    user_answer: str | None = None

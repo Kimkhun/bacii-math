@@ -66,16 +66,7 @@ async def _ollama_generate(prompt: str) -> str:
         return resp.json().get("response", "").strip()
 
 
-async def narrate(steps_text: str, allow_gemini: bool = True) -> tuple[str | None, str | None]:
-    prompt = (
-        "Explain the solution below in a concise, no-nonsense style.\n"
-        "For each step write ONE short line: the key computation and its result. "
-        "At most one sentence per step.\n"
-        "No greeting, no closing, no headings, no analogies, no encouragement, "
-        "no markdown. Just the math, step by step.\n"
-        "Follow the given steps exactly; do not invent new math.\n\n"
-        f"{steps_text}"
-    )
+async def _generate_with_fallback(prompt: str, allow_gemini: bool = True) -> tuple[str | None, str | None]:
     if allow_gemini:
         try:
             text = (await _gemini_generate(prompt)).strip()
@@ -90,6 +81,42 @@ async def narrate(steps_text: str, allow_gemini: bool = True) -> tuple[str | Non
     except Exception:
         pass
     return None, None
+
+
+async def narrate(steps_text: str, allow_gemini: bool = True) -> tuple[str | None, str | None]:
+    prompt = (
+        "Explain the solution below in a concise, no-nonsense style.\n"
+        "For each step write ONE short line: the key computation and its result. "
+        "At most one sentence per step.\n"
+        "No greeting, no closing, no headings, no analogies, no encouragement, "
+        "no markdown. Just the math, step by step.\n"
+        "Follow the given steps exactly; do not invent new math.\n\n"
+        f"{steps_text}"
+    )
+    return await _generate_with_fallback(prompt, allow_gemini)
+
+
+async def check_work(
+    question_text: str,
+    user_work: str,
+    steps_text: str,
+    answer: str,
+    allow_gemini: bool = True,
+) -> tuple[str | None, str | None]:
+    prompt = (
+        "You are a math teacher checking a student's handwritten work line by line.\n\n"
+        f"QUESTION: {question_text}\n\n"
+        f"STUDENT'S WORK (transcribed from handwriting):\n{user_work}\n\n"
+        f"CORRECT SOLUTION, ONE STEP PER LINE:\n{steps_text}\n\n"
+        f"CORRECT ANSWER: {answer}\n\n"
+        "Check the student's work against the correct solution, step by step:\n"
+        "- If the student's work is fully correct, say so in one short line.\n"
+        "- Otherwise, point out the FIRST mistake: which line of the student's work "
+        "is wrong, why it is wrong, and what the correct value should be at that step.\n"
+        "- Mention what the student got right, if anything.\n"
+        "Be concise: max 6 lines. No greeting, no closing, no markdown."
+    )
+    return await _generate_with_fallback(prompt, allow_gemini)
 
 
 async def propose_problem(topic: str, difficulty: str) -> dict | None:

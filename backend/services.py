@@ -51,8 +51,8 @@ def _steps_text(question: Question) -> str:
     return explainer.build_text(question.question_type, a, b, solution)
 
 
-async def _build_explanation(db, user, question, attempt_id, trigger, use_ai) -> dict:
-    steps_text = _steps_text(question)
+async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, steps_text=None, allow_gemini=None) -> dict:
+    steps_text = steps_text or _steps_text(question)
     content = steps_text
     provider = "deterministic"
     intervened = False
@@ -63,8 +63,9 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai) ->
         if cached:
             content, provider, intervened = cached, "gemini", True
         else:
-            allowed = await cache.allow_gemini(str(user.id))
-            text, got_provider = await llm.narrate(steps_text, allow_gemini=allowed)
+            if allow_gemini is None:
+                allow_gemini = await cache.allow_gemini(str(user.id))
+            text, got_provider = await llm.narrate(steps_text, allow_gemini=allow_gemini)
             if text:
                 content, provider, intervened = text, got_provider, True
                 if got_provider == "gemini":
@@ -107,17 +108,34 @@ async def grade_question(db, user, question_id, user_answer) -> dict:
     }
 
     if not result["correct"]:
-        resp["explanation"] = await _build_explanation(db, user, question, attempt.id, "incorrect", use_ai=True)
+        steps_text = _steps_text(question)
+        allowed = await cache.allow_gemini(str(user.id))
+        resp["explanation"] = await _build_explanation(
+            db, user, question, attempt.id, "incorrect", use_ai=True, steps_text=steps_text, allow_gemini=allowed
+        )
+        check, provider = await llm.check_work(
+            question.prompt, user_answer, steps_text, str(question.expected_answer), allow_gemini=allowed
+        )
+        if check:
+            resp["work_check"] = {"content": check, "provider": provider}
 
     await db.commit()
     return resp
 
 
-async def explain_question(db, user, question_id) -> dict:
+async def explain_question(db, user, question_id, user_answer=None) -> dict:
     question = await db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
-    result = await _build_explanation(db, user, question, None, "manual", use_ai=True)
+    steps_text = _steps_text(question)
+    result = await _build_explanation(db, user, question, None, "manual", use_ai=True, steps_text=steps_text)
+    if user_answer:
+        allowed = await cache.allow_gemini(str(user.id))
+        check, provider = await llm.check_work(
+            question.prompt, user_answer, steps_text, str(question.expected_answer), allow_gemini=allowed
+        )
+        if check:
+            result["work_check"] = {"content": check, "provider": provider}
     await db.commit()
     return result
 

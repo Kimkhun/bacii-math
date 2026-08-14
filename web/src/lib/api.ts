@@ -125,6 +125,7 @@ export interface Explanation {
   provider: string;
   intervened: boolean;
   trigger: string;
+  work_check?: { content: string; provider: string } | null;
 }
 
 export interface GradeResult {
@@ -134,6 +135,7 @@ export interface GradeResult {
   given?: string;
   expected: string;
   explanation?: Explanation;
+  work_check?: { content: string; provider: string } | null;
 }
 
 export interface Attempt {
@@ -164,8 +166,8 @@ export const api = {
     request<DetectResult>("/vision/detect", { method: "POST", body: { image_base64 } }),
   grade: (question_id: string, user_answer: string) =>
     request<GradeResult>("/problems/grade", { method: "POST", body: { question_id, user_answer } }),
-  explain: (question_id: string) =>
-    request<Explanation>("/problems/explain", { method: "POST", body: { question_id } }),
+  explain: (question_id: string, user_answer?: string) =>
+    request<Explanation>("/problems/explain", { method: "POST", body: { question_id, user_answer } }),
   attempts: () => request<Attempt[]>("/attempts"),
   stats: () => request<Stats>("/stats"),
 };
