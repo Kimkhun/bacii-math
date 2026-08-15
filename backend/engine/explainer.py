@@ -4,23 +4,41 @@
 (always available). `explain()` optionally asks an LLM (Gemini, then Ollama) to
 rewrite those steps in friendlier language; the LLM never invents new math.
 """
+from sympy import I, Symbol, sympify
+
 from engine import llm
-from engine.solver import format_z, solve
+from engine.solver import _calc_locals, inline_latex, solve
 
 
-def build_text(question_type, a, b, solution):
-    z = format_z(a, b)
-    lines = [f"Problem: {question_type} of z = {z}."]
+def _problem_desc(topic, question_type, params):
+    if topic == "complex":
+        z_sym = params["a"] + params["b"] * I
+        return f"{question_type} of \\(z\\) = {inline_latex(z_sym)}"
+    if topic == "calculus":
+        var = params["var"]
+        expr = sympify(params["expr"], locals=_calc_locals(var))
+        if question_type == "limit":
+            point = sympify(params["point"], locals=_calc_locals(var))
+            return f"limit of {inline_latex(expr)} as \\({var} \\to {point}\\)"
+        if question_type == "definite_integral":
+            lower = sympify(params["lower"], locals=_calc_locals(var))
+            upper = sympify(params["upper"], locals=_calc_locals(var))
+            return f"integral of {inline_latex(expr)} \\(d{var}\\) from \\({var} = {lower}\\) to \\({var} = {upper}\\)"
+    return f"{question_type} with {params}"
+
+
+def build_text(topic, question_type, params, solution):
+    lines = [f"Problem: {_problem_desc(topic, question_type, params)}."]
     for i, step in enumerate(solution["steps"], 1):
         lines.append(f"Step {i}: {step['title']}")
         lines.append(f"    {step['detail']}")
-    lines.append(f"Answer: {solution['answer_exact']}")
+    lines.append(f"Answer: {inline_latex(solution['answer_exact'])}")
     return "\n".join(lines)
 
 
-async def explain(question_type, a, b, use_ai=False):
-    solution = solve(question_type, a, b)
-    steps_text = build_text(question_type, a, b, solution)
+async def explain(topic, question_type, params, use_ai=False):
+    solution = solve(topic, question_type, params)
+    steps_text = build_text(topic, question_type, params, solution)
     ai = None
     if use_ai:
         ai, _ = await llm.narrate(steps_text)

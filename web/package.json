@@ -8,11 +8,13 @@
     "start": "next start -H 0.0.0.0"
   },
   "dependencies": {
+    "katex": "^0.16.11",
     "next": "^15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/katex": "^0.16.7",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

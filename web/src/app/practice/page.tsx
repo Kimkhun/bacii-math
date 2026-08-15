@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
-import Canvas, { CanvasHandle, CanvasTool } from "@/components/Canvas";
+import Canvas, { CanvasHandle, CanvasTool, PEN_WIDTHS } from "@/components/Canvas";
+import MathText from "@/components/MathText";
 import QuestionCard from "@/components/QuestionCard";
 import { api, Question, GradeResult, Explanation, DetectResult } from "@/lib/api";
 
@@ -12,6 +13,7 @@ export default function PracticePage() {
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [mode, setMode] = useState("templates");
+  const [topic, setTopic] = useState("complex");
   const [difficulty, setDifficulty] = useState("medium");
   const [typed, setTyped] = useState("");
   const [detected, setDetected] = useState<string | null>(null);
@@ -23,11 +25,41 @@ export default function PracticePage() {
   const [debug, setDebug] = useState(false);
   const [detectResult, setDetectResult] = useState<DetectResult | null>(null);
   const [tool, setTool] = useState<CanvasTool>("pen");
+  const [penWidth, setPenWidth] = useState<number>(PEN_WIDTHS.medium);
+  const [canUndo, setCanUndo] = useState(false);
+  const [zoom, setZoom] = useState(1);
 
   const selectTool = (t: CanvasTool) => {
     setTool(t);
     canvasRef.current?.setTool(t);
   };
+
+  const selectPenWidth = (w: number) => {
+    setPenWidth(w);
+    canvasRef.current?.setPenWidth(w);
+  };
+
+  const undo = () => canvasRef.current?.undo();
+
+  const markDirty = () => setCanUndo(canvasRef.current?.canUndo() ?? false);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        undo();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const zoomIn = () => setZoom((z) => Math.min(2.5, Math.round((z + 0.25) * 100) / 100));
+  const zoomOut = () => setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100));
+  const zoomReset = () => setZoom(1);
 
   const newQuestion = async () => {
     setError("");
@@ -40,7 +72,7 @@ export default function PracticePage() {
     canvasRef.current?.clear();
     setBusy(true);
     try {
-      const q = await api.generate(mode, difficulty);
+      const q = await api.generate(topic === "calculus" ? "templates" : mode, difficulty, topic);
       setQuestion(q);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate");
@@ -116,13 +148,14 @@ export default function PracticePage() {
   return (
     <AuthGuard>
       <div className="relative">
-        <Canvas ref={canvasRef} fullscreen />
+        <Canvas ref={canvasRef} fullscreen zoom={zoom} onChange={markDirty} onZoomChange={setZoom} />
 
-        <div className="fixed inset-x-3 top-3 z-10 flex items-start justify-between gap-3 pointer-events-none">
-          <div className="pointer-events-auto w-full max-w-md">
+        <div className="fixed inset-x-3 top-3 z-10 flex flex-wrap items-start justify-between gap-3 pointer-events-none">
+          <div className="pointer-events-auto w-full sm:w-auto sm:max-w-md sm:flex-1">
             {question ? (
               <QuestionCard
                 prompt={question.prompt}
+                promptLatex={question.prompt_latex}
                 questionType={question.question_type}
                 difficulty={question.difficulty}
               />
@@ -133,19 +166,28 @@ export default function PracticePage() {
             )}
           </div>
 
-          <div className="pointer-events-auto w-full max-w-md bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-md p-3 space-y-2">
+          <div className="pointer-events-auto w-full sm:w-auto sm:max-w-md bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-md p-3 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={newQuestion}
                 disabled={busy}
-                className="px-3 py-1.5 rounded-md bg-slate-900 text-white text-sm font-medium hover:bg-slate-700 disabled:opacity-50"
+                className="px-3 py-2 rounded-md bg-slate-900 text-white text-sm font-medium hover:bg-slate-700 disabled:opacity-50"
               >
                 New Question
               </button>
               <select
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                className="px-2 py-2 border border-slate-300 rounded-md text-sm"
+              >
+                <option value="complex">Complex numbers</option>
+                <option value="calculus">Calculus</option>
+              </select>
+              <select
                 value={mode}
                 onChange={(e) => setMode(e.target.value)}
-                className="px-2 py-1.5 border border-slate-300 rounded-md text-sm"
+                disabled={topic === "calculus"}
+                className="px-2 py-2 border border-slate-300 rounded-md text-sm disabled:opacity-50"
               >
                 <option value="templates">Templates</option>
                 <option value="gemini">Gemini</option>
@@ -153,7 +195,7 @@ export default function PracticePage() {
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value)}
-                className="px-2 py-1.5 border border-slate-300 rounded-md text-sm"
+                className="px-2 py-2 border border-slate-300 rounded-md text-sm"
               >
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
@@ -161,24 +203,63 @@ export default function PracticePage() {
               </select>
               <button
                 onClick={uploadImage}
-                className="px-3 py-1.5 rounded border border-slate-300 text-sm hover:bg-slate-50"
+                className="px-3 py-2 rounded border border-slate-300 text-sm hover:bg-slate-50"
               >
                 Upload image...
               </button>
               <div className="flex rounded-md border border-slate-300 overflow-hidden text-sm">
                 <button
                   onClick={() => selectTool("pen")}
-                  className={`px-3 py-1.5 ${tool === "pen" ? "bg-slate-900 text-white" : "hover:bg-slate-50"}`}
+                  className={`px-3 py-2 ${tool === "pen" ? "bg-slate-900 text-white" : "hover:bg-slate-50"}`}
                 >
                   Pen
                 </button>
                 <button
                   onClick={() => selectTool("eraser")}
-                  className={`px-3 py-1.5 border-l border-slate-300 ${
+                  className={`px-3 py-2 border-l border-slate-300 ${
                     tool === "eraser" ? "bg-slate-900 text-white" : "hover:bg-slate-50"
                   }`}
                 >
                   Eraser
+                </button>
+              </div>
+              <div className="flex rounded-md border border-slate-300 overflow-hidden text-sm">
+                {(["thin", "medium", "thick"] as const).map((size, i) => (
+                  <button
+                    key={size}
+                    onClick={() => selectPenWidth(PEN_WIDTHS[size])}
+                    title={size}
+                    className={`px-3 py-2 ${i > 0 ? "border-l border-slate-300" : ""} ${
+                      penWidth === PEN_WIDTHS[size] ? "bg-slate-900 text-white" : "hover:bg-slate-50"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block rounded-full ${penWidth === PEN_WIDTHS[size] ? "bg-white" : "bg-slate-700"}`}
+                      style={{ width: PEN_WIDTHS[size], height: PEN_WIDTHS[size] }}
+                    />
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className="px-3 py-2 rounded border border-slate-300 text-sm hover:bg-slate-50 disabled:opacity-50"
+              >
+                Undo
+              </button>
+              <div className="flex items-center rounded-md border border-slate-300 overflow-hidden text-sm">
+                <button onClick={zoomOut} className="px-2.5 py-2 hover:bg-slate-50" title="Zoom out">
+                  −
+                </button>
+                <button
+                  onClick={zoomReset}
+                  className="px-2 py-2 border-x border-slate-300 hover:bg-slate-50 min-w-[3.5rem] text-center"
+                  title="Reset zoom"
+                >
+                  {Math.round(zoom * 100)}%
+                </button>
+                <button onClick={zoomIn} className="px-2.5 py-2 hover:bg-slate-50" title="Zoom in">
+                  +
                 </button>
               </div>
               <button
@@ -188,7 +269,7 @@ export default function PracticePage() {
                   setWorkText(null);
                   setDetectResult(null);
                 }}
-                className="px-3 py-1.5 rounded border border-slate-300 text-sm hover:bg-slate-50"
+                className="px-3 py-2 rounded border border-slate-300 text-sm hover:bg-slate-50"
               >
                 Clear
               </button>
@@ -210,12 +291,12 @@ export default function PracticePage() {
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
                 placeholder="e.g. 5 or pi/4"
-                className="flex-1 px-2 py-1.5 border border-slate-300 rounded-md text-sm"
+                className="flex-1 px-2 py-2 border border-slate-300 rounded-md text-sm"
               />
               <button
                 onClick={check}
                 disabled={busy}
-                className="px-4 py-1.5 rounded-md bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 disabled:opacity-50"
+                className="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 disabled:opacity-50"
               >
                 {busy ? "Working..." : "Check Answer"}
               </button>
@@ -226,7 +307,7 @@ export default function PracticePage() {
         </div>
 
         {debug && (
-          <div className="fixed left-3 bottom-3 z-10 w-[26rem] max-h-[45vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur text-slate-100 rounded-lg p-3 text-xs space-y-2 shadow-lg">
+          <div className="fixed left-3 bottom-3 z-10 w-[calc(100vw-1.5rem)] sm:w-[26rem] max-h-[45vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur text-slate-100 rounded-lg p-3 text-xs space-y-2 shadow-lg">
             <div className="font-semibold text-slate-300">Debug</div>
             <div>
               <span className="text-slate-400">Question:</span> {question?.prompt ?? "none"}
@@ -234,8 +315,9 @@ export default function PracticePage() {
             {question && (
               <div>
                 <span className="text-slate-400">Question id:</span> {question.id}
+                <span className="text-slate-400"> · topic:</span> {question.topic}
                 <span className="text-slate-400"> · type:</span> {question.question_type}
-                <span className="text-slate-400"> · a,b:</span> {question.a},{question.b}
+                <span className="text-slate-400"> · params:</span> {JSON.stringify(question.params)}
               </div>
             )}
             <div>
@@ -268,7 +350,7 @@ export default function PracticePage() {
           </div>
         )}
 
-        <div className="fixed right-3 bottom-3 z-10 w-96 max-h-[55vh] overflow-y-auto pointer-events-auto space-y-3">
+        <div className="fixed right-3 bottom-3 z-10 w-[calc(100vw-1.5rem)] sm:w-96 max-h-[55vh] overflow-y-auto pointer-events-auto space-y-3">
           {detected !== null && (
             <div className="bg-white/90 backdrop-blur border border-slate-200 rounded-lg p-3 shadow-md">
               {workText && workText.split("\n").length > 1 && (
@@ -328,12 +410,12 @@ export default function PracticePage() {
               </button>
             </div>
             {explanation ? (
-              <div className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
-                {explanation.content}
+              <div className="mt-2 text-sm leading-relaxed">
+                <MathText text={explanation.content} className="whitespace-pre-wrap" />
                 {explanation.work_check?.content && (
                   <div className="mt-3 border-t border-slate-200 pt-2">
                     <div className="text-xs font-medium text-slate-500 uppercase">Your work check</div>
-                    <div className="mt-1 whitespace-pre-wrap">{explanation.work_check.content}</div>
+                    <MathText text={explanation.work_check.content} className="mt-1 whitespace-pre-wrap" />
                   </div>
                 )}
                 <div className="mt-2 text-xs text-slate-400">
