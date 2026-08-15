@@ -53,15 +53,18 @@ def _is_given_restatement(lhs: str) -> bool:
     return lhs.strip().lower() in ("z", "z bar", "z_bar", "z̄")
 
 
-def analyze_work(question_type, a, b, lines, tolerance=None) -> dict:
+def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     """Deterministically check each line of a student's work against the SymPy-computed
     checkpoints for this solution, in order. Returns the first line whose claimed value
     doesn't match the correct value at that point in the solution — a verified fact, not
     an LLM guess. Lines that don't parse, or that just restate the given z, are skipped
     rather than flagged (SymPy can't judge a definition, only a computation).
+
+    Checkpoints are only populated for some question types (currently modulus); when
+    absent, only the final answer is checked.
     """
     tol = tolerance if tolerance is not None else _DEFAULT_TOL
-    solution = solve(question_type, a, b)
+    solution = solve(topic, question_type, params)
     checkpoints = list(solution.get("checkpoints", [])) + [("final answer", solution["answer_exact"])]
 
     line_results = []
@@ -113,9 +116,9 @@ def analyze_work(question_type, a, b, lines, tolerance=None) -> dict:
     }
 
 
-def grade(question_type, a, b, user_answer, tolerance=None):
+def grade(topic, question_type, params, user_answer, tolerance=None):
     tol = tolerance if tolerance is not None else _DEFAULT_TOL
-    solution = solve(question_type, a, b)
+    solution = solve(topic, question_type, params)
     expected = solution["answer_exact"]
 
     try:

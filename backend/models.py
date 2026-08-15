@@ -27,6 +27,7 @@ class Question(Base):
     difficulty: Mapped[str] = mapped_column(String(20))
     spec: Mapped[dict] = mapped_column(JSONB)
     prompt: Mapped[str] = mapped_column(Text)
+    prompt_latex: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     z_display: Mapped[str] = mapped_column(String(100))
     expected_answer: Mapped[str] = mapped_column(String(255))
     expected_decimal: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

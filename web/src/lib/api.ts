@@ -104,11 +104,14 @@ export interface AuthResponse {
 
 export interface Question {
   id: string;
+  topic: string;
   question_type: string;
   difficulty: string;
-  a: number;
-  b: number;
+  a?: number | null;
+  b?: number | null;
+  params: Record<string, string>;
   prompt: string;
+  prompt_latex: string | null;
   z_display: string;
   source: string;
 }
@@ -178,8 +181,8 @@ export const api = {
   login: (email: string, password: string) =>
     request<AuthResponse>("/auth/login", { method: "POST", body: { email, password }, auth: "none" }),
   me: () => request<User>("/auth/me"),
-  generate: (generation_mode: string, difficulty: string) =>
-    request<Question>("/problems/generate", { method: "POST", body: { generation_mode, difficulty } }),
+  generate: (generation_mode: string, difficulty: string, topic: string = "complex") =>
+    request<Question>("/problems/generate", { method: "POST", body: { generation_mode, difficulty, topic } }),
   detect: (image_base64: string) =>
     request<DetectResult>("/vision/detect", { method: "POST", body: { image_base64 } }),
   grade: (question_id: string, user_answer: string, work_text?: string) =>

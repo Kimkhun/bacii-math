@@ -11,15 +11,16 @@ from schemas import GenerateRequest
 
 
 async def create_question(db: AsyncSession, req: GenerateRequest) -> dict:
-    problem = await generator.generate(req.difficulty, req.seed, req.question_type, req.generation_mode)
-    solution = solver.solve(problem["question_type"], problem["a"], problem["b"])
+    problem = await generator.generate(req.topic, req.difficulty, req.seed, req.question_type, req.generation_mode)
+    solution = solver.solve(problem["topic"], problem["question_type"], problem["params"])
 
     question = Question(
         topic=problem["topic"],
         question_type=problem["question_type"],
         difficulty=problem["difficulty"],
-        spec={"a": problem["a"], "b": problem["b"]},
+        spec=problem["params"],
         prompt=problem["prompt"],
+        prompt_latex=problem.get("prompt_latex"),
         z_display=problem["z_display"],
         expected_answer=str(solution["answer_exact"]),
         expected_decimal=solution["answer_decimal"] if isinstance(solution["answer_decimal"], float) else None,
@@ -34,21 +35,22 @@ async def create_question(db: AsyncSession, req: GenerateRequest) -> dict:
     await db.commit()
     return {
         "id": question.id,
+        "topic": question.topic,
         "question_type": question.question_type,
         "difficulty": question.difficulty,
-        "a": problem["a"],
-        "b": problem["b"],
+        "a": problem["params"].get("a"),
+        "b": problem["params"].get("b"),
+        "params": problem["params"],
         "prompt": question.prompt,
+        "prompt_latex": question.prompt_latex,
         "z_display": question.z_display,
         "source": question.source,
     }
 
 
 def _steps_text(question: Question) -> str:
-    a = question.spec["a"]
-    b = question.spec["b"]
-    solution = solver.solve(question.question_type, a, b)
-    return explainer.build_text(question.question_type, a, b, solution)
+    solution = solver.solve(question.topic, question.question_type, question.spec)
+    return explainer.build_text(question.topic, question.question_type, question.spec, solution)
 
 
 async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, steps_text=None, allow_gemini=None) -> dict:
@@ -58,7 +60,8 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
     intervened = False
 
     if use_ai:
-        key = f"explain:{question.question_type}:{question.spec['a']}:{question.spec['b']}"
+        spec_key = ":".join(f"{k}={v}" for k, v in sorted(question.spec.items()))
+        key = f"explain:{question.topic}:{question.question_type}:{spec_key}"
         cached = await cache.get_explanation(key)
         if cached:
             content, provider, intervened = cached, "gemini", True
@@ -87,7 +90,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None) -> 
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
 
-    result = grader.grade(question.question_type, question.spec["a"], question.spec["b"], user_answer)
+    result = grader.grade(question.topic, question.question_type, question.spec, user_answer)
     attempt = Attempt(
         user_id=user.id,
         question_id=question.id,
@@ -116,7 +119,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None) -> 
         step_check = None
         if work_text:
             step_check = grader.analyze_work(
-                question.question_type, question.spec["a"], question.spec["b"], work_text.split("\n")
+                question.topic, question.question_type, question.spec, work_text.split("\n")
             )
             resp["step_check"] = step_check
         check, provider = await llm.check_work(
@@ -141,7 +144,7 @@ async def explain_question(db, user, question_id, user_answer=None, work_text=No
         step_check = None
         if work_text:
             step_check = grader.analyze_work(
-                question.question_type, question.spec["a"], question.spec["b"], work_text.split("\n")
+                question.topic, question.question_type, question.spec, work_text.split("\n")
             )
             result["step_check"] = step_check
         check, provider = await llm.check_work(
@@ -165,6 +168,7 @@ async def get_question(db, question_id) -> dict:
         "question_type": question.question_type,
         "difficulty": question.difficulty,
         "prompt": question.prompt,
+        "prompt_latex": question.prompt_latex,
         "z_display": question.z_display,
         "source": question.source,
         "steps": steps,
