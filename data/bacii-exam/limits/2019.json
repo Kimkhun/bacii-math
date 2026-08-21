@@ -1,0 +1,48 @@
+{
+  "source": {
+    "file": "photo_7_2026-08-21_19-02-09.jpg",
+    "description": "Cambodian BAC II grade-12 exam booklet screenshot, limits section only",
+    "extracted_by": "manual OCR/transcription from photo (Claude Code), 2026-08-21"
+  },
+  "exams": [
+    {
+      "exam_date": "2019-08-19",
+      "subject_km": "គណិតវិទ្យា",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 150,
+      "total_points": 125,
+      "sections": [
+        {
+          "id": "I",
+          "title_km": "គណនាលីមីត",
+          "title_en": "Compute the limits",
+          "points": 15,
+          "questions": [
+            {
+              "label": "a",
+              "prompt_latex": "\\lim_{x\\to +\\infty} \\left[\\sqrt{x^2+2x+3}-(x+1)\\right]",
+              "answer_latex": "0",
+              "technique": "∞-∞ at infinity. Multiply and divide by the conjugate sqrt(x^2+2x+3)+(x+1); the numerator collapses to the constant 2, so the whole expression is 2/[sqrt(x^2+2x+3)+x+1] → 0 as the denominator → ∞.",
+              "formula_latex": "\\left[\\sqrt{x^2+2x+3}-(x+1)\\right]\\left[\\sqrt{x^2+2x+3}+(x+1)\\right]=2"
+            },
+            {
+              "label": "b",
+              "prompt_latex": "\\lim_{x\\to 0} \\frac{-2x\\sin x}{1-\\cos^2 x}",
+              "answer_latex": "-2",
+              "technique": "0/0 at x=0. Replace 1-cos^2x with sin^2x (Pythagorean identity), cancel one factor of sin x, leaving -2x/sin x, then apply the standard sinc limit x/sin x → 1.",
+              "formula_latex": "1-\\cos^2x=\\sin^2x;\\quad \\lim_{x\\to0}\\frac{x}{\\sin x}=1"
+            },
+            {
+              "label": "c",
+              "prompt_latex": "\\lim_{x\\to -\\frac{\\pi}{2}} \\frac{1+\\sin x}{\\sin^4 x - 1}",
+              "answer_latex": "-\\frac{1}{4}",
+              "technique": "0/0 at x=-pi/2. Factor sin^4x-1=(sin^2x-1)(sin^2x+1)=-(1-sin x)(1+sin x)(sin^2x+1) via difference of squares plus the Pythagorean form. Cancel (1+sin x), leaving -1/[(1-sin x)(sin^2x+1)]; substitute sin(-pi/2)=-1.",
+              "formula_latex": "\\sin^4x-1=-(1-\\sin x)(1+\\sin x)(\\sin^2x+1)"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

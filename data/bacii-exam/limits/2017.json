@@ -1,0 +1,46 @@
+{
+  "source": {
+    "file": "photo_9_2026-08-21_19-02-09.jpg",
+    "description": "Cambodian BAC II grade-12 exam booklet screenshot, limits section only",
+    "extracted_by": "manual OCR/transcription from photo (Claude Code), 2026-08-21"
+  },
+  "exams": [
+    {
+      "exam_date": "2017-08-21",
+      "subject_km": "គណិតវិទ្យា",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 150,
+      "sections": [
+        {
+          "id": "I",
+          "title_km": "គណនាលីមីត",
+          "title_en": "Compute the limits",
+          "questions": [
+            {
+              "label": "a",
+              "prompt_latex": "\\lim_{x\\to 1} \\frac{1-x^2}{x^3-x^2+x-1}",
+              "answer_latex": "-1",
+              "technique": "0/0 at x=1. Factor numerator 1-x^2=-(x-1)(x+1) and denominator x^3-x^2+x-1=(x-1)(x^2+1) by grouping. Cancel (x-1), leaving -(x+1)/(x^2+1); substitute x=1.",
+              "formula_latex": "1-x^2=-(x-1)(x+1);\\quad x^3-x^2+x-1=(x-1)(x^2+1)"
+            },
+            {
+              "label": "b",
+              "prompt_latex": "\\lim_{x\\to 0} \\frac{\\sin 3x}{-x}",
+              "answer_latex": "-3",
+              "technique": "0/0 at x=0, direct application of the standard sinc limit with k=3, with an extra sign flip from the -x denominator.",
+              "formula_latex": "\\lim_{x\\to0}\\frac{\\sin kx}{kx}=1"
+            },
+            {
+              "label": "c",
+              "prompt_latex": "\\lim_{x\\to 0} \\frac{\\sqrt{2+x}-\\sqrt{2-x}}{\\sin x}",
+              "answer_latex": "\\frac{\\sqrt{2}}{2}",
+              "technique": "0/0 at x=0. Rationalize the numerator by multiplying by sqrt(2+x)+sqrt(2-x): (2+x)-(2-x)=2x, giving 2x/[sin x·(sqrt(2+x)+sqrt(2-x))]. Split off the sinc factor x/sin x → 1 and evaluate the remaining sqrt sum at x=0.",
+              "formula_latex": "(\\sqrt{2+x}-\\sqrt{2-x})(\\sqrt{2+x}+\\sqrt{2-x})=2x;\\quad \\lim_{x\\to0}\\frac{x}{\\sin x}=1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

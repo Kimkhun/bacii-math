@@ -1,0 +1,47 @@
+{
+  "source": {
+    "file": "photo_11_2026-08-21_19-02-09.jpg",
+    "description": "Cambodian BAC II grade-12 exam booklet screenshot, limits section only",
+    "extracted_by": "manual OCR/transcription from photo (Claude Code), 2026-08-21"
+  },
+  "exams": [
+    {
+      "exam_date": "2015-08-24",
+      "subject_km": "វិញ្ញាសាទី២៣",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 140,
+      "sections": [
+        {
+          "id": "II",
+          "title_km": "គណនាលីមីត",
+          "title_en": "Compute the limits",
+          "points": 15,
+          "questions": [
+            {
+              "label": "a",
+              "prompt_latex": "\\lim_{x\\to 2} \\frac{x^3-8}{\\sqrt{x+2}-2}",
+              "answer_latex": "48",
+              "technique": "0/0 at x=2. Factor numerator x^3-8=(x-2)(x^2+2x+4); rationalize the denominator by multiplying by (sqrt(x+2)+2), which turns sqrt(x+2)-2 into (x-2)/(sqrt(x+2)+2). The (x-2) factors cancel, leaving (x^2+2x+4)(sqrt(x+2)+2).",
+              "formula_latex": "x^3-8=(x-2)(x^2+2x+4);\\quad \\sqrt{x+2}-2=\\frac{x-2}{\\sqrt{x+2}+2}"
+            },
+            {
+              "label": "b",
+              "prompt_latex": "\\lim_{x\\to 0} \\frac{\\cos x - 1}{\\sin^2 x}",
+              "answer_latex": "-\\frac{1}{2}",
+              "technique": "0/0 at x=0. Write sin^2x=(1-cos x)(1+cos x) via the Pythagorean identity, so the expression becomes -(1)/(1+cos x); substitute cos 0=1.",
+              "formula_latex": "\\sin^2x=(1-\\cos x)(1+\\cos x)"
+            },
+            {
+              "label": "c",
+              "prompt_latex": "\\lim_{x\\to 0} \\frac{3\\sin 3x}{x}",
+              "answer_latex": "9",
+              "technique": "0/0 at x=0, direct application of the standard sinc limit with k=3: write as 3·3·(sin 3x)/(3x).",
+              "formula_latex": "\\lim_{x\\to0}\\frac{\\sin kx}{kx}=1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

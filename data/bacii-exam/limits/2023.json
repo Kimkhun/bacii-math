@@ -1,0 +1,47 @@
+{
+  "source": {
+    "file": "photo_4_2026-08-21_19-02-09.jpg",
+    "description": "Cambodian BAC II grade-12 exam booklet screenshot, limits section only (also present in khexam_math_2022_2023.json, extracted from the source PDF)",
+    "extracted_by": "manual OCR/transcription from photo (Claude Code), 2026-08-21"
+  },
+  "exams": [
+    {
+      "exam_date": "2023-11-06",
+      "subject_km": "គណិតវិទ្យា",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 150,
+      "total_points": 125,
+      "sections": [
+        {
+          "id": "I",
+          "title_km": "គណនាលីមីត",
+          "title_en": "Compute the limits",
+          "questions": [
+            {
+              "label": "a",
+              "prompt_latex": "\\lim_{x\\to +\\infty} \\left[x\\ln\\left(1+\\frac{1}{x}\\right)\\right],\\ \\text{given } \\lim_{X\\to 0}\\frac{\\ln(1+X)}{X}=1",
+              "answer_latex": "1",
+              "technique": "∞·0 at infinity, reduced directly with the given standard log limit by substituting X=1/x → 0, turning x·ln(1+1/x) into ln(1+X)/X.",
+              "formula_latex": "x\\ln\\left(1+\\frac{1}{x}\\right)=\\frac{\\ln(1+X)}{X},\\ X=\\frac{1}{x}\\to0"
+            },
+            {
+              "label": "b",
+              "prompt_latex": "\\lim_{x\\to -\\frac{\\pi}{2}} \\frac{1-\\sin^2 x}{2+2\\sin x}",
+              "answer_latex": "1",
+              "technique": "0/0 at x=-pi/2. Factor numerator via Pythagorean identity: 1-sin^2x=(1-sin x)(1+sin x); factor 2 from denominator: 2(1+sin x). Cancel (1+sin x), leaving (1-sin x)/2; substitute sin(-pi/2)=-1.",
+              "formula_latex": "1-\\sin^2x=(1-\\sin x)(1+\\sin x)"
+            },
+            {
+              "label": "c",
+              "prompt_latex": "\\lim_{x\\to 3} \\frac{x^3-27}{27(\\sqrt{x+6}-3)}",
+              "answer_latex": "6",
+              "technique": "0/0 at x=3. Factor numerator x^3-27=(x-3)(x^2+3x+9); rationalize denominator sqrt(x+6)-3=(x-3)/(sqrt(x+6)+3). The (x-3) factors cancel, leaving (x^2+3x+9)(sqrt(x+6)+3)/27.",
+              "formula_latex": "x^3-27=(x-3)(x^2+3x+9);\\quad \\sqrt{x+6}-3=\\frac{x-3}{\\sqrt{x+6}+3}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

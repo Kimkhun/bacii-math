@@ -1,0 +1,55 @@
+{
+  "source": {
+    "file": "photo_3_2026-08-21_19-02-09.jpg",
+    "description": "Cambodian BAC II grade-12 exam booklet screenshot, limits section only",
+    "extracted_by": "manual OCR/transcription from photo (Claude Code), 2026-08-21"
+  },
+  "exams": [
+    {
+      "exam_date": "2024-10-08",
+      "subject_km": "គណិតវិទ្យា",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 150,
+      "total_points": 125,
+      "sections": [
+        {
+          "id": "I",
+          "title_km": "គណនាលីមីត",
+          "title_en": "Compute the limits",
+          "points": 15,
+          "questions": [
+            {
+              "label": "a",
+              "prompt_latex": "\\lim_{x\\to 0} \\left(2e^{3x}-xe^{2x}+2e^{x}+4\\right)",
+              "answer_latex": "8",
+              "technique": "No indeterminate form: every term is a continuous exponential/polynomial product, so evaluate by direct substitution at x=0 (2·1-0·1+2·1+4).",
+              "formula_latex": "\\lim_{x\\to a}f(x)=f(a)\\ \\text{when } f \\text{ continuous at } a"
+            },
+            {
+              "label": "b",
+              "prompt_latex": "\\lim_{x\\to +\\infty} \\frac{8x^2-x+1}{ax^2+8} = 1,\\ \\text{find } a",
+              "answer_latex": "a=8",
+              "technique": "∞/∞ at infinity: for a rational function, the limit of the ratio of same-degree polynomials equals the ratio of leading coefficients. Set 8/a=1 and solve for a.",
+              "formula_latex": "\\lim_{x\\to\\infty}\\frac{a_nx^n+\\dots}{b_nx^n+\\dots}=\\frac{a_n}{b_n}"
+            },
+            {
+              "label": "c",
+              "prompt_latex": "\\lim_{x\\to -\\infty} \\left(x+\\sqrt{x^2+9}\\right)",
+              "answer_latex": "0",
+              "technique": "∞-∞ at negative infinity. Multiply and divide by the conjugate sqrt(x^2+9)-x: numerator collapses to the constant 9, giving 9/(sqrt(x^2+9)-x). As x→-∞, sqrt(x^2+9)~-x so the denominator → +∞, sending the ratio to 0.",
+              "formula_latex": "\\left(x+\\sqrt{x^2+9}\\right)\\left(\\sqrt{x^2+9}-x\\right)=9"
+            },
+            {
+              "label": "d",
+              "prompt_latex": "\\lim_{x\\to 0} \\frac{\\sin x - \\sin x\\cos x}{x^3}",
+              "answer_latex": "\\frac{1}{2}",
+              "technique": "0/0 at x=0. Factor sin x(1-cos x) from the numerator, then replace 1-cos x with the half-angle form 2sin^2(x/2). Split the expression into (sin x/x)·(2sin^2(x/2))/x^2 and apply the sinc limit twice.",
+              "formula_latex": "1-\\cos x=2\\sin^2\\frac{x}{2};\\quad \\lim_{x\\to0}\\frac{\\sin x}{x}=1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

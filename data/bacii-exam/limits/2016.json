@@ -1,0 +1,47 @@
+{
+  "source": {
+    "file": "photo_10_2026-08-21_19-02-09.jpg",
+    "description": "Cambodian BAC II grade-12 exam booklet screenshot, limits section only",
+    "extracted_by": "manual OCR/transcription from photo (Claude Code), 2026-08-21"
+  },
+  "exams": [
+    {
+      "exam_date": "2016-08-22",
+      "subject_km": "វិញ្ញាសាទី២៥",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 150,
+      "sections": [
+        {
+          "id": "I",
+          "title_km": "គណនាលីមីត",
+          "title_en": "Compute the limits",
+          "points": 15,
+          "questions": [
+            {
+              "label": "a",
+              "prompt_latex": "\\lim_{x\\to 1} \\frac{1-x^2}{x^2+2-3x}",
+              "answer_latex": "2",
+              "technique": "0/0 at x=1. Factor both: 1-x^2=-(x-1)(x+1) and x^2-3x+2=(x-1)(x-2). Cancel (x-1), leaving -(x+1)/(x-2); substitute x=1.",
+              "formula_latex": "1-x^2=-(x-1)(x+1);\\quad x^2-3x+2=(x-1)(x-2)"
+            },
+            {
+              "label": "b",
+              "prompt_latex": "\\lim_{x\\to 3} \\frac{\\sqrt{x+6}-3}{x^3-27}",
+              "answer_latex": "\\frac{1}{162}",
+              "technique": "0/0 at x=3. Rationalize the numerator (multiply by sqrt(x+6)+3) to get (x-3)/(sqrt(x+6)+3); factor denominator x^3-27=(x-3)(x^2+3x+9). Cancel (x-3), leaving 1/[(sqrt(x+6)+3)(x^2+3x+9)].",
+              "formula_latex": "\\sqrt{x+6}-3=\\frac{x-3}{\\sqrt{x+6}+3};\\quad x^3-27=(x-3)(x^2+3x+9)"
+            },
+            {
+              "label": "c",
+              "prompt_latex": "\\lim_{x\\to 0} \\frac{5\\sin 5x}{x}",
+              "answer_latex": "25",
+              "technique": "0/0 at x=0, direct application of the standard sinc limit with k=5: write as 5·5·(sin 5x)/(5x).",
+              "formula_latex": "\\lim_{x\\to0}\\frac{\\sin kx}{kx}=1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

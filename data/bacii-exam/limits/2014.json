@@ -1,0 +1,62 @@
+{
+  "source": {
+    "file": "photo_1_2026-08-21_19-02-09.jpg",
+    "description": "Cambodian BAC II grade-12 exam booklet screenshot, limits section only",
+    "extracted_by": "manual OCR/transcription from photo (Claude Code), 2026-08-21"
+  },
+  "exams": [
+    {
+      "exam_date": "2014-10-13",
+      "exam_round": 2,
+      "subject_km": "វិញ្ញាសាទី២១",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 150,
+      "sections": [
+        {
+          "id": "I",
+          "title_km": "គណនាលីមីតខាងក្រោម",
+          "title_en": "Compute the following limits",
+          "points": 20,
+          "questions": [
+            {
+              "label": "a",
+              "prompt_latex": "\\lim_{x\\to 1} \\frac{x^3-x^2+x-1}{x-1}",
+              "answer_latex": "2",
+              "technique": "0/0 at x=1. Factor the numerator by grouping: x^3-x^2+x-1 = x^2(x-1)+(x-1) = (x-1)(x^2+1). Cancel (x-1), then substitute x=1 into x^2+1.",
+              "formula_latex": "x^3-x^2+x-1=(x-1)(x^2+1)"
+            },
+            {
+              "label": "b",
+              "prompt_latex": "\\lim_{x\\to \\frac{\\pi}{2}} \\frac{\\sin^2 x - 1}{1+\\sin x}",
+              "answer_latex": "0",
+              "technique": "0/0 at x=pi/2. Use sin^2x-1=-cos^2x=-(1-sin x)(1+sin x), cancel the (1+sin x) factor with the denominator, leaving -(1-sin x); substitute sin(pi/2)=1.",
+              "formula_latex": "\\sin^2x-1=-(1-\\sin x)(1+\\sin x)"
+            },
+            {
+              "label": "c",
+              "prompt_latex": "\\lim_{x\\to +\\infty} \\left(\\sqrt{x^2+x}-x\\right)",
+              "answer_latex": "\\frac{1}{2}",
+              "technique": "∞-∞ at infinity. Multiply and divide by the conjugate sqrt(x^2+x)+x to turn the difference into x/(sqrt(x^2+x)+x), then divide numerator and denominator by x and let x→∞.",
+              "formula_latex": "\\sqrt{x^2+x}-x=\\frac{x}{\\sqrt{x^2+x}+x}"
+            },
+            {
+              "label": "d",
+              "prompt_latex": "\\lim_{x\\to 0} \\frac{(e^{-x}+e^{x})\\sin^2 x}{2x^2}",
+              "answer_latex": "1",
+              "technique": "0/0 at x=0. Split as (e^{-x}+e^x) · (sin x / x)^2 / 2. The exponential factor is continuous (→2 at x=0) and the sinc-squared factor uses the standard limit sin x/x → 1.",
+              "formula_latex": "\\lim_{x\\to0}\\frac{\\sin x}{x}=1"
+            },
+            {
+              "label": "e",
+              "prompt_latex": "\\lim_{x\\to +\\infty} \\left(\\ln(x+2)-\\ln x - \\frac{2}{x+2}+\\frac{1}{4}\\right)",
+              "answer_latex": "\\frac{1}{4}",
+              "technique": "∞-∞ (log difference) at infinity. Combine logs: ln(x+2)-ln x = ln(1+2/x) → 0 as x→∞ (standard log limit form), and 2/(x+2) → 0, leaving only the constant 1/4.",
+              "formula_latex": "\\ln(x+2)-\\ln x=\\ln\\left(1+\\frac{2}{x}\\right)\\xrightarrow[x\\to\\infty]{}0,\\quad \\frac{2}{x+2}\\xrightarrow[x\\to\\infty]{}0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

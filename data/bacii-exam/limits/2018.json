@@ -1,0 +1,48 @@
+{
+  "source": {
+    "file": "photo_8_2026-08-21_19-02-09.jpg",
+    "description": "Cambodian BAC II grade-12 exam booklet screenshot, limits section only",
+    "extracted_by": "manual OCR/transcription from photo (Claude Code), 2026-08-21"
+  },
+  "exams": [
+    {
+      "exam_date": "2018-08-20",
+      "subject_km": "គណិតវិទ្យា",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 150,
+      "total_points": 125,
+      "sections": [
+        {
+          "id": "2",
+          "title_km": "គណនាលីមីត",
+          "title_en": "Compute the limits",
+          "points": 15,
+          "questions": [
+            {
+              "label": "a",
+              "prompt_latex": "\\lim_{x\\to 1} \\frac{x^2(x-2)+x^2+x-1}{1-x}",
+              "answer_latex": "-2",
+              "technique": "0/0 at x=1. Expand the numerator to x^3-x^2+x-1=(x-1)(x^2+1) by grouping; the denominator is 1-x=-(x-1). Cancel (x-1), leaving -(x^2+1); substitute x=1.",
+              "formula_latex": "x^2(x-2)+x^2+x-1=(x-1)(x^2+1)"
+            },
+            {
+              "label": "b",
+              "prompt_latex": "\\lim_{x\\to 0} \\frac{-2x}{\\sin 3x}",
+              "answer_latex": "-\\frac{2}{3}",
+              "technique": "0/0 at x=0. Write as -2/3 · (3x)/(sin 3x) and apply the standard sinc limit with k=3.",
+              "formula_latex": "\\lim_{x\\to0}\\frac{kx}{\\sin kx}=1"
+            },
+            {
+              "label": "c",
+              "prompt_latex": "\\lim_{x\\to \\frac{\\pi}{3}} \\frac{\\sin x - \\sqrt{3}\\cos x}{2(\\pi-3x)}",
+              "answer_latex": "-\\frac{1}{3}",
+              "technique": "0/0 at x=pi/3. Rewrite the linear combination sin x - sqrt3 cos x as 2 sin(x-pi/3) (angle-addition identity), and note pi-3x = -3(x-pi/3). Substitute t=x-pi/3 and apply the sinc limit sin t/t → 1.",
+              "formula_latex": "\\sin x-\\sqrt3\\cos x=2\\sin\\left(x-\\frac{\\pi}{3}\\right);\\quad \\lim_{t\\to0}\\frac{\\sin t}{t}=1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

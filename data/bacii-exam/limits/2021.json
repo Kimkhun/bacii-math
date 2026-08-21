@@ -1,0 +1,47 @@
+{
+  "source": {
+    "file": "photo_6_2026-08-21_19-02-09.jpg",
+    "description": "Cambodian BAC II grade-12 exam booklet screenshot, limits section only",
+    "extracted_by": "manual OCR/transcription from photo (Claude Code), 2026-08-21"
+  },
+  "exams": [
+    {
+      "exam_date": "2021-08-27",
+      "subject_km": "គណិតវិទ្យា",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 150,
+      "total_points": 125,
+      "sections": [
+        {
+          "id": "I",
+          "title_km": "គណនាលីមីត",
+          "title_en": "Compute the limits",
+          "questions": [
+            {
+              "label": "a",
+              "prompt_latex": "\\lim_{x\\to 3} \\sqrt{3x^2-11}",
+              "answer_latex": "4",
+              "technique": "No indeterminate form: sqrt(3x^2-11) is continuous at x=3 and 3(3)^2-11=16≥0, so evaluate by direct substitution.",
+              "formula_latex": "\\lim_{x\\to a}\\sqrt{g(x)}=\\sqrt{g(a)}\\ \\text{when } g(a)\\ge0"
+            },
+            {
+              "label": "b",
+              "prompt_latex": "\\lim_{x\\to \\frac{\\pi}{3}} \\frac{\\sqrt{3}\\sin\\left(x-\\frac{\\pi}{3}\\right)}{\\frac{\\pi}{3}-x}",
+              "answer_latex": "-\\sqrt{3}",
+              "technique": "0/0 at x=pi/3. Substitute t=x-pi/3 so the denominator is -t; apply the standard sinc limit sin t/t → 1 with a sign flip.",
+              "formula_latex": "\\lim_{t\\to0}\\frac{\\sin t}{t}=1,\\ t=x-\\frac{\\pi}{3}"
+            },
+            {
+              "label": "c",
+              "prompt_latex": "\\lim_{x\\to +\\infty} \\left(2x-7-11\\ln x\\right)",
+              "answer_latex": "+\\infty",
+              "technique": "∞-∞ growth-rate comparison. Factor out x: x(2-7/x-11 ln x/x). As x→∞, ln x/x → 0, so the bracket → 2, and x·2 → +∞; linear growth always beats logarithmic growth.",
+              "formula_latex": "\\lim_{x\\to+\\infty}\\frac{\\ln x}{x}=0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

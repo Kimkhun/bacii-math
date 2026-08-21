@@ -1,0 +1,54 @@
+{
+  "source": {
+    "file": "photo_2_2026-08-21_19-02-09.jpg",
+    "description": "Cambodian BAC II grade-12 exam booklet screenshot, limits section only",
+    "extracted_by": "manual OCR/transcription from photo (Claude Code), 2026-08-21"
+  },
+  "exams": [
+    {
+      "exam_date": "2025-08-28",
+      "subject_km": "គណិតវិទ្យា",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 150,
+      "total_points": 125,
+      "sections": [
+        {
+          "id": "I",
+          "title_km": "គណនាលីមីត",
+          "title_en": "Compute the limits",
+          "questions": [
+            {
+              "label": "a",
+              "prompt_latex": "\\lim_{x\\to 1} \\left(\\sqrt{x^2-1}+3x\\right)",
+              "answer_latex": "3",
+              "technique": "No indeterminate form: sqrt(x^2-1) is continuous at x=1 (x^2-1=0≥0) and the whole expression is continuous there, so evaluate by direct substitution.",
+              "formula_latex": "\\lim_{x\\to a}\\sqrt{g(x)}=\\sqrt{g(a)}\\ \\text{when } g(a)\\ge0"
+            },
+            {
+              "label": "b",
+              "prompt_latex": "\\lim_{x\\to 0} \\frac{e^{4x}-1}{e^{x}-1}",
+              "answer_latex": "4",
+              "technique": "0/0 at x=0. Divide numerator and denominator by x and apply the standard exponential limit (e^{kx}-1)/x → k separately to numerator (k=4) and denominator (k=1); the ratio is 4/1.",
+              "formula_latex": "\\lim_{x\\to0}\\frac{e^{kx}-1}{x}=k"
+            },
+            {
+              "label": "c",
+              "prompt_latex": "\\lim_{x\\to 2} \\frac{2-\\sqrt{x+2}}{x^3-8}",
+              "answer_latex": "-\\frac{1}{48}",
+              "technique": "0/0 at x=2. Rationalize the numerator by multiplying by (2+sqrt(x+2)): (4-(x+2))=(2-x), giving -(x-2)/(2+sqrt(x+2)). Factor denominator x^3-8=(x-2)(x^2+2x+4); cancel (x-2), leaving -1/[(2+sqrt(x+2))(x^2+2x+4)].",
+              "formula_latex": "2-\\sqrt{x+2}=\\frac{-(x-2)}{2+\\sqrt{x+2}};\\quad x^3-8=(x-2)(x^2+2x+4)"
+            },
+            {
+              "label": "d",
+              "prompt_latex": "\\lim_{x\\to \\frac{\\pi}{3}} \\frac{x-\\frac{\\pi}{3}}{\\sin x - \\sqrt{3}\\cos x}",
+              "answer_latex": "\\frac{1}{2}",
+              "technique": "0/0 at x=pi/3. Rewrite sin x - sqrt3 cos x as 2 sin(x-pi/3) (angle-addition identity), giving t/(2 sin t) with t=x-pi/3, then apply the sinc limit t/sin t → 1.",
+              "formula_latex": "\\sin x-\\sqrt3\\cos x=2\\sin\\left(x-\\frac{\\pi}{3}\\right);\\quad \\lim_{t\\to0}\\frac{t}{\\sin t}=1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

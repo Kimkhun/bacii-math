@@ -1,0 +1,48 @@
+{
+  "source": {
+    "file": "photo_5_2026-08-21_19-02-09.jpg",
+    "description": "Cambodian BAC II grade-12 exam booklet screenshot, limits section only (also present in khexam_math_2022_2023.json, extracted from the source PDF)",
+    "extracted_by": "manual OCR/transcription from photo (Claude Code), 2026-08-21"
+  },
+  "exams": [
+    {
+      "exam_date": "2022-10-05",
+      "subject_km": "គណិតវិទ្យា",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 150,
+      "total_points": 125,
+      "sections": [
+        {
+          "id": "I",
+          "title_km": "គណនាលីមីត",
+          "title_en": "Compute the limits",
+          "points": 10,
+          "questions": [
+            {
+              "label": "a",
+              "prompt_latex": "\\lim_{x\\to 0} \\frac{e^x+1}{2e^x}",
+              "answer_latex": "1",
+              "technique": "No indeterminate form: e^x is continuous and 2e^x never vanishes, so evaluate by direct substitution at x=0.",
+              "formula_latex": "\\lim_{x\\to a}f(x)=f(a)\\ \\text{when } f \\text{ continuous at } a"
+            },
+            {
+              "label": "b",
+              "prompt_latex": "\\lim_{x\\to 1} \\frac{\\sqrt{x+3}-2}{\\sqrt{x}-1}",
+              "answer_latex": "\\frac{1}{2}",
+              "technique": "0/0 at x=1. Rationalize both numerator and denominator by multiplying by (sqrt(x+3)+2) and (sqrt(x)+1); this turns the ratio into (x-1)(sqrt x+1) / [(x-1)(sqrt(x+3)+2)], and the (x-1) factors cancel.",
+              "formula_latex": "\\sqrt{x+3}-2=\\frac{x-1}{\\sqrt{x+3}+2};\\quad \\sqrt{x}-1=\\frac{x-1}{\\sqrt{x}+1}"
+            },
+            {
+              "label": "c",
+              "prompt_latex": "\\lim_{x\\to \\frac{\\pi}{3}} \\frac{\\sqrt{3}\\left(\\frac{\\pi}{3}-x\\right)}{\\sin\\left(x-\\frac{\\pi}{3}\\right)}",
+              "answer_latex": "-\\sqrt{3}",
+              "technique": "0/0 at x=pi/3. Substitute t=x-pi/3; numerator becomes sqrt3·(-t), denominator sin t. Apply the sinc limit t/sin t → 1.",
+              "formula_latex": "\\lim_{t\\to0}\\frac{t}{\\sin t}=1,\\ t=x-\\frac{\\pi}{3}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
