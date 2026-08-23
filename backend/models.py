@@ -15,6 +15,7 @@ class User(Base):
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255))
+    plan: Mapped[str] = mapped_column(String(20), nullable=False, server_default="free")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -32,6 +33,7 @@ class Question(Base):
     expected_answer: Mapped[str] = mapped_column(String(255))
     expected_decimal: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     source: Mapped[str] = mapped_column(String(20))
+    formula_tags: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -43,6 +45,7 @@ class Step(Base):
     step_order: Mapped[int] = mapped_column(Integer)
     title: Mapped[str] = mapped_column(String(255))
     detail: Mapped[str] = mapped_column(Text)
+    formula: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
 
 class Attempt(Base):
@@ -55,6 +58,10 @@ class Attempt(Base):
     parsed_answer: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     correct: Mapped[bool] = mapped_column(Boolean)
     reason: Mapped[str] = mapped_column(Text)
+    work_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    step_check: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    lines_boxes: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+    formula_breakdown: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

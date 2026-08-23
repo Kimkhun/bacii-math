@@ -1,18 +1,37 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 export type CanvasTool = "pen" | "eraser";
 
+export interface CanvasExportMap {
+  canvasW: number;
+  canvasH: number;
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+}
+
 export interface CanvasHandle {
   getImageBase64: () => string | null;
+  getExportMap: () => CanvasExportMap;
+  getLineSnapshots: (boxes: (number[] | null)[]) => (LineSnapshot | null)[];
   hasInk: () => boolean;
   loadImage: (dataUrl: string) => void;
   clear: () => void;
   setTool: (tool: CanvasTool) => void;
   setPenWidth: (width: number) => void;
+  setEraserWidth: (width: number) => void;
   undo: () => void;
   canUndo: () => boolean;
+}
+
+export interface LineSnapshot {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  href: string;
 }
 
 interface Point {
@@ -86,8 +105,9 @@ const Canvas = forwardRef<
     onChange?: () => void;
     zoom?: number;
     onZoomChange?: (zoom: number) => void;
+    overlay?: ReactNode;
   }
->(({ width = 640, height = 820, fullscreen = false, onChange, zoom = 1, onZoomChange }, ref) => {
+>(({ width = 640, height = 820, fullscreen = false, onChange, zoom = 1, onZoomChange, overlay }, ref) => {
     const initialW = fullscreen ? FULL_W : width;
     const initialH = fullscreen ? FULL_H : height;
     const [canvasWidth, setCanvasWidth] = useState(initialW);
@@ -99,12 +119,39 @@ const Canvas = forwardRef<
     // Ink lives on its own transparent layer so erasing (destination-out) never
     // touches the ruled background drawn underneath it.
     const inkCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const rafRef = useRef<number | null>(null);
     const strokesRef = useRef<Stroke[]>([]);
     const imageRef = useRef<HTMLImageElement | null>(null);
     const imageDataRef = useRef<string | null>(null);
     const drawing = useRef(false);
     const toolRef = useRef<CanvasTool>("pen");
     const penWidthRef = useRef<number>(DEFAULT_PEN_WIDTH);
+    const eraserWidthRef = useRef<number>(ERASER_WIDTH);
+    const cursorElRef = useRef<HTMLDivElement>(null);
+
+    const updateCursor = (clientX: number, clientY: number) => {
+      const el = cursorElRef.current;
+      if (!el) return;
+      const isPen = toolRef.current === "pen";
+      const w = Math.max(2, (isPen ? penWidthRef.current : eraserWidthRef.current) * zoom);
+      el.style.width = `${w}px`;
+      el.style.height = `${w}px`;
+      el.style.left = `${clientX}px`;
+      el.style.top = `${clientY}px`;
+      if (isPen) {
+        el.style.background = "rgba(31, 41, 55, 0.12)";
+        el.style.border = "1px solid rgba(31, 41, 55, 0.7)";
+      } else {
+        el.style.background = "rgba(255, 255, 255, 0.4)";
+        el.style.border = "1.5px solid #1f2937";
+      }
+      el.style.display = "block";
+    };
+
+    const hideCursor = () => {
+      if (cursorElRef.current) cursorElRef.current.style.display = "none";
+    };
 
     const getInkCanvas = () => {
       if (!inkCanvasRef.current) {
@@ -126,7 +173,7 @@ const Canvas = forwardRef<
       ctx.lineJoin = "round";
       if (tool === "eraser") {
         ctx.globalCompositeOperation = "destination-out";
-        ctx.lineWidth = ERASER_WIDTH;
+        ctx.lineWidth = width;
       } else {
         ctx.globalCompositeOperation = "source-over";
         ctx.strokeStyle = INK_COLOR;
@@ -152,6 +199,20 @@ const Canvas = forwardRef<
       }
     };
 
+    // The ruled background is static per canvas size, so render it once into its
+    // own layer and composite it — redrawing ~300 lines on every pointer move is
+    // what made the cursor lag once the canvas had grown.
+    const getBgCanvas = () => {
+      if (!bgCanvasRef.current || bgCanvasRef.current.width !== W || bgCanvasRef.current.height !== H) {
+        const c = document.createElement("canvas");
+        c.width = W;
+        c.height = H;
+        drawRuled(c.getContext("2d")!);
+        bgCanvasRef.current = c;
+      }
+      return bgCanvasRef.current;
+    };
+
     const replayStrokesToInk = () => {
       const inkCanvas = getInkCanvas();
       const ictx = inkCanvas.getContext("2d")!;
@@ -166,7 +227,7 @@ const Canvas = forwardRef<
 
     const redraw = () => {
       const ctx = canvasRef.current!.getContext("2d")!;
-      drawRuled(ctx);
+      ctx.drawImage(getBgCanvas(), 0, 0);
       if (imageRef.current) {
         const img = imageRef.current;
         const scale = Math.min((W - 32) / img.width, (H - 32) / img.height);
@@ -177,6 +238,30 @@ const Canvas = forwardRef<
       }
       replayStrokesToInk();
       ctx.drawImage(getInkCanvas(), 0, 0);
+    };
+
+    // Per-move repaint: replay only the in-progress stroke onto the persistent
+    // ink layer (opaque pen overdraw / idempotent eraser erase), then composite
+    // once per animation frame — O(current stroke) instead of O(all strokes).
+    const redrawCurrentStroke = () => {
+      rafRef.current = null;
+      if (!canvasRef.current) return;
+      const ctx = canvasRef.current.getContext("2d")!;
+      ctx.drawImage(getBgCanvas(), 0, 0);
+      if (imageRef.current) return;
+      const stroke = strokesRef.current[strokesRef.current.length - 1];
+      if (stroke) {
+        const ictx = getInkCanvas().getContext("2d")!;
+        strokeStyleFor(ictx, stroke.tool, stroke.width);
+        drawSmoothPath(ictx, stroke.points);
+        ictx.globalCompositeOperation = "source-over";
+      }
+      ctx.drawImage(getInkCanvas(), 0, 0);
+    };
+
+    const requestRedraw = () => {
+      if (rafRef.current !== null) return;
+      rafRef.current = requestAnimationFrame(redrawCurrentStroke);
     };
 
     const [spaceHeld, setSpaceHeld] = useState(false);
@@ -266,7 +351,10 @@ const Canvas = forwardRef<
       growingRef.current = true;
 
       if (growLeft) shiftStrokesX(growLeft);
-      grownRef.current = { top: growH, left: growRight + growLeft };
+      // Only left-growth needs scroll compensation (it relocates existing ink).
+      // Bottom/right growth keeps the view exactly where the user is — no auto
+      // scroll, so the pen never gets dragged into the new space mid-stroke.
+      grownRef.current = { top: 0, left: growLeft };
 
       if (growH) setCanvasHeight((h) => Math.min(MAX_HEIGHT, h + growH));
       if (growRight || growLeft) setCanvasWidth((w) => Math.min(MAX_WIDTH, w + (growRight || growLeft)));
@@ -283,6 +371,7 @@ const Canvas = forwardRef<
     };
 
     const start = (e: React.PointerEvent) => {
+      updateCursor(e.clientX, e.clientY);
       // Palm rejection: while a stylus is actively writing, ignore stray touch
       // contacts (a resting palm) entirely rather than starting a stroke/pan with them.
       if (e.pointerType === "touch" && activePenPointerRef.current !== null) return;
@@ -324,13 +413,14 @@ const Canvas = forwardRef<
       if (e.pointerType === "pen") activePenPointerRef.current = e.pointerId;
       drawing.current = true;
       const p = getPos(e);
-      const width = toolRef.current === "pen" ? penWidthRef.current : ERASER_WIDTH;
+      const width = toolRef.current === "pen" ? penWidthRef.current : eraserWidthRef.current;
       strokesRef.current.push({ points: [p], tool: toolRef.current, width });
       redraw();
       maybeGrow(p);
     };
 
     const move = (e: React.PointerEvent) => {
+      updateCursor(e.clientX, e.clientY);
       if (e.pointerType === "touch" && touchPointersRef.current.has(e.pointerId)) {
         touchPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
       }
@@ -359,7 +449,7 @@ const Canvas = forwardRef<
       e.preventDefault();
       const p = getPos(e);
       strokesRef.current[strokesRef.current.length - 1].points.push(p);
-      redraw();
+      requestRedraw();
       maybeGrow(p);
     };
 
@@ -393,6 +483,44 @@ const Canvas = forwardRef<
         octx.drawImage(getInkCanvas(), 0, 0);
         return off.toDataURL("image/png").split(",")[1];
       },
+      getExportMap: () => {
+        // Maps exported-image pixel coords (what the OCR boxes are in) to canvas
+        // internal coords. For strokes the export IS the canvas, so scale 1.
+        // For loaded images the export is the image, drawn centered + scaled.
+        if (imageRef.current) {
+          const img = imageRef.current;
+          const scale = Math.min((W - 32) / img.width, (H - 32) / img.height);
+          return {
+            canvasW: W,
+            canvasH: H,
+            scale,
+            offsetX: (W - img.width * scale) / 2,
+            offsetY: (H - img.height * scale) / 2,
+          };
+        }
+        return { canvasW: W, canvasH: H, scale: 1, offsetX: 0, offsetY: 0 };
+      },
+      getLineSnapshots: (boxes) => {
+        // Per-line ink snapshots for the line-pop animation. Only meaningful for
+        // drawn strokes (loaded images have no ink layer of their own).
+        if (imageDataRef.current) return boxes.map(() => null);
+        replayStrokesToInk();
+        const ink = getInkCanvas();
+        const pad = 6;
+        return boxes.map((b) => {
+          if (!b || b.length !== 4) return null;
+          const sx = Math.max(0, Math.floor(b[0]) - pad);
+          const sy = Math.max(0, Math.floor(b[1]) - pad);
+          const sw = Math.min(ink.width, Math.ceil(b[2]) + pad) - sx;
+          const sh = Math.min(ink.height, Math.ceil(b[3]) + pad) - sy;
+          if (sw <= 0 || sh <= 0) return null;
+          const c = document.createElement("canvas");
+          c.width = sw;
+          c.height = sh;
+          c.getContext("2d")!.drawImage(ink, sx, sy, sw, sh, 0, 0, sw, sh);
+          return { x: sx, y: sy, w: sw, h: sh, href: c.toDataURL("image/png") };
+        });
+      },
       hasInk: () => strokesRef.current.length > 0 || !!imageDataRef.current,
       loadImage: (dataUrl: string) => {
         const img = new Image();
@@ -421,6 +549,9 @@ const Canvas = forwardRef<
       setPenWidth: (width: number) => {
         penWidthRef.current = width;
       },
+      setEraserWidth: (width: number) => {
+        eraserWidthRef.current = width;
+      },
       undo: () => {
         if (imageRef.current) {
           imageRef.current = null;
@@ -439,35 +570,70 @@ const Canvas = forwardRef<
     if (fullscreen) {
       return (
         <div ref={wrapperRef} className="fixed inset-0 overflow-auto bg-slate-200">
-          <canvas
-            ref={canvasRef}
-            width={W}
-            height={H}
-            style={{ width: W * zoom, height: H * zoom, display: "block" }}
-            className={`touch-none m-6 shadow-md ${spaceHeld ? "cursor-grab" : "cursor-crosshair"}`}
-            onPointerDown={start}
-            onPointerMove={move}
-            onPointerUp={end}
-            onPointerCancel={end}
-            onPointerLeave={end}
+          <div
+            className="relative m-6 shadow-md"
+            style={{ width: W * zoom, height: H * zoom }}
+          >
+            <canvas
+              ref={canvasRef}
+              width={W}
+              height={H}
+              style={{ width: W * zoom, height: H * zoom, display: "block" }}
+              className={`touch-none ${spaceHeld ? "cursor-grab" : "cursor-none"}`}
+              onPointerDown={start}
+              onPointerMove={move}
+              onPointerUp={end}
+              onPointerCancel={end}
+              onPointerLeave={(e) => {
+                hideCursor();
+                end(e);
+              }}
+            />
+            {overlay && (
+              <div className="absolute inset-0 z-10 pointer-events-none overflow-visible">
+                <svg
+                  width={W * zoom}
+                  height={H * zoom}
+                  viewBox={`0 0 ${W} ${H}`}
+                  className="block"
+                >
+                  {overlay}
+                </svg>
+              </div>
+            )}
+          </div>
+          <div
+            ref={cursorElRef}
+            className="fixed z-20 pointer-events-none rounded-full"
+            style={{ display: "none", transform: "translate(-50%, -50%)", left: 0, top: 0 }}
           />
         </div>
       );
     }
 
     return (
-      <canvas
-        ref={canvasRef}
-        width={W}
-        height={H}
-        style={{ aspectRatio: `${W} / ${H}` }}
-        className="w-full h-auto border border-slate-200 rounded cursor-crosshair touch-none shadow-sm"
-        onPointerDown={start}
-        onPointerMove={move}
-        onPointerUp={end}
-        onPointerCancel={end}
-        onPointerLeave={end}
-      />
+      <div className="relative">
+        <canvas
+          ref={canvasRef}
+          width={W}
+          height={H}
+          style={{ aspectRatio: `${W} / ${H}` }}
+          className="w-full h-auto border border-slate-200 rounded cursor-none touch-none shadow-sm"
+          onPointerDown={start}
+          onPointerMove={move}
+          onPointerUp={end}
+          onPointerCancel={end}
+          onPointerLeave={(e) => {
+            hideCursor();
+            end(e);
+          }}
+        />
+        <div
+          ref={cursorElRef}
+          className="fixed z-20 pointer-events-none rounded-full"
+          style={{ display: "none", transform: "translate(-50%, -50%)", left: 0, top: 0 }}
+        />
+      </div>
     );
   }
 );

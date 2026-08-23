@@ -72,6 +72,32 @@ export default function StatsPage() {
                 </table>
               </div>
             )}
+
+            {stats.by_formula && stats.by_formula.length > 0 && (
+              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                <div className="px-4 py-2 font-semibold text-slate-900 text-sm">Formulas to review</div>
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 text-left text-slate-500">
+                    <tr>
+                      <th className="px-4 py-2">Formula</th>
+                      <th className="px-4 py-2">Steps checked</th>
+                      <th className="px-4 py-2">Got it</th>
+                      <th className="px-4 py-2">Missed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.by_formula.map((f) => (
+                      <tr key={f.formula} className="border-t border-slate-100">
+                        <td className="px-4 py-2 capitalize">{f.name_en ?? f.formula.replace("_", " ")}</td>
+                        <td className="px-4 py-2">{f.attempts}</td>
+                        <td className="px-4 py-2 text-emerald-600">{f.reached}</td>
+                        <td className="px-4 py-2 text-red-600">{f.missed}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

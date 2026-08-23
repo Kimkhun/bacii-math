@@ -1,7 +1,11 @@
+@import url("https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
   @apply bg-slate-50 text-slate-900;
+  /* Battambang covers Khmer glyphs only — Latin text falls through to system-ui. */
+  font-family: "Battambang", system-ui, -apple-system, "Segoe UI", sans-serif;
 }

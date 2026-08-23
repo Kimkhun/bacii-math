@@ -1,0 +1,800 @@
+{
+ "I16": {
+  "var": "x",
+  "expr": "2/x + sin(x) + cos(x)",
+  "bounds": null,
+  "answer": "2*log(x) + sin(x) - cos(x)"
+ },
+ "I17": {
+  "var": "x",
+  "expr": "1/x + 1/x**2 + e**x - sin(x)",
+  "bounds": null,
+  "answer": "exp(x) + log(x) + cos(x) - 1/x"
+ },
+ "I18": {
+  "var": "x",
+  "expr": "(3/2)*cos(x) - (3/5)*e + 4/x - x*ln(5)",
+  "bounds": null,
+  "answer": "-x**2*log(5)/2 - 3*E*x/5 + 4*log(x) + 3*sin(x)/2"
+ },
+ "I19": {
+  "var": "x",
+  "expr": "x**(2/3) + 1/(2*sqrt(x)) + 2*x*ln(2)",
+  "bounds": null,
+  "answer": "3*x**(5/3)/5 + sqrt(x) + x**2*log(2)"
+ },
+ "I20": {
+  "var": "t",
+  "expr": "t**(1/3) + t*t**(2/3) - 2*e**t",
+  "bounds": null,
+  "answer": "3*t**(8/3)/8 + 3*t**(4/3)/4 - 2*exp(t)"
+ },
+ "I21": {
+  "var": "x",
+  "expr": "1/cos(x)**2 - e**x + 7/sqrt(x)",
+  "bounds": null,
+  "answer": "14*sqrt(x) - exp(x) + sin(x)/cos(x)"
+ },
+ "I22": {
+  "var": "x",
+  "expr": "1/cos(x)**2 - 2/sin(x)**2 + 2*e**x",
+  "bounds": null,
+  "answer": "2*exp(x) + sin(x)/cos(x) + 2*cos(x)/sin(x)"
+ },
+ "I23": {
+  "var": "x",
+  "expr": "x*(x**2 + x - 2)",
+  "bounds": null,
+  "answer": "x**4/4 + x**3/3 - x**2"
+ },
+ "I24": {
+  "var": "x",
+  "expr": "x**2*(2*x + 3)",
+  "bounds": null,
+  "answer": "x**4/2 + x**3"
+ },
+ "I25": {
+  "var": "y",
+  "expr": "y*(sqrt(y) + y + 2/y)",
+  "bounds": null,
+  "answer": "2*y**(5/2)/5 + y**3/3 + 2*y"
+ },
+ "I26": {
+  "var": "x",
+  "expr": "(2*x + 3)*(x - 4)",
+  "bounds": null,
+  "answer": "2*x**3/3 - 5*x**2/2 - 12*x"
+ },
+ "I27": {
+  "var": "t",
+  "expr": "(3*t - 4*t**2)*(t + 2)",
+  "bounds": null,
+  "answer": "-t**4 - 5*t**3/3 + 3*t**2"
+ },
+ "I28": {
+  "var": "t",
+  "expr": "(2*t - 3)**2",
+  "bounds": null,
+  "answer": "4*t**3/3 - 6*t**2 + 9*t"
+ },
+ "I29": {
+  "var": "x",
+  "expr": "(3 + 4*x)*(3 - 4*x)",
+  "bounds": null,
+  "answer": "-16*x**3/3 + 9*x"
+ },
+ "I30": {
+  "var": "y",
+  "expr": "-3*y*(2*y + 1)**2",
+  "bounds": null,
+  "answer": "-3*y**4 - 4*y**3 - 3*y**2/2"
+ },
+ "I31": {
+  "var": "x",
+  "expr": "(2*x**2 + 3*x - 4)/x",
+  "bounds": null,
+  "answer": "x**2 + 3*x - 4*log(x)"
+ },
+ "I32": {
+  "var": "t",
+  "expr": "(t**3 - 3*t**2 + t + 3)/(2*t**2)",
+  "bounds": null,
+  "answer": "t**2/4 - 3*t/2 + log(t)/2 - 3/(2*t)"
+ },
+ "I33": {
+  "var": "t",
+  "expr": "(4*t**3 + 5*t + 1)/sqrt(t)",
+  "bounds": null,
+  "answer": "8*t**(7/2)/7 + 10*t**(3/2)/3 + 2*sqrt(t)"
+ },
+ "I34": {
+  "var": "x",
+  "expr": "(x*e**x + ln(3) - x*cos(x))/x",
+  "bounds": null,
+  "answer": "exp(x) + log(3)*log(x) - sin(x)"
+ },
+ "I35": {
+  "var": "y",
+  "expr": "(5*y**3 - 4*y**2 + 3*y)/y**3",
+  "bounds": null,
+  "answer": "5*y - 4*log(y) - 3/y"
+ },
+ "I36": {
+  "var": "x",
+  "expr": "(x**2*sin(x) - sqrt(x) + 3*x**3)/x**2",
+  "bounds": null,
+  "answer": "3*x**2/2 - cos(x) + 2/sqrt(x)"
+ },
+ "I37": {
+  "var": "x",
+  "expr": "2/sin(x)**2 - 3/cos(x)**2",
+  "bounds": null,
+  "answer": "-3*sin(x)/cos(x) - 2*cos(x)/sin(x)"
+ },
+ "I38": {
+  "var": "x",
+  "expr": "(tan(x) + cot(x))**2",
+  "bounds": null,
+  "answer": "tan(x) - 1/tan(x)"
+ },
+ "II1": {
+  "var": "x",
+  "expr": "2*x*(x**2 + 3)**2",
+  "bounds": null,
+  "answer": "x**6/3 + 3*x**4 + 9*x**2"
+ },
+ "II2": {
+  "var": "x",
+  "expr": "(2 + x)**8",
+  "bounds": null,
+  "answer": "x**9/9 + 2*x**8 + 16*x**7 + 224*x**6/3 + 224*x**5 + 448*x**4 + 1792*x**3/3 + 512*x**2 + 256*x"
+ },
+ "II3": {
+  "var": "x",
+  "expr": "3*cos(3*x)",
+  "bounds": null,
+  "answer": "sin(3*x)"
+ },
+ "II4": {
+  "var": "x",
+  "expr": "(4*x + 4)*cos(2*x**2 + 4*x)",
+  "bounds": null,
+  "answer": "sin(2*x**2 + 4*x)"
+ },
+ "II5": {
+  "var": "x",
+  "expr": "4*sin(5*x)",
+  "bounds": null,
+  "answer": "-4*cos(5*x)/5"
+ },
+ "II6": {
+  "var": "x",
+  "expr": "(2*x + 3)*sin(x**2 + 3*x - 1)",
+  "bounds": null,
+  "answer": "-cos(x**2 + 3*x - 1)"
+ },
+ "II7": {
+  "var": "x",
+  "expr": "e**(3*x) + sin(3*x) - cos(4*x)",
+  "bounds": null,
+  "answer": "exp(3*x)/3 - sin(4*x)/4 - cos(3*x)/3"
+ },
+ "II8": {
+  "var": "y",
+  "expr": "5*y*e**(2*y**2)",
+  "bounds": null,
+  "answer": "5*exp(2*y**2)/4"
+ },
+ "II9": {
+  "var": "x",
+  "expr": "e**(-x/2) - sin(2*x)",
+  "bounds": null,
+  "answer": "cos(2*x)/2 - 2*exp(-x/2)"
+ },
+ "II10": {
+  "var": "x",
+  "expr": "-3*cos(x + 2)",
+  "bounds": null,
+  "answer": "-3*sin(x + 2)"
+ },
+ "II11": {
+  "var": "x",
+  "expr": "(cos(x) - sin(x))*(sin(x) + cos(x))**3",
+  "bounds": null,
+  "answer": "-sin(x)**4/2 + sin(x)**3*cos(x) + sin(x)*cos(x)**3 - cos(x)**4/2"
+ },
+ "II12": {
+  "var": "x",
+  "expr": "(2*x + 1)/(x**2 + x)",
+  "bounds": null,
+  "answer": "log(x**2 + x)"
+ },
+ "II13": {
+  "var": "x",
+  "expr": "ln(x)**3/x",
+  "bounds": null,
+  "answer": "log(x)**4/4"
+ },
+ "II14": {
+  "var": "x",
+  "expr": "sin(x)*cos(x)**3",
+  "bounds": null,
+  "answer": "-cos(x)**4/4"
+ },
+ "II15": {
+  "var": "t",
+  "expr": "(2*t + 3)*sqrt(t**2 + 3*t - 4)",
+  "bounds": null,
+  "answer": "2*t**2*sqrt(t**2 + 3*t - 4)/3 + 2*t*sqrt(t**2 + 3*t - 4) - 8*sqrt(t**2 + 3*t - 4)/3"
+ },
+ "II16": {
+  "var": "y",
+  "expr": "2*y*(3*y**2 - 4)**(1/3)",
+  "bounds": null,
+  "answer": "3*y**2*(3*y**2 - 4)**(1/3)/4 - (3*y**2 - 4)**(1/3)"
+ },
+ "II17": {
+  "var": "x",
+  "expr": "x**2*sin(x**3) - 2*x*cos(x**2)",
+  "bounds": null,
+  "answer": "-sin(x**2) - cos(x**3)/3"
+ },
+ "II18": {
+  "var": "x",
+  "expr": "sin(x)*(3 - cos(x))**4",
+  "bounds": null,
+  "answer": "-54*sin(x)**2 - cos(x)**5/5 + 3*cos(x)**4 - 18*cos(x)**3 - 81*cos(x)"
+ },
+ "II19": {
+  "var": "x",
+  "expr": "10*sin(x)*cos(x)**4",
+  "bounds": null,
+  "answer": "-2*cos(x)**5"
+ },
+ "II20": {
+  "var": "x",
+  "expr": "5*sin(x)**4*cos(x)",
+  "bounds": null,
+  "answer": "sin(x)**5"
+ },
+ "II21": {
+  "var": "t",
+  "expr": "6*t/(t**2 + 4)",
+  "bounds": null,
+  "answer": "3*log(t**2 + 4)"
+ },
+ "II22": {
+  "var": "t",
+  "expr": "(t + 2)/(t**2 + 4*t - 5)",
+  "bounds": null,
+  "answer": "log(t**2 + 4*t - 5)/2"
+ },
+ "II23": {
+  "var": "x",
+  "expr": "(3 + 2*x)/(x**2 + 3*x + 5)",
+  "bounds": null,
+  "answer": "log(x**2 + 3*x + 5)"
+ },
+ "II24": {
+  "var": "x",
+  "expr": "(cos(x) - sin(x))/(sin(x) + cos(x))",
+  "bounds": null,
+  "answer": "log(sin(x) + cos(x))"
+ },
+ "II25": {
+  "var": "x",
+  "expr": "e**x/(2*e**x + 3)",
+  "bounds": null,
+  "answer": "log(exp(x) + 3/2)/2"
+ },
+ "II26": {
+  "var": "x",
+  "expr": "x + 1/(x - 1) - 2/(x + 2)",
+  "bounds": null,
+  "answer": "x**2/2 + log(x - 1) - 2*log(x + 2)"
+ },
+ "II27": {
+  "var": "x",
+  "expr": "(2*x + 1)/(x**2 + x)**3",
+  "bounds": null,
+  "answer": "-1/(2*x**4 + 4*x**3 + 2*x**2)"
+ },
+ "II28": {
+  "var": "t",
+  "expr": "4/(3 - 2*t)**5",
+  "bounds": null,
+  "answer": "4/(128*t**4 - 768*t**3 + 1728*t**2 - 1728*t + 648)"
+ },
+ "II29": {
+  "var": "x",
+  "expr": "e**(2*x)/(2*e**(2*x) - 3)**2",
+  "bounds": null,
+  "answer": "-1/(8*exp(2*x) - 12)"
+ },
+ "II30": {
+  "var": "x",
+  "expr": "2*x + 3 - 4/(x + 2) + 5/(x + 2)**2",
+  "bounds": null,
+  "answer": "x**2 + 3*x - 4*log(x + 2) - 5/(x + 2)"
+ },
+ "II31": {
+  "var": "x",
+  "expr": "-2*x + 1 + 1/(x*ln(x)**3)",
+  "bounds": null,
+  "answer": "-x**2 + x - 1/(2*log(x)**2)"
+ },
+ "II32": {
+  "var": "x",
+  "expr": "2*ln(x)/x + 3/(x*ln(x)) - 4/(x*ln(x)**3)",
+  "bounds": null,
+  "answer": "log(x)**2 + 3*log(log(x)) + 2/log(x)**2"
+ },
+ "II33": {
+  "var": "x",
+  "expr": "(3*x**2 + 5)/sqrt(x**3 + 5*x - 2)",
+  "bounds": null,
+  "answer": "2*sqrt(x**3 + 5*x - 2)"
+ },
+ "II34": {
+  "var": "x",
+  "expr": "cos(x)/sqrt(sin(x) + 10)",
+  "bounds": null,
+  "answer": "2*sqrt(sin(x) + 10)"
+ },
+ "II35": {
+  "var": "x",
+  "expr": "x/sqrt(x**2 + 2)",
+  "bounds": null,
+  "answer": "sqrt(x**2 + 2)"
+ },
+ "II36": {
+  "var": "t",
+  "expr": "(2*t - 3)/sqrt(t**2 - 3*t + 1)",
+  "bounds": null,
+  "answer": "2*sqrt(t**2 - 3*t + 1)"
+ },
+ "II37": {
+  "var": "x",
+  "expr": "2/(x*sqrt(2 + ln(x)))",
+  "bounds": null,
+  "answer": "4*sqrt(log(x) + 2)"
+ },
+ "II38": {
+  "var": "x",
+  "expr": "-4*e**(-x)/sqrt(e**(-x) + 4)",
+  "bounds": null,
+  "answer": "8*sqrt(4 + exp(-x))"
+ },
+ "III-1": {
+  "var": "x",
+  "expr": "4 - x**2",
+  "bounds": [
+   "-2",
+   "2"
+  ],
+  "answer": "32/3"
+ },
+ "III-2": {
+  "var": "x",
+  "expr": "x**2 + 1/x - 3*e**x",
+  "bounds": [
+   "1",
+   "2"
+  ],
+  "answer": "-3*exp(2) + log(2) + 7/3 + 3*E"
+ },
+ "III-3": {
+  "var": "x",
+  "expr": "1/x - e**x + x**2",
+  "bounds": [
+   "1",
+   "3"
+  ],
+  "answer": "-exp(3) + log(3) + E + 26/3"
+ },
+ "III-4": {
+  "var": "x",
+  "expr": "2*x**2 - 4*x + 5",
+  "bounds": [
+   "-1",
+   "4"
+  ],
+  "answer": "115/3"
+ },
+ "III-5": {
+  "var": "x",
+  "expr": "-3*x**5 - 3*x**2 + 2*x + 5",
+  "bounds": [
+   "-1",
+   "0"
+  ],
+  "answer": "7/2"
+ },
+ "III-6": {
+  "var": "x",
+  "expr": "sqrt(x) - 4/sqrt(x)",
+  "bounds": [
+   "1",
+   "4"
+  ],
+  "answer": "-10/3"
+ },
+ "III-7": {
+  "var": "x",
+  "expr": "1 + 1/x**2 + 1/x**3",
+  "bounds": [
+   "-2",
+   "-1"
+  ],
+  "answer": "9/8"
+ },
+ "III-8": {
+  "var": "x",
+  "expr": "cos(2*x) - sin(2*x)",
+  "bounds": [
+   "0",
+   "pi/4"
+  ],
+  "answer": "0"
+ },
+ "III-9": {
+  "var": "x",
+  "expr": "cos(x) + sin(x)",
+  "bounds": [
+   "0",
+   "pi/2"
+  ],
+  "answer": "2"
+ },
+ "III-10": {
+  "var": "x",
+  "expr": "1/sin(x)**2 + 1/cos(x)**2",
+  "bounds": [
+   "pi/4",
+   "pi/3"
+  ],
+  "answer": "2*sqrt(3)/3"
+ },
+ "III-11": {
+  "var": "x",
+  "expr": "(x - 1)*(x + 2)",
+  "bounds": [
+   "1",
+   "2"
+  ],
+  "answer": "11/6"
+ },
+ "III-12": {
+  "var": "x",
+  "expr": "(2*x + 3)*(-x + 1)",
+  "bounds": [
+   "-1",
+   "0"
+  ],
+  "answer": "17/6"
+ },
+ "III-13": {
+  "var": "x",
+  "expr": "2*x*(x**2 + 1)**2",
+  "bounds": [
+   "1",
+   "2"
+  ],
+  "answer": "39"
+ },
+ "III-14": {
+  "var": "x",
+  "expr": "(x + 1)*(x**2 + x - 1)**3",
+  "bounds": [
+   "-2",
+   "1"
+  ],
+  "answer": "-51/56"
+ },
+ "III-15": {
+  "var": "t",
+  "expr": "(2*t - 3)*(t**2 - 3*t + 4)",
+  "bounds": [
+   "-2",
+   "2"
+  ],
+  "answer": "-96"
+ },
+ "III-16": {
+  "var": "t",
+  "expr": "(3*t + 2)**4",
+  "bounds": [
+   "0",
+   "1"
+  ],
+  "answer": "1031/5"
+ },
+ "III-17": {
+  "var": "y",
+  "expr": "(2*y + 1)*sqrt(y**2 + y)",
+  "bounds": [
+   "0",
+   "1"
+  ],
+  "answer": "4*sqrt(2)/3"
+ },
+ "III-18": {
+  "var": "x",
+  "expr": "-sin(x)*cos(x)",
+  "bounds": [
+   "0",
+   "pi/4"
+  ],
+  "answer": "-1/4"
+ },
+ "III-19": {
+  "var": "x",
+  "expr": "(e**x + 1)*(e**x + x)",
+  "bounds": [
+   "0",
+   "1"
+  ],
+  "answer": "E + exp(2)/2"
+ },
+ "III-20": {
+  "var": "x",
+  "expr": "ln(x)/x",
+  "bounds": [
+   "1",
+   "e"
+  ],
+  "answer": "1/2"
+ },
+ "III-21": {
+  "var": "x",
+  "expr": "cos(x)*sin(x)**2",
+  "bounds": [
+   "0",
+   "pi/2"
+  ],
+  "answer": "1/3"
+ },
+ "III-22": {
+  "var": "x",
+  "expr": "ln(x)/x",
+  "bounds": [
+   "e",
+   "e**2"
+  ],
+  "answer": "3/2"
+ },
+ "III-23": {
+  "var": "x",
+  "expr": "4/(x + 1)",
+  "bounds": [
+   "0",
+   "2"
+  ],
+  "answer": "4*log(3)"
+ },
+ "III-24": {
+  "var": "x",
+  "expr": "2*x/(x**2 + 3) - 1/(x - 2)",
+  "bounds": [
+   "0",
+   "1"
+  ],
+  "answer": "-log(3) + log(2) + log(4)"
+ },
+ "III-25": {
+  "var": "x",
+  "expr": "tan(x) + sin(x)",
+  "bounds": [
+   "0",
+   "pi/4"
+  ],
+  "answer": "-sqrt(2)/2 - log(sqrt(2)/2) + 1"
+ },
+ "III-26": {
+  "var": "x",
+  "expr": "cos(x)**2 - sin(x)**2",
+  "bounds": [
+   "0",
+   "pi/4"
+  ],
+  "answer": "1/2"
+ },
+ "III-27": {
+  "var": "x",
+  "expr": "cos(x)/(1 + sin(x))",
+  "bounds": [
+   "0",
+   "pi/2"
+  ],
+  "answer": "log(2)"
+ },
+ "III-28": {
+  "var": "x",
+  "expr": "sin(x)/(1 + cos(x))",
+  "bounds": [
+   "pi/3",
+   "pi/2"
+  ],
+  "answer": "log(3/2)"
+ },
+ "III-29": {
+  "var": "x",
+  "expr": "2/sqrt(x + 2)",
+  "bounds": [
+   "-1",
+   "7"
+  ],
+  "answer": "8"
+ },
+ "III-30": {
+  "var": "x",
+  "expr": "(2*x + 1)/sqrt(x**2 + x - 1)",
+  "bounds": [
+   "-1",
+   "1"
+  ],
+  "answer": "2 - 2*I"
+ },
+ "III-31": {
+  "var": "x",
+  "expr": "3*x**2/(x**3 + 1)**2",
+  "bounds": [
+   "1",
+   "2"
+  ],
+  "answer": "7/18"
+ },
+ "III-32": {
+  "var": "x",
+  "expr": "1/(x*ln(x)**2)",
+  "bounds": [
+   "e**2",
+   "e**3"
+  ],
+  "answer": "1/6"
+ },
+ "III-33": {
+  "var": "x",
+  "expr": "2*x + 3 + 1/(x + 1)",
+  "bounds": [
+   "1",
+   "2"
+  ],
+  "answer": "-log(2) + log(3) + 6"
+ },
+ "III-34": {
+  "var": "x",
+  "expr": "3*x**2 + 4*x - 2 + 5/(x - 1)",
+  "bounds": [
+   "0",
+   "2"
+  ],
+  "answer": "nan"
+ },
+ "III-35": {
+  "var": "x",
+  "expr": "1/(x - 1) + 2/(x - 1)**2",
+  "bounds": [
+   "2",
+   "3"
+  ],
+  "answer": "log(2) + 1"
+ },
+ "III-36": {
+  "var": "x",
+  "expr": "3/(x + 2) - 4/(x + 1) + 5/(x + 1)**2",
+  "bounds": [
+   "0",
+   "1"
+  ],
+  "answer": "-7*log(2) + 5/2 + 3*log(3)"
+ },
+ "III-37": {
+  "var": "x",
+  "expr": "sin(x) + cos(x)/(2 - sin(x))",
+  "bounds": [
+   "0",
+   "pi/2"
+  ],
+  "answer": "log(2) + 1"
+ },
+ "III-38": {
+  "var": "x",
+  "expr": "x + 2 + e**x/(e**x + 1)",
+  "bounds": [
+   "0",
+   "1"
+  ],
+  "answer": "-log(2) + log(1 + E) + 5/2"
+ },
+ "III-A": {
+  "var": "x",
+  "expr": "x*sin(x)",
+  "bounds": [
+   "0",
+   "pi/3"
+  ],
+  "answer": "-pi/6 + sqrt(3)/2"
+ },
+ "III-B": {
+  "var": "x",
+  "expr": "x*cos(x)",
+  "bounds": [
+   "0",
+   "pi/2"
+  ],
+  "answer": "-1 + pi/2"
+ },
+ "III-C": {
+  "var": "x",
+  "expr": "x*e**x",
+  "bounds": [
+   "0",
+   "1"
+  ],
+  "answer": "1"
+ },
+ "III-D": {
+  "var": "x",
+  "expr": "x*sin(2*x)",
+  "bounds": [
+   "0",
+   "pi"
+  ],
+  "answer": "-pi/2"
+ },
+ "III-E": {
+  "var": "x",
+  "expr": "x**3*ln(x)",
+  "bounds": [
+   "1",
+   "2"
+  ],
+  "answer": "-15/16 + 4*log(2)"
+ },
+ "III-F": {
+  "var": "x",
+  "expr": "x**2*ln(3*x)",
+  "bounds": [
+   "1",
+   "2"
+  ],
+  "answer": "-7/9 - log(3)/3 + 8*log(6)/3"
+ },
+ "III-G": {
+  "var": "x",
+  "expr": "x*sqrt(x - 1)",
+  "bounds": [
+   "1",
+   "5"
+  ],
+  "answer": "272/15"
+ },
+ "III-H": {
+  "var": "x",
+  "expr": "x*cos(3*x)",
+  "bounds": [
+   "pi/6",
+   "pi/3"
+  ],
+  "answer": "-pi/18 - 1/9"
+ },
+ "III-I": {
+  "var": "x",
+  "expr": "ln(x)**2/x",
+  "bounds": [
+   "1",
+   "2"
+  ],
+  "answer": "log(2)**3/3"
+ },
+ "III-J": {
+  "var": "x",
+  "expr": "ln(x)/sqrt(x)",
+  "bounds": [
+   "1",
+   "4"
+  ],
+  "answer": "Integral(Piecewise((0, (x < 1) & (1/x < 1)), (log(x)/sqrt(x), (x < 1) | (1/x < 1)), (-(meijerg(((-1/2,), (1, 1)), ((0, 0), (-1/2,)), x) - meijerg(((1/2,), (1, 1)), ((0, 0), (-1/2,)), x)/2)/sqrt(x) + (meijerg(((-1/2, 1, 1), ()), ((), (-1/2, 0, 0)), x) - meijerg(((1/2, 1, 1), ()), ((), (-1/2, 0, 0)), x)/2)/sqrt(x) - meijerg(((1/2,), (1, 1)), ((0, 0), (-1/2,)), x)/(2*sqrt(x)) + meijerg(((1/2, 1, 1), ()), ((), (-1/2, 0, 0)), x)/(2*sqrt(x)), True)), (x, 1, 4))"
+ }
+}

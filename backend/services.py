@@ -1,18 +1,41 @@
+import hashlib
 import uuid
+import zlib
 
 from fastapi import HTTPException, status
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import cache
-from engine import explainer, generator, grader, llm, solver
+from engine import explainer, formulas, generator, grader, llm, scenarios, solver, structures
 from models import Attempt, Explanation, Question, Step, User
 from schemas import GenerateRequest
+
+WORK_UNREADABLE_MSG = (
+    "Couldn't read your written steps clearly. Try writing larger and more spaced out, "
+    "or type your work instead."
+)
+
+
+def _work_usable(step_check: dict | None) -> bool:
+    return bool(step_check) and any(r.get("checked") for r in step_check.get("line_results", []))
 
 
 async def create_question(db: AsyncSession, req: GenerateRequest) -> dict:
     problem = await generator.generate(req.topic, req.difficulty, req.seed, req.question_type, req.generation_mode)
+    return await persist_problem(db, problem)
+
+
+async def persist_problem(db: AsyncSession, problem: dict) -> dict:
+    """Store a generated problem + its SymPy solution as a new Question row."""
     solution = solver.solve(problem["topic"], problem["question_type"], problem["params"])
+
+    formula_tags = solution.get("formula_tags") or []
+    if not formula_tags or not solution.get("checkpoints"):
+        raise RuntimeError(
+            f"solver for {problem['topic']}/{problem['question_type']} did not emit formula_tags/checkpoints"
+        )
+    formula_difficulty = formulas.formula_difficulty(formula_tags)
 
     question = Question(
         topic=problem["topic"],
@@ -25,12 +48,16 @@ async def create_question(db: AsyncSession, req: GenerateRequest) -> dict:
         expected_answer=str(solution["answer_exact"]),
         expected_decimal=solution["answer_decimal"] if isinstance(solution["answer_decimal"], float) else None,
         source=problem["source"],
+        formula_tags=formula_tags,
     )
     db.add(question)
     await db.flush()
 
     for i, s in enumerate(solution["steps"], 1):
-        db.add(Step(question_id=question.id, step_order=i, title=s["title"], detail=s["detail"]))
+        db.add(Step(
+            question_id=question.id, step_order=i, title=s["title"], detail=s["detail"],
+            formula=s.get("formula"),
+        ))
 
     await db.commit()
     return {
@@ -45,7 +72,29 @@ async def create_question(db: AsyncSession, req: GenerateRequest) -> dict:
         "prompt_latex": question.prompt_latex,
         "z_display": question.z_display,
         "source": question.source,
+        "formula_tags": formula_tags,
+        "formula_difficulty": formula_difficulty,
     }
+
+
+async def recreate_question(db: AsyncSession, user, question_id) -> dict:
+    """'Do the same exercise again': build a fresh copy of an existing question
+    (same topic/type/difficulty/spec/prompt), re-solved by SymPy, so a student
+    can redo it with a clean attempt history."""
+    existing = await db.get(Question, question_id)
+    if existing is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
+    problem = {
+        "topic": existing.topic,
+        "question_type": existing.question_type,
+        "difficulty": existing.difficulty,
+        "params": existing.spec,
+        "prompt": existing.prompt,
+        "prompt_latex": existing.prompt_latex,
+        "z_display": existing.z_display,
+        "source": "template",
+    }
+    return await persist_problem(db, problem)
 
 
 def _steps_text(question: Question) -> str:
@@ -53,7 +102,7 @@ def _steps_text(question: Question) -> str:
     return explainer.build_text(question.topic, question.question_type, question.spec, solution)
 
 
-async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, steps_text=None, allow_gemini=None) -> dict:
+async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, steps_text=None, allow_gemini=None, context=None) -> dict:
     steps_text = steps_text or _steps_text(question)
     content = steps_text
     provider = "deterministic"
@@ -61,14 +110,18 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
 
     if use_ai:
         spec_key = ":".join(f"{k}={v}" for k, v in sorted(question.spec.items()))
-        key = f"explain:{question.topic}:{question.question_type}:{spec_key}"
+        # Version the cache with the deterministic steps' content: if a solver
+        # change alters the steps, stale narrations must never be served for
+        # questions with the same params.
+        steps_digest = hashlib.sha1(steps_text.encode("utf-8")).hexdigest()[:12]
+        key = f"explain:{question.topic}:{question.question_type}:{spec_key}:{steps_digest}"
         cached = await cache.get_explanation(key)
         if cached:
             content, provider, intervened = cached, "gemini", True
         else:
             if allow_gemini is None:
                 allow_gemini = await cache.allow_gemini(str(user.id))
-            text, got_provider = await llm.narrate(steps_text, allow_gemini=allow_gemini)
+            text, got_provider = await llm.narrate(steps_text, allow_gemini=allow_gemini, context=context)
             if text:
                 content, provider, intervened = text, got_provider, True
                 if got_provider == "gemini":
@@ -85,12 +138,34 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
     return {"content": content, "provider": provider, "intervened": intervened, "trigger": trigger}
 
 
-async def grade_question(db, user, question_id, user_answer, work_text=None) -> dict:
+async def grade_question(db, user, question_id, user_answer, work_text=None, lines_boxes=None, part=None) -> dict:
     question = await db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
 
-    result = grader.grade(question.topic, question.question_type, question.spec, user_answer)
+    spec = question.spec or {}
+    is_multi = isinstance(spec.get("parts"), list) and len(spec["parts"]) > 1
+
+    if is_multi and part:
+        # Progressive flow: grade only the requested sub-part (A, then B, ...).
+        labels = [str(p.get("label")) for p in spec["parts"]]
+        if part not in labels:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"unknown part: {part}")
+        result = grader.grade_part(question.topic, question.question_type, spec, part, user_answer)
+    elif is_multi:
+        labels = [str(p.get("label")) for p in spec["parts"]]
+        submissions = grader.parse_multi_answers(user_answer, labels)
+        if work_text:
+            segments = grader.split_work_by_part(work_text.split("\n"), labels)
+            for label in labels:
+                if label not in submissions:
+                    value = grader.last_value_of_lines(segments[label])
+                    if value:
+                        submissions[label] = value
+        result = grader.grade_multi(question.topic, question.question_type, spec, submissions)
+    else:
+        result = grader.grade(question.topic, question.question_type, spec, user_answer)
+
     attempt = Attempt(
         user_id=user.id,
         question_id=question.id,
@@ -98,6 +173,8 @@ async def grade_question(db, user, question_id, user_answer, work_text=None) -> 
         parsed_answer=result.get("given"),
         correct=result["correct"],
         reason=result["reason"],
+        work_text=work_text,
+        lines_boxes=lines_boxes,
     )
     db.add(attempt)
     await db.flush()
@@ -109,25 +186,45 @@ async def grade_question(db, user, question_id, user_answer, work_text=None) -> 
         "given": result.get("given"),
         "expected": result["expected"],
     }
+    if is_multi:
+        resp["parts"] = result.get("parts")
+        if part:
+            resp["part"] = result.get("part")
+            resp["all_complete"] = result.get("all_complete")
+
+    step_check = None
+    if work_text:
+        step_check = grader.analyze_work(
+            question.topic, question.question_type, question.spec, work_text.split("\n")
+        )
+        if is_multi:
+            step_check = {**step_check, "parts": result.get("parts")}
+        attempt.formula_breakdown = step_check.get("formula_breakdown")
+        attempt.step_check = step_check
+        resp["step_check"] = step_check
 
     if not result["correct"]:
         steps_text = _steps_text(question)
         allowed = await cache.allow_gemini(str(user.id))
+        context = {
+            "question_text": question.prompt,
+            "part": result.get("part") if is_multi else None,
+            "user_answer": user_answer,
+            "expected": result.get("expected"),
+        }
         resp["explanation"] = await _build_explanation(
-            db, user, question, attempt.id, "incorrect", use_ai=True, steps_text=steps_text, allow_gemini=allowed
+            db, user, question, attempt.id, "incorrect", use_ai=True, steps_text=steps_text,
+            allow_gemini=allowed, context=context,
         )
-        step_check = None
-        if work_text:
-            step_check = grader.analyze_work(
-                question.topic, question.question_type, question.spec, work_text.split("\n")
+        if work_text and not _work_usable(step_check):
+            resp["work_check"] = {"content": WORK_UNREADABLE_MSG, "provider": "system"}
+        else:
+            check, provider = await llm.check_work(
+                question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
+                allow_gemini=allowed, step_check=step_check,
             )
-            resp["step_check"] = step_check
-        check, provider = await llm.check_work(
-            question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
-            allow_gemini=allowed, step_check=step_check,
-        )
-        if check:
-            resp["work_check"] = {"content": check, "provider": provider}
+            if check:
+                resp["work_check"] = {"content": check, "provider": provider}
 
     await db.commit()
     return resp
@@ -138,7 +235,23 @@ async def explain_question(db, user, question_id, user_answer=None, work_text=No
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
     steps_text = _steps_text(question)
-    result = await _build_explanation(db, user, question, None, "manual", use_ai=True, steps_text=steps_text)
+    context = {"question_text": question.prompt, "part": None, "user_answer": user_answer, "expected": None}
+    if user_answer:
+        spec = question.spec or {}
+        labels = [str(p.get("label")) for p in spec.get("parts", [])] if isinstance(spec.get("parts"), list) else []
+        if labels:
+            # The student may have prefixed their answer with a part label.
+            import re as _re
+            for lab in labels:
+                if _re.match(rf"^\s*{_re.escape(lab)}\s*[:=]", user_answer.strip()):
+                    context["part"] = lab
+                    break
+    result = await _build_explanation(db, user, question, None, "manual", use_ai=True, steps_text=steps_text, context=context)
+    rows = await db.execute(select(Step).where(Step.question_id == question.id).order_by(Step.step_order))
+    result["steps"] = [
+        {"step_order": s.step_order, "title": s.title, "detail": s.detail, "formula": s.formula}
+        for s in rows.scalars()
+    ]
     if user_answer:
         allowed = await cache.allow_gemini(str(user.id))
         step_check = None
@@ -147,12 +260,15 @@ async def explain_question(db, user, question_id, user_answer=None, work_text=No
                 question.topic, question.question_type, question.spec, work_text.split("\n")
             )
             result["step_check"] = step_check
-        check, provider = await llm.check_work(
-            question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
-            allow_gemini=allowed, step_check=step_check,
-        )
-        if check:
-            result["work_check"] = {"content": check, "provider": provider}
+        if work_text and not _work_usable(step_check):
+            result["work_check"] = {"content": WORK_UNREADABLE_MSG, "provider": "system"}
+        else:
+            check, provider = await llm.check_work(
+                question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
+                allow_gemini=allowed, step_check=step_check,
+            )
+            if check:
+                result["work_check"] = {"content": check, "provider": provider}
     await db.commit()
     return result
 
@@ -162,7 +278,10 @@ async def get_question(db, question_id) -> dict:
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
     rows = await db.execute(select(Step).where(Step.question_id == question.id).order_by(Step.step_order))
-    steps = [{"step_order": s.step_order, "title": s.title, "detail": s.detail} for s in rows.scalars()]
+    steps = [
+        {"step_order": s.step_order, "title": s.title, "detail": s.detail, "formula": s.formula}
+        for s in rows.scalars()
+    ]
     return {
         "id": question.id,
         "question_type": question.question_type,
@@ -171,25 +290,247 @@ async def get_question(db, question_id) -> dict:
         "prompt_latex": question.prompt_latex,
         "z_display": question.z_display,
         "source": question.source,
+        "formula_tags": question.formula_tags or [],
+        "formula_difficulty": formulas.formula_difficulty(question.formula_tags or []) if question.formula_tags else None,
         "steps": steps,
     }
 
 
 async def list_attempts(db, user, limit=50) -> list:
     rows = await db.execute(
-        select(Attempt).where(Attempt.user_id == user.id).order_by(Attempt.created_at.desc()).limit(limit)
+        select(Attempt, Question)
+        .join(Question, Question.id == Attempt.question_id)
+        .where(Attempt.user_id == user.id)
+        .order_by(Attempt.created_at.desc())
+        .limit(limit)
     )
     return [
         {
             "id": a.id,
             "question_id": a.question_id,
+            "topic": q.topic,
+            "question_type": q.question_type,
+            "difficulty": q.difficulty,
+            "prompt": q.prompt,
+            "prompt_latex": q.prompt_latex,
+            "expected_answer": q.expected_answer,
             "user_answer": a.user_answer,
             "correct": a.correct,
             "reason": a.reason,
+            "formula_breakdown": a.formula_breakdown,
             "created_at": a.created_at,
         }
-        for a in rows.scalars()
+        for a, q in rows.all()
     ]
+
+
+async def get_attempt(db, user, attempt_id) -> dict:
+    attempt = await db.get(Attempt, attempt_id)
+    if attempt is None or attempt.user_id != user.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Attempt not found")
+    question = await db.get(Question, attempt.question_id)
+
+    steps = []
+    if question is not None:
+        rows = await db.execute(
+            select(Step).where(Step.question_id == question.id).order_by(Step.step_order)
+        )
+        steps = [
+            {"step_order": s.step_order, "title": s.title, "detail": s.detail, "formula": s.formula}
+            for s in rows.scalars()
+        ]
+
+    expl_rows = await db.execute(select(Explanation).where(Explanation.attempt_id == attempt.id))
+    explanations = [
+        {"provider": e.provider, "content": e.content, "trigger": e.trigger, "created_at": e.created_at}
+        for e in expl_rows.scalars()
+    ]
+
+    return {
+        "id": attempt.id,
+        "user_answer": attempt.user_answer,
+        "parsed_answer": attempt.parsed_answer,
+        "correct": attempt.correct,
+        "reason": attempt.reason,
+        "work_text": attempt.work_text,
+        "step_check": attempt.step_check,
+        "lines_boxes": attempt.lines_boxes,
+        "formula_breakdown": attempt.formula_breakdown,
+        "created_at": attempt.created_at,
+        "question": {
+            "id": question.id,
+            "topic": question.topic,
+            "question_type": question.question_type,
+            "difficulty": question.difficulty,
+            "prompt": question.prompt,
+            "prompt_latex": question.prompt_latex,
+            "expected_answer": question.expected_answer,
+            "formula_tags": question.formula_tags or [],
+            "steps": steps,
+        } if question is not None else None,
+        "explanations": explanations,
+    }
+
+
+def get_formulas_catalog() -> dict:
+    """Full formula registry grouped by topic, for the admin view."""
+    by_group: dict[str, list] = {}
+    for tag, e in formulas.FORMULA_REGISTRY.items():
+        g = e.get("group") or "other"
+        by_group.setdefault(g, []).append({
+            "id": tag,
+            "name_en": e.get("name_en"),
+            "name_km": e.get("name_km") or "",
+            "latex": e.get("latex"),
+            "weight": e.get("weight", 1),
+            "formulas": e.get("formulas") or [],
+        })
+    order = [g for g in ("complex", "limit", "integral", "probability") if g in by_group]
+    return {"topics": [{"topic": g, "entries": by_group[g]} for g in order]}
+
+
+async def get_template_inventory() -> dict:
+    """Live template inventory: for every topic/question type/difficulty (and
+    every integral variant), a deterministic sample with its generated params,
+    answer, and formula tags — so the admin view always reflects what runs."""
+    topics = []
+    for topic in generator.TOPICS:
+        types = []
+        for qt in solver.QUESTION_TYPES_BY_TOPIC.get(topic, ()):
+            difficulties = []
+            for diff in ("easy", "medium", "hard"):
+                variants = [None]
+                if topic == "integral" and qt == "definite_integral":
+                    variants = generator._INTEGRAL_VARIANT_BY_DIFFICULTY[diff]
+                elif topic == "integral" and qt == "indefinite_integral":
+                    variants = generator._INDEFINITE_VARIANT_BY_DIFFICULTY[diff]
+                elif topic == "probability":
+                    variants = scenarios.VARIANT_BY_DIFFICULTY[diff]
+                for variant in variants:
+                    # Show several deterministic samples per variant so the
+                    # parameterized variety (not just one shape) is visible.
+                    samples = 1 if topic == "complex" else 3
+                    for i in range(samples):
+                        try:
+                            problem = await generator.generate(
+                                topic, diff, seed=hash((topic, qt, diff, variant, i)) & 0xFFFFFFFF,
+                                question_type=qt, generation_mode="templates", variant=variant,
+                            )
+                        except Exception:
+                            continue
+                        solution = solver.solve(topic, problem["question_type"], problem["params"])
+                        difficulties.append({
+                            "difficulty": diff,
+                            "variant": problem["params"].get("variant"),
+                            "params": problem["params"],
+                            "prompt": problem["prompt"],
+                            "prompt_latex": problem.get("prompt_latex"),
+                            "answer": str(solution["answer_exact"]),
+                            "answer_latex": solution.get("answer_latex"),
+                            "formula_tags": solution.get("formula_tags", []),
+                        })
+            types.append({"question_type": qt, "difficulties": difficulties})
+        topics.append({"topic": topic, "question_types": types})
+    return {"topics": topics}
+
+
+_STRUCT_PATTERNS = {
+    ("complex", "modulus"): r"\lvert z \rvert = \lvert a + bi \rvert",
+    ("complex", "argument"): r"\arg(z),\ z = a + bi",
+    ("complex", "conjugate"): r"\overline{a + bi}",
+    ("complex", "real_part"): r"\operatorname{Re}(a + bi)",
+    ("complex", "imaginary_part"): r"\operatorname{Im}(a + bi)",
+    ("limit", "limit"): r"\lim_{x \to a} f(x)",
+}
+
+_integral_structure_payload = None
+
+
+def _build_integral_structure_payload() -> dict:
+    """Deterministic per-structure samples for the integral topic (one per
+    unique template structure). Memoized — the payload is expensive to compute
+    and identical on every call."""
+    global _integral_structure_payload
+    if _integral_structure_payload is not None:
+        return _integral_structure_payload
+
+    by_qt: dict[str, list] = {}
+    for struct in structures.all_integral_structures():
+        by_qt.setdefault(struct["question_type"], []).append(struct)
+
+    question_types = []
+    for qt in ("indefinite_integral", "definite_integral"):
+        entries = []
+        for struct in by_qt.get(qt, []):
+            sample = structures.build_sample(
+                struct, seed=zlib.crc32(struct["id"].encode()) & 0xFFFFFFFF
+            )
+            solution = sample["solution"]
+            entries.append({
+                "id": struct["id"],
+                "question_type": qt,
+                "difficulty": struct["difficulty"],
+                "pattern": struct["pattern"],
+                "pattern_latex": structures.build_pattern_latex(struct),
+                "sample_prompt": sample["prompt"],
+                "sample_prompt_latex": sample["prompt_latex"],
+                "sample_answer": str(solution["answer_exact"]),
+                "sample_answer_latex": solution.get("answer_latex"),
+                "formula_tags": solution.get("formula_tags", []),
+                "source_labels": struct["source_labels"],
+            })
+        question_types.append({"question_type": qt, "structures": entries})
+    _integral_structure_payload = {"topic": "integral", "question_types": question_types}
+    return _integral_structure_payload
+
+
+async def get_template_structures() -> dict:
+    """One card per unique template structure: the symbolic slot pattern, one
+    deterministic filled sample (prompt + answer), formula tags, and the source
+    BAC II exercise labels that map to it. Grouped by topic → question type."""
+    topics = [_build_integral_structure_payload()]
+
+    for topic in generator.TOPICS:
+        if topic == "integral":
+            continue
+        question_types = []
+        for qt in solver.QUESTION_TYPES_BY_TOPIC.get(topic, ()):
+            entries = []
+            for diff in ("easy", "medium", "hard"):
+                variants = [None]
+                if topic == "probability":
+                    variants = list(scenarios.VARIANT_BY_DIFFICULTY.get(diff, ()))
+                for variant in variants:
+                    try:
+                        problem = await generator.generate(
+                            topic, diff,
+                            seed=zlib.crc32(f"{topic}:{qt}:{diff}:{variant}".encode()) & 0xFFFFFFFF,
+                            question_type=qt, generation_mode="templates", variant=variant,
+                        )
+                        solution = solver.solve(topic, problem["question_type"], problem["params"])
+                    except Exception:
+                        continue
+                    if variant:
+                        pattern = f"scenario {variant}"
+                    else:
+                        pattern = _STRUCT_PATTERNS.get((topic, qt), f"{topic} {qt}")
+                    entries.append({
+                        "id": f"{topic}:{qt}:{diff}" + (f":{variant}" if variant else ""),
+                        "question_type": qt,
+                        "difficulty": diff,
+                        "pattern": pattern,
+                        "pattern_latex": _STRUCT_PATTERNS.get((topic, qt)) if not variant else None,
+                        "sample_prompt": problem["prompt"],
+                        "sample_prompt_latex": problem.get("prompt_latex"),
+                        "sample_answer": str(solution["answer_exact"]),
+                        "sample_answer_latex": solution.get("answer_latex"),
+                        "formula_tags": solution.get("formula_tags", []),
+                        "source_labels": [],
+                    })
+            question_types.append({"question_type": qt, "structures": entries})
+        topics.append({"topic": topic, "question_types": question_types})
+
+    return {"topics": topics}
 
 
 async def get_stats(db, user) -> dict:
@@ -210,9 +551,26 @@ async def get_stats(db, user) -> dict:
     )
     by_topic = [{"question_type": qt, "attempts": t, "correct": c or 0} for qt, t, c in rows.all()]
 
+    breakdowns = (await db.scalars(select(Attempt.formula_breakdown).where(Attempt.user_id == user.id))).all()
+    by_formula: dict[str, dict] = {}
+    for bd in breakdowns:
+        for item in bd or []:
+            fid = item.get("formula")
+            if not fid:
+                continue
+            agg = by_formula.setdefault(fid, {"formula": fid, "attempts": 0, "reached": 0, "missed": 0})
+            agg["attempts"] += 1
+            if item.get("reached"):
+                agg["reached"] += 1
+            else:
+                agg["missed"] += 1
+    for agg in by_formula.values():
+        agg["name_en"] = formulas.resolve_formula(agg["formula"])["name_en"]
+
     return {
         "total_attempts": total,
         "correct": correct,
         "accuracy": round(correct / total, 4) if total else 0.0,
         "by_topic": by_topic,
+        "by_formula": sorted(by_formula.values(), key=lambda a: (-a["missed"], a["formula"])),
     }

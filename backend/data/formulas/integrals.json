@@ -1,0 +1,126 @@
+{
+  "antiderivative_power_rule": {
+    "name_en": "Power rule antiderivative",
+    "name_km": "",
+    "latex": "\\int x^n\\,dx = \\frac{x^{n+1}}{n+1} + C",
+    "weight": 1,
+    "group": "integral",
+    "formulas": [
+      "\\int k\\,dx = kx + C",
+      "\\int x^n\\,dx = \\frac{x^{n+1}}{n+1} + C \\quad (n \\neq -1)",
+      "\\int \\frac{1}{x^n}\\,dx = \\frac{-1}{(n-1)x^{n-1}} + C",
+      "\\int \\frac{1}{\\sqrt{x}}\\,dx = 2\\sqrt{x} + C"
+    ]
+  },
+  "antiderivative_reciprocal": {
+    "name_en": "Reciprocal antiderivative",
+    "name_km": "",
+    "latex": "\\int \\frac{1}{x}\\,dx = \\ln|x| + C",
+    "weight": 1,
+    "group": "integral",
+    "formulas": [
+      "\\int \\frac{1}{x}\\,dx = \\int x^{-1}\\,dx = \\ln|x| + C"
+    ]
+  },
+  "antiderivative_exponential": {
+    "name_en": "Exponential antiderivative",
+    "name_km": "",
+    "latex": "\\int e^x\\,dx = e^x + C",
+    "weight": 1,
+    "group": "integral",
+    "formulas": [
+      "\\int e^x\\,dx = e^x + C"
+    ]
+  },
+  "antiderivative_trig": {
+    "name_en": "Trig antiderivative",
+    "name_km": "",
+    "latex": "\\int \\sin x\\,dx = -\\cos x + C,\\quad \\int \\cos x\\,dx = \\sin x + C",
+    "weight": 1,
+    "group": "integral",
+    "formulas": [
+      "\\int \\sin x\\,dx = -\\cos x + C",
+      "\\int \\cos x\\,dx = \\sin x + C"
+    ]
+  },
+  "antiderivative_trig_sec": {
+    "name_en": "Secant/cosecant antiderivative",
+    "name_km": "",
+    "latex": "\\int \\frac{1}{\\cos^2 x}\\,dx = \\tan x + C,\\quad \\int \\frac{1}{\\sin^2 x}\\,dx = -\\cot x + C",
+    "weight": 2,
+    "group": "integral",
+    "formulas": [
+      "\\int \\frac{1}{\\cos^2 x}\\,dx = \\int (1+\\tan^2 x)\\,dx = \\tan x + C",
+      "\\int \\frac{1}{\\sin^2 x}\\,dx = \\int (1+\\cot^2 x)\\,dx = -\\cot x + C"
+    ]
+  },
+  "u_substitution": {
+    "name_en": "u-substitution (composite functions)",
+    "name_km": "",
+    "latex": "\\int u'\\,f(u)\\,dx = F(u) + C",
+    "weight": 2,
+    "group": "integral",
+    "formulas": [
+      "\\int k\\,f(x)\\,dx = k\\int f(x)\\,dx",
+      "\\int u'\\,u^n\\,dx = \\frac{u^{n+1}}{n+1} + C",
+      "\\int \\frac{u'}{u}\\,dx = \\ln|u| + C",
+      "\\int \\frac{u'}{u^n}\\,dx = \\frac{-1}{(n-1)u^{n-1}} + C",
+      "\\int \\frac{u'}{\\sqrt{u}}\\,dx = 2\\sqrt{u} + C",
+      "\\int u'\\,e^u\\,dx = e^u + C",
+      "\\int u'\\,\\sin u\\,dx = -\\cos u + C",
+      "\\int u'\\,\\cos u\\,dx = \\sin u + C",
+      "\\int \\frac{u'}{\\cos^2 u}\\,dx = \\tan u + C",
+      "\\int \\frac{u'}{\\sin^2 u}\\,dx = -\\cot u + C"
+    ]
+  },
+  "linear_argument_rule": {
+    "name_en": "Linear argument rule",
+    "name_km": "",
+    "latex": "\\int f(ax+b)\\,dx = \\frac{1}{a}F(ax+b) + C",
+    "weight": 2,
+    "group": "integral",
+    "formulas": [
+      "\\int \\sin(ax)\\,dx = -\\frac{1}{a}\\cos(ax) + C",
+      "\\int \\cos(ax)\\,dx = \\frac{1}{a}\\sin(ax) + C",
+      "\\int e^{ax}\\,dx = \\frac{1}{a}e^{ax} + C",
+      "\\int (ax+b)^n\\,dx = \\frac{(ax+b)^{n+1}}{a(n+1)} + C",
+      "\\int \\frac{1}{ax+b}\\,dx = \\frac{1}{a}\\ln|ax+b| + C"
+    ]
+  },
+  "expand_before_integrating": {
+    "name_en": "Expand a product before integrating",
+    "name_km": "",
+    "latex": "f(x)\\cdot g(x) = \\text{sum of terms}",
+    "weight": 1,
+    "group": "integral",
+    "formulas": [
+      "\\int x(x^2+x-2)\\,dx = \\int (x^3+x^2-2x)\\,dx",
+      "\\int (2x+3)(x-4)\\,dx",
+      "\\int (ax+b)(ax-b)\\,dx = \\int (a^2x^2-b^2)\\,dx"
+    ]
+  },
+  "split_fraction": {
+    "name_en": "Split a fraction term by term",
+    "name_km": "",
+    "latex": "\\frac{a+b}{c} = \\frac{a}{c} + \\frac{b}{c}",
+    "weight": 1,
+    "group": "integral",
+    "formulas": [
+      "\\int \\frac{2x^2+3x-4}{x}\\,dx = \\int \\left(2x+3-\\frac{4}{x}\\right)\\,dx",
+      "\\int \\frac{t^3-3t^2+t+3}{2t^2}\\,dt"
+    ]
+  },
+  "integration_by_parts": {
+    "name_en": "Integration by parts",
+    "name_km": "",
+    "latex": "\\int u\\,dv = uv - \\int v\\,du",
+    "weight": 3,
+    "group": "integral",
+    "formulas": [
+      "\\int x\\sin(ax)\\,dx = -\\frac{x\\cos(ax)}{a} + \\frac{\\sin(ax)}{a^2} + C",
+      "\\int x\\cos(ax)\\,dx = \\frac{x\\sin(ax)}{a} + \\frac{\\cos(ax)}{a^2} + C",
+      "\\int x e^x\\,dx = e^x(x-1) + C",
+      "\\int x^n\\ln x\\,dx = \\frac{x^{n+1}\\ln x}{n+1} - \\frac{x^{n+1}}{(n+1)^2} + C"
+    ]
+  }
+}

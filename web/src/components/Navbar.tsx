@@ -19,6 +19,7 @@ export default function Navbar() {
             <Link href="/practice" className="text-slate-600 hover:text-slate-900">Practice</Link>
             <Link href="/history" className="text-slate-600 hover:text-slate-900">History</Link>
             <Link href="/stats" className="text-slate-600 hover:text-slate-900">Stats</Link>
+            <Link href="/admin" className="text-slate-600 hover:text-slate-900">Admin</Link>
           </div>
         )}
         <div className="ml-auto flex items-center gap-3 text-sm">

@@ -1,0 +1,128 @@
+{
+  "_meta": {
+    "description": "Probability scenario catalog — multi-part exercises parameterized from real BAC II probability exam problems (user-supplied, 2026-08-23). Every question is one coherent exercise with its sub-parts A/B/C/D together; the parts share the setup and each has its own answer.",
+    "notes": [
+      "Slots are filled with Arabic digits, exactly as in the source exam sentences.",
+      "In hypergeometric parts, {w} is the count of the first category (default wanted) and {b} the second. Parts that ask about the second category set \"wanted\": \"b\" (e.g. banknotes part ខ: at least one 10000).",
+      "Per-part constants (like the fixed a in P1's parts A/B) live inside the part object; derived slots (n, kb, k3, a = k//2) are evaluated per part against that part's merged env.",
+      "Constraints are validated per part, so a scenario can never emit an impossible sub-question.",
+      "Frames use a newline ('\\n') between the setup and each sub-question so every part renders on its own line.",
+      "Structures without catalog entries yet (laplace single-draw, binomial coins, union, conditional) are solver-ready — add frames here once real examples are supplied."
+    ]
+  },
+
+  "exercise_bag_split_atleast": {
+    "structure": "hypergeometric",
+    "difficulty": "medium",
+    "slots": {
+      "w": {"min": 5, "max": 8},
+      "b": {"min": 5, "max": 8},
+      "k": {"min": 4, "max": 5}
+    },
+    "derived": {"n": "w + b", "kb": "k - a"},
+    "constraints": ["k <= b", "k >= 4"],
+    "setup_km": "ស្បោងមួយមានប៊ូល {n} : ស {w} ខ្មៅ {b} ។ គេទាញយកប៊ូល {k} ចេញពីស្បោង ។ គណនាប្រូបាបនៃព្រឹត្តិការណ៍ខាងក្រោម:",
+    "setup_en": "A bag contains {n} balls: {w} white and {b} black. {k} balls are drawn at random. Find the probability of each event:",
+    "parts": [
+      {"label": "A", "want": "exactly_split", "a": 3, "km": "A: ទាញបានប៊ូលស {a} និង ខ្មៅ {kb} ។", "en": "A: drawing {a} white and {kb} black balls."},
+      {"label": "B", "want": "exactly_split", "a": 2, "km": "B: ទាញបានប៊ូលសតែ {a} គ្រាប់គត់ ។", "en": "B: drawing exactly {a} white balls."},
+      {"label": "C", "want": "all_black", "km": "C: ទាញបានប៊ូលទាំង {k} ខ្មៅ ។", "en": "C: drawing all {k} black balls."},
+      {"label": "D", "want": "at_least_white", "km": "D: ទាញបានប៊ូលសយ៉ាងតិច 1 ។", "en": "D: drawing at least 1 white ball."}
+    ]
+  },
+
+  "exercise_two_bag_odd_even": {
+    "structure": "two_bag_numbers",
+    "difficulty": "medium",
+    "slots": {
+      "n": {"values": [5, 7, 9]},
+      "k1": {"min": 1, "max": 2},
+      "k2": {"min": 1, "max": 2}
+    },
+    "derived": {"k3": "k1 + k2", "o": "(n + 1) // 2", "e": "(n - 1) // 2"},
+    "constraints": ["k1 <= n", "k2 <= n", "k3 <= 4"],
+    "setup_km": "ថង់ពីរមានប៊ូល {n} ដូចគ្នាដែលមានចុះលេខពី 1 ដល់ {n} ។ ក្នុងថង់នីមួយៗគេទាញយកប៊ូល {k1} ពីថង់ទី 1 និង ប៊ូល {k2} ពីថង់ទី 2 ។ គណនាប្រូបាបខាងក្រោម:",
+    "setup_en": "Two bags contain {n} identical balls numbered 1 to {n}. {k1} balls are drawn from bag 1 and {k2} balls from bag 2. Find the probability of each event:",
+    "parts": [
+      {"label": "A", "want": "all_odd", "km": "A: ប៊ូលទាំង {k3} មានចុះលេខសេស ។", "en": "A: all {k3} balls have odd numbers."},
+      {"label": "B", "want": "all_even", "km": "B: ប៊ូលទាំង {k3} មានចុះលេខគូ ។", "en": "B: all {k3} balls have even numbers."},
+      {"label": "C", "want": "at_least_one_odd", "km": "C: ប៊ូលទាំង {k3} មានចុះលេខសេសមួយយ៉ាងតិច ។", "en": "C: at least one of the {k3} balls has an odd number."}
+    ]
+  },
+
+  "exercise_two_box_colors": {
+    "structure": "two_box",
+    "difficulty": "easy",
+    "slots": {
+      "w1": {"min": 5, "max": 9},
+      "b1": {"min": 3, "max": 6},
+      "w2": {"min": 4, "max": 8},
+      "b2": {"min": 2, "max": 6}
+    },
+    "setup_km": "ប្រអប់ពីរ ដែលមានប៊ូលស និង ខ្មៅ ។ ប្រអប់ទី 1 មានប៊ូលស {w1} និង ខ្មៅ {b1} ។ ប្រអប់ទីពីរមានប៊ូលស {w2} និង ខ្មៅ {b2} ។ គេទាញយកប៊ូលមួយពីប្រអប់នីមួយៗ ។ គណនាប្រូបាបនៃព្រឹត្តិការណ៍:",
+    "setup_en": "Two boxes contain white and black balls. Box 1 has {w1} white and {b1} black; box 2 has {w2} white and {b2} black. One ball is drawn from each box. Find the probability of each event:",
+    "parts": [
+      {"label": "ក", "want": "both_white", "km": "ក. ទាញយកប៊ូលស 2 ។", "en": "ក. drawing 2 white balls."},
+      {"label": "ខ", "want": "both_black", "km": "ខ. ទាញយកប៊ូលខ្មៅ 2 ។", "en": "ខ. drawing 2 black balls."},
+      {"label": "គ", "want": "cross", "km": "គ. ទាញយកប៊ូលស 1 ពីប្រអប់ទី 1 និង ប៊ូលខ្មៅ 1 ពីប្រអប់ទី 2 ។", "en": "គ. drawing 1 white from box 1 and 1 black from box 2."},
+      {"label": "ឃ", "want": "exactly_one_white", "km": "ឃ. ទាញយកប៊ូលស 1 និង ខ្មៅ 1 ។", "en": "ឃ. drawing 1 white and 1 black ball."}
+    ]
+  },
+
+  "exercise_banknotes": {
+    "structure": "hypergeometric",
+    "difficulty": "hard",
+    "slots": {
+      "w": {"min": 6, "max": 9},
+      "b": {"min": 4, "max": 6},
+      "k": {"values": [4]}
+    },
+    "derived": {"n": "w + b"},
+    "constraints": ["k <= w", "k <= b"],
+    "setup_km": "ក្នុងប្រអប់មួយមានក្រដាសប្រាក់ 5000៛ ចំនួន {w} សន្លឹក និង 10000៛ ចំនួន {b} សន្លឹក ។ គេទាញយកក្រដាសប្រាក់ចំនួន {k} សន្លឹកចេញពីប្រអប់ដោយចៃដន្យ ។",
+    "setup_en": "A box contains {w} banknotes of 5000 riels and {b} banknotes of 10000 riels. {k} banknotes are drawn at random.",
+    "parts": [
+      {"label": "ក", "want": "all_white", "km": "ក. គណនាប្រូបាបដែលគេទាញបានក្រដាសប្រាក់ 5000៛ ទាំង 4 សន្លឹក ។", "en": "ក. the probability that all {k} drawn are 5000-riel notes."},
+      {"label": "ខ", "want": "at_least_white", "wanted": "b", "want_label": "10000-riel note", "other_label": "5000-riel note", "km": "ខ. គណនាប្រូបាបដែលគេទាញបានក្រដាសប្រាក់ 10000៛ យ៉ាងតិចមួយសន្លឹក ។", "en": "ខ. the probability of drawing at least one 10000-riel note."},
+      {"label": "គ", "want": "exactly_split", "a": 3, "km": "គ. គណនាប្រូបាបដែលគេទាញបានក្រដាសប្រាក់ 5000៛ ចំនួន 3 សន្លឹកគត់ ។", "en": "គ. the probability that exactly 3 of the drawn notes are 5000-riel."}
+    ]
+  },
+
+  "exercise_pens": {
+    "structure": "hypergeometric",
+    "difficulty": "medium",
+    "slots": {
+      "w": {"min": 6, "max": 9},
+      "b": {"min": 5, "max": 8},
+      "k": {"values": [5]}
+    },
+    "derived": {"n": "w + b"},
+    "constraints": ["k <= w", "k <= b"],
+    "setup_km": "ថង់មួយមានប៊ិចពណ៌ក្រហម {w} និងប៊ិចខៀវ {b} ។ គេចាប់យក 5 ដើមព្រមគ្នាចេញពីថង់ដោយចៃដន្យ ។ គណនាប្រូបាប :",
+    "setup_en": "A bag contains {w} red and {b} blue pens. 5 pens are taken out together at random. Find the probability of each event:",
+    "parts": [
+      {"label": "A", "want": "all_white", "want_label": "red", "other_label": "blue", "km": "A: ប៊ិចទាំង 5 ពណ៌ក្រហម ។", "en": "A: all 5 pens are red."},
+      {"label": "B", "want": "exactly_split", "a": 3, "want_label": "red", "other_label": "blue", "km": "B: ប៊ិច 3 ពណ៌ក្រហម និង ប៊ិច 2 ពណ៌ខៀវ ។", "en": "B: 3 pens are red and 2 are blue."},
+      {"label": "C", "want": "at_least_white", "wanted": "b", "want_label": "blue", "other_label": "red", "km": "C: មានប៊ិចពណ៌ខៀវ 1 យ៉ាងតិចក្នុងចំណោមប៊ិចទាំង 5 ។", "en": "C: at least 1 blue pen among the 5."}
+    ]
+  },
+
+  "exercise_students": {
+    "structure": "hypergeometric",
+    "difficulty": "hard",
+    "slots": {
+      "w": {"min": 4, "max": 6},
+      "b": {"min": 4, "max": 6},
+      "k": {"values": [4]}
+    },
+    "derived": {"n": "w + b", "a": "k // 2"},
+    "constraints": ["k <= w", "k <= b", "k % 2 == 0"],
+    "setup_km": "ក្នុងថ្នាក់រៀនមួយមានសិស្សពូកែ {n} នាក់ ក្នុងនោះ {w} នាក់ស្រី និង {b} នាក់ជាប្រុស ។ គេរៀបចំសិស្សជាក្រុម ក្នុងមួយក្រុមមាន {k} នាក់ដោយចៃដន្យ ។ រកប្រូបាបនៃព្រឹត្តិការណ៍ :",
+    "setup_en": "A class has {n} excellent students: {w} girls and {b} boys. A group of {k} students is chosen at random. Find the probability of each event:",
+    "parts": [
+      {"label": "A", "want": "all_white", "want_label": "girl", "other_label": "boy", "km": "A: ក្រុមសិស្សដែលជ្រើសរើសបានសុទ្ធតែស្រី ។", "en": "A: the group is all girls."},
+      {"label": "B", "want": "all_black", "want_label": "boy", "other_label": "girl", "km": "B: ក្រុមសិស្សដែលជ្រើសរើសបានសុទ្ធតែប្រុស ។", "en": "B: the group is all boys."},
+      {"label": "C", "want": "exactly_split", "wanted": "b", "want_label": "boy", "other_label": "girl", "km": "C: ក្រុមសិស្សដែលជ្រើសរើសបាន 50% ជាប្រុស ។", "en": "C: the group is 50% boys."}
+    ]
+  }
+}

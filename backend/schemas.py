@@ -23,6 +23,7 @@ class UserOut(BaseModel):
 
     id: uuid.UUID
     email: str
+    plan: str = "free"
     created_at: datetime
 
 
@@ -44,9 +45,15 @@ class GradeRequest(BaseModel):
     question_id: uuid.UUID
     user_answer: str
     work_text: str | None = None
+    lines_boxes: list | None = None
+    part: str | None = None
 
 
 class ExplainRequest(BaseModel):
     question_id: uuid.UUID
     user_answer: str | None = None
     work_text: str | None = None
+
+
+class ReplayRequest(BaseModel):
+    question_id: uuid.UUID

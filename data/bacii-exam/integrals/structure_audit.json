@@ -1,0 +1,5086 @@
+{
+ "audit": {
+  "curated-1": {
+   "status": "mapped",
+   "structure_id": "curated_1"
+  },
+  "curated-2": {
+   "status": "mapped",
+   "structure_id": "curated_2"
+  },
+  "curated-3": {
+   "status": "mapped",
+   "structure_id": "curated_3"
+  },
+  "curated-4": {
+   "status": "mapped",
+   "structure_id": "curated_4"
+  },
+  "curated-5": {
+   "status": "mapped",
+   "structure_id": "curated_5"
+  },
+  "curated-6": {
+   "status": "mapped",
+   "structure_id": "curated_6"
+  },
+  "curated-7": {
+   "status": "mapped",
+   "structure_id": "curated_7"
+  },
+  "curated-8": {
+   "status": "mapped",
+   "structure_id": "curated_8"
+  },
+  "curated-9": {
+   "status": "mapped",
+   "structure_id": "curated_9"
+  },
+  "curated-10": {
+   "status": "mapped",
+   "structure_id": "curated_10"
+  },
+  "curated-11": {
+   "status": "mapped",
+   "structure_id": "curated_11"
+  },
+  "curated-12": {
+   "status": "mapped",
+   "structure_id": "curated_12"
+  },
+  "curated-13": {
+   "status": "mapped",
+   "structure_id": "curated_13"
+  },
+  "curated-14": {
+   "status": "mapped",
+   "structure_id": "curated_14"
+  },
+  "curated-15": {
+   "status": "mapped",
+   "structure_id": "curated_15"
+  },
+  "I16": {
+   "status": "mapped",
+   "structure_id": "ind_basics_recip_trig"
+  },
+  "I17": {
+   "status": "mapped",
+   "structure_id": "ind_basics_mix4"
+  },
+  "I18": {
+   "status": "mapped",
+   "structure_id": "ind_basics_const_mix"
+  },
+  "I19": {
+   "status": "mapped",
+   "structure_id": "ind_basics_frac_pow"
+  },
+  "I20": {
+   "status": "mapped",
+   "structure_id": "ind_basics_frac_pow2"
+  },
+  "I21": {
+   "status": "mapped",
+   "structure_id": "ind_basics_sec_exp_sqrt"
+  },
+  "I22": {
+   "status": "mapped",
+   "structure_id": "ind_basics_sec_csc_exp"
+  },
+  "I23": {
+   "status": "mapped",
+   "structure_id": "expand_1"
+  },
+  "I24": {
+   "status": "mapped",
+   "structure_id": "expand_2"
+  },
+  "I25": {
+   "status": "mapped",
+   "structure_id": "ind_expand_sqrt"
+  },
+  "I26": {
+   "status": "mapped",
+   "structure_id": "expand_3"
+  },
+  "I27": {
+   "status": "mapped",
+   "structure_id": "ind_expand_quad"
+  },
+  "I28": {
+   "status": "mapped",
+   "structure_id": "expand_4"
+  },
+  "I29": {
+   "status": "mapped",
+   "structure_id": "ind_expand_opposite"
+  },
+  "I30": {
+   "status": "mapped",
+   "structure_id": "ind_expand_neg_sq"
+  },
+  "I31": {
+   "status": "mapped",
+   "structure_id": "split_1"
+  },
+  "I32": {
+   "status": "mapped",
+   "structure_id": "split_2"
+  },
+  "I33": {
+   "status": "mapped",
+   "structure_id": "split_3"
+  },
+  "I34": {
+   "status": "mapped",
+   "structure_id": "ind_split_exp_trig"
+  },
+  "I35": {
+   "status": "mapped",
+   "structure_id": "split_4"
+  },
+  "I36": {
+   "status": "mapped",
+   "structure_id": "split_6"
+  },
+  "I37": {
+   "status": "mapped",
+   "structure_id": "ind_basics_csc_sec"
+  },
+  "I38": {
+   "status": "mapped",
+   "structure_id": "trig_sq_1"
+  },
+  "II1": {
+   "status": "mapped",
+   "structure_id": "usub_power"
+  },
+  "II2": {
+   "status": "mapped",
+   "structure_id": "linear_4"
+  },
+  "II3": {
+   "status": "mapped",
+   "structure_id": "linear_2"
+  },
+  "II4": {
+   "status": "mapped",
+   "structure_id": "ind_quad_cos"
+  },
+  "II5": {
+   "status": "mapped",
+   "structure_id": "linear_1"
+  },
+  "II6": {
+   "status": "mapped",
+   "structure_id": "ind_quad_sin"
+  },
+  "II7": {
+   "status": "mapped",
+   "structure_id": "ind_linear_mix_exp"
+  },
+  "II8": {
+   "status": "mapped",
+   "structure_id": "usub_exp"
+  },
+  "II9": {
+   "status": "mapped",
+   "structure_id": "ind_linear_mix_negexp"
+  },
+  "II10": {
+   "status": "mapped",
+   "structure_id": "ind_linear_neg_cos"
+  },
+  "II11": {
+   "status": "mapped",
+   "structure_id": "ind_usub_trig_mix"
+  },
+  "II12": {
+   "status": "mapped",
+   "structure_id": "usub_quad_recip"
+  },
+  "II13": {
+   "status": "mapped",
+   "structure_id": "usub_ln_pow"
+  },
+  "II14": {
+   "status": "mapped",
+   "structure_id": "usub_tpow_sin"
+  },
+  "II15": {
+   "status": "mapped",
+   "structure_id": "ind_quad_sqrt_pow"
+  },
+  "II16": {
+   "status": "mapped",
+   "structure_id": "usub_cuberoot"
+  },
+  "II17": {
+   "status": "mapped",
+   "structure_id": "usub_mix2b"
+  },
+  "II18": {
+   "status": "mapped",
+   "structure_id": "ind_usub_cos_shift"
+  },
+  "II19": {
+   "status": "mapped",
+   "structure_id": "usub_tpow_sin_coef"
+  },
+  "II20": {
+   "status": "mapped",
+   "structure_id": "usub_tpow_cos_coef"
+  },
+  "II21": {
+   "status": "mapped",
+   "structure_id": "usub_recip"
+  },
+  "II22": {
+   "status": "mapped",
+   "structure_id": "ind_quad_recip_frac"
+  },
+  "II23": {
+   "status": "mapped",
+   "structure_id": "usub_quad_recip"
+  },
+  "II24": {
+   "status": "mapped",
+   "structure_id": "ind_usub_trig_frac"
+  },
+  "II25": {
+   "status": "mapped",
+   "structure_id": "usub_e_recip"
+  },
+  "II26": {
+   "status": "mapped",
+   "structure_id": "linear_9"
+  },
+  "II27": {
+   "status": "mapped",
+   "structure_id": "usub_quad_negpow"
+  },
+  "II28": {
+   "status": "mapped",
+   "structure_id": "ind_linear_recip_negpow"
+  },
+  "II29": {
+   "status": "mapped",
+   "structure_id": "usub_e_pow2"
+  },
+  "II30": {
+   "status": "mapped",
+   "structure_id": "linear_10"
+  },
+  "II31": {
+   "status": "mapped",
+   "structure_id": "ind_linear_ln_mix"
+  },
+  "II32": {
+   "status": "mapped",
+   "structure_id": "usub_ln_mix"
+  },
+  "II33": {
+   "status": "mapped",
+   "structure_id": "usub_sqrt_cubic_neg"
+  },
+  "II34": {
+   "status": "mapped",
+   "structure_id": "usub_sqrt_sinx"
+  },
+  "II35": {
+   "status": "mapped",
+   "structure_id": "usub_sqrt"
+  },
+  "II36": {
+   "status": "mapped",
+   "structure_id": "ind_quad_sqrt_neg"
+  },
+  "II37": {
+   "status": "mapped",
+   "structure_id": "ind_ln_sqrt_recip"
+  },
+  "II38": {
+   "status": "mapped",
+   "structure_id": "ind_esqrt_neg"
+  },
+  "III-1": {
+   "status": "mapped",
+   "structure_id": "def_poly"
+  },
+  "III-2": {
+   "status": "mapped",
+   "structure_id": "def_x2_recip_negexp"
+  },
+  "III-3": {
+   "status": "mapped",
+   "structure_id": "def_x2_recip_negexp"
+  },
+  "III-4": {
+   "status": "mapped",
+   "structure_id": "def_poly"
+  },
+  "III-5": {
+   "status": "mapped",
+   "structure_id": "def_quintic_mix"
+  },
+  "III-6": {
+   "status": "mapped",
+   "structure_id": "def_sqrt_recip_mix"
+  },
+  "III-7": {
+   "status": "mapped",
+   "structure_id": "def_mixed_8"
+  },
+  "III-8": {
+   "status": "mapped",
+   "structure_id": "def_cos_sin_k"
+  },
+  "III-9": {
+   "status": "mapped",
+   "structure_id": "def_mixed_11"
+  },
+  "III-10": {
+   "status": "mapped",
+   "structure_id": "def_mixed_12"
+  },
+  "III-11": {
+   "status": "mapped",
+   "structure_id": "def_mixed_7"
+  },
+  "III-12": {
+   "status": "mapped",
+   "structure_id": "def_expand_opposite"
+  },
+  "III-13": {
+   "status": "mapped",
+   "structure_id": "def_usub_power2"
+  },
+  "III-14": {
+   "status": "mapped",
+   "structure_id": "def_quad_pow_frac"
+  },
+  "III-15": {
+   "status": "mapped",
+   "structure_id": "def_quad_pow_neg"
+  },
+  "III-16": {
+   "status": "mapped",
+   "structure_id": "def_linarg_power"
+  },
+  "III-17": {
+   "status": "mapped",
+   "structure_id": "def_quad_sqrt_pow"
+  },
+  "III-18": {
+   "status": "mapped",
+   "structure_id": "def_neg_sin_cos"
+  },
+  "III-19": {
+   "status": "mapped",
+   "structure_id": "def_exp_x_prod"
+  },
+  "III-20": {
+   "status": "mapped",
+   "structure_id": "def_usub_ln_pow"
+  },
+  "III-21": {
+   "status": "mapped",
+   "structure_id": "def_usub_trig_pow_cos"
+  },
+  "III-22": {
+   "status": "mapped",
+   "structure_id": "def_usub_ln_pow"
+  },
+  "III-23": {
+   "status": "mapped",
+   "structure_id": "def_linarg_recip_coef"
+  },
+  "III-24": {
+   "status": "mapped",
+   "structure_id": "def_mixed_10"
+  },
+  "III-25": {
+   "status": "mapped",
+   "structure_id": "def_mixed_15"
+  },
+  "III-26": {
+   "status": "mapped",
+   "structure_id": "def_cos2_sin2"
+  },
+  "III-27": {
+   "status": "mapped",
+   "structure_id": "def_cos_over_sin"
+  },
+  "III-28": {
+   "status": "mapped",
+   "structure_id": "def_usub_sinx_over"
+  },
+  "III-29": {
+   "status": "mapped",
+   "structure_id": "def_linarg_sqrt_coef"
+  },
+  "III-30": {
+   "status": "excluded",
+   "excluded_reason": "complex answer (2-2i): radicand negative inside interval"
+  },
+  "III-31": {
+   "status": "mapped",
+   "structure_id": "def_usub_cubic_negpow"
+  },
+  "III-32": {
+   "status": "mapped",
+   "structure_id": "def_ln_recip_pow"
+  },
+  "III-33": {
+   "status": "mapped",
+   "structure_id": "def_lin_recip_mix"
+  },
+  "III-34": {
+   "status": "excluded",
+   "excluded_reason": "nan: 5/(x-1) has a singularity at x=1 inside [0,2]"
+  },
+  "III-35": {
+   "status": "mapped",
+   "structure_id": "def_recip2_mix"
+  },
+  "III-36": {
+   "status": "mapped",
+   "structure_id": "def_recip3_mix"
+  },
+  "III-37": {
+   "status": "mapped",
+   "structure_id": "def_mixed_16"
+  },
+  "III-38": {
+   "status": "mapped",
+   "structure_id": "def_mixed_9"
+  },
+  "III-A": {
+   "status": "mapped",
+   "structure_id": "def_byparts_x_sin"
+  },
+  "III-B": {
+   "status": "mapped",
+   "structure_id": "def_byparts_x_cos"
+  },
+  "III-C": {
+   "status": "mapped",
+   "structure_id": "def_byparts_x_exp"
+  },
+  "III-D": {
+   "status": "mapped",
+   "structure_id": "def_byparts_x_sin"
+  },
+  "III-E": {
+   "status": "mapped",
+   "structure_id": "def_byparts_x3_ln"
+  },
+  "III-F": {
+   "status": "mapped",
+   "structure_id": "def_byparts_x2_lnkx"
+  },
+  "III-G": {
+   "status": "mapped",
+   "structure_id": "def_byparts_x_sqrt_lin"
+  },
+  "III-H": {
+   "status": "mapped",
+   "structure_id": "def_byparts_x_cos"
+  },
+  "III-I": {
+   "status": "mapped",
+   "structure_id": "def_byparts_ln2_x"
+  },
+  "III-J": {
+   "status": "mapped",
+   "structure_id": "def_byparts_ln_sqrt"
+  }
+ },
+ "grade_results": {
+  "curated_1": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "4*x**3/3 + 5*x**2/2 + 3*x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*x**3/3 + 5*x**2/2 + 3*x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*x**3/3 + 5*x**2/2 + 3*x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*x**3/3 + 5*x**2/2 + 3*x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4*x**2 + 5*x + 3",
+   "source_labels": [
+    "curated-1"
+   ]
+  },
+  "curated_2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "x**3/6 + 5*x**2/2 + 5*x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**3/6 + 5*x**2/2 + 5*x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**3/6 + 5*x**2/2 + 5*x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**3/6 + 5*x**2/2 + 5*x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(1/2)*x**2 + 5*x + 5",
+   "source_labels": [
+    "curated-2"
+   ]
+  },
+  "curated_3": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*x**4/4 + x**3/3 + x**2 + 4*x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**4/4 + x**3/3 + x**2 + 4*x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**4/4 + x**3/3 + x**2 + 4*x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**4/4 + x**3/3 + x**2 + 4*x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*x**3 + 1*x**2 + 2*x + 4",
+   "source_labels": [
+    "curated-3"
+   ]
+  },
+  "curated_4": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "x**2 + exp(x) - 5*log(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**2 + exp(x) - 5*log(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**2 + exp(x) - 5*log(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**2 + exp(x) - 5*log(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x - 5/x + e**x",
+   "source_labels": [
+    "curated-4"
+   ]
+  },
+  "curated_5": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*x**(5/2) + exp(x)/4",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(5/2) + exp(x)/4 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(5/2) + exp(x)/4 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(5/2) + exp(x)/4 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(1/4)*e**x + 5*x*sqrt(x)",
+   "source_labels": [
+    "curated-5"
+   ]
+  },
+  "curated_6": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "x*exp(2) - 6*exp(x) + 8*log(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x*exp(2) - 6*exp(x) + 8*log(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x*exp(2) - 6*exp(x) + 8*log(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x*exp(2) - 6*exp(x) + 8*log(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "8/x - 6*e**x + e**2",
+   "source_labels": [
+    "curated-6"
+   ]
+  },
+  "curated_7": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "sqrt(5)*x + log(x)/2 + 3/x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sqrt(5)*x + log(x)/2 + 3/x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sqrt(5)*x + log(x)/2 + 3/x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sqrt(5)*x + log(x)/2 + 3/x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "1/(2*x) - 6/(2*x**2) + sqrt(5)",
+   "source_labels": [
+    "curated-7"
+   ]
+  },
+  "curated_8": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-8*sqrt(x) + log(x) - 7/x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-8*sqrt(x) + log(x) - 7/x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-8*sqrt(x) + log(x) - 7/x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-8*sqrt(x) + log(x) - 7/x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "1/x + 7/x**2 - 4/sqrt(x)",
+   "source_labels": [
+    "curated-8"
+   ]
+  },
+  "curated_9": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*x**(3/2) - 5*cos(x) - 1/(2*x**2)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(3/2) - 5*cos(x) - 1/(2*x**2) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(3/2) - 5*cos(x) - 1/(2*x**2) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(3/2) - 5*cos(x) - 1/(2*x**2) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*sqrt(x) + 1/x**3 + 5*sin(x)",
+   "source_labels": [
+    "curated-9"
+   ]
+  },
+  "curated_10": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-5*sqrt(x) + 2*x*sqrt(x**3)/5 + x*log(3)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-5*sqrt(x) + 2*x*sqrt(x**3)/5 + x*log(3) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-5*sqrt(x) + 2*x*sqrt(x**3)/5 + x*log(3) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-5*sqrt(x) + 2*x*sqrt(x**3)/5 + x*log(3) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "sqrt(x**3) - 5/(2*sqrt(x)) + ln(3)",
+   "source_labels": [
+    "curated-10"
+   ]
+  },
+  "curated_11": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-E*x + 4*sin(x) - 5*cos(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-E*x + 4*sin(x) - 5*cos(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-E*x + 4*sin(x) - 5*cos(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-E*x + 4*sin(x) - 5*cos(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4*cos(x) + 5*sin(x) - e",
+   "source_labels": [
+    "curated-11"
+   ]
+  },
+  "curated_12": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "t**2/8 - exp(t) + 4*sin(t)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "t**2/8 - exp(t) + 4*sin(t) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "t**2/8 - exp(t) + 4*sin(t) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "t**2/8 - exp(t) + 4*sin(t) + t",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4*cos(t) - 1*e**t + t/4",
+   "source_labels": [
+    "curated-12"
+   ]
+  },
+  "curated_13": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "t*log(2) + 5*exp(t) + 4*cos(t)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "t*log(2) + 5*exp(t) + 4*cos(t) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "t*log(2) + 5*exp(t) + 4*cos(t) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "t*log(2) + 5*exp(t) + 4*cos(t) + t",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "ln(2) + 5*e**t - 4*sin(t)",
+   "source_labels": [
+    "curated-13"
+   ]
+  },
+  "curated_14": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "y**4/8 - pi*y + log(y)/4",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "y**4/8 - pi*y + log(y)/4 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "y**4/8 - pi*y + log(y)/4 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "y**4/8 - pi*y + log(y)/4 + y",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(1/2)*y**3 + 1/(4*y) - pi",
+   "source_labels": [
+    "curated-14"
+   ]
+  },
+  "curated_15": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "4*sqrt(y) + 4*log(y) - 1/(2*y**2)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*sqrt(y) + 4*log(y) - 1/(2*y**2) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*sqrt(y) + 4*log(y) - 1/(2*y**2) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*sqrt(y) + 4*log(y) - 1/(2*y**2) + y",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6/(3*sqrt(y)) + 1/y**3 + 4/y",
+   "source_labels": [
+    "curated-15"
+   ]
+  },
+  "expand_1": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "5*x**4 + 8*x**3/3 - 4*x**2",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "5*x**4 + 8*x**3/3 - 4*x**2 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "5*x**4 + 8*x**3/3 - 4*x**2 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "5*x**4 + 8*x**3/3 - 4*x**2 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4*x*(5*x**2 + 2*x - 2)",
+   "source_labels": [
+    "I23"
+   ]
+  },
+  "expand_2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "14*x**4 + 7*x**3/3",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "14*x**4 + 7*x**3/3 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "14*x**4 + 7*x**3/3 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "14*x**4 + 7*x**3/3 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7*x**2*(8*x + 1)",
+   "source_labels": [
+    "I24"
+   ]
+  },
+  "expand_3": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "8*x**3 - 5*x**2 - 25*x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "8*x**3 - 5*x**2 - 25*x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "8*x**3 - 5*x**2 - 25*x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "8*x**3 - 5*x**2 - 25*x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(6*x + 5)*(4*x - 5)",
+   "source_labels": [
+    "I26"
+   ]
+  },
+  "expand_4": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "12*x**3 - 18*x**2 + 9*x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "12*x**3 - 18*x**2 + 9*x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "12*x**3 - 18*x**2 + 9*x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "12*x**3 - 18*x**2 + 9*x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(6*x - 3)**2",
+   "source_labels": [
+    "I28"
+   ]
+  },
+  "expand_5": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*x**3 - x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**3 - x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**3 - x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**3 - x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(3*x + 1)*(3*x - 1)",
+   "source_labels": []
+  },
+  "expand_6": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "4*x**4 + 80*x**3/3 + 50*x**2",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*x**4 + 80*x**3/3 + 50*x**2 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*x**4 + 80*x**3/3 + 50*x**2 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*x**4 + 80*x**3/3 + 50*x**2 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4*x*(2*x + 5)**2",
+   "source_labels": []
+  },
+  "expand_7": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-2*x**3 + 27*x**2/2 - 21*x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-2*x**3 + 27*x**2/2 - 21*x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-2*x**3 + 27*x**2/2 - 21*x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-2*x**3 + 27*x**2/2 - 21*x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(3*x - 3)*(7 - 2*x)",
+   "source_labels": []
+  },
+  "split_1": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*x**2/2 + 2*x - 9*log(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/2 + 2*x - 9*log(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/2 + 2*x - 9*log(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/2 + 2*x - 9*log(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(3*x**2 + 2*x - 9)/x",
+   "source_labels": [
+    "I31"
+   ]
+  },
+  "split_2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*x**2/2 - 2*x + 9*log(x)/2 - 3/(2*x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/2 - 2*x + 9*log(x)/2 - 3/(2*x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/2 - 2*x + 9*log(x)/2 - 3/(2*x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/2 - 2*x + 9*log(x)/2 - 3/(2*x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(6*x**3 - 4*x**2 + 9*x + 3)/(2*x**2)",
+   "source_labels": [
+    "I32"
+   ]
+  },
+  "split_3": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*x**(7/2) + 10*x**(3/2)/3 - 6*sqrt(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(7/2) + 10*x**(3/2)/3 - 6*sqrt(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(7/2) + 10*x**(3/2)/3 - 6*sqrt(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(7/2) + 10*x**(3/2)/3 - 6*sqrt(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(7*x**3 + 5*x - 3)/sqrt(x)",
+   "source_labels": [
+    "I33"
+   ]
+  },
+  "split_4": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*x - 8*log(x) - 7/x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x - 8*log(x) - 7/x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x - 8*log(x) - 7/x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x - 8*log(x) - 7/x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(3*x**3 - 8*x**2 + 7*x)/x**3",
+   "source_labels": [
+    "I35"
+   ]
+  },
+  "split_5": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*x**2/5 + x/5 - log(x)/5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/5 + x/5 - log(x)/5 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/5 + x/5 - log(x)/5 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/5 + x/5 - log(x)/5 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(6*x**2 + 1*x - 1)/(5*x)",
+   "source_labels": []
+  },
+  "split_6": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*x**2/2 - 3*cos(x) + 2/sqrt(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/2 - 3*cos(x) + 2/sqrt(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/2 - 3*cos(x) + 2/sqrt(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**2/2 - 3*cos(x) + 2/sqrt(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(3*x**2*sin(x) - sqrt(x) + 3*x**3)/x**2",
+   "source_labels": [
+    "I36"
+   ]
+  },
+  "usub_power": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "4*x**6 + 18*x**4 + 27*x**2",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*x**6 + 18*x**4 + 27*x**2 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*x**6 + 18*x**4 + 27*x**2 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*x**6 + 18*x**4 + 27*x**2 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6*x*(2*x**2 + 3)**2",
+   "source_labels": [
+    "II1"
+   ]
+  },
+  "usub_recip": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "7*log(3*x**2 + 1)/12",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7*log(3*x**2 + 1)/12 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7*log(3*x**2 + 1)/12 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7*log(3*x**2 + 1)/12 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7*x/(6*x**2 + 2)",
+   "source_labels": [
+    "II21"
+   ]
+  },
+  "usub_exp": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "exp(8*x**2 + 4)/8",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(8*x**2 + 4)/8 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(8*x**2 + 4)/8 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(8*x**2 + 4)/8 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x*e**(8*x**2 + 4)",
+   "source_labels": [
+    "II8"
+   ]
+  },
+  "usub_sin": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-7*cos(2*x**2 + 5)/4",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-7*cos(2*x**2 + 5)/4 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-7*cos(2*x**2 + 5)/4 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-7*cos(2*x**2 + 5)/4 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7*x*sin(2*x**2 + 5)",
+   "source_labels": []
+  },
+  "usub_cos": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "sin(3*x**2 + 5)/3",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sin(3*x**2 + 5)/3 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sin(3*x**2 + 5)/3 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sin(3*x**2 + 5)/3 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x*cos(3*x**2 + 5)",
+   "source_labels": []
+  },
+  "usub_sqrt": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "7*sqrt(2)*sqrt(2*x**2 + 1)/4",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7*sqrt(2)*sqrt(2*x**2 + 1)/4 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7*sqrt(2)*sqrt(2*x**2 + 1)/4 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7*sqrt(2)*sqrt(2*x**2 + 1)/4 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7*x/sqrt(4*x**2 + 2)",
+   "source_labels": [
+    "II35"
+   ]
+  },
+  "usub_cuberoot": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*3**(1/3)*x**2*(x**2 - 1)**(1/3)/4 - 3*3**(1/3)*(x**2 - 1)**(1/3)/4",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*3**(1/3)*x**2*(x**2 - 1)**(1/3)/4 - 3*3**(1/3)*(x**2 - 1)**(1/3)/4 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*3**(1/3)*x**2*(x**2 - 1)**(1/3)/4 - 3*3**(1/3)*(x**2 - 1)**(1/3)/4 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*3**(1/3)*x**2*(x**2 - 1)**(1/3)/4 - 3*3**(1/3)*(x**2 - 1)**(1/3)/4 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x*(3*x**2 - 3)**(1/3)",
+   "source_labels": [
+    "II16"
+   ]
+  },
+  "usub_quad_pow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "x**10/5 + 3*x**9 + 19*x**8 + 66*x**7 + 137*x**6 + 873*x**5/5 + 137*x**4 + 66*x**3 + 19*x**2 + 3*x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**10/5 + 3*x**9 + 19*x**8 + 66*x**7 + 137*x**6 + 873*x**5/5 + 137*x**4 + 66*x**3 + 19*x**2 + 3*x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**10/5 + 3*x**9 + 19*x**8 + 66*x**7 + 137*x**6 + 873*x**5/5 + 137*x**4 + 66*x**3 + 19*x**2 + 3*x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**10/5 + 3*x**9 + 19*x**8 + 66*x**7 + 137*x**6 + 873*x**5/5 + 137*x**4 + 66*x**3 + 19*x**2 + 3*x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(3 + 2*x)*(x**2 + 3*x + 1)**4",
+   "source_labels": []
+  },
+  "usub_quad_recip": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "log(x**2 + 6*x + 7)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x**2 + 6*x + 7) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x**2 + 6*x + 7) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x**2 + 6*x + 7) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(6 + 2*x)/(x**2 + 6*x + 7)",
+   "source_labels": [
+    "II12",
+    "II23"
+   ]
+  },
+  "usub_quad_sqrt": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*sqrt(x**2 + 2*x + 9)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**2 + 2*x + 9) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**2 + 2*x + 9) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**2 + 2*x + 9) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(2 + 2*x)/sqrt(x**2 + 2*x + 9)",
+   "source_labels": []
+  },
+  "usub_ln_pow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "log(x)**3/3",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x)**3/3 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x)**3/3 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x)**3/3 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "ln(x)**2/x",
+   "source_labels": [
+    "II13"
+   ]
+  },
+  "usub_ln_recip": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "log(log(x))",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(log(x)) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(log(x)) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(log(x)) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "1/(x*ln(x))",
+   "source_labels": []
+  },
+  "usub_ln_recip3": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-1/(2*log(x)**2)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(2*log(x)**2) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(2*log(x)**2) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(2*log(x)**2) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "1/(x*ln(x)**3)",
+   "source_labels": []
+  },
+  "usub_tpow_sin": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-cos(x)**4/4",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-cos(x)**4/4 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-cos(x)**4/4 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-cos(x)**4/4 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "sin(x)*cos(x)**3",
+   "source_labels": [
+    "II14"
+   ]
+  },
+  "usub_tpow_cos": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "sin(x)**4/4",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sin(x)**4/4 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sin(x)**4/4 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sin(x)**4/4 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "cos(x)*sin(x)**3",
+   "source_labels": []
+  },
+  "usub_sqrt_sinx": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*sqrt(sin(x) + 9)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(sin(x) + 9) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(sin(x) + 9) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(sin(x) + 9) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "cos(x)/sqrt(sin(x) + 9)",
+   "source_labels": [
+    "II34"
+   ]
+  },
+  "usub_sqrt_cubic": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*sqrt(x**3 + 5*x + 7)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**3 + 5*x + 7) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**3 + 5*x + 7) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**3 + 5*x + 7) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(5 + 3*x**2)/sqrt(x**3 + 5*x + 7)",
+   "source_labels": []
+  },
+  "usub_e_recip": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "log(exp(x) + 1/4)/4",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(exp(x) + 1/4)/4 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(exp(x) + 1/4)/4 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(exp(x) + 1/4)/4 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "e**x/(4*e**x + 1)",
+   "source_labels": [
+    "II25"
+   ]
+  },
+  "usub_e_pow2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-1/(8*exp(2*x) - 12)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(8*exp(2*x) - 12) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(8*exp(2*x) - 12) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(8*exp(2*x) - 12) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "e**(2*x)/(2*e**(2*x) - 3)**2",
+   "source_labels": [
+    "II29"
+   ]
+  },
+  "usub_negpow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-5/(1536*x**6 + 3456*x**4 + 2592*x**2 + 648)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-5/(1536*x**6 + 3456*x**4 + 2592*x**2 + 648) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-5/(1536*x**6 + 3456*x**4 + 2592*x**2 + 648) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-5/(1536*x**6 + 3456*x**4 + 2592*x**2 + 648) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "5*x/(4*x**2 + 3)**4",
+   "source_labels": []
+  },
+  "usub_quad_negpow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-1/(2*x**4 + 20*x**3 + 62*x**2 + 60*x + 18)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(2*x**4 + 20*x**3 + 62*x**2 + 60*x + 18) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(2*x**4 + 20*x**3 + 62*x**2 + 60*x + 18) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(2*x**4 + 20*x**3 + 62*x**2 + 60*x + 18) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(5 + 2*x)/(x**2 + 5*x + 3)**3",
+   "source_labels": [
+    "II27"
+   ]
+  },
+  "usub_esqrt": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-12*sqrt(2 + 5*exp(-x))/5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-12*sqrt(2 + 5*exp(-x))/5 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-12*sqrt(2 + 5*exp(-x))/5 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-12*sqrt(2 + 5*exp(-x))/5 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6*e**(-x)/sqrt(5*e**(-x) + 2)",
+   "source_labels": []
+  },
+  "usub_mix2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-7*sin(x**2)/2 - 7*cos(x**3)/3",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-7*sin(x**2)/2 - 7*cos(x**3)/3 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-7*sin(x**2)/2 - 7*cos(x**3)/3 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-7*sin(x**2)/2 - 7*cos(x**3)/3 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7*x**2*sin(x**3) - 7*x*cos(x**2)",
+   "source_labels": []
+  },
+  "usub_ln_mix": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "log(x)**2 + 6*log(log(x)) + 5/(2*log(x)**2)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x)**2 + 6*log(log(x)) + 5/(2*log(x)**2) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x)**2 + 6*log(log(x)) + 5/(2*log(x)**2) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x)**2 + 6*log(log(x)) + 5/(2*log(x)**2) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*ln(x)/x + 6/(x*ln(x)) - 5/(x*ln(x)**3)",
+   "source_labels": [
+    "II32"
+   ]
+  },
+  "linear_1": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-3*cos(2*x)/2",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-3*cos(2*x)/2 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-3*cos(2*x)/2 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-3*cos(2*x)/2 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*sin(2*x)",
+   "source_labels": [
+    "II5"
+   ]
+  },
+  "linear_2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "7*sin(3*x)/3",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7*sin(3*x)/3 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7*sin(3*x)/3 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7*sin(3*x)/3 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7*cos(3*x)",
+   "source_labels": [
+    "II3"
+   ]
+  },
+  "linear_3": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "exp(5*x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(5*x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(5*x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(5*x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "5*e**(5*x)",
+   "source_labels": []
+  },
+  "linear_4": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "16*x**4 + 96*x**3 + 216*x**2 + 216*x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "16*x**4 + 96*x**3 + 216*x**2 + 216*x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "16*x**4 + 96*x**3 + 216*x**2 + 216*x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "16*x**4 + 96*x**3 + 216*x**2 + 216*x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(4*x + 6)**3",
+   "source_labels": [
+    "II2"
+   ]
+  },
+  "linear_5": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "log(2*x + 1)/2",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(2*x + 1)/2 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(2*x + 1)/2 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(2*x + 1)/2 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "1/(2*x + 1)",
+   "source_labels": []
+  },
+  "linear_6": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-1/(4*x - 12)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(4*x - 12) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(4*x - 12) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-1/(4*x - 12) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "1/(2*x - 6)**2",
+   "source_labels": []
+  },
+  "linear_7": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "4*sin(5*x + 2)/5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*sin(5*x + 2)/5 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*sin(5*x + 2)/5 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "4*sin(5*x + 2)/5 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4*cos(5*x + 2)",
+   "source_labels": []
+  },
+  "linear_8": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "exp(4*x + 4)/4",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(4*x + 4)/4 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(4*x + 4)/4 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(4*x + 4)/4 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "e**(4*x + 4)",
+   "source_labels": []
+  },
+  "linear_9": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "x**2/2 + 3*log(x - 2) - 3*log(x + 2)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**2/2 + 3*log(x - 2) - 3*log(x + 2) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**2/2 + 3*log(x - 2) - 3*log(x + 2) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "x**2/2 + 3*log(x - 2) - 3*log(x + 2) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "x + 3/(x - 2) - 3/(x + 2)",
+   "source_labels": [
+    "II26"
+   ]
+  },
+  "linear_10": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*x**2 + 8*x - 2*log(x + 7) - 5/(x + 7)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**2 + 8*x - 2*log(x + 7) - 5/(x + 7) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**2 + 8*x - 2*log(x + 7) - 5/(x + 7) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**2 + 8*x - 2*log(x + 7) - 5/(x + 7) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4*x + 8 - 2/(x + 7) + 5/(x + 7)**2",
+   "source_labels": [
+    "II30"
+   ]
+  },
+  "trig_sq_1": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "5*tan(x) - 5/tan(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "5*tan(x) - 5/tan(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "5*tan(x) - 5/tan(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "5*tan(x) - 5/tan(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "5*(tan(x) + cot(x))**2",
+   "source_labels": [
+    "I38"
+   ]
+  },
+  "ind_basics_recip_trig": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*log(x) + sin(x) - 4*cos(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*log(x) + sin(x) - 4*cos(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*log(x) + sin(x) - 4*cos(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*log(x) + sin(x) - 4*cos(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3/x + 4*sin(x) + 1*cos(x)",
+   "source_labels": [
+    "I16"
+   ]
+  },
+  "ind_basics_mix4": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*exp(x) + 6*log(x) + 4*cos(x) - 1/x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*exp(x) + 6*log(x) + 4*cos(x) - 1/x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*exp(x) + 6*log(x) + 4*cos(x) - 1/x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*exp(x) + 6*log(x) + 4*cos(x) - 1/x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6/x + 1/x**2 + 3*e**x - 4*sin(x)",
+   "source_labels": [
+    "I17"
+   ]
+  },
+  "ind_basics_const_mix": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-x**2*log(4)/2 - E*x + 4*log(x) + sin(x)/4",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-x**2*log(4)/2 - E*x + 4*log(x) + sin(x)/4 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-x**2*log(4)/2 - E*x + 4*log(x) + sin(x)/4 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-x**2*log(4)/2 - E*x + 4*log(x) + sin(x)/4 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(1/4)*cos(x) - (1)*e + 4/x - x*ln(4)",
+   "source_labels": [
+    "I18"
+   ]
+  },
+  "ind_basics_frac_pow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*x**(5/3)/5 + 5*sqrt(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**(5/3)/5 + 5*sqrt(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**(5/3)/5 + 5*sqrt(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**(5/3)/5 + 5*sqrt(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "x**(2/3) + (5/2)/sqrt(x) + 7*x*ln(1)",
+   "source_labels": [
+    "I19"
+   ]
+  },
+  "ind_basics_frac_pow2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3*x**(8/3)/8 + 3*x**(4/3)/4 - 2*exp(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**(8/3)/8 + 3*x**(4/3)/4 - 2*exp(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**(8/3)/8 + 3*x**(4/3)/4 - 2*exp(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "3*x**(8/3)/8 + 3*x**(4/3)/4 - 2*exp(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "x**(1/3) + x*x**(2/3) - 2*e**x",
+   "source_labels": [
+    "I20"
+   ]
+  },
+  "ind_basics_sec_exp_sqrt": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "16*sqrt(x) - 7*exp(x) + 7*sin(x)/cos(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "16*sqrt(x) - 7*exp(x) + 7*sin(x)/cos(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "16*sqrt(x) - 7*exp(x) + 7*sin(x)/cos(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "16*sqrt(x) - 7*exp(x) + 7*sin(x)/cos(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7/cos(x)**2 - 7*e**x + 8/sqrt(x)",
+   "source_labels": [
+    "I21"
+   ]
+  },
+  "ind_basics_sec_csc_exp": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "5*exp(x) + 4*sin(x)/cos(x) + cos(x)/sin(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "5*exp(x) + 4*sin(x)/cos(x) + cos(x)/sin(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "5*exp(x) + 4*sin(x)/cos(x) + cos(x)/sin(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "5*exp(x) + 4*sin(x)/cos(x) + cos(x)/sin(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4/cos(x)**2 - 1/sin(x)**2 + 5*e**x",
+   "source_labels": [
+    "I22"
+   ]
+  },
+  "ind_expand_sqrt": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*x**(5/2)/5 + x**3/3 + 5*x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(5/2)/5 + x**3/3 + 5*x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(5/2)/5 + x**3/3 + 5*x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**(5/2)/5 + x**3/3 + 5*x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "x*(sqrt(x) + x + 5/x)",
+   "source_labels": [
+    "I25"
+   ]
+  },
+  "ind_expand_quad": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-3*x**4/4 + 7*x**3/3 + 10*x**2",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-3*x**4/4 + 7*x**3/3 + 10*x**2 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-3*x**4/4 + 7*x**3/3 + 10*x**2 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-3*x**4/4 + 7*x**3/3 + 10*x**2 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(4*x - 1*x**2)*(3*x + 5)",
+   "source_labels": [
+    "I27"
+   ]
+  },
+  "ind_expand_opposite": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-6*x**3 + 18*x**2 + 54*x",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-6*x**3 + 18*x**2 + 54*x + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-6*x**3 + 18*x**2 + 54*x + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-6*x**3 + 18*x**2 + 54*x + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(6*x + 6)*(9 - 3*x)",
+   "source_labels": [
+    "I29"
+   ]
+  },
+  "ind_expand_neg_sq": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-24*x**4 - 16*x**3 - 3*x**2",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-24*x**4 - 16*x**3 - 3*x**2 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-24*x**4 - 16*x**3 - 3*x**2 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-24*x**4 - 16*x**3 - 3*x**2 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "-6*x*(4*x + 1)**2",
+   "source_labels": [
+    "I30"
+   ]
+  },
+  "ind_split_exp_trig": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "exp(x) + log(3)*log(x) - sin(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(x) + log(3)*log(x) - sin(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(x) + log(3)*log(x) - sin(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(x) + log(3)*log(x) - sin(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(x*e**x + ln(3) - x*cos(x))/x",
+   "source_labels": [
+    "I34"
+   ]
+  },
+  "ind_basics_csc_sec": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-sin(x)/cos(x) - 7*cos(x)/sin(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-sin(x)/cos(x) - 7*cos(x)/sin(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-sin(x)/cos(x) - 7*cos(x)/sin(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-sin(x)/cos(x) - 7*cos(x)/sin(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7/sin(x)**2 - 1/cos(x)**2",
+   "source_labels": [
+    "I37"
+   ]
+  },
+  "ind_quad_cos": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "sin(5*x**2 + 2*x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sin(5*x**2 + 2*x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sin(5*x**2 + 2*x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "sin(5*x**2 + 2*x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(2 + 2*5*x)*cos(5*x**2 + 2*x)",
+   "source_labels": [
+    "II4"
+   ]
+  },
+  "ind_quad_sin": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-cos(4*x**2 + 2*x - 1)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-cos(4*x**2 + 2*x - 1) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-cos(4*x**2 + 2*x - 1) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-cos(4*x**2 + 2*x - 1) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(2 + 2*4*x)*sin(4*x**2 + 2*x - 1)",
+   "source_labels": [
+    "II6"
+   ]
+  },
+  "ind_linear_mix_exp": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "exp(2*x)/2 - 3*sin(4*x)/2 - 2*cos(2*x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(2*x)/2 - 3*sin(4*x)/2 - 2*cos(2*x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(2*x)/2 - 3*sin(4*x)/2 - 2*cos(2*x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "exp(2*x)/2 - 3*sin(4*x)/2 - 2*cos(2*x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "e**(2*x) + 4*sin(2*x) - 6*cos(4*x)",
+   "source_labels": [
+    "II7"
+   ]
+  },
+  "ind_linear_mix_negexp": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "cos(5*x) - 3*exp(-x/3)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "cos(5*x) - 3*exp(-x/3) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "cos(5*x) - 3*exp(-x/3) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "cos(5*x) - 3*exp(-x/3) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "e**(-1/3*x) - 5*sin(5*x)",
+   "source_labels": [
+    "II9"
+   ]
+  },
+  "ind_linear_neg_cos": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-5*sin(3*x + 6)/3",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-5*sin(3*x + 6)/3 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-5*sin(3*x + 6)/3 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-5*sin(3*x + 6)/3 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "-5*cos(3*x + 6)",
+   "source_labels": [
+    "II10"
+   ]
+  },
+  "ind_usub_trig_mix": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-sin(x)**4/2 + sin(x)**3*cos(x) + sin(x)*cos(x)**3 - cos(x)**4/2",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-sin(x)**4/2 + sin(x)**3*cos(x) + sin(x)*cos(x)**3 - cos(x)**4/2 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-sin(x)**4/2 + sin(x)**3*cos(x) + sin(x)*cos(x)**3 - cos(x)**4/2 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-sin(x)**4/2 + sin(x)**3*cos(x) + sin(x)*cos(x)**3 - cos(x)**4/2 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(cos(x) - sin(x))*(sin(x) + cos(x))**3",
+   "source_labels": [
+    "II11"
+   ]
+  },
+  "ind_quad_sqrt_pow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*x**2*sqrt(x**2 + 2*x - 4)/3 + 4*x*sqrt(x**2 + 2*x - 4)/3 - 8*sqrt(x**2 + 2*x - 4)/3",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**2*sqrt(x**2 + 2*x - 4)/3 + 4*x*sqrt(x**2 + 2*x - 4)/3 - 8*sqrt(x**2 + 2*x - 4)/3 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**2*sqrt(x**2 + 2*x - 4)/3 + 4*x*sqrt(x**2 + 2*x - 4)/3 - 8*sqrt(x**2 + 2*x - 4)/3 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*x**2*sqrt(x**2 + 2*x - 4)/3 + 4*x*sqrt(x**2 + 2*x - 4)/3 - 8*sqrt(x**2 + 2*x - 4)/3 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(2 + 2*x)*sqrt(x**2 + 2*x - 4)",
+   "source_labels": [
+    "II15"
+   ]
+  },
+  "ind_usub_cos_shift": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 + 2*cos(x)**2 - cos(x)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 + 2*cos(x)**2 - cos(x) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 + 2*cos(x)**2 - cos(x) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 + 2*cos(x)**2 - cos(x) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "sin(x)*(1 - cos(x))**4",
+   "source_labels": [
+    "II18"
+   ]
+  },
+  "ind_quad_recip_frac": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "log(x**2 + 7*x - 9)/4",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x**2 + 7*x - 9)/4 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x**2 + 7*x - 9)/4 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(x**2 + 7*x - 9)/4 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(1/4)*(7 + 2*x)/(x**2 + 7*x - 9)",
+   "source_labels": [
+    "II22"
+   ]
+  },
+  "ind_usub_trig_frac": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "log(sin(x) + cos(x))",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(sin(x) + cos(x)) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(sin(x) + cos(x)) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "log(sin(x) + cos(x)) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(cos(x) - sin(x))/(sin(x) + cos(x))",
+   "source_labels": [
+    "II24"
+   ]
+  },
+  "ind_linear_recip_negpow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "7/(128*x**2 - 320*x + 200)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7/(128*x**2 - 320*x + 200) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7/(128*x**2 - 320*x + 200) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "7/(128*x**2 - 320*x + 200) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7/(5 - 4*x)**3",
+   "source_labels": [
+    "II28"
+   ]
+  },
+  "ind_linear_ln_mix": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-3*x**2 + 8*x - 1/(2*log(x)**2)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-3*x**2 + 8*x - 1/(2*log(x)**2) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-3*x**2 + 8*x - 1/(2*log(x)**2) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-3*x**2 + 8*x - 1/(2*log(x)**2) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "-6*x + 8 + 1/(x*ln(x)**3)",
+   "source_labels": [
+    "II31"
+   ]
+  },
+  "ind_quad_sqrt_neg": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*sqrt(x**2 - 3*x + 9)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**2 - 3*x + 9) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**2 - 3*x + 9) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**2 - 3*x + 9) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(2*x - 3)/sqrt(x**2 - 3*x + 9)",
+   "source_labels": [
+    "II36"
+   ]
+  },
+  "ind_ln_sqrt_recip": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "6*sqrt(log(x) + 3)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "6*sqrt(log(x) + 3) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "6*sqrt(log(x) + 3) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "6*sqrt(log(x) + 3) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3/(x*sqrt(3 + ln(x)))",
+   "source_labels": [
+    "II37"
+   ]
+  },
+  "ind_esqrt_neg": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "8*sqrt(4 + exp(-x))",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "8*sqrt(4 + exp(-x)) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "8*sqrt(4 + exp(-x)) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "8*sqrt(4 + exp(-x)) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "-4*e**(-x)/sqrt(1*e**(-x) + 4)",
+   "source_labels": [
+    "II38"
+   ]
+  },
+  "usub_mix2b": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-sin(x**2) - 4*cos(x**3)/3",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-sin(x**2) - 4*cos(x**3)/3 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-sin(x**2) - 4*cos(x**3)/3 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-sin(x**2) - 4*cos(x**3)/3 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4*x**2*sin(x**3) - 2*x*cos(x**2)",
+   "source_labels": [
+    "II17"
+   ]
+  },
+  "usub_tpow_sin_coef": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-2*cos(x)**3",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-2*cos(x)**3 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-2*cos(x)**3 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "-2*cos(x)**3 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6*sin(x)*cos(x)**2",
+   "source_labels": [
+    "II19"
+   ]
+  },
+  "usub_tpow_cos_coef": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "6*sin(x)**5/5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "6*sin(x)**5/5 + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "6*sin(x)**5/5 + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "6*sin(x)**5/5 + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6*cos(x)*sin(x)**4",
+   "source_labels": [
+    "II20"
+   ]
+  },
+  "usub_sqrt_cubic_neg": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*sqrt(x**3 + 4*x - 2)",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**3 + 4*x - 2) + C",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**3 + 4*x - 2) + 5",
+     "expected": true,
+     "got": true,
+     "reason": "indefinite"
+    },
+    {
+     "answer": "2*sqrt(x**3 + 4*x - 2) + x",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(4 + 3*x**2)/sqrt(x**3 + 4*x - 2)",
+   "source_labels": [
+    "II33"
+   ]
+  },
+  "def_poly": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "86/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(86/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "5*x**2 + 8*x + 5",
+   "source_labels": [
+    "III-1",
+    "III-4"
+   ]
+  },
+  "def_trig_sin": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "7/2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(7/2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7*sin(x)",
+   "source_labels": []
+  },
+  "def_trig_cos": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "6",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(6) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6*cos(x)",
+   "source_labels": []
+  },
+  "def_linarg_sin": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "1/4",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(1/4) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "sin(4*x)",
+   "source_labels": []
+  },
+  "def_linarg_cos": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "1/5",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(1/5) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "cos(5*x)",
+   "source_labels": []
+  },
+  "def_linarg_exp": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-exp(4)/5 + exp(9)/5",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-exp(4)/5 + exp(9)/5) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "e**(5*x + 4)",
+   "source_labels": []
+  },
+  "def_linarg_power": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2321",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(2321) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(5*x + 4)**4",
+   "source_labels": [
+    "III-16"
+   ]
+  },
+  "def_linarg_recip": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-log(6)/5 + log(11)/5",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-log(6)/5 + log(11)/5) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "1/(5*x + 6)",
+   "source_labels": []
+  },
+  "def_linarg_sqrt": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-4*sqrt(2)/3 + 2*sqrt(11)/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-4*sqrt(2)/3 + 2*sqrt(11)/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "1/sqrt(3*x + 8)",
+   "source_labels": []
+  },
+  "def_usub_power2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "31/5",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(31/5) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x*(x**2 + 1)**4",
+   "source_labels": [
+    "III-13"
+   ]
+  },
+  "def_usub_power3": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "271/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(271/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*x**2*(x**3 + 9)**2",
+   "source_labels": []
+  },
+  "def_usub_recip2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-log(9) + log(10)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-log(9) + log(10)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x/(x**2 + 9)",
+   "source_labels": []
+  },
+  "def_usub_recip3": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-log(9) + log(10)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-log(9) + log(10)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*x**2/(x**3 + 9)",
+   "source_labels": []
+  },
+  "def_usub_exp2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-E + exp(2)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-E + exp(2)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x*e**(x**2 + 1)",
+   "source_labels": []
+  },
+  "def_usub_exp3": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-exp(5) + exp(6)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-exp(5) + exp(6)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*x**2*e**(x**3 + 5)",
+   "source_labels": []
+  },
+  "def_usub_sin2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-cos(2) + cos(1)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-cos(2) + cos(1)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x*sin(x**2 + 1)",
+   "source_labels": []
+  },
+  "def_usub_sin3": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-cos(6) + cos(5)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-cos(6) + cos(5)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*x**2*sin(x**3 + 5)",
+   "source_labels": []
+  },
+  "def_usub_cos2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "sin(4) - sin(3)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(sin(4) - sin(3)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x*cos(x**2 + 3)",
+   "source_labels": []
+  },
+  "def_usub_cos3": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-sin(1) + sin(2)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-sin(1) + sin(2)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*x**2*cos(x**3 + 1)",
+   "source_labels": []
+  },
+  "def_usub_quad_pow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "335/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(335/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(4 + 2*x)*(x**2 + 4*x + 2)**2",
+   "source_labels": []
+  },
+  "def_usub_quad_recip": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-log(2) + log(9)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-log(2) + log(9)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(6 + 2*x)/(x**2 + 6*x + 2)",
+   "source_labels": []
+  },
+  "def_usub_trig_pow_sin": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "1/4",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(1/4) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "sin(x)*cos(x)**3",
+   "source_labels": []
+  },
+  "def_usub_trig_pow_cos": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "1/4",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(1/4) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "cos(x)*sin(x)**3",
+   "source_labels": [
+    "III-21"
+   ]
+  },
+  "def_usub_ln_pow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "1/4",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(1/4) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "ln(x)**3/x",
+   "source_labels": [
+    "III-20",
+    "III-22"
+   ]
+  },
+  "def_usub_e_recip": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-log(2) + log(1 + E)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-log(2) + log(1 + E)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "e**x/(e**x + 1)",
+   "source_labels": []
+  },
+  "def_usub_kx2_exp": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-E/2 + exp(6)/2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-E/2 + exp(6)/2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "5*x*e**(5*x**2 + 1)",
+   "source_labels": []
+  },
+  "def_usub_sqrt": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "8*x/sqrt(8*x**2 + 1)",
+   "source_labels": []
+  },
+  "def_usub_sinx_over": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-log(6) + log(13/2)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-log(6) + log(13/2)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "sin(x)/(6 + cos(x))",
+   "source_labels": [
+    "III-28"
+   ]
+  },
+  "def_mixed_1": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "56/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(56/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x**2 + 2*x + 1",
+   "source_labels": []
+  },
+  "def_mixed_2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-2*E/3 + log(3) + 2*exp(3)/3 + 104/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-2*E/3 + log(3) + 2*exp(3)/3 + 104/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4*x**2 + 1/x + 2/3*e**x",
+   "source_labels": []
+  },
+  "def_mixed_3": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-E/2 + 2 + 3*log(2) + exp(2)/2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-E/2 + 2 + 3*log(2) + exp(2)/2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3/x + 4/x**2 + 1/2*e**x",
+   "source_labels": []
+  },
+  "def_mixed_4": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "4*log(2) + 8",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(4*log(2) + 8) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*x**2 - 4*x + 7 + 4/x",
+   "source_labels": []
+  },
+  "def_mixed_5": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-14*sqrt(2) + 1 + 18*sqrt(3)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-14*sqrt(2) + 1 + 18*sqrt(3)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6*sqrt(x) + 3/sqrt(x) + 1",
+   "source_labels": []
+  },
+  "def_mixed_6": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-E/4 + exp(2)/4 + 35/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-E/4 + exp(2)/4 + 35/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x**2 + 4*x + 1 + 1/4*e**x",
+   "source_labels": []
+  },
+  "def_mixed_7": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-11/2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-11/2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(3*x - 5)*(5*x + 6)",
+   "source_labels": [
+    "III-11"
+   ]
+  },
+  "def_mixed_8": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "5/8",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(5/8) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2 + 4/x**2 + 9/x**3",
+   "source_labels": [
+    "III-7"
+   ]
+  },
+  "def_mixed_9": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-log(4) + log(E + 3) + 6",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-log(4) + log(E + 3) + 6) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6*x + 3 + e**x/(e**x + 3)",
+   "source_labels": [
+    "III-38"
+   ]
+  },
+  "def_mixed_10": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-3*log(5) + 4*log(2) + 3*log(6)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-3*log(5) + 4*log(2) + 3*log(6)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6*x/(x**2 + 5) - 4/(x - 2)",
+   "source_labels": [
+    "III-24"
+   ]
+  },
+  "def_mixed_11": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "9 - 7*sqrt(3)/2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(9 - 7*sqrt(3)/2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7*sin(x) + 4*cos(x)",
+   "source_labels": [
+    "III-9"
+   ]
+  },
+  "def_mixed_12": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "sqrt(3)/3 + 1",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(sqrt(3)/3 + 1) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2/cos(x)**2 + 1/sin(x)**2",
+   "source_labels": [
+    "III-10"
+   ]
+  },
+  "def_mixed_13": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "9/8 + 3*sqrt(3)/4",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(9/8 + 3*sqrt(3)/4) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*sin(4*x) + 6*cos(4*x)",
+   "source_labels": []
+  },
+  "def_mixed_14": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2*sqrt(3)/3 + 2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(2*sqrt(3)/3 + 2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*sin(x) + 5/cos(x)**2",
+   "source_labels": []
+  },
+  "def_mixed_15": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-sqrt(2) - 4*log(sqrt(2)/2) + 2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-sqrt(2) - 4*log(sqrt(2)/2) + 2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4*tan(x) + 2*sin(x)",
+   "source_labels": [
+    "III-25"
+   ]
+  },
+  "def_mixed_16": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "1 + 2*log(2)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(1 + 2*log(2)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "sin(x) + 2*cos(x)/(2 - sin(x))",
+   "source_labels": [
+    "III-37"
+   ]
+  },
+  "def_byparts_x_sin": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(2/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6*x*sin(3*x)",
+   "source_labels": [
+    "III-A",
+    "III-D"
+   ]
+  },
+  "def_byparts_x_cos": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-2/25 + pi/25",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-2/25 + pi/25) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x*cos(5*x)",
+   "source_labels": [
+    "III-B",
+    "III-H"
+   ]
+  },
+  "def_byparts_x_exp": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*x*e**x",
+   "source_labels": [
+    "III-C"
+   ]
+  },
+  "def_byparts_x_ln": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-3/4 + 2*log(2)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-3/4 + 2*log(2)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "x*ln(x)",
+   "source_labels": []
+  },
+  "def_byparts_x2_ln": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-7/9 + 8*log(2)/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-7/9 + 8*log(2)/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "x**2*ln(x)",
+   "source_labels": []
+  },
+  "def_byparts_x3_ln": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-15/16 + 4*log(2)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-15/16 + 4*log(2)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "x**3*ln(x)",
+   "source_labels": [
+    "III-E"
+   ]
+  },
+  "def_byparts_ln2_x": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "log(2)**3/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(log(2)**3/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "ln(x)**2/x",
+   "source_labels": [
+    "III-I"
+   ]
+  },
+  "def_x2_recip_negexp": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-exp(3)/4 + E/4 + 6*log(3) + 26",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-exp(3)/4 + E/4 + 6*log(3) + 26) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*x**2 + 6/x - 1/4*e**x",
+   "source_labels": [
+    "III-2",
+    "III-3"
+   ]
+  },
+  "def_quintic_mix": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-23/6",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-23/6) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "-2*x**5 - 8*x**2 + 7*x + 2",
+   "source_labels": [
+    "III-5"
+   ]
+  },
+  "def_sqrt_recip_mix": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "35",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(35) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "6*sqrt(x) - 4/sqrt(x) + 5",
+   "source_labels": [
+    "III-6"
+   ]
+  },
+  "def_cos_sin_k": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-5/2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-5/2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*cos(2*x) - 8*sin(2*x)",
+   "source_labels": [
+    "III-8"
+   ]
+  },
+  "def_expand_opposite": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-179/6",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-179/6) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(7*x + 1)*(9 - 4*x)",
+   "source_labels": [
+    "III-12"
+   ]
+  },
+  "def_quad_pow_frac": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "112",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(112) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(1/3)*(5 + 2*x)*(x**2 + 5*x - 4)**2",
+   "source_labels": [
+    "III-14"
+   ]
+  },
+  "def_quad_pow_neg": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-2479224/5",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-2479224/5) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(2*x - 6)*(x**2 - 6*x + 3)**4",
+   "source_labels": [
+    "III-15"
+   ]
+  },
+  "def_quad_sqrt_pow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "32*sqrt(2)/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(32*sqrt(2)/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(7 + 2*x)*sqrt(x**2 + 7*x)",
+   "source_labels": [
+    "III-17"
+   ]
+  },
+  "def_neg_sin_cos": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-1/3 + sqrt(2)/12",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-1/3 + sqrt(2)/12) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "-sin(x)*cos(x)**2",
+   "source_labels": [
+    "III-18"
+   ]
+  },
+  "def_exp_x_prod": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "exp(2)/2 + 4 + 3*E",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(exp(2)/2 + 4 + 3*E) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(e**x + 3)*(e**x + 3*x)",
+   "source_labels": [
+    "III-19"
+   ]
+  },
+  "def_linarg_recip_coef": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-3*log(5)/2 + 3*log(9)/2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-3*log(5)/2 + 3*log(9)/2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3/(2*x + 5)",
+   "source_labels": [
+    "III-23"
+   ]
+  },
+  "def_cos2_sin2": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "1/2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(1/2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "cos(x)**2 - sin(x)**2",
+   "source_labels": [
+    "III-26"
+   ]
+  },
+  "def_cos_over_sin": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-log(3) + log(4)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-log(3) + log(4)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "cos(x)/(3 + sin(x))",
+   "source_labels": [
+    "III-27"
+   ]
+  },
+  "def_linarg_sqrt_coef": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-6 + 6*sqrt(5)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-6 + 6*sqrt(5)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3/sqrt(2*x + 6)",
+   "source_labels": [
+    "III-29"
+   ]
+  },
+  "def_usub_cubic_negpow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "310219/10871546625",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(310219/10871546625) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7*x**2/(8*x**3 + 7)**4",
+   "source_labels": [
+    "III-31"
+   ]
+  },
+  "def_ln_recip_pow": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "5/36",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(5/36) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2/(x*ln(x)**3)",
+   "source_labels": [
+    "III-32"
+   ]
+  },
+  "def_lin_recip_mix": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-5*log(3) + 5*log(4) + 21/2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-5*log(3) + 5*log(4) + 21/2) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "3*x + 6 + 5/(x + 2)",
+   "source_labels": [
+    "III-33"
+   ]
+  },
+  "def_recip2_mix": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "7/2 - 2*log(2)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(7/2 - 2*log(2)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2/(x - 4) + 7/(x - 4)**2",
+   "source_labels": [
+    "III-35"
+   ]
+  },
+  "def_recip3_mix": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-3*log(6) + 5/42 + 3*log(7)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-3*log(6) + 5/42 + 3*log(7)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7/(x + 6) - 4/(x + 6) + 5/(x + 6)**2",
+   "source_labels": [
+    "III-36"
+   ]
+  },
+  "def_byparts_x2_lnkx": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-49/9 - 7*log(4)/3 + 56*log(8)/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-49/9 - 7*log(4)/3 + 56*log(8)/3) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7*x**2*ln(4*x)",
+   "source_labels": [
+    "III-F"
+   ]
+  },
+  "def_byparts_x_sqrt_lin": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "1088/15",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(1088/15) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "4*x*sqrt(x - 1)",
+   "source_labels": [
+    "III-G"
+   ]
+  },
+  "def_byparts_ln_sqrt": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-8 + 8*log(4)",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "(-8 + 8*log(4)) + 1",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "2*ln(x)/sqrt(x)",
+   "source_labels": [
+    "III-J"
+   ]
+  }
+ },
+ "counts": {
+  "exercises_total": 124,
+  "mapped": 122,
+  "excluded": 2,
+  "uncovered": 0,
+  "unique_structures": 168,
+  "indefinite_structures": 95,
+  "definite_structures": 73,
+  "all_graded_correct": true
+ },
+ "excluded_reasons": {
+  "III-30": "complex answer (2-2i): radicand negative inside interval",
+  "III-34": "nan: 5/(x-1) has a singularity at x=1 inside [0,2]"
+ }
+}

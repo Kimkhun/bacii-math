@@ -260,7 +260,7 @@ def main():
     formula_pass = formula_fail = formula_skip = 0
 
     for fpath in files:
-        data = json.load(open(fpath))
+        data = json.load(open(fpath, encoding="utf-8"))
         year = data["exams"][0]["exam_date"][:4]
         for exam in data["exams"]:
             for sec in exam["sections"]:

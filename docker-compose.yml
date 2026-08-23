@@ -38,12 +38,14 @@ services:
       - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-7}
       - GEMINI_PROJECT=${GEMINI_PROJECT:-}
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.5-flash}
+      - GEMINI_VISION_MODEL=${GEMINI_VISION_MODEL:-}
       - GEMINI_LOCATION=${GEMINI_LOCATION:-global}
       - GEMINI_RATE_LIMIT_PER_MINUTE=${GEMINI_RATE_LIMIT_PER_MINUTE:-10}
       - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gemini-service-account.json
       - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434/api/generate}
       - TEXT_MODEL=${TEXT_MODEL:-qwen2.5:3b}
       - VISION_MODEL=${VISION_MODEL:-qwen2.5vl:3b}
+      - VISION_PROVIDER=${VISION_PROVIDER:-gemini}
       - EXPLANATION_CACHE_TTL_SECONDS=${EXPLANATION_CACHE_TTL_SECONDS:-86400}
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -59,6 +61,7 @@ services:
       - backend
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8016}
+      - WATCHPACK_POLLING=300
     volumes:
       - ./web:/app
       - /app/node_modules

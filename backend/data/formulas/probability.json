@@ -1,0 +1,84 @@
+{
+  "laplace_rule": {
+    "name_en": "Laplace's rule",
+    "name_km": "",
+    "latex": "P(A) = \\frac{n(A)}{n(\\Omega)}",
+    "weight": 1,
+    "group": "probability",
+    "formulas": [
+      "P(A) = \\frac{n(A)}{n(\\Omega)}"
+    ]
+  },
+  "combination_rule": {
+    "name_en": "Combination (n choose k)",
+    "name_km": "",
+    "latex": "C(n,k) = \\frac{n!}{k!(n-k)!}",
+    "weight": 1,
+    "group": "probability",
+    "formulas": [
+      "C(n,k) = \\frac{n!}{k!(n-k)!}"
+    ]
+  },
+  "hypergeometric_rule": {
+    "name_en": "Hypergeometric probability (sampling without replacement)",
+    "name_km": "",
+    "latex": "P = \\frac{C(w,a)\\,C(b,k-a)}{C(w+b,k)}",
+    "weight": 2,
+    "group": "probability",
+    "formulas": [
+      "P(\\text{all white}) = \\frac{C(w,k)}{C(w+b,k)}",
+      "P(\\text{exactly } a \\text{ white, } k-a \\text{ black}) = \\frac{C(w,a)\\,C(b,k-a)}{C(w+b,k)}",
+      "P(\\text{at least one white}) = 1 - \\frac{C(b,k)}{C(w+b,k)}"
+    ]
+  },
+  "product_rule": {
+    "name_en": "Product rule for independent draws",
+    "name_km": "",
+    "latex": "P(A\\cap B) = P(A)\\,P(B)",
+    "weight": 1,
+    "group": "probability",
+    "formulas": [
+      "P(\\text{draw from box 1}) \\times P(\\text{draw from box 2})"
+    ]
+  },
+  "binomial_rule": {
+    "name_en": "Binomial probability (exactly k successes)",
+    "name_km": "",
+    "latex": "P(X=k) = C(n,k)\\,p^k(1-p)^{n-k}",
+    "weight": 2,
+    "group": "probability",
+    "formulas": [
+      "P(\\text{exactly } k \\text{ heads in } n \\text{ flips}) = \\frac{C(n,k)}{2^n}"
+    ]
+  },
+  "union_rule": {
+    "name_en": "Probability of a union",
+    "name_km": "",
+    "latex": "P(A\\cup B) = P(A) + P(B) - P(A\\cap B)",
+    "weight": 2,
+    "group": "probability",
+    "formulas": [
+      "P(A\\cup B) = P(A) + P(B) - P(A\\cap B)"
+    ]
+  },
+  "conditional_rule": {
+    "name_en": "Conditional probability",
+    "name_km": "",
+    "latex": "P(A\\mid B) = \\frac{P(A\\cap B)}{P(B)}",
+    "weight": 2,
+    "group": "probability",
+    "formulas": [
+      "P(A\\mid B) = \\frac{P(A\\cap B)}{P(B)}"
+    ]
+  },
+  "complement_rule": {
+    "name_en": "Complement rule",
+    "name_km": "",
+    "latex": "P(A^c) = 1 - P(A)",
+    "weight": 1,
+    "group": "probability",
+    "formulas": [
+      "P(\\text{at least one white}) = 1 - P(\\text{no white})"
+    ]
+  }
+}

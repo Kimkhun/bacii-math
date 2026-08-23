@@ -13,6 +13,8 @@ from google.oauth2 import service_account
 
 from core.config import settings
 
+from .formulas import resolve_formula
+
 _client = None
 
 
@@ -56,6 +58,28 @@ async def _gemini_generate(prompt: str, json_mode: bool = False) -> str:
     return resp.text
 
 
+async def gemini_vision_generate(prompt: str, image_bytes: bytes, mime_type: str = "image/png") -> str | None:
+    """Best-effort Gemini vision call for handwriting OCR.
+
+    Uses the same Vertex service account as the text/explanation calls, so the
+    normal Gemini quota applies (Vertex API, not the consumer free tier).
+    Returns None on any error so callers can fall back to Ollama.
+    """
+    model = settings.gemini_vision_model or settings.gemini_model
+    try:
+        resp = await _gemini_client().aio.models.generate_content(
+            model=model,
+            contents=[
+                types.Part(text=prompt),
+                types.Part(inline_data=types.Blob(mime_type=mime_type, data=image_bytes)),
+            ],
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
+        )
+        return resp.text
+    except Exception:
+        return None
+
+
 async def _ollama_generate(prompt: str) -> str:
     async with httpx.AsyncClient(timeout=120) as client:
         resp = await client.post(
@@ -83,17 +107,37 @@ async def _generate_with_fallback(prompt: str, allow_gemini: bool = True) -> tup
     return None, None
 
 
-async def narrate(steps_text: str, allow_gemini: bool = True) -> tuple[str | None, str | None]:
+async def narrate(steps_text: str, allow_gemini: bool = True, context: dict | None = None) -> tuple[str | None, str | None]:
     prompt = (
         "Explain the solution below in a concise, no-nonsense style.\n"
         "For each step write ONE short line: the key computation and its result. "
         "At most one sentence per step.\n"
         "No greeting, no closing, no headings, no analogies, no encouragement, "
         "no markdown. Just the math, step by step.\n"
-        "Follow the given steps exactly; do not invent new math.\n\n"
+        "Follow the given steps exactly; do not invent new math.\n"
+        "Do not add any analysis not present in the given steps — no 'undefined', "
+        "no domain restrictions, no alternative approaches.\n"
+        "Write EVERY mathematical expression as LaTeX wrapped in \\( and \\) "
+        "(e.g. \\( \\lim_{x\\to 2} \\frac{x^2-4}{x-2} = 4 \\)). Never write "
+        "plain-text math like lim(x -> 2) or sqrt(x+1).\n\n"
         f"{steps_text}"
     )
+    if context and context.get("user_answer"):
+        part = context.get("part")
+        expected = context.get("expected")
+        expected_note = f" and the correct value for that part is '{expected}'" if expected else ""
+        prompt = (
+            f"CONTEXT: the student answered{subpart_label(part)} with "
+            f"'{context['user_answer']}'{expected_note}.\n"
+            "Briefly (one line, at the start) connect their answer to the correct one "
+            "for that part, then explain the solution. Never invent math beyond the "
+            "steps below.\n\n" + prompt
+        )
     return await _generate_with_fallback(prompt, allow_gemini)
+
+
+def subpart_label(part):
+    return f" part {part}" if part else ""
 
 
 def _step_check_summary(step_check: dict | None) -> str:
@@ -103,17 +147,32 @@ def _step_check_summary(step_check: dict | None) -> str:
     for r in step_check["line_results"]:
         if not r.get("checked"):
             continue
-        verdict = "OK, matches " + r["matches"] if r.get("correct") else "WRONG at this step"
+        formula = r.get("formula")
+        fname = f" ({resolve_formula(formula)['name_en']})" if formula else ""
+        expected = r.get("expected")
+        if r.get("correct"):
+            verdict = f"OK, matches {r['matches']}{fname}"
+            if expected:
+                verdict += f" (expected value: {expected})"
+        else:
+            verdict = "could not verify against the expected step"
+            if expected:
+                verdict += f" (expected value: {expected})"
+            verdict += fname
         lines.append(f"  line {r['line']} (\"{r['text']}\"): {verdict}")
     if not lines:
         return ""
     first_error = step_check.get("first_error_line")
     header = (
-        f"\nVERIFIED STEP CHECK (computed exactly by SymPy, not a guess — trust this over your "
-        f"own judgment of the algebra):\n" + "\n".join(lines) + "\n"
+        f"\nSTEP CHECK (lines marked OK are verified exactly by SymPy; lines marked "
+        f"'could not verify' are NOT certain):\n" + "\n".join(lines) + "\n"
     )
     if first_error:
-        header += f"The first line that is mathematically wrong is line {first_error}. Center your answer on that line.\n"
+        header += (
+            f"The first line that could not be verified is line {first_error}. Re-check that "
+            f"line yourself against the expected value above — it may be a real mistake or a "
+            f"valid alternative step.\n"
+        )
     return header
 
 
@@ -132,12 +191,23 @@ async def check_work(
         f"CORRECT SOLUTION, ONE STEP PER LINE:\n{steps_text}\n\n"
         f"CORRECT ANSWER: {answer}\n"
         f"{_step_check_summary(step_check)}\n"
+        "The question and the student's work may be in Khmer: work lines can mix Khmer "
+        "words (e.g. ប្រូបាប៊ីលីតេ, ទាញបាន) with the math, and numbers may be written with "
+        "Khmer digits (០-៩). Read the Khmer to understand what the student did, but judge "
+        "only the MATH — the numbers and expressions. When quoting a value back, write it "
+        "with Arabic digits.\n"
         "Check the student's work against the correct solution, step by step:\n"
         "- If the student's work is fully correct, say so in one short line.\n"
         "- Otherwise, point out the FIRST mistake: which line of the student's work "
-        "is wrong, why it is wrong, and what the correct value should be at that step. "
-        "If a VERIFIED STEP CHECK is given above, that line number is authoritative — do not "
-        "second-guess it or pick a different line.\n"
+        "is wrong, why it is wrong, and what the correct value should be at that step.\n"
+        "- Lines marked OK in the STEP CHECK are certain — trust them. Lines marked "
+        "'could not verify' are NOT certain: they may be a real mistake OR a valid "
+        "alternative step. For those lines, compare the student's line against the "
+        "expected value and the correct solution yourself; if the student used a "
+        "valid alternative method, say the work is correct and move on.\n"
+        "- If the student's work reaches the correct answer through valid steps, say "
+        "it is correct. Do not flag correct work over pedantic caveats like domain "
+        "restrictions on cancellation — only flag genuine algebra errors.\n"
         "- Mention what the student got right, if anything.\n"
         "Be concise: max 6 lines. No greeting, no closing, no markdown."
     )

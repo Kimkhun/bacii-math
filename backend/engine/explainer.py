@@ -14,16 +14,24 @@ def _problem_desc(topic, question_type, params):
     if topic == "complex":
         z_sym = params["a"] + params["b"] * I
         return f"{question_type} of \\(z\\) = {inline_latex(z_sym)}"
-    if topic == "calculus":
+    if topic == "limit":
         var = params["var"]
         expr = sympify(params["expr"], locals=_calc_locals(var))
-        if question_type == "limit":
-            point = sympify(params["point"], locals=_calc_locals(var))
-            return f"limit of {inline_latex(expr)} as \\({var} \\to {point}\\)"
-        if question_type == "definite_integral":
-            lower = sympify(params["lower"], locals=_calc_locals(var))
-            upper = sympify(params["upper"], locals=_calc_locals(var))
-            return f"integral of {inline_latex(expr)} \\(d{var}\\) from \\({var} = {lower}\\) to \\({var} = {upper}\\)"
+        point = sympify(params["point"], locals=_calc_locals(var))
+        return f"limit of {inline_latex(expr)} as \\({var} \\to {point}\\)"
+    if topic == "integral":
+        var = params["var"]
+        expr = sympify(params["expr"], locals=_calc_locals(var))
+        if question_type == "indefinite_integral":
+            return f"indefinite integral of {inline_latex(expr)} with respect to \\({var}\\)"
+        lower = sympify(params["lower"], locals=_calc_locals(var))
+        upper = sympify(params["upper"], locals=_calc_locals(var))
+        return f"integral of {inline_latex(expr)} \\(d{var}\\) from \\({var} = {lower}\\) to \\({var} = {upper}\\)"
+    if topic == "probability":
+        structure = params.get("structure", "?")
+        want = params.get("want")
+        label = f"{structure}" + (f" ({want})" if want else "")
+        return f"probability word problem ({label})"
     return f"{question_type} with {params}"
 
 
