@@ -1,0 +1,34 @@
+{
+  "formula_name": "conjugate_infinity",
+  "description": "∞-∞ at infinity involving a square root: multiply and divide by the conjugate to collapse the difference, then divide by the dominant power.",
+  "count": 3,
+  "exercises": [
+    {
+      "id": "2014c",
+      "year": "2014",
+      "exam_date": "2014-10-13",
+      "prompt_latex": "\\lim_{x\\to +\\infty} \\left(\\sqrt{x^2+x}-x\\right)",
+      "answer_latex": "\\frac{1}{2}",
+      "technique": "∞-∞ at infinity. Multiply and divide by the conjugate sqrt(x^2+x)+x to turn the difference into x/(sqrt(x^2+x)+x), then divide numerator and denominator by x and let x→∞.",
+      "formula_latex": "\\sqrt{x^2+x}-x=\\frac{x}{\\sqrt{x^2+x}+x}"
+    },
+    {
+      "id": "2019a",
+      "year": "2019",
+      "exam_date": "2019-08-19",
+      "prompt_latex": "\\lim_{x\\to +\\infty} \\left[\\sqrt{x^2+2x+3}-(x+1)\\right]",
+      "answer_latex": "0",
+      "technique": "∞-∞ at infinity. Multiply and divide by the conjugate sqrt(x^2+2x+3)+(x+1); the numerator collapses to the constant 2, so the whole expression is 2/[sqrt(x^2+2x+3)+x+1] → 0 as the denominator → ∞.",
+      "formula_latex": "\\left[\\sqrt{x^2+2x+3}-(x+1)\\right]\\left[\\sqrt{x^2+2x+3}+(x+1)\\right]=2"
+    },
+    {
+      "id": "2024c",
+      "year": "2024",
+      "exam_date": "2024-10-08",
+      "prompt_latex": "\\lim_{x\\to -\\infty} \\left(x+\\sqrt{x^2+9}\\right)",
+      "answer_latex": "0",
+      "technique": "∞-∞ at negative infinity. Multiply and divide by the conjugate sqrt(x^2+9)-x: numerator collapses to the constant 9, giving 9/(sqrt(x^2+9)-x). As x→-∞, sqrt(x^2+9)~-x so the denominator → +∞, sending the ratio to 0.",
+      "formula_latex": "\\left(x+\\sqrt{x^2+9}\\right)\\left(\\sqrt{x^2+9}-x\\right)=9"
+    }
+  ]
+}

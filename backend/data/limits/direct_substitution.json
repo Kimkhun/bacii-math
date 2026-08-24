@@ -1,0 +1,43 @@
+{
+  "formula_name": "direct_substitution",
+  "description": "No indeterminate form: the function is continuous at the limit point, evaluate by direct substitution.",
+  "count": 4,
+  "exercises": [
+    {
+      "id": "2021a",
+      "year": "2021",
+      "exam_date": "2021-08-27",
+      "prompt_latex": "\\lim_{x\\to 3} \\sqrt{3x^2-11}",
+      "answer_latex": "4",
+      "technique": "No indeterminate form: sqrt(3x^2-11) is continuous at x=3 and 3(3)^2-11=16≥0, so evaluate by direct substitution.",
+      "formula_latex": "\\lim_{x\\to a}\\sqrt{g(x)}=\\sqrt{g(a)}\\ \\text{when } g(a)\\ge0"
+    },
+    {
+      "id": "2022a",
+      "year": "2022",
+      "exam_date": "2022-10-05",
+      "prompt_latex": "\\lim_{x\\to 0} \\frac{e^x+1}{2e^x}",
+      "answer_latex": "1",
+      "technique": "No indeterminate form: e^x is continuous and 2e^x never vanishes, so evaluate by direct substitution at x=0.",
+      "formula_latex": "\\lim_{x\\to a}f(x)=f(a)\\ \\text{when } f \\text{ continuous at } a"
+    },
+    {
+      "id": "2024a",
+      "year": "2024",
+      "exam_date": "2024-10-08",
+      "prompt_latex": "\\lim_{x\\to 0} \\left(2e^{3x}-xe^{2x}+2e^{x}+4\\right)",
+      "answer_latex": "8",
+      "technique": "No indeterminate form: every term is a continuous exponential/polynomial product, so evaluate by direct substitution at x=0 (2·1-0·1+2·1+4).",
+      "formula_latex": "\\lim_{x\\to a}f(x)=f(a)\\ \\text{when } f \\text{ continuous at } a"
+    },
+    {
+      "id": "2025a",
+      "year": "2025",
+      "exam_date": "2025-08-28",
+      "prompt_latex": "\\lim_{x\\to 1} \\left(\\sqrt{x^2-1}+3x\\right)",
+      "answer_latex": "3",
+      "technique": "No indeterminate form: sqrt(x^2-1) is continuous at x=1 (x^2-1=0≥0) and the whole expression is continuous there, so evaluate by direct substitution.",
+      "formula_latex": "\\lim_{x\\to a}\\sqrt{g(x)}=\\sqrt{g(a)}\\ \\text{when } g(a)\\ge0"
+    }
+  ]
+}

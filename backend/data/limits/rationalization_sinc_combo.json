@@ -1,0 +1,16 @@
+{
+  "formula_name": "rationalization_sinc_combo",
+  "description": "0/0 at x=0 combining conjugate rationalization of a square-root numerator with the standard sinc limit sin x / x -> 1.",
+  "count": 1,
+  "exercises": [
+    {
+      "id": "2017c",
+      "year": "2017",
+      "exam_date": "2017-08-21",
+      "prompt_latex": "\\lim_{x\\to 0} \\frac{\\sqrt{2+x}-\\sqrt{2-x}}{\\sin x}",
+      "answer_latex": "\\frac{\\sqrt{2}}{2}",
+      "technique": "0/0 at x=0. Rationalize the numerator by multiplying by sqrt(2+x)+sqrt(2-x): (2+x)-(2-x)=2x, giving 2x/[sin x·(sqrt(2+x)+sqrt(2-x))]. Split off the sinc factor x/sin x → 1 and evaluate the remaining sqrt sum at x=0.",
+      "formula_latex": "(\\sqrt{2+x}-\\sqrt{2-x})(\\sqrt{2+x}+\\sqrt{2-x})=2x;\\quad \\lim_{x\\to0}\\frac{x}{\\sin x}=1"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "formula_name": "exponential_standard_limit",
+  "description": "0/0 at x=0 using the standard exponential limit (e^{kx}-1)/x -> k.",
+  "count": 1,
+  "exercises": [
+    {
+      "id": "2025b",
+      "year": "2025",
+      "exam_date": "2025-08-28",
+      "prompt_latex": "\\lim_{x\\to 0} \\frac{e^{4x}-1}{e^{x}-1}",
+      "answer_latex": "4",
+      "technique": "0/0 at x=0. Divide numerator and denominator by x and apply the standard exponential limit (e^{kx}-1)/x → k separately to numerator (k=4) and denominator (k=1); the ratio is 4/1.",
+      "formula_latex": "\\lim_{x\\to0}\\frac{e^{kx}-1}{x}=k"
+    }
+  ]
+}

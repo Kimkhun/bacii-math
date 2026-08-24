@@ -1,0 +1,16 @@
+{
+  "formula_name": "rational_function_infinity",
+  "description": "∞/∞ at infinity for a rational function: the limit of same-degree polynomial ratios equals the ratio of leading coefficients.",
+  "count": 1,
+  "exercises": [
+    {
+      "id": "2024b",
+      "year": "2024",
+      "exam_date": "2024-10-08",
+      "prompt_latex": "\\lim_{x\\to +\\infty} \\frac{8x^2-x+1}{ax^2+8} = 1,\\ \\text{find } a",
+      "answer_latex": "a=8",
+      "technique": "∞/∞ at infinity: for a rational function, the limit of the ratio of same-degree polynomials equals the ratio of leading coefficients. Set 8/a=1 and solve for a.",
+      "formula_latex": "\\lim_{x\\to\\infty}\\frac{a_nx^n+\\dots}{b_nx^n+\\dots}=\\frac{a_n}{b_n}"
+    }
+  ]
+}

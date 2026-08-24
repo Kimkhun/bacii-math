@@ -1,0 +1,16 @@
+{
+  "formula_name": "half_angle_sinc_combo",
+  "description": "0/0 at x=0 combining sin x factoring with the half-angle limit (1-cos x)/x^2 -> 1/2 and/or the sinc limit.",
+  "count": 1,
+  "exercises": [
+    {
+      "id": "2024d",
+      "year": "2024",
+      "exam_date": "2024-10-08",
+      "prompt_latex": "\\lim_{x\\to 0} \\frac{\\sin x - \\sin x\\cos x}{x^3}",
+      "answer_latex": "\\frac{1}{2}",
+      "technique": "0/0 at x=0. Factor sin x(1-cos x) from the numerator, then replace 1-cos x with the half-angle form 2sin^2(x/2). Split the expression into (sin x/x)·(2sin^2(x/2))/x^2 and apply the sinc limit twice.",
+      "formula_latex": "1-\\cos x=2\\sin^2\\frac{x}{2};\\quad \\lim_{x\\to0}\\frac{\\sin x}{x}=1"
+    }
+  ]
+}

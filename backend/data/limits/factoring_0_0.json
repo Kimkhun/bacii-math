@@ -1,0 +1,43 @@
+{
+  "formula_name": "factoring_0_0",
+  "description": "0/0 at a finite point: factor numerator and denominator (polynomial, no radicals/trig) and cancel the common factor.",
+  "count": 4,
+  "exercises": [
+    {
+      "id": "2014a",
+      "year": "2014",
+      "exam_date": "2014-10-13",
+      "prompt_latex": "\\lim_{x\\to 1} \\frac{x^3-x^2+x-1}{x-1}",
+      "answer_latex": "2",
+      "technique": "0/0 at x=1. Factor the numerator by grouping: x^3-x^2+x-1 = x^2(x-1)+(x-1) = (x-1)(x^2+1). Cancel (x-1), then substitute x=1 into x^2+1.",
+      "formula_latex": "x^3-x^2+x-1=(x-1)(x^2+1)"
+    },
+    {
+      "id": "2016a",
+      "year": "2016",
+      "exam_date": "2016-08-22",
+      "prompt_latex": "\\lim_{x\\to 1} \\frac{1-x^2}{x^2+2-3x}",
+      "answer_latex": "2",
+      "technique": "0/0 at x=1. Factor both: 1-x^2=-(x-1)(x+1) and x^2-3x+2=(x-1)(x-2). Cancel (x-1), leaving -(x+1)/(x-2); substitute x=1.",
+      "formula_latex": "1-x^2=-(x-1)(x+1);\\quad x^2-3x+2=(x-1)(x-2)"
+    },
+    {
+      "id": "2017a",
+      "year": "2017",
+      "exam_date": "2017-08-21",
+      "prompt_latex": "\\lim_{x\\to 1} \\frac{1-x^2}{x^3-x^2+x-1}",
+      "answer_latex": "-1",
+      "technique": "0/0 at x=1. Factor numerator 1-x^2=-(x-1)(x+1) and denominator x^3-x^2+x-1=(x-1)(x^2+1) by grouping. Cancel (x-1), leaving -(x+1)/(x^2+1); substitute x=1.",
+      "formula_latex": "1-x^2=-(x-1)(x+1);\\quad x^3-x^2+x-1=(x-1)(x^2+1)"
+    },
+    {
+      "id": "2018a",
+      "year": "2018",
+      "exam_date": "2018-08-20",
+      "prompt_latex": "\\lim_{x\\to 1} \\frac{x^2(x-2)+x^2+x-1}{1-x}",
+      "answer_latex": "-2",
+      "technique": "0/0 at x=1. Expand the numerator to x^3-x^2+x-1=(x-1)(x^2+1) by grouping; the denominator is 1-x=-(x-1). Cancel (x-1), leaving -(x^2+1); substitute x=1.",
+      "formula_latex": "x^2(x-2)+x^2+x-1=(x-1)(x^2+1)"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "formula_name": "sinc_standard_limit",
+  "description": "0/0 at x=0 using the standard limit sin(kx)/(kx) -> 1, possibly after a linear substitution.",
+  "count": 6,
+  "exercises": [
+    {
+      "id": "2015c",
+      "year": "2015",
+      "exam_date": "2015-08-24",
+      "prompt_latex": "\\lim_{x\\to 0} \\frac{3\\sin 3x}{x}",
+      "answer_latex": "9",
+      "technique": "0/0 at x=0, direct application of the standard sinc limit with k=3: write as 3·3·(sin 3x)/(3x).",
+      "formula_latex": "\\lim_{x\\to0}\\frac{\\sin kx}{kx}=1"
+    },
+    {
+      "id": "2016c",
+      "year": "2016",
+      "exam_date": "2016-08-22",
+      "prompt_latex": "\\lim_{x\\to 0} \\frac{5\\sin 5x}{x}",
+      "answer_latex": "25",
+      "technique": "0/0 at x=0, direct application of the standard sinc limit with k=5: write as 5·5·(sin 5x)/(5x).",
+      "formula_latex": "\\lim_{x\\to0}\\frac{\\sin kx}{kx}=1"
+    },
+    {
+      "id": "2017b",
+      "year": "2017",
+      "exam_date": "2017-08-21",
+      "prompt_latex": "\\lim_{x\\to 0} \\frac{\\sin 3x}{-x}",
+      "answer_latex": "-3",
+      "technique": "0/0 at x=0, direct application of the standard sinc limit with k=3, with an extra sign flip from the -x denominator.",
+      "formula_latex": "\\lim_{x\\to0}\\frac{\\sin kx}{kx}=1"
+    },
+    {
+      "id": "2018b",
+      "year": "2018",
+      "exam_date": "2018-08-20",
+      "prompt_latex": "\\lim_{x\\to 0} \\frac{-2x}{\\sin 3x}",
+      "answer_latex": "-\\frac{2}{3}",
+      "technique": "0/0 at x=0. Write as -2/3 · (3x)/(sin 3x) and apply the standard sinc limit with k=3.",
+      "formula_latex": "\\lim_{x\\to0}\\frac{kx}{\\sin kx}=1"
+    },
+    {
+      "id": "2021b",
+      "year": "2021",
+      "exam_date": "2021-08-27",
+      "prompt_latex": "\\lim_{x\\to \\frac{\\pi}{3}} \\frac{\\sqrt{3}\\sin\\left(x-\\frac{\\pi}{3}\\right)}{\\frac{\\pi}{3}-x}",
+      "answer_latex": "-\\sqrt{3}",
+      "technique": "0/0 at x=pi/3. Substitute t=x-pi/3 so the denominator is -t; apply the standard sinc limit sin t/t → 1 with a sign flip.",
+      "formula_latex": "\\lim_{t\\to0}\\frac{\\sin t}{t}=1,\\ t=x-\\frac{\\pi}{3}"
+    },
+    {
+      "id": "2022c",
+      "year": "2022",
+      "exam_date": "2022-10-05",
+      "prompt_latex": "\\lim_{x\\to \\frac{\\pi}{3}} \\frac{\\sqrt{3}\\left(\\frac{\\pi}{3}-x\\right)}{\\sin\\left(x-\\frac{\\pi}{3}\\right)}",
+      "answer_latex": "-\\sqrt{3}",
+      "technique": "0/0 at x=pi/3. Substitute t=x-pi/3; numerator becomes sqrt3·(-t), denominator sin t. Apply the sinc limit t/sin t → 1.",
+      "formula_latex": "\\lim_{t\\to0}\\frac{t}{\\sin t}=1,\\ t=x-\\frac{\\pi}{3}"
+    }
+  ]
+}

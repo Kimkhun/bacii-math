@@ -1,0 +1,25 @@
+{
+  "formula_name": "angle_addition_0_0",
+  "description": "0/0 at x=pi/3 (or similar): rewrite a linear combination a*sin x + b*cos x via the angle-addition identity as R*sin(x - phi), then apply the sinc limit.",
+  "count": 2,
+  "exercises": [
+    {
+      "id": "2018c",
+      "year": "2018",
+      "exam_date": "2018-08-20",
+      "prompt_latex": "\\lim_{x\\to \\frac{\\pi}{3}} \\frac{\\sin x - \\sqrt{3}\\cos x}{2(\\pi-3x)}",
+      "answer_latex": "-\\frac{1}{3}",
+      "technique": "0/0 at x=pi/3. Rewrite the linear combination sin x - sqrt3 cos x as 2 sin(x-pi/3) (angle-addition identity), and note pi-3x = -3(x-pi/3). Substitute t=x-pi/3 and apply the sinc limit sin t/t → 1.",
+      "formula_latex": "\\sin x-\\sqrt3\\cos x=2\\sin\\left(x-\\frac{\\pi}{3}\\right);\\quad \\lim_{t\\to0}\\frac{\\sin t}{t}=1"
+    },
+    {
+      "id": "2025d",
+      "year": "2025",
+      "exam_date": "2025-08-28",
+      "prompt_latex": "\\lim_{x\\to \\frac{\\pi}{3}} \\frac{x-\\frac{\\pi}{3}}{\\sin x - \\sqrt{3}\\cos x}",
+      "answer_latex": "\\frac{1}{2}",
+      "technique": "0/0 at x=pi/3. Rewrite sin x - sqrt3 cos x as 2 sin(x-pi/3) (angle-addition identity), giving t/(2 sin t) with t=x-pi/3, then apply the sinc limit t/sin t → 1.",
+      "formula_latex": "\\sin x-\\sqrt3\\cos x=2\\sin\\left(x-\\frac{\\pi}{3}\\right);\\quad \\lim_{t\\to0}\\frac{t}{\\sin t}=1"
+    }
+  ]
+}

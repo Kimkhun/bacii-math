@@ -1,0 +1,52 @@
+{
+  "formula_name": "rationalization_conjugate_finite",
+  "description": "0/0 at a finite point involving a square root: multiply by the conjugate to rationalize, then cancel and substitute.",
+  "count": 5,
+  "exercises": [
+    {
+      "id": "2015a",
+      "year": "2015",
+      "exam_date": "2015-08-24",
+      "prompt_latex": "\\lim_{x\\to 2} \\frac{x^3-8}{\\sqrt{x+2}-2}",
+      "answer_latex": "48",
+      "technique": "0/0 at x=2. Factor numerator x^3-8=(x-2)(x^2+2x+4); rationalize the denominator by multiplying by (sqrt(x+2)+2), which turns sqrt(x+2)-2 into (x-2)/(sqrt(x+2)+2). The (x-2) factors cancel, leaving (x^2+2x+4)(sqrt(x+2)+2).",
+      "formula_latex": "x^3-8=(x-2)(x^2+2x+4);\\quad \\sqrt{x+2}-2=\\frac{x-2}{\\sqrt{x+2}+2}"
+    },
+    {
+      "id": "2016b",
+      "year": "2016",
+      "exam_date": "2016-08-22",
+      "prompt_latex": "\\lim_{x\\to 3} \\frac{\\sqrt{x+6}-3}{x^3-27}",
+      "answer_latex": "\\frac{1}{162}",
+      "technique": "0/0 at x=3. Rationalize the numerator (multiply by sqrt(x+6)+3) to get (x-3)/(sqrt(x+6)+3); factor denominator x^3-27=(x-3)(x^2+3x+9). Cancel (x-3), leaving 1/[(sqrt(x+6)+3)(x^2+3x+9)].",
+      "formula_latex": "\\sqrt{x+6}-3=\\frac{x-3}{\\sqrt{x+6}+3};\\quad x^3-27=(x-3)(x^2+3x+9)"
+    },
+    {
+      "id": "2022b",
+      "year": "2022",
+      "exam_date": "2022-10-05",
+      "prompt_latex": "\\lim_{x\\to 1} \\frac{\\sqrt{x+3}-2}{\\sqrt{x}-1}",
+      "answer_latex": "\\frac{1}{2}",
+      "technique": "0/0 at x=1. Rationalize both numerator and denominator by multiplying by (sqrt(x+3)+2) and (sqrt(x)+1); this turns the ratio into (x-1)(sqrt x+1) / [(x-1)(sqrt(x+3)+2)], and the (x-1) factors cancel.",
+      "formula_latex": "\\sqrt{x+3}-2=\\frac{x-1}{\\sqrt{x+3}+2};\\quad \\sqrt{x}-1=\\frac{x-1}{\\sqrt{x}+1}"
+    },
+    {
+      "id": "2023c",
+      "year": "2023",
+      "exam_date": "2023-11-06",
+      "prompt_latex": "\\lim_{x\\to 3} \\frac{x^3-27}{27(\\sqrt{x+6}-3)}",
+      "answer_latex": "6",
+      "technique": "0/0 at x=3. Factor numerator x^3-27=(x-3)(x^2+3x+9); rationalize denominator sqrt(x+6)-3=(x-3)/(sqrt(x+6)+3). The (x-3) factors cancel, leaving (x^2+3x+9)(sqrt(x+6)+3)/27.",
+      "formula_latex": "x^3-27=(x-3)(x^2+3x+9);\\quad \\sqrt{x+6}-3=\\frac{x-3}{\\sqrt{x+6}+3}"
+    },
+    {
+      "id": "2025c",
+      "year": "2025",
+      "exam_date": "2025-08-28",
+      "prompt_latex": "\\lim_{x\\to 2} \\frac{2-\\sqrt{x+2}}{x^3-8}",
+      "answer_latex": "-\\frac{1}{48}",
+      "technique": "0/0 at x=2. Rationalize the numerator by multiplying by (2+sqrt(x+2)): (4-(x+2))=(2-x), giving -(x-2)/(2+sqrt(x+2)). Factor denominator x^3-8=(x-2)(x^2+2x+4); cancel (x-2), leaving -1/[(2+sqrt(x+2))(x^2+2x+4)].",
+      "formula_latex": "2-\\sqrt{x+2}=\\frac{-(x-2)}{2+\\sqrt{x+2}};\\quad x^3-8=(x-2)(x^2+2x+4)"
+    }
+  ]
+}

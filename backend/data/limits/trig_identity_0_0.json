@@ -1,0 +1,52 @@
+{
+  "formula_name": "trig_identity_0_0",
+  "description": "0/0 at a finite point using a Pythagorean/trig identity (e.g. sin^2x-1, 1-cos^2x) to factor and cancel.",
+  "count": 5,
+  "exercises": [
+    {
+      "id": "2014b",
+      "year": "2014",
+      "exam_date": "2014-10-13",
+      "prompt_latex": "\\lim_{x\\to \\frac{\\pi}{2}} \\frac{\\sin^2 x - 1}{1+\\sin x}",
+      "answer_latex": "0",
+      "technique": "0/0 at x=pi/2. Use sin^2x-1=-cos^2x=-(1-sin x)(1+sin x), cancel the (1+sin x) factor with the denominator, leaving -(1-sin x); substitute sin(pi/2)=1.",
+      "formula_latex": "\\sin^2x-1=-(1-\\sin x)(1+\\sin x)"
+    },
+    {
+      "id": "2015b",
+      "year": "2015",
+      "exam_date": "2015-08-24",
+      "prompt_latex": "\\lim_{x\\to 0} \\frac{\\cos x - 1}{\\sin^2 x}",
+      "answer_latex": "-\\frac{1}{2}",
+      "technique": "0/0 at x=0. Write sin^2x=(1-cos x)(1+cos x) via the Pythagorean identity, so the expression becomes -(1)/(1+cos x); substitute cos 0=1.",
+      "formula_latex": "\\sin^2x=(1-\\cos x)(1+\\cos x)"
+    },
+    {
+      "id": "2019b",
+      "year": "2019",
+      "exam_date": "2019-08-19",
+      "prompt_latex": "\\lim_{x\\to 0} \\frac{-2x\\sin x}{1-\\cos^2 x}",
+      "answer_latex": "-2",
+      "technique": "0/0 at x=0. Replace 1-cos^2x with sin^2x (Pythagorean identity), cancel one factor of sin x, leaving -2x/sin x, then apply the standard sinc limit x/sin x → 1.",
+      "formula_latex": "1-\\cos^2x=\\sin^2x;\\quad \\lim_{x\\to0}\\frac{x}{\\sin x}=1"
+    },
+    {
+      "id": "2019c",
+      "year": "2019",
+      "exam_date": "2019-08-19",
+      "prompt_latex": "\\lim_{x\\to -\\frac{\\pi}{2}} \\frac{1+\\sin x}{\\sin^4 x - 1}",
+      "answer_latex": "-\\frac{1}{4}",
+      "technique": "0/0 at x=-pi/2. Factor sin^4x-1=(sin^2x-1)(sin^2x+1)=-(1-sin x)(1+sin x)(sin^2x+1) via difference of squares plus the Pythagorean form. Cancel (1+sin x), leaving -1/[(1-sin x)(sin^2x+1)]; substitute sin(-pi/2)=-1.",
+      "formula_latex": "\\sin^4x-1=-(1-\\sin x)(1+\\sin x)(\\sin^2x+1)"
+    },
+    {
+      "id": "2023b",
+      "year": "2023",
+      "exam_date": "2023-11-06",
+      "prompt_latex": "\\lim_{x\\to -\\frac{\\pi}{2}} \\frac{1-\\sin^2 x}{2+2\\sin x}",
+      "answer_latex": "1",
+      "technique": "0/0 at x=-pi/2. Factor numerator via Pythagorean identity: 1-sin^2x=(1-sin x)(1+sin x); factor 2 from denominator: 2(1+sin x). Cancel (1+sin x), leaving (1-sin x)/2; substitute sin(-pi/2)=-1.",
+      "formula_latex": "1-\\sin^2x=(1-\\sin x)(1+\\sin x)"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "formula_name": "exponential_sinc_combo",
+  "description": "0/0 at x=0 combining a continuous exponential factor with the standard sinc-squared limit (sin x / x)^2 -> 1.",
+  "count": 1,
+  "exercises": [
+    {
+      "id": "2014d",
+      "year": "2014",
+      "exam_date": "2014-10-13",
+      "prompt_latex": "\\lim_{x\\to 0} \\frac{(e^{-x}+e^{x})\\sin^2 x}{2x^2}",
+      "answer_latex": "1",
+      "technique": "0/0 at x=0. Split as (e^{-x}+e^x) · (sin x / x)^2 / 2. The exponential factor is continuous (→2 at x=0) and the sinc-squared factor uses the standard limit sin x/x → 1.",
+      "formula_latex": "\\lim_{x\\to0}\\frac{\\sin x}{x}=1"
+    }
+  ]
+}
