@@ -1,10 +1,12 @@
 import hashlib
+import random
 import uuid
 import zlib
 
 from fastapi import HTTPException, status
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sympy import latex
 
 import cache
 from engine import explainer, formulas, generator, grader, llm, scenarios, solver, structures
@@ -484,14 +486,73 @@ def _build_integral_structure_payload() -> dict:
     return _integral_structure_payload
 
 
+_limit_structure_payload = None
+
+
+def _build_limit_structure_payload() -> dict:
+    """One card per limit *technique* (not per parameterized shape — most limit
+    techniques are tied to a specific identity, not free coefficients; see
+    `structures.LIMIT_TECHNIQUES`). Parameterizable techniques additionally get
+    a deterministic procedurally-generated sample; curated-only techniques show
+    one real BAC II exercise instead. Memoized like the integral payload."""
+    global _limit_structure_payload
+    if _limit_structure_payload is not None:
+        return _limit_structure_payload
+
+    label_map = structures.limit_source_label_map()
+    curated_by_technique: dict[str, list] = {}
+    for item in structures._LIMIT_CURATED_TEMPLATES:
+        curated_by_technique.setdefault(item["formula_name"], []).append(item)
+
+    entries = []
+    for technique, meta in structures.LIMIT_TECHNIQUES.items():
+        curated = sorted(curated_by_technique.get(technique, []), key=lambda it: it["id"])
+        source_labels = [it["id"] for it in curated]
+        entry = {
+            "id": technique,
+            "technique": technique,
+            "difficulty": meta["difficulty"],
+            "parameterizable": meta["parameterizable"],
+            "description": meta["description"],
+            "source_labels": source_labels,
+        }
+        if meta["parameterizable"]:
+            problem = generator.generate_limit_for_technique(
+                random.Random(zlib.crc32(technique.encode()) & 0xFFFFFFFF), technique,
+            )
+            solution = solver.solve("limit", "limit", problem["params"])
+            entry.update({
+                "sample_prompt": problem["prompt"],
+                "sample_prompt_latex": problem.get("prompt_latex"),
+                "sample_answer": str(solution["answer_exact"]),
+                "sample_answer_latex": solution.get("answer_latex"),
+                "formula_tags": solution.get("formula_tags", []),
+            })
+        elif curated:
+            example = curated[0]
+            entry.update({
+                "sample_prompt": f"\\(\\lim_{{x \\to {latex(example['point'])}}} {latex(example['expr'])}\\)",
+                "sample_answer": example["answer_latex"],
+                "sample_answer_latex": example["answer_latex"],
+                "formula_tags": [technique],
+            })
+        entries.append(entry)
+
+    _limit_structure_payload = {
+        "topic": "limit",
+        "question_types": [{"question_type": "limit", "structures": entries}],
+    }
+    return _limit_structure_payload
+
+
 async def get_template_structures() -> dict:
     """One card per unique template structure: the symbolic slot pattern, one
     deterministic filled sample (prompt + answer), formula tags, and the source
     BAC II exercise labels that map to it. Grouped by topic → question type."""
-    topics = [_build_integral_structure_payload()]
+    topics = [_build_integral_structure_payload(), _build_limit_structure_payload()]
 
     for topic in generator.TOPICS:
-        if topic == "integral":
+        if topic in ("integral", "limit"):
             continue
         question_types = []
         for qt in solver.QUESTION_TYPES_BY_TOPIC.get(topic, ()):

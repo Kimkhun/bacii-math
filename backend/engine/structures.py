@@ -707,6 +707,12 @@ def _load_limit_curated():
             try:
                 point = _to_point(point_latex)
                 expr = _latex_to_sympy(expr_latex)
+            except ImportError:
+                # antlr4-python3-runtime missing or version-mismatched with
+                # sympy's generated LaTeX grammar — every exercise would fail
+                # to parse the same way, silently emptying the curated pool
+                # instead of skipping a handful of bad prompts. Fail loudly.
+                raise
             except Exception:
                 # A handful of exam prompts don't round-trip through
                 # antlr's LaTeX grammar (e.g. an implicit "find a" ask
@@ -727,3 +733,94 @@ def _load_limit_curated():
 
 
 _LIMIT_CURATED_TEMPLATES = _load_limit_curated()
+
+
+# ---------------------------------------------------------------------------
+# Limit technique registry: one entry per solution technique (not per
+# parameterized shape — unlike integrals, most limit techniques are tied to a
+# specific algebraic identity, not to free coefficients). `parameterizable`
+# techniques additionally have a sampler in `engine/generator.py` that can
+# generate infinitely many valid instances; the rest are curated-only because
+# the technique only applies at specific "nice" points/values (e.g. an
+# angle-addition identity that only collapses cleanly at x = pi/3).
+# ---------------------------------------------------------------------------
+LIMIT_TECHNIQUES = {
+    "direct_substitution": {
+        "difficulty": "easy",
+        "parameterizable": True,
+        "description": "No indeterminate form: the function is continuous at the limit point, evaluate by direct substitution.",
+    },
+    "factoring_0_0": {
+        "difficulty": "easy",
+        "parameterizable": True,
+        "description": "0/0 at a finite point: factor numerator and denominator (polynomial, no radicals/trig) and cancel the common factor.",
+    },
+    "rationalization_conjugate_finite": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at a finite point involving a square root: multiply by the conjugate to rationalize, then cancel and substitute.",
+    },
+    "trig_identity_0_0": {
+        "difficulty": "medium",
+        "parameterizable": False,
+        "description": "0/0 at a finite point using a Pythagorean/trig identity (e.g. sin^2x-1, 1-cos^2x) to factor and cancel. Curated-only: "
+                        "the identity only collapses cleanly at specific angles (sin/cos = 0, +-1), so it doesn't generalize to free coefficients.",
+    },
+    "sinc_standard_limit": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at x=0 using the standard limit sin(kx)/(kx) -> 1, possibly after a linear substitution.",
+    },
+    "angle_addition_0_0": {
+        "difficulty": "medium",
+        "parameterizable": False,
+        "description": "0/0 at x=pi/3 (or similar): rewrite a linear combination a*sin x + b*cos x via the angle-addition identity as "
+                        "R*sin(x - phi), then apply the sinc limit. Curated-only: only specific (a, b, point) triples form a known angle.",
+    },
+    "rationalization_sinc_combo": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at x=0 combining conjugate rationalization of a square-root numerator with the standard sinc limit sin x / x -> 1.",
+    },
+    "exponential_sinc_combo": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at x=0 combining a continuous exponential factor with the standard sinc-squared limit (sin x / x)^2 -> 1.",
+    },
+    "half_angle_sinc_combo": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at x=0 combining sin x factoring with the half-angle limit (1-cos x)/x^2 -> 1/2 and/or the sinc limit.",
+    },
+    "exponential_standard_limit": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at x=0 using the standard exponential limit (e^{kx}-1)/x -> k.",
+    },
+    "conjugate_infinity": {
+        "difficulty": "hard",
+        "parameterizable": True,
+        "description": "Infinity minus infinity at infinity involving a square root: multiply and divide by the conjugate to collapse the "
+                        "difference, then divide by the dominant power.",
+    },
+    "log_limit_infinity": {
+        "difficulty": "hard",
+        "parameterizable": True,
+        "description": "Indeterminate form at infinity involving logarithms: reduce to the standard limit ln(1+u)/u -> 1 as u -> 0.",
+    },
+    "rational_function_infinity": {
+        "difficulty": "hard",
+        "parameterizable": True,
+        "description": "Infinity/infinity at infinity for a rational function: the limit of same-degree polynomial ratios equals the ratio "
+                        "of leading coefficients.",
+    },
+}
+
+
+def all_limit_techniques():
+    return dict(LIMIT_TECHNIQUES)
+
+
+def limit_source_label_map():
+    """exam exercise id -> technique id, for every curated limit exercise."""
+    return {item["id"]: item["formula_name"] for item in _LIMIT_CURATED_TEMPLATES}
