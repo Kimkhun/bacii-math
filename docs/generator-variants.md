@@ -3,7 +3,7 @@
 Every question template the generator can emit, which formulas it tags, and
 which difficulty pools it belongs to. Derived from `backend/engine/generator.py`
 (`_INTEGRAL_VARIANT_BY_DIFFICULTY`, `_INDEFINITE_VARIANT_BY_DIFFICULTY`,
-`_LIMIT_VARIANT_BY_DIFFICULTY`, complex pools).
+`_LIMIT_SAMPLERS` + `structures.LIMIT_TECHNIQUES`, complex pools).
 
 ## Complex numbers (5 question types; pools pick random params)
 
@@ -17,22 +17,53 @@ Gemini mode (complex only): LLM proposes a,b + type; SymPy validates.
 
 ## Limits
 
-Each request has a 50% chance of drawing a **curated** exercise (one of the 36
-real BAC II limit questions, 2014-2025, sorted by technique into
-`backend/data/limits/{formula_name}.json`) for the given difficulty, falling
-back to the procedural variant otherwise. Curated params carry `formula_name`
-+ the exam-authored technique text (`engine/structures._LIMIT_CURATED_TEMPLATES`,
-parsed at import time); `solver._solve_limit`'s `formula_name` branch uses that
-text to narrate steps while SymPy still computes/grades the answer.
+Limits are organized around a **technique registry** (`structures.LIMIT_TECHNIQUES`,
+13 entries — one per solution technique, not per parameterized shape), because
+most limit techniques are tied to a specific algebraic identity rather than
+free coefficients the way integral shapes are (e.g. the angle-addition
+identity only collapses cleanly at x = π/3; swapping coefficients on a sinc
+limit doesn't teach anything new the way swapping integral coefficients does).
+Each registry entry is flagged `parameterizable` or not:
 
-| Difficulty | Procedural variant | Procedural tags | Curated formula names (SymPy-verified) |
-|---|---|---|---|
-| easy | polynomial (random coeffs + point) | `direct_substitution` | `direct_substitution`, `factoring_0_0` |
-| medium | removable `(x²−c²)/(x−c)` | `factor_difference_of_squares`, `cancel_common_factor`, `direct_substitution` | `rationalization_conjugate_finite`, `trig_identity_0_0`, `sinc_standard_limit`, `angle_addition_0_0`, `rationalization_sinc_combo`, `exponential_sinc_combo`, `half_angle_sinc_combo`, `exponential_standard_limit` |
-| hard | infinity rational | `divide_highest_power`, `leading_coefficient_ratio` | `conjugate_infinity`, `log_limit_infinity`, `rational_function_infinity` |
+- **11 parameterizable techniques** each have a sampler in `generator.py`
+  (`_LIMIT_SAMPLERS`) that picks *constrained*, not free, parameters — e.g.
+  `conjugate_infinity` requires the sqrt's leading coefficient to be a perfect
+  square and derives the answer from the other slots — plus a matching
+  narration handler in `solver.py` (`_LIMIT_TECHNIQUE_HANDLERS`) that derives
+  the actual algebra for those specific numbers at request time (not
+  hardcoded prose): `direct_substitution`, `factoring_0_0`,
+  `rational_function_infinity`, `sinc_standard_limit`,
+  `exponential_standard_limit`, `conjugate_infinity`,
+  `rationalization_conjugate_finite`, `rationalization_sinc_combo`,
+  `exponential_sinc_combo`, `half_angle_sinc_combo`, `log_limit_infinity`.
+- **2 curated-only techniques** stay fixed to the real exam exercises because
+  parameterizing them would require faking a shape that doesn't generalize:
+  `trig_identity_0_0` (Pythagorean identity only cancels cleanly at
+  sin/cos = 0, ±1) and `angle_addition_0_0` (the angle-addition identity only
+  collapses at specific (a, b, point) triples).
+
+Each generation request for a given difficulty has a 50% chance of drawing a
+**curated** exercise (one of the 36 real, SymPy-verified BAC II limit
+questions, 2014-2025, sorted by technique into
+`backend/data/limits/{formula_name}.json`, loaded into
+`structures._LIMIT_CURATED_TEMPLATES` at import time) and otherwise picks a
+random *parameterizable* technique for that difficulty and samples a fresh
+instance. Curated params carry `formula_name` + the exam-authored technique
+text; procedural params carry an explicit `technique` id + its slot values
+(e.g. `{"technique": "sinc_standard_limit", "k": 6, "c": 3}`) — `solver.py`
+dispatches on whichever is present rather than re-inferring the shape from
+the expression.
+
+| Difficulty | Parameterizable techniques | Curated-only techniques |
+|---|---|---|
+| easy | `direct_substitution`, `factoring_0_0` | — |
+| medium | `sinc_standard_limit`, `exponential_standard_limit`, `rationalization_conjugate_finite`, `rationalization_sinc_combo`, `exponential_sinc_combo`, `half_angle_sinc_combo` | `trig_identity_0_0`, `angle_addition_0_0` |
+| hard | `conjugate_infinity`, `log_limit_infinity`, `rational_function_infinity` | — |
 
 (One curated exercise, `2024b`, is excluded from the pool — it's an inverse
-"find a given the limit" problem, not a plain limit to solve.)
+"find a given the limit" problem, not a plain limit to solve. See
+`scripts/verify_limit_structures.py` for the full coverage/grading audit, and
+the admin `GET /templates` endpoint for one live card per technique.)
 
 ## Definite integrals (`topic=integral`, `definite_integral`)
 
