@@ -1,24 +1,8 @@
-"""Random problem generation for complex-number, limit, and integral questions.
-
-Complex template mode keeps all coordinates integer so answers stay clean: modulus
-uses Pythagorean triples (integer answer), argument uses pairs yielding a multiple of
-pi/4 or an axis angle. Limit/integral template mode keeps problems restricted to
-patterns with clean, exactly-computable SymPy answers (direct substitution, factorable
-0/0 forms, rational limits at infinity, polynomial/simple-trig antiderivatives) — the
-same spirit as the BAC II mock-exam problems this was modeled on. In Gemini mode, the
-LLM proposes a complex-number problem and SymPy recomputes/validates the answer;
-Gemini generation is not offered for limits/integrals (proof/study-style problems
-don't reduce to a simple SymPy-checkable numeric answer the way these templates do).
-"""
-import random
-
-from sympy import Symbol, latex, oo, sympify
-
-from engine import llm, scenarios
+"""Integral generation: definite (polynomial, trig, linear_argument, u_substitution,
+mixed_sum, by_parts) and indefinite (power, expand, split, linear_argument, usub,
+trig_sec) variants, plus the difficulty variant tables."""
 from engine.notation import pretty_expr, pretty_point
-from engine.solver import QUESTION_TYPES, format_z, z_latex
 from engine.structures import (
-    _COEFF_POOLS,
     _fill,
     _INDEF_EXPAND_TEMPLATES,
     _INDEFINITE_TEMPLATES,
@@ -26,41 +10,10 @@ from engine.structures import (
     _INDEF_SPLIT_TEMPLATES,
     _INDEF_TRIG_SQ_TEMPLATES,
     _INDEF_USUB_TEMPLATES,
-    _LIMIT_CURATED_TEMPLATES,
 )
 
-TOPICS = ("complex", "limit", "integral", "probability")
+from .shared import _build_expr_problem, _expr_latex, _fmt_poly
 
-_MODULUS_POOLS = {
-    "easy": [(3, 4), (4, 3), (6, 8), (8, 6)],
-    "medium": [(5, 12), (12, 5), (9, 12), (12, 9), (8, 15), (15, 8)],
-    "hard": [(7, 24), (24, 7), (20, 21), (21, 20), (9, 40), (40, 9)],
-}
-
-_ARGUMENT_K = {"easy": 1, "medium": 2, "hard": 3}
-
-_HI_RANGE = {"easy": 5, "medium": 12, "hard": 20}
-
-_PROMPTS = {
-    "modulus": lambda z: f"Find the modulus |z| of z = {z}.",
-    "argument": lambda z: f"Find the principal argument arg(z), in radians, of z = {z}.",
-    "conjugate": lambda z: f"Find the complex conjugate of z = {z}.",
-    "real_part": lambda z: f"Find the real part Re(z) of z = {z}.",
-    "imaginary_part": lambda z: f"Find the imaginary part Im(z) of z = {z}.",
-}
-
-_PROMPTS_LATEX = {
-    "modulus": lambda zl: rf"\text{{Find the modulus }} |z| \text{{ of }} z = {zl}.",
-    "argument": lambda zl: rf"\text{{Find the principal argument }} \arg(z) \text{{ of }} z = {zl}.",
-    "conjugate": lambda zl: rf"\text{{Find the complex conjugate of }} z = {zl}.",
-    "real_part": lambda zl: rf"\text{{Find }} \operatorname{{Re}}(z) \text{{ of }} z = {zl}.",
-    "imaginary_part": lambda zl: rf"\text{{Find }} \operatorname{{Im}}(z) \text{{ of }} z = {zl}.",
-}
-_LIMIT_VARIANT_BY_DIFFICULTY = {
-    "easy": "polynomial",
-    "medium": "removable",
-    "hard": "infinity_rational",
-}
 
 _INTEGRAL_VARIANT_BY_DIFFICULTY = {
     "easy": ["polynomial"],
@@ -73,165 +26,6 @@ _INDEFINITE_VARIANT_BY_DIFFICULTY = {
     "medium": ["power", "expand", "split", "linear_argument"],
     "hard": ["usub", "split", "trig_sec", "linear_argument", "expand"],
 }
-
-
-def _build(question_type, a, b, difficulty, source):
-    z = format_z(a, b)
-    zl = z_latex(a, b)
-    return {
-        "topic": "complex",
-        "difficulty": difficulty,
-        "question_type": question_type,
-        "params": {"a": a, "b": b},
-        "a": a,
-        "b": b,
-        "z_display": z,
-        "z_latex": zl,
-        "prompt": _PROMPTS[question_type](z),
-        "prompt_latex": _PROMPTS_LATEX[question_type](zl),
-        "source": source,
-    }
-
-
-def _sign(rng, v):
-    return v if rng.random() < 0.5 else -v
-
-
-def _generate_templates(difficulty, seed, question_type):
-    rng = random.Random(seed)
-    qt = question_type or rng.choice(QUESTION_TYPES)
-    if qt not in QUESTION_TYPES:
-        raise ValueError(f"unknown question_type: {qt}")
-    if difficulty not in _HI_RANGE:
-        raise ValueError(f"unknown difficulty: {difficulty}")
-
-    if qt == "modulus":
-        x, y = rng.choice(_MODULUS_POOLS[difficulty])
-        a, b = _sign(rng, x), _sign(rng, y)
-    elif qt == "argument":
-        k = _ARGUMENT_K[difficulty]
-        a, b = rng.choice([
-            (k, k), (k, -k), (-k, k), (-k, -k),
-            (k, 0), (0, k), (0, -k), (-k, 0),
-        ])
-    else:
-        hi = _HI_RANGE[difficulty]
-        a = rng.randint(-hi, hi)
-        b = rng.randint(-hi, hi)
-        while b == 0:
-            b = rng.randint(-hi, hi)
-
-    return _build(qt, a, b, difficulty, "template")
-
-
-async def _generate_gemini(difficulty):
-    candidate = await llm.propose_problem("complex", difficulty)
-    if not candidate:
-        return None
-    qt, a, b = candidate["question_type"], candidate["a"], candidate["b"]
-    if qt not in QUESTION_TYPES:
-        return None
-    if not (-20 <= a <= 20 and -20 <= b <= 20 and b != 0):
-        return None
-    return _build(qt, a, b, difficulty, "gemini")
-
-
-def _build_expr_problem(topic, question_type, params, difficulty, prompt, prompt_latex, display):
-    return {
-        "topic": topic,
-        "difficulty": difficulty,
-        "question_type": question_type,
-        "params": params,
-        "z_display": display,
-        "z_latex": display,
-        "prompt": prompt,
-        "prompt_latex": prompt_latex,
-        "source": "template",
-    }
-
-
-def _expr_latex(expr_str, var="x"):
-    return latex(sympify(expr_str, locals={var: Symbol(var)}))
-
-
-def _fmt_poly(p, q, r, var="x"):
-    terms = []
-    if p:
-        terms.append(f"{p}*{var}**2" if p != 1 else f"{var}**2")
-    if q:
-        sign = "+" if (q > 0 and terms) else ""
-        terms.append(f"{sign}{q}*{var}" if abs(q) != 1 else f"{sign}{'-' if q<0 else ''}{var}")
-    if r:
-        sign = "+" if (r > 0 and terms) else ""
-        terms.append(f"{sign}{r}")
-    return "".join(terms) or "0"
-
-
-def _build_curated_limit(item, difficulty):
-    """A real BAC II limit exercise from backend/data/limits/{formula_name}.json,
-    replayed through SymPy for the graded answer (technique text narrates the
-    steps; see solver._solve_limit's `formula_name` branch)."""
-    var = item["var"]
-    expr, point = item["expr"], item["point"]
-    point_str = "oo" if point is oo else "-oo" if point is -oo else str(point)
-    params = {
-        "expr": str(expr),
-        "var": var,
-        "point": point_str,
-        "formula_name": item["formula_name"],
-        "curated_technique": item["technique"],
-        "curated_formula_latex": item["formula_latex"],
-        "source_id": item["id"],
-    }
-    point_display = pretty_point(point_str)
-    point_latex_str = r"+\infty" if point is oo else r"-\infty" if point is -oo else latex(point)
-    prompt = f"Find lim({var} → {point_display}) of {pretty_expr(str(expr))}."
-    prompt_latex = rf"\text{{Find }} \lim_{{{var} \to {point_latex_str}}} {latex(expr)}"
-    display = f"lim_{{{var} \\to {point_display}}} {expr}"
-
-    problem = _build_expr_problem("limit", "limit", params, difficulty, prompt, prompt_latex, display)
-    problem["source"] = "curated"
-    return problem
-
-
-def _generate_limit(rng, difficulty):
-    curated_pool = [t for t in _LIMIT_CURATED_TEMPLATES if t["difficulty"] == difficulty]
-    if curated_pool and rng.random() < 0.5:
-        return _build_curated_limit(rng.choice(curated_pool), difficulty)
-
-    variant = _LIMIT_VARIANT_BY_DIFFICULTY[difficulty]
-
-    if variant == "polynomial":
-        p = rng.randint(1, 3)
-        q = rng.randint(-5, 5)
-        r = rng.randint(-5, 5)
-        c = rng.randint(-3, 3)
-        expr = _fmt_poly(p, q, r)
-        point_latex = str(c)
-    elif variant == "removable":
-        c = rng.choice([v for v in range(-5, 6) if v != 0])
-        expr = f"(x**2 - {c * c})/(x - {c})"
-        point_latex = str(c)
-    else:  # infinity_rational
-        p = rng.randint(1, 5)
-        q = rng.randint(-9, 9)
-        r = rng.randint(1, 5)
-        s = rng.randint(-9, 9)
-        num = _fmt_poly(p, q, 0)
-        den = _fmt_poly(r, 0, s)
-        expr = f"({num})/({den})"
-        point_latex = r"+\infty"
-
-    point = "oo" if variant == "infinity_rational" else str(c)
-    params = {"expr": expr, "var": "x", "point": point}
-    point_display = "+∞" if variant == "infinity_rational" else str(c)
-    prompt = f"Find lim(x → {point_display}) of {pretty_expr(expr)}."
-    expr_latex = _expr_latex(expr)
-    prompt_latex = rf"\text{{Find }} \lim_{{x \to {point_latex}}} {expr_latex}"
-    display = f"lim_{{x \\to {point_display}}} {expr}"
-
-    return _build_expr_problem("limit", "limit", params, difficulty, prompt, prompt_latex, display)
-
 
 def _generate_integral(rng, difficulty, variant=None):
     variant = variant or rng.choice(_INTEGRAL_VARIANT_BY_DIFFICULTY[difficulty])
@@ -440,7 +234,6 @@ def _generate_integral(rng, difficulty, variant=None):
 
     return _build_expr_problem("integral", "definite_integral", params, difficulty, prompt, prompt_latex, display)
 
-
 _INDEFINITE_VARIABLES = ("x", "t", "y")
 
 # Term pools for indefinite sums (terms are written with x; the variable is
@@ -460,7 +253,6 @@ _INDEFINITE_TERM_POOLS = {
     "special": ["ln(2)", "ln(3)", "e", "e**2", "pi", "sqrt(5)", "sqrt(3)", "-e", "-pi", "x*ln(2)"],
 }
 
-
 def _build_indefinite(func, var, difficulty, variant, curated=False):
     params = {"expr": func, "var": var, "variant": variant, "curated": curated}
     prompt = f"Compute ∫ ({pretty_expr(func)}) d{var} (indefinite — include +C)."
@@ -468,7 +260,6 @@ def _build_indefinite(func, var, difficulty, variant, curated=False):
     prompt_latex = rf"\text{{Compute }} \int ({expr_latex})\,d{var} \text{{ (indefinite, +C)}}"
     display = f"\\int ({func})\\,d{var}"
     return _build_expr_problem("integral", "indefinite_integral", params, difficulty, prompt, prompt_latex, display)
-
 
 def _generate_indefinite(rng, difficulty, variant=None):
     variant = variant or rng.choice(_INDEFINITE_VARIANT_BY_DIFFICULTY[difficulty])
@@ -507,99 +298,3 @@ def _generate_indefinite(rng, difficulty, variant=None):
     terms = [rng.choice(_INDEFINITE_TERM_POOLS[g]) for g in groups]
     func = " + ".join(terms).replace("x", var)
     return _build_indefinite(func, var, difficulty, variant)
-
-
-def _generate_expr_templates(topic, difficulty, seed, question_type, variant=None):
-    rng = random.Random(seed)
-    allowed = {
-        "limit": ("limit",),
-        "integral": ("definite_integral", "indefinite_integral"),
-    }[topic]
-    qt = question_type or allowed[0]
-    if qt not in allowed:
-        raise ValueError(f"question_type {qt} does not match topic {topic}")
-    if difficulty not in _LIMIT_VARIANT_BY_DIFFICULTY:
-        raise ValueError(f"unknown difficulty: {difficulty}")
-
-    if topic == "limit":
-        return _generate_limit(rng, difficulty)
-    if qt == "indefinite_integral":
-        return _generate_indefinite(rng, difficulty, variant)
-    return _generate_integral(rng, difficulty, variant)
-
-
-def _generate_probability(rng, difficulty, question_type=None, variant=None):
-    """Pick a multi-part exercise from the user-owned catalog, sample valid
-    params, fill the Khmer (or English) sentences — setup on its own line, then
-    every sub-part A/B/C/D on its own line — and return the problem. The solver
-    computes every part's answer afterwards; the catalog only owns the story and
-    the param *possibility* constraints."""
-    if question_type not in (None, "probability"):
-        raise ValueError(f"question_type {question_type} does not match topic probability")
-    if difficulty not in scenarios.VARIANT_BY_DIFFICULTY:
-        raise ValueError(f"unknown difficulty: {difficulty}")
-
-    pool = [variant] if variant and variant in scenarios.SCENARIOS else None
-    if pool is None:
-        pool = list(scenarios.VARIANT_BY_DIFFICULTY.get(difficulty, ()))
-        if not pool:
-            pool = list(scenarios.SCENARIOS)
-    if not pool:
-        raise ValueError(f"no probability scenarios for difficulty {difficulty}")
-    rng.shuffle(pool)
-
-    for sid in pool:
-        entry = scenarios.by_id(sid)
-        envs = scenarios.sample_scenario(entry, rng)
-        if not envs:
-            continue
-
-        lines = []
-        setup = entry.get("setup_km") or entry.get("setup_en") or ""
-        if setup:
-            lines.append(scenarios.fill_frame(setup, envs[0]["env"]))
-        parts = entry.get("parts") or []
-        part_params = []
-        for i, pe in enumerate(envs):
-            part = parts[i] if i < len(parts) else {}
-            frame = part.get("km") or part.get("en") or pe.get("km") or ""
-            if not frame:
-                continue
-            lines.append(scenarios.fill_frame(frame, pe["env"]))
-            part_params.append({"label": pe["label"], "want": pe["want"], **pe["env"]})
-        if len(part_params) < 1:
-            continue
-        try:
-            text = "\n".join(lines)
-        except ValueError:
-            continue
-
-        params = {
-            "structure": entry["structure"],
-            "variant": sid,
-            "scenario_id": sid,
-            "target": part_params[-1]["label"],
-            "parts": part_params,
-        }
-        display = f"probability ({entry['structure']})"
-        return _build_expr_problem(
-            "probability", "probability", params, difficulty, text, None, display
-        )
-    raise ValueError(f"no scenario could produce a valid problem for difficulty {difficulty}")
-
-
-async def generate(topic="complex", difficulty="medium", seed=None, question_type=None, generation_mode="templates", variant=None):
-    if topic not in TOPICS:
-        raise ValueError(f"unknown topic: {topic}")
-
-    if topic == "probability":
-        return _generate_probability(random.Random(seed), difficulty, question_type, variant)
-
-    if topic in ("limit", "integral"):
-        return _generate_expr_templates(topic, difficulty, seed, question_type, variant)
-
-    if generation_mode == "gemini":
-        problem = await _generate_gemini(difficulty)
-        if problem is not None:
-            return problem
-    return _generate_templates(difficulty, seed, question_type)

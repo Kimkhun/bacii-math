@@ -8,6 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import cache
 from engine import explainer, formulas, generator, grader, llm, scenarios, solver, structures
+from engine.generator.integrals import (
+    _INDEFINITE_VARIANT_BY_DIFFICULTY,
+    _INTEGRAL_VARIANT_BY_DIFFICULTY,
+)
 from models import Attempt, Explanation, Question, Step, User
 from schemas import GenerateRequest
 
@@ -401,9 +405,9 @@ async def get_template_inventory() -> dict:
             for diff in ("easy", "medium", "hard"):
                 variants = [None]
                 if topic == "integral" and qt == "definite_integral":
-                    variants = generator._INTEGRAL_VARIANT_BY_DIFFICULTY[diff]
+                    variants = _INTEGRAL_VARIANT_BY_DIFFICULTY[diff]
                 elif topic == "integral" and qt == "indefinite_integral":
-                    variants = generator._INDEFINITE_VARIANT_BY_DIFFICULTY[diff]
+                    variants = _INDEFINITE_VARIANT_BY_DIFFICULTY[diff]
                 elif topic == "probability":
                     variants = scenarios.VARIANT_BY_DIFFICULTY[diff]
                 for variant in variants:

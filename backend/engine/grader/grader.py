@@ -1,4 +1,9 @@
-"""Parsing and judging of user answers against the SymPy-computed expected value."""
+"""Parsing and judging of user answers against the SymPy-computed expected value.
+
+The generic core shared by every topic: answer parsing, numeric/exact equivalence,
+and step-by-step work checking (``analyze_work``). Probability's multi-part
+grading lives in ``grader.probability``.
+"""
 import math
 import re as _re
 
@@ -10,7 +15,8 @@ from sympy.parsing.sympy_parser import (
     standard_transformations,
 )
 
-from .solver import solve
+from ..solver import solve
+
 
 _LOCAL = {"I": I, "i": I, "pi": pi, "e": E, "sqrt": sqrt, "binomial": binomial}
 _TRANS = standard_transformations + (implicit_multiplication_application, convert_xor)
@@ -32,7 +38,6 @@ _LIM_PREFIX = _re.compile(
 # is never touched.
 _COMB_NOTATION = _re.compile(r"\bC\(\s*(\d+)\s*,\s*(\d+)\s*\)")
 
-
 def parse_answer(text):
     text = text.strip()
     if not text:
@@ -49,7 +54,6 @@ def parse_answer(text):
     text = _COMB_NOTATION.sub(r"binomial(\1, \2)", text)
     return parse_expr(text, local_dict=_LOCAL, transformations=_TRANS)
 
-
 def _numeric_close(user, expected, tol):
     try:
         u = N(user)
@@ -62,12 +66,10 @@ def _numeric_close(user, expected, tol):
     except (TypeError, ValueError):
         return False
 
-
 def _angle_close(user, expected, tol):
     d = float(N(user - expected))
     d = (d + math.pi) % (2 * math.pi) - math.pi
     return abs(d) <= tol
-
 
 # --- hybrid equivalence (CAS + numeric safety net) ---
 #
@@ -79,7 +81,6 @@ def _angle_close(user, expected, tol):
 
 _SAMPLE_POINTS = (0.37, 1.23, 2.71, 3.87, 5.03)
 _SAMPLE_TOL = 1e-6
-
 
 def _sample_values(expr, var):
     """Evaluate expr at the sample points, skipping poles/non-real results."""
@@ -93,7 +94,6 @@ def _sample_values(expr, var):
             continue
         vals.append(float(v))
     return vals
-
 
 def _equivalent_const(value, expected, var, diff=None):
     """True when value == expected + constant (in var) — the rule for any
@@ -110,10 +110,11 @@ def _equivalent_const(value, expected, var, diff=None):
     except Exception:
         return False
 
-
 def _equivalent_exact(value, expected, var, diff=None):
     """True when value == expected exactly, via the same hybrid ladder."""
     try:
+        if value == expected:
+            return True
         if diff is None:
             diff = simplify(value - expected)
         if diff == 0:
@@ -125,10 +126,8 @@ def _equivalent_exact(value, expected, var, diff=None):
     except Exception:
         return False
 
-
 def _is_given_restatement(lhs: str) -> bool:
     return lhs.strip().lower() in ("z", "z bar", "z_bar", "z̄")
-
 
 def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     """Deterministically check each line of a student's work against the SymPy-computed
@@ -247,7 +246,6 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
         "formula_breakdown": formula_breakdown,
     }
 
-
 def _analyze_work_any_order(solution, params, lines, tol):
     """Probability's work-checking mode.
 
@@ -350,10 +348,11 @@ def _analyze_work_any_order(solution, params, lines, tol):
         "formula_breakdown": formula_breakdown,
     }
 
-
 def grade_part(topic, question_type, params, label, user_answer, tolerance=None):
     """Grade one sub-part of a multi-part exercise (the progressive flow: check
     A, then B, then C). Accepts a bare value or a label-prefixed value."""
+    from .probability import _judge_value
+
     solution = solve(topic, question_type, params)
     part = next((p for p in solution.get("parts", []) if p["label"] == label), None)
     if part is None:
@@ -383,7 +382,6 @@ def grade_part(topic, question_type, params, label, user_answer, tolerance=None)
         "steps": solution["steps"],
         "all_complete": correct and str(solution.get("target_label")) == str(label),
     }
-
 
 def grade(topic, question_type, params, user_answer, tolerance=None):
     tol = tolerance if tolerance is not None else _DEFAULT_TOL
@@ -427,176 +425,3 @@ def grade(topic, question_type, params, user_answer, tolerance=None):
         "answer_decimal": solution["answer_decimal"],
         "steps": solution["steps"],
     }
-
-
-# ---------------------------------------------------------------------------
-# Multi-part probability grading
-#
-# A probability exercise lists several sub-parts (A/B/C/D or ក/ខ/គ/ឃ) sharing
-# one setup. The student submits an answer per part; every part's final answer
-# is graded (exact or numeric) against its own SymPy-computed value. Formula
-# and calculation checking happens separately via `analyze_work` on the merged
-# checkpoints (each checkpoint is labeled with its part).
-# ---------------------------------------------------------------------------
-
-_PART_LABEL_PREFIX = _re.compile(r"^([^:=\s]+)\s*[:=]\s*(.+)$")
-
-
-def _split_answer_tokens(text):
-    """Split a multi-answer string on newlines/semicolons and on commas at
-    paren depth 0 (so 'C(12,5), B: 3/11' splits correctly)."""
-    tokens = []
-    for chunk in _re.split(r"[;\n]", text):
-        buf = []
-        depth = 0
-        for ch in chunk:
-            if ch == "(":
-                depth += 1
-            elif ch == ")":
-                depth -= 1
-            if ch == "," and depth == 0:
-                tokens.append("".join(buf))
-                buf = []
-            else:
-                buf.append(ch)
-        tokens.append("".join(buf))
-    return [t.strip() for t in tokens if t.strip()]
-
-
-def parse_multi_answers(text, labels):
-    """Parse a multi-part answer submission into {label: value_str}.
-
-    Accepts labeled values ('A: 14/99', 'B = 14/33', 'ខ: 2/3'), separated by
-    commas/newlines/semicolons, and/or bare values assigned to the parts in
-    order ('14/99, 14/33, 7/99, 92/99'). Labels are canonicalized against the
-    given part labels (case-insensitive for Latin)."""
-    text = (text or "").strip()
-    if not text:
-        return {}
-    canonical = [str(l) for l in labels]
-
-    def canon(key):
-        for c in canonical:
-            if c.upper() == key.upper():
-                return c
-        return None
-
-    result = {}
-    bare = []
-    for tok in _split_answer_tokens(text):
-        m = _PART_LABEL_PREFIX.match(tok)
-        c = canon(m.group(1)) if m else None
-        if c is not None:
-            result[c] = m.group(2).strip()
-        else:
-            bare.append(tok)
-    for value in bare:
-        for c in canonical:
-            if c not in result:
-                result[c] = value
-                break
-    return result
-
-
-def _judge_value(expected, user_answer, tol=_DEFAULT_TOL):
-    """Judge one answer value against an expected expression (probability)."""
-    user = parse_answer(user_answer)
-    x = Symbol("x")
-    if _equivalent_exact(user, expected, x):
-        return True, "exact"
-    if _numeric_close(user, expected, tol):
-        return True, "numeric"
-    return False, "mismatch"
-
-
-def grade_multi(topic, question_type, params, submissions):
-    """Grade every sub-part of a multi-part question.
-
-    `submissions`: {label: value_str}. Each part's final answer is graded
-    exactly/numerically against that part's SymPy answer. Overall `correct`
-    requires every part to be answered AND correct. The response carries the
-    per-part verdicts (`parts`) so the UI can show ✓/✗ per sub-question."""
-    solution = solve(topic, question_type, params)
-    parts = solution.get("parts") or []
-    if not parts:
-        raise ValueError("grade_multi requires a multi-part solution")
-    verdicts = []
-    for part in parts:
-        label = part["label"]
-        value = submissions.get(label)
-        expected = str(part["answer_exact"])
-        if not value:
-            verdicts.append({
-                "label": label, "correct": False, "reason": "unanswered",
-                "given": None, "expected": expected,
-                "answer_decimal": part["answer_decimal"],
-            })
-            continue
-        try:
-            correct, reason = _judge_value(part["answer_exact"], value)
-            given = str(parse_answer(value))
-        except Exception as exc:
-            verdicts.append({
-                "label": label, "correct": False,
-                "reason": f"could not parse answer: {exc}",
-                "given": value, "expected": expected,
-                "answer_decimal": part["answer_decimal"],
-            })
-            continue
-        verdicts.append({
-            "label": label, "correct": correct, "reason": reason,
-            "given": given, "expected": expected,
-            "answer_decimal": part["answer_decimal"],
-        })
-
-    n_correct = sum(1 for v in verdicts if v["correct"])
-    n_total = len(verdicts)
-    correct = n_correct == n_total
-    reason = "all correct" if correct else f"{n_correct}/{n_total} correct"
-    return {
-        "correct": correct,
-        "reason": reason,
-        "parts": verdicts,
-        "given": "; ".join(f"{v['label']}: {v['given'] or '—'}" for v in verdicts),
-        "expected": str(solution["answer_exact"]),
-        "answer_decimal": solution["answer_decimal"],
-        "steps": solution["steps"],
-        "target_label": solution.get("target_label"),
-    }
-
-
-def split_work_by_part(lines, labels):
-    """Group a student's written work lines by part label.
-
-    A line belongs to the most recent part label seen ('A:', 'B:', 'ក.', or
-    'P(A)'-style markers); leading unlabeled lines go to the first part and
-    trailing ones to the last."""
-    segments = {l: [] for l in labels}
-    current = labels[0]
-    for raw in lines:
-        text = raw.strip()
-        if not text:
-            continue
-        for l in labels:
-            if _re.match(rf"^\s*{_re.escape(l)}\s*[:=.]\s*", text) or \
-               _re.search(rf"P\s*\(\s*{_re.escape(l)}\s*\)", text):
-                current = l
-                break
-        segments[current].append(text)
-    return segments
-
-
-def last_value_of_lines(lines):
-    """The claimed final value of a part: the value on its last line (after any
-    label prefix and '='), or None if no line carries a value."""
-    for raw in reversed(lines):
-        text = raw.strip()
-        m = _PART_LABEL_PREFIX.match(text)
-        if m:
-            text = m.group(2).strip()
-        if "=" in text:
-            text = text.rpartition("=")[2].strip()
-        text = _re.sub(r"^P\s*\([^)]*\)\s*$", "", text).strip()
-        if text and not text.startswith("n("):
-            return text
-    return None
