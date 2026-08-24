@@ -15,10 +15,23 @@ LLM client dependencies.
 
 The slot/fill machinery (`_COEFF_POOLS`, `_fill`) lives here too and is
 re-imported by `engine.generator.py` (its previous home) — one source of truth.
+
+`_LIMIT_CURATED_TEMPLATES` is the analogous curated pool for limits: parsed at
+import time from `backend/data/limits/{formula_name}.json` — the 37 real BAC II
+limit exercises (2014-2025), sorted by solution technique via
+`scripts/verify_limits.py`'s categorization. Each entry carries the SymPy expr
++ point the generator/solver replay to grade it (SymPy stays the source of
+truth for the answer), plus the exam-authored technique text used as the
+step-by-step narration.
 """
+import glob
+import json
+import os
 import random
+import re
 
 from sympy import E, Integral, N, Symbol, latex, oo, pi, sqrt, sympify, zoo
+from sympy.parsing.latex import parse_latex
 
 from engine.solver import solve
 
@@ -600,3 +613,117 @@ def build_sample(struct, seed):
             "solution": solution,
         }
     raise ValueError(f"could not build a valid sample for {struct['id']}")
+
+
+# ---------------------------------------------------------------------------
+# Curated limit exercises: the 37 real BAC II limit questions (2014-2025),
+# pre-sorted by solution technique into backend/data/limits/{formula_name}.json.
+# Parsed once at import time into ready-to-solve SymPy expr/point pairs.
+# ---------------------------------------------------------------------------
+_LIMITS_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "limits")
+
+_LIMIT_DIFFICULTY_BY_CATEGORY = {
+    "direct_substitution": "easy",
+    "factoring_0_0": "easy",
+    "rationalization_conjugate_finite": "medium",
+    "trig_identity_0_0": "medium",
+    "sinc_standard_limit": "medium",
+    "angle_addition_0_0": "medium",
+    "rationalization_sinc_combo": "medium",
+    "exponential_sinc_combo": "medium",
+    "half_angle_sinc_combo": "medium",
+    "exponential_standard_limit": "medium",
+    "conjugate_infinity": "hard",
+    "log_limit_infinity": "hard",
+    "rational_function_infinity": "hard",
+}
+
+_PI_SYMBOL = Symbol("pi")
+_E_SYMBOL = Symbol("e")
+
+
+def _latex_to_sympy(latex_str):
+    s = re.sub(r"\\sqrt(\d)", r"\\sqrt{\1}", latex_str.strip())
+    expr = parse_latex(s)
+    if _PI_SYMBOL in expr.free_symbols:
+        expr = expr.subs(_PI_SYMBOL, pi)
+    if _E_SYMBOL in expr.free_symbols:
+        expr = expr.subs(_E_SYMBOL, E)
+    return expr
+
+
+def _find_group(s, open_idx):
+    """s[open_idx] must be '{'. Return (content, index_after_closing_brace)."""
+    depth = 0
+    for i in range(open_idx, len(s)):
+        if s[i] == "{":
+            depth += 1
+        elif s[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return s[open_idx + 1:i], i + 1
+    raise ValueError("unbalanced braces")
+
+
+def _extract_lim(latex_str):
+    """Pull (point_latex, expr_latex) out of a '\\lim_{x\\to POINT} EXPR[, given ...]'
+    prompt. Returns None if the structure can't be found."""
+    m = re.search(r"\\lim_\{", latex_str)
+    if not m:
+        return None
+    content, close_idx = _find_group(latex_str, m.end() - 1)
+    mm = re.match(r"x\s*\\to\s*(.+)", content)
+    if not mm:
+        return None
+    point_latex = mm.group(1)
+    # Drop a trailing "given ..." hint clause (e.g. "\ \text{given }...").
+    expr_latex = re.split(r",?\s*\\,?\\text\{", latex_str[close_idx:])[0].strip()
+    return point_latex, expr_latex
+
+
+def _to_point(point_latex):
+    p = point_latex.strip()
+    if p in (r"+\infty", r"\infty"):
+        return oo
+    if p == r"-\infty":
+        return -oo
+    return _latex_to_sympy(p)
+
+
+def _load_limit_curated():
+    items = []
+    for fpath in sorted(glob.glob(os.path.join(_LIMITS_DATA_DIR, "*.json"))):
+        try:
+            data = json.load(open(fpath, encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        category = data["formula_name"]
+        difficulty = _LIMIT_DIFFICULTY_BY_CATEGORY.get(category, "medium")
+        for ex in data.get("exercises", []):
+            found = _extract_lim(ex["prompt_latex"])
+            if not found:
+                continue
+            point_latex, expr_latex = found
+            try:
+                point = _to_point(point_latex)
+                expr = _latex_to_sympy(expr_latex)
+            except Exception:
+                # A handful of exam prompts don't round-trip through
+                # antlr's LaTeX grammar (e.g. an implicit "find a" ask
+                # rather than a plain limit) — skip, don't crash the pool.
+                continue
+            items.append({
+                "id": ex["id"],
+                "formula_name": category,
+                "difficulty": difficulty,
+                "var": "x",
+                "expr": expr,
+                "point": point,
+                "answer_latex": ex["answer_latex"],
+                "technique": ex["technique"],
+                "formula_latex": ex.get("formula_latex", ""),
+            })
+    return items
+
+
+_LIMIT_CURATED_TEMPLATES = _load_limit_curated()

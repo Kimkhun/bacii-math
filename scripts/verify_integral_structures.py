@@ -133,7 +133,7 @@ def main():
             print(f"    {fid}: {msg}")
 
     dest = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
-                        "data", "bacii-exam", "integrals", "structure_audit.json")
+                        "backend", "data", "bacii-exam", "integrals", "structure_audit.json")
     os.makedirs(os.path.dirname(dest), exist_ok=True)
     with open(dest, "w", encoding="utf-8") as f:
         json.dump({

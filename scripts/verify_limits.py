@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Verify BAC II limits exam questions in data/bacii-exam/limits/*.json.
+Verify BAC II limits exam questions in backend/data/bacii-exam/limits/*.json.
 
 For each question:
   1. Parse prompt_latex, compute the limit with SymPy, compare to answer_latex.
@@ -251,9 +251,9 @@ def check_formula(formula_latex):
 
 
 def main():
-    files = sorted(glob.glob("data/bacii-exam/limits/*.json"))
+    files = sorted(glob.glob("backend/data/bacii-exam/limits/*.json"))
     if not files:
-        files = sorted(glob.glob("/home/lavid/bacii-math/data/bacii-exam/limits/*.json"))
+        files = sorted(glob.glob("/home/lavid/bacii-math/backend/data/bacii-exam/limits/*.json"))
 
     total = 0
     answer_pass = answer_fail = answer_skip = 0

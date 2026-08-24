@@ -287,7 +287,29 @@ def _solve_limit(params):
         },
     ]
 
-    if variant == "polynomial":
+    if params.get("formula_name"):
+        # Curated real BAC II exercise: SymPy still computes `result` above
+        # (the graded answer); the exam-authored technique text narrates the
+        # steps instead of the generic 3-branch classification below.
+        formula = params["formula_name"]
+        steps.append({
+            "title": "Apply the technique",
+            "detail": params.get("curated_technique", ""),
+            "formula": formula,
+        })
+        if params.get("curated_formula_latex"):
+            steps.append({
+                "title": "Key identity used",
+                "detail": f"\\({params['curated_formula_latex']}\\)",
+                "formula": formula,
+            })
+        steps.append({
+            "title": "Result",
+            "detail": f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr)}\\) = {inline_latex(result)}.",
+            "formula": formula,
+        })
+        checkpoints = [{"label": "final value", "value": result, "formula": formula}]
+    elif variant == "polynomial":
         steps.append({
             "title": "Evaluate by direct substitution",
             "detail": f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr)}\\) = {inline_latex(direct)}.",

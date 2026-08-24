@@ -107,9 +107,11 @@ the new catalog entry, `/templates` shows a live sample of the new template
 
 ## Related patterns
 
-- **Exam bank data** (fixed real questions): `data/bacii-exam/<topic>/*.json` +
-  a verify script (`scripts/verify_limits.py`) that SymPy-checks every answer.
-  Bank JSON at repo root is NOT mounted into the backend container — playable
-  curated questions live in the generator pools instead.
+- **Exam bank data** (fixed real questions): `backend/data/bacii-exam/<topic>/*.json`
+  + a verify script (`scripts/verify_limits.py`) that SymPy-checks every
+  answer. For limits, the bank is also sorted by technique into
+  `backend/data/limits/{formula_name}.json` and loaded straight into the
+  generator's curated pool (`engine/structures._LIMIT_CURATED_TEMPLATES`) —
+  see `exam-data.md`.
 - **Formula sheet**: the catalog JSON (`backend/data/formulas/*.json`) doubles
   as student-facing content (names, translations, the `formulas` list).

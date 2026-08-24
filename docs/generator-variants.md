@@ -15,13 +15,24 @@ which difficulty pools it belongs to. Derived from `backend/engine/generator.py`
 
 Gemini mode (complex only): LLM proposes a,b + type; SymPy validates.
 
-## Limits (variant fixed per difficulty)
+## Limits
 
-| Difficulty | Variant | Tags |
-|---|---|---|
-| easy | polynomial (random coeffs + point) | `direct_substitution` |
-| medium | removable `(x²−c²)/(x−c)` | `factor_difference_of_squares`, `cancel_common_factor`, `direct_substitution` |
-| hard | infinity rational | `divide_highest_power`, `leading_coefficient_ratio` |
+Each request has a 50% chance of drawing a **curated** exercise (one of the 36
+real BAC II limit questions, 2014-2025, sorted by technique into
+`backend/data/limits/{formula_name}.json`) for the given difficulty, falling
+back to the procedural variant otherwise. Curated params carry `formula_name`
++ the exam-authored technique text (`engine/structures._LIMIT_CURATED_TEMPLATES`,
+parsed at import time); `solver._solve_limit`'s `formula_name` branch uses that
+text to narrate steps while SymPy still computes/grades the answer.
+
+| Difficulty | Procedural variant | Procedural tags | Curated formula names (SymPy-verified) |
+|---|---|---|---|
+| easy | polynomial (random coeffs + point) | `direct_substitution` | `direct_substitution`, `factoring_0_0` |
+| medium | removable `(x²−c²)/(x−c)` | `factor_difference_of_squares`, `cancel_common_factor`, `direct_substitution` | `rationalization_conjugate_finite`, `trig_identity_0_0`, `sinc_standard_limit`, `angle_addition_0_0`, `rationalization_sinc_combo`, `exponential_sinc_combo`, `half_angle_sinc_combo`, `exponential_standard_limit` |
+| hard | infinity rational | `divide_highest_power`, `leading_coefficient_ratio` | `conjugate_infinity`, `log_limit_infinity`, `rational_function_infinity` |
+
+(One curated exercise, `2024b`, is excluded from the pool — it's an inverse
+"find a given the limit" problem, not a plain limit to solve.)
 
 ## Definite integrals (`topic=integral`, `definite_integral`)
 

@@ -3,7 +3,7 @@
 
 Reads the transcription data (scripts/integrals_part1.py, integrals_part2.py),
 integrates everything, prints a per-exercise report, and writes
-data/bacii-exam/integrals/answers.json {label: answer} for reference.
+backend/data/bacii-exam/integrals/answers.json {label: answer} for reference.
 """
 import json
 import os
@@ -68,7 +68,7 @@ def main():
         for label, expr, err in failures:
             print(f"  FAIL {label} {expr}: {err}")
 
-    dest = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "bacii-exam", "integrals", "answers.json")
+    dest = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "backend", "data", "bacii-exam", "integrals", "answers.json")
     os.makedirs(os.path.dirname(dest), exist_ok=True)
     with open(dest, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=1)

@@ -12,7 +12,7 @@ don't reduce to a simple SymPy-checkable numeric answer the way these templates 
 """
 import random
 
-from sympy import Symbol, latex, sympify
+from sympy import Symbol, latex, oo, sympify
 
 from engine import llm, scenarios
 from engine.notation import pretty_expr, pretty_point
@@ -26,6 +26,7 @@ from engine.structures import (
     _INDEF_SPLIT_TEMPLATES,
     _INDEF_TRIG_SQ_TEMPLATES,
     _INDEF_USUB_TEMPLATES,
+    _LIMIT_CURATED_TEMPLATES,
 )
 
 TOPICS = ("complex", "limit", "integral", "probability")
@@ -166,7 +167,38 @@ def _fmt_poly(p, q, r, var="x"):
     return "".join(terms) or "0"
 
 
+def _build_curated_limit(item, difficulty):
+    """A real BAC II limit exercise from backend/data/limits/{formula_name}.json,
+    replayed through SymPy for the graded answer (technique text narrates the
+    steps; see solver._solve_limit's `formula_name` branch)."""
+    var = item["var"]
+    expr, point = item["expr"], item["point"]
+    point_str = "oo" if point is oo else "-oo" if point is -oo else str(point)
+    params = {
+        "expr": str(expr),
+        "var": var,
+        "point": point_str,
+        "formula_name": item["formula_name"],
+        "curated_technique": item["technique"],
+        "curated_formula_latex": item["formula_latex"],
+        "source_id": item["id"],
+    }
+    point_display = pretty_point(point_str)
+    point_latex_str = r"+\infty" if point is oo else r"-\infty" if point is -oo else latex(point)
+    prompt = f"Find lim({var} → {point_display}) of {pretty_expr(str(expr))}."
+    prompt_latex = rf"\text{{Find }} \lim_{{{var} \to {point_latex_str}}} {latex(expr)}"
+    display = f"lim_{{{var} \\to {point_display}}} {expr}"
+
+    problem = _build_expr_problem("limit", "limit", params, difficulty, prompt, prompt_latex, display)
+    problem["source"] = "curated"
+    return problem
+
+
 def _generate_limit(rng, difficulty):
+    curated_pool = [t for t in _LIMIT_CURATED_TEMPLATES if t["difficulty"] == difficulty]
+    if curated_pool and rng.random() < 0.5:
+        return _build_curated_limit(rng.choice(curated_pool), difficulty)
+
     variant = _LIMIT_VARIANT_BY_DIFFICULTY[difficulty]
 
     if variant == "polynomial":
