@@ -9,7 +9,7 @@ import DisambiguationCard, { DisambiguationCandidate } from "@/components/Disamb
 import { api, Question, GradeResult, Explanation, DetectResult } from "@/lib/api";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
 
-const CURSIVE = "'Segoe Script', 'Comic Sans MS', cursive";
+const CURSIVE = "'Caveat', 'Segoe Script', cursive";
 
 const MARK_STAGGER_MS = 1000;
 const SESSION_TOTAL = 20;
@@ -345,10 +345,15 @@ export default function PracticePage() {
   );
 }
 
+const TOOLBAR_POS_KEY = "bacii:toolbarPos";
+
 function PracticeInner() {
   const canvasRefs = useRef<(CanvasHandle | null)[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const pendingDetectRef = useRef<DetectResult | null>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const toolbarDraggingRef = useRef(false);
+  const toolbarDragOffsetRef = useRef({ x: 0, y: 0 });
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [partIndex, setPartIndex] = useState(0);
@@ -392,6 +397,9 @@ function PracticeInner() {
   const [canRedo, setCanRedo] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [streak, setStreak] = useState(0);
+  // null = docked centered-bottom (default). Once dragged, an explicit
+  // top-left pixel position takes over and is remembered per device.
+  const [toolbarPos, setToolbarPos] = useState<{ x: number; y: number } | null>(null);
   const [reviewMode, setReviewMode] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -637,6 +645,65 @@ function PracticeInner() {
       window.removeEventListener("orientationchange", fitToWidth);
     };
   }, []);
+
+  // Keep the (movable) toolbar fully on-screen, using its actual measured size.
+  const clampToolbarPos = (x: number, y: number) => {
+    const el = toolbarRef.current;
+    const w = el?.offsetWidth ?? 320;
+    const h = el?.offsetHeight ?? 56;
+    const maxX = Math.max(8, window.innerWidth - w - 8);
+    const maxY = Math.max(8, window.innerHeight - h - 8);
+    return { x: Math.min(Math.max(8, x), maxX), y: Math.min(Math.max(8, y), maxY) };
+  };
+
+  // Restore a remembered position (per device) on mount, and re-clamp on resize
+  // so the toolbar never ends up stranded off-screen after a viewport change.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(TOOLBAR_POS_KEY);
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (typeof p?.x === "number" && typeof p?.y === "number") setToolbarPos(clampToolbarPos(p.x, p.y));
+      }
+    } catch {
+      /* ignore malformed/unavailable storage */
+    }
+    const onResize = () => setToolbarPos((p) => (p ? clampToolbarPos(p.x, p.y) : p));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const startToolbarDrag = (e: React.PointerEvent) => {
+    e.preventDefault();
+    const el = toolbarRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    toolbarDragOffsetRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    toolbarDraggingRef.current = true;
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+  };
+
+  const moveToolbarDrag = (e: React.PointerEvent) => {
+    if (!toolbarDraggingRef.current) return;
+    const { x, y } = toolbarDragOffsetRef.current;
+    setToolbarPos(clampToolbarPos(e.clientX - x, e.clientY - y));
+  };
+
+  const endToolbarDrag = () => {
+    if (!toolbarDraggingRef.current) return;
+    toolbarDraggingRef.current = false;
+    setToolbarPos((p) => {
+      if (p) {
+        try {
+          localStorage.setItem(TOOLBAR_POS_KEY, JSON.stringify(p));
+        } catch {
+          /* storage unavailable — position just won't persist */
+        }
+      }
+      return p;
+    });
+  };
 
   const generateOne = async (cfg: SessionConfig) => {
     const q = await api.generate(
@@ -950,24 +1017,24 @@ function PracticeInner() {
   if (showSetup) {
     return (
       <AuthGuard>
-        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 px-4">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-4">
+        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#f2f1ed] px-4">
+          <div className="w-full max-w-md bg-white border border-[#e4e2db] rounded-2xl shadow-sm p-6 space-y-4">
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Start a practice session</h1>
-              <p className="mt-1 text-sm text-slate-500">
+              <h1 className="text-xl font-bold text-[#23272e]">Start a practice session</h1>
+              <p className="mt-1 text-sm text-[#8a857b]">
                 {SESSION_TOTAL} questions, handwritten and graded instantly.
               </p>
             </div>
             <div className="space-y-3">
               <label className="block">
-                <span className="text-xs font-medium text-slate-600">Topic</span>
+                <span className="text-xs font-medium text-[#6b6558]">Topic</span>
                 <select
                   value={topic}
                   onChange={(e) => {
                     setTopic(e.target.value);
                     setQuestionType("any");
                   }}
-                  className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
                 >
                   <option value="complex">Complex numbers</option>
                   <option value="limit">Limits</option>
@@ -976,11 +1043,11 @@ function PracticeInner() {
                 </select>
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-slate-600">Question type</span>
+                <span className="text-xs font-medium text-[#6b6558]">Question type</span>
                 <select
                   value={questionType}
                   onChange={(e) => setQuestionType(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
                 >
                   <option value="any">Any type</option>
                   {TYPE_OPTIONS[topic].map((t) => (
@@ -991,11 +1058,11 @@ function PracticeInner() {
                 </select>
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-slate-600">Difficulty</span>
+                <span className="text-xs font-medium text-[#6b6558]">Difficulty</span>
                 <select
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
                 >
                   <option value="easy">Easy</option>
                   <option value="medium">Medium</option>
@@ -1004,11 +1071,11 @@ function PracticeInner() {
               </label>
               {topic === "complex" && (
                 <label className="block">
-                  <span className="text-xs font-medium text-slate-600">Generation mode</span>
+                  <span className="text-xs font-medium text-[#6b6558]">Generation mode</span>
                   <select
                     value={mode}
                     onChange={(e) => setMode(e.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                    className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
                   >
                     <option value="templates">Templates</option>
                     <option value="gemini">Gemini</option>
@@ -1020,7 +1087,7 @@ function PracticeInner() {
             <button
               onClick={startSession}
               disabled={busy}
-              className="w-full px-4 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 disabled:opacity-50"
+              className="w-full px-4 py-2.5 rounded-lg bg-[#23272e] text-white text-sm font-semibold hover:bg-[#31363f] disabled:opacity-50"
             >
               {busy ? "Starting..." : `Start session (${SESSION_TOTAL} questions)`}
             </button>
@@ -1033,24 +1100,24 @@ function PracticeInner() {
   if (sessionDone) {
     return (
       <AuthGuard>
-        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 px-4">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-sm p-6 text-center space-y-4">
-            <h1 className="text-xl font-bold text-slate-900">Session complete!</h1>
+        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#f2f1ed] px-4">
+          <div className="w-full max-w-md bg-white border border-[#e4e2db] rounded-2xl shadow-sm p-6 text-center space-y-4">
+            <h1 className="text-xl font-bold text-[#23272e]">Session complete!</h1>
             <p className="text-4xl font-extrabold text-emerald-600">
               {sessionCorrect} / {SESSION_TOTAL}
             </p>
-            <p className="text-sm text-slate-500">correct on the first check</p>
+            <p className="text-sm text-[#8a857b]">correct on the first check</p>
             <div className="flex gap-2">
               <button
                 onClick={startSession}
                 disabled={busy}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 rounded-lg bg-[#23272e] text-white text-sm font-semibold hover:bg-[#31363f] disabled:opacity-50"
               >
                 Start another session
               </button>
               <button
                 onClick={endSession}
-                className="px-4 py-2.5 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50"
+                className="px-4 py-2.5 rounded-lg border border-[#dddad1] text-sm font-medium hover:bg-[#faf9f6]"
               >
                 Done
               </button>
@@ -1065,7 +1132,7 @@ function PracticeInner() {
     <AuthGuard>
       <div className="relative">
         {reviewMode && (
-          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-slate-900/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto">
+          <div className="fixed top-[76px] left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto">
             <span>Reviewing a past attempt — your writing is restored, draw on it or start fresh.</span>
             <button
               onClick={replayReview}
@@ -1086,11 +1153,11 @@ function PracticeInner() {
 
         {partLabels.length > 0 && (
           <div
-            className={`fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 backdrop-blur border border-slate-200 rounded-lg shadow-md px-2 py-1.5 pointer-events-auto ${
-              reviewMode ? "top-16" : "top-3"
+            className={`fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md px-2 py-1.5 pointer-events-auto ${
+              reviewMode ? "top-[124px]" : "top-[76px]"
             }`}
           >
-            <span className="text-xs text-slate-400 pr-1">Part</span>
+            <span className="text-xs text-[#8a857b] pr-1">Part</span>
             {partLabels.map((lab, i) => {
               const done = !!resultByPart[i]?.correct;
               return (
@@ -1100,10 +1167,10 @@ function PracticeInner() {
                   disabled={busy}
                   className={`px-2.5 py-1 stylus:px-3 stylus:py-2 rounded text-sm font-semibold transition-colors ${
                     i === partIndex
-                      ? "bg-slate-900 text-white"
+                      ? "bg-[#23272e] text-white"
                       : done
                       ? "bg-emerald-100 text-emerald-800"
-                      : "text-slate-600 hover:bg-slate-100"
+                      : "text-[#6b6558] hover:bg-[#faf9f6]"
                   }`}
                 >
                   {done ? "✓ " : ""}
@@ -1158,29 +1225,24 @@ function PracticeInner() {
           />
         )}
 
-        {/* Top bar: Find <prompt> ................ Question N of 20  Skip */}
-        <div className="fixed inset-x-0 top-0 z-10 flex items-start justify-between gap-3 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] pointer-events-none">
-          <div className="pointer-events-auto max-w-2xl bg-white/95 backdrop-blur border border-slate-200 rounded-lg shadow-md px-4 py-2.5">
+        {/* Question bar: Find <prompt> ................ Question N of 20  Skip */}
+        <div className="fixed inset-x-0 top-0 z-10 min-h-[68px] bg-white border-b border-[#e4e2db] flex items-center justify-between gap-3 pl-7 pr-6 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <div className="flex items-center gap-2.5 min-w-0">
             {question ? (
-              <div className="flex items-baseline gap-2 text-lg text-slate-900">
-                <span className="font-semibold text-slate-500 text-sm uppercase tracking-wide">Find</span>
+              <div className="flex items-baseline gap-2.5 min-w-0">
+                <span className="font-medium text-[#23272e] text-base shrink-0">Find</span>
                 {question.prompt_latex ? (
-                  <MathText text={`\\(${question.prompt_latex}\\)`} />
+                  <MathText text={`\\(${question.prompt_latex}\\)`} className="text-[#23272e]" />
                 ) : (
-                  <span className="font-semibold">{question.prompt}</span>
+                  <span className="font-medium text-[#23272e]">{question.prompt}</span>
                 )}
               </div>
             ) : (
-              <span className="text-slate-400 text-sm">Loading question…</span>
+              <span className="text-[#8a857b] text-sm">Loading question…</span>
             )}
           </div>
 
-          <div className="pointer-events-auto flex items-center gap-2 bg-white/95 backdrop-blur border border-slate-200 rounded-lg shadow-md px-3 py-2.5">
-            {sessionActive && (
-              <span className="text-sm text-slate-500 whitespace-nowrap">
-                Question {sessionIndex} of {SESSION_TOTAL}
-              </span>
-            )}
+          <div className="flex items-center gap-3.5 shrink-0">
             {streak > 0 && (
               <span
                 className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-xs font-semibold whitespace-nowrap"
@@ -1189,10 +1251,15 @@ function PracticeInner() {
                 🔥 {streak}
               </span>
             )}
+            {sessionActive && (
+              <span className="text-[12.5px] text-[#8a857b] whitespace-nowrap">
+                Question {sessionIndex} of {SESSION_TOTAL}
+              </span>
+            )}
             <button
               onClick={skip}
               disabled={busy}
-              className="px-3 py-1.5 stylus:px-4 stylus:py-2.5 rounded-md border border-slate-300 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+              className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
             >
               Skip
             </button>
@@ -1200,7 +1267,7 @@ function PracticeInner() {
         </div>
 
         {error && (
-          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+          <div className="fixed top-[76px] left-1/2 -translate-x-1/2 z-20 pointer-events-none">
             <p className="pointer-events-auto bg-red-50 border border-red-200 text-red-700 text-xs rounded-md px-3 py-1.5 shadow-md">
               {error}
             </p>
@@ -1215,7 +1282,7 @@ function PracticeInner() {
                 result.correct ? "bg-emerald-50/95 border-emerald-200" : "bg-red-50/95 border-red-200"
               }`}
             >
-              <div className="font-bold text-slate-900">
+              <div className="font-bold text-[#23272e]">
                 {exerciseDone
                   ? "Exercise complete!"
                   : result.correct
@@ -1231,8 +1298,8 @@ function PracticeInner() {
                         i < partIndex || (exerciseDone && i === partIndex)
                           ? "bg-emerald-600 text-white"
                           : i === partIndex
-                          ? "bg-slate-900 text-white"
-                          : "bg-slate-200 text-slate-500"
+                          ? "bg-[#23272e] text-white"
+                          : "bg-[#e4e2db] text-[#8a857b]"
                       }`}
                     >
                       {lab}
@@ -1262,20 +1329,20 @@ function PracticeInner() {
                 </div>
               ) : (
                 !result.correct && (
-                  <div className="mt-1 text-sm text-slate-700">
+                  <div className="mt-1 text-sm text-[#3f3c35]">
                     Expected: <span className="font-medium">{result.expected}</span>
                   </div>
                 )
               )}
-              <div className="mt-1 text-xs text-slate-500">Reason: {result.reason}</div>
+              <div className="mt-1 text-xs text-[#8a857b]">Reason: {result.reason}</div>
             </div>
           )}
 
           {(explanation || workText) && (
-            <div className="bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-md p-3">
+            <div className="bg-white/90 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md p-3">
               {workText && workText.split("\n").length > 1 && (
-                <div className="mb-2 pb-2 border-b border-slate-200">
-                  <div className="text-xs text-slate-500 uppercase font-medium">Your work</div>
+                <div className="mb-2 pb-2 border-b border-[#e4e2db]">
+                  <div className="text-xs text-[#8a857b] uppercase font-medium">Your work</div>
                   <div className="mt-1 text-sm space-y-0.5">
                     {workText.split("\n").map((line, idx) => {
                       const lineNo = idx + 1;
@@ -1285,7 +1352,7 @@ function PracticeInner() {
                       const lineRes = result?.step_check?.line_results.find((r) => r.line === lineNo);
                       const formulaName = lineRes?.formula ? lineRes.formula.replaceAll("_", " ") : null;
                       return (
-                        <div key={idx} className={isError ? "text-red-700 font-semibold" : "text-slate-600"}>
+                        <div key={idx} className={isError ? "text-red-700 font-semibold" : "text-[#6b6558]"}>
                           {isError ? "→ " : ""}
                           {latex ? <MathText text={`\\(${latex}\\)`} /> : <MathText text={line} />}
                           {isError && formulaName && (
@@ -1301,11 +1368,11 @@ function PracticeInner() {
                 <div className="text-sm leading-relaxed">
                   {explanation.steps?.length ? (
                     <div className="space-y-1.5 mb-2">
-                      <div className="text-xs font-medium text-slate-500 uppercase">Solution</div>
+                      <div className="text-xs font-medium text-[#8a857b] uppercase">Solution</div>
                       {explanation.steps.slice(0, hintLevel || explanation.steps.length).map((s) => (
                         <div key={s.step_order} className="flex gap-1.5">
-                          <span className="font-medium text-slate-900 whitespace-nowrap">Step {s.step_order}:</span>
-                          <MathText text={s.detail} className="text-slate-700" />
+                          <span className="font-medium text-[#23272e] whitespace-nowrap">Step {s.step_order}:</span>
+                          <MathText text={s.detail} className="text-[#3f3c35]" />
                         </div>
                       ))}
                     </div>
@@ -1314,8 +1381,8 @@ function PracticeInner() {
                     <MathText text={explanation.content} className="whitespace-pre-wrap" />
                   )}
                   {explanation.work_check?.content && (
-                    <div className="mt-3 border-t border-slate-200 pt-2">
-                      <div className="text-xs font-medium text-slate-500 uppercase">Your work check</div>
+                    <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                      <div className="text-xs font-medium text-[#8a857b] uppercase">Your work check</div>
                       <MathText text={explanation.work_check.content} className="mt-1 whitespace-pre-wrap" />
                     </div>
                   )}
@@ -1325,46 +1392,72 @@ function PracticeInner() {
           )}
         </div>
 
-        {/* Bottom pill toolbar. Buttons pick up bigger touch targets under
-            `stylus:` (pointer: coarse — finger/pen tablets) without bloating
-            them for precise mouse users, and the pill wraps instead of
-            overflowing off-screen on a narrower portrait tablet. Bottom
-            padding respects the safe area for iPad landscape/PWA use. */}
-        <div className="fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-10 flex justify-center pointer-events-none px-3">
-          <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-1 max-w-[95vw] bg-white/95 backdrop-blur border border-slate-200 rounded-[1.75rem] shadow-lg px-2 py-2">
-            <button
-              onClick={() => selectTool("pen")}
-              title="Pen (P)"
-              className={`px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium ${
-                tool === "pen" ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              Pen
-            </button>
-            <button
-              onClick={() => selectTool("eraser")}
-              title="Eraser (E)"
-              className={`px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium ${
-                tool === "eraser" ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              Eraser
-            </button>
-            <div className="w-px h-6 bg-slate-200 mx-1" />
+        {/* Toolbar — docked bottom-center (respecting the safe area) by default,
+            drag the grip to move it anywhere. Buttons pick up bigger touch
+            targets under `stylus:` (pointer: coarse — finger/pen tablets)
+            without bloating them for precise mouse users, and the row wraps
+            instead of overflowing off-screen on a narrower portrait tablet. */}
+        <div
+          ref={toolbarRef}
+          className="fixed z-10 pointer-events-auto flex items-center gap-1.5 bg-white rounded-xl shadow-[0px_2px_8px_0px_rgba(0,0,0,0.08)] p-2"
+          style={
+            toolbarPos
+              ? { left: toolbarPos.x, top: toolbarPos.y }
+              : { left: "50%", bottom: "max(24px, env(safe-area-inset-bottom))", transform: "translateX(-50%)" }
+          }
+        >
+          <div
+            onPointerDown={startToolbarDrag}
+            onPointerMove={moveToolbarDrag}
+            onPointerUp={endToolbarDrag}
+            onPointerCancel={endToolbarDrag}
+            title="Drag to move"
+            className="self-stretch flex flex-col flex-wrap items-center justify-center gap-[3px] px-1.5 cursor-grab active:cursor-grabbing touch-none"
+          >
+            {Array.from({ length: 6 }).map((_, i) => (
+              <span key={i} className="w-1 h-1 rounded-full bg-[#c7c2b6]" />
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 max-w-[85vw]">
+            <div className="flex items-center gap-0.5 bg-[#f1f0ec] rounded-[9px] p-[3px]">
+              <button
+                onClick={() => selectTool("pen")}
+                title="Pen (P)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "pen"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Pen
+              </button>
+              <button
+                onClick={() => selectTool("eraser")}
+                title="Eraser (E)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "eraser"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Eraser
+              </button>
+            </div>
             <button
               onClick={undo}
               disabled={!canUndo}
-              className="px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+              className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
             >
               Undo
             </button>
             <button
               onClick={redo}
               disabled={!canRedo}
-              className="px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+              className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
             >
               Redo
             </button>
+            <div className="w-px h-[26px] bg-[#e4e2db]" />
             <button
               onClick={() => {
                 activeCanvas()?.clear();
@@ -1375,30 +1468,29 @@ function PracticeInner() {
                 setLinePops(null);
                 markDirty();
               }}
-              className="px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100"
+              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#9a9488] hover:bg-[#faf9f6]"
             >
               Clear
             </button>
-            <div className="w-px h-6 bg-slate-200 mx-1" />
             <button
               onClick={showHint}
               disabled={busy || !question}
-              className="px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-40"
+              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
             >
               {explanation?.steps?.length && hintLevel >= explanation.steps.length ? "All hints shown" : "Hint"}
             </button>
             <button
               onClick={uploadImage}
-              className="px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100"
+              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6]"
             >
               Upload
             </button>
-            <div className="flex items-center rounded-full border border-slate-200 overflow-hidden text-xs ml-1">
-              <button onClick={zoomOut} className="px-2 py-2 stylus:px-3 stylus:py-3 hover:bg-slate-50" title="Zoom out">
+            <div className="flex items-center rounded-[7px] border border-[#dddad1] overflow-hidden text-xs">
+              <button onClick={zoomOut} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-[#faf9f6] text-[#6b6558]" title="Zoom out">
                 −
               </button>
-              <span className="px-1.5 min-w-[2.5rem] text-center text-slate-500">{Math.round(zoom * 100)}%</span>
-              <button onClick={zoomIn} className="px-2 py-2 stylus:px-3 stylus:py-3 hover:bg-slate-50" title="Zoom in">
+              <span className="px-1.5 min-w-[2.5rem] text-center text-[#8a857b]">{Math.round(zoom * 100)}%</span>
+              <button onClick={zoomIn} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-[#faf9f6] text-[#6b6558]" title="Zoom in">
                 +
               </button>
             </div>
@@ -1406,12 +1498,12 @@ function PracticeInner() {
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
               placeholder="or type answer"
-              className="ml-1 w-28 px-2 py-2 stylus:py-3 border border-slate-200 rounded-full text-xs"
+              className="w-28 px-3 py-2.5 stylus:py-3 border border-[#dddad1] rounded-[7px] text-xs placeholder:text-[#a8a296]"
             />
             <button
               onClick={check}
               disabled={busy}
-              className="ml-1 px-5 py-2.5 stylus:px-6 stylus:py-3.5 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 disabled:opacity-50"
+              className="px-[15px] py-2.5 stylus:px-6 stylus:py-3.5 rounded-[7px] bg-[#23272e] text-white text-[12.5px] font-medium hover:bg-[#31363f] disabled:opacity-50"
             >
               {busy ? "Working..." : "Check my work"}
             </button>
@@ -1419,8 +1511,8 @@ function PracticeInner() {
         </div>
 
         {/* Pen/eraser size + debug, tucked into an unobtrusive corner strip */}
-        <div className="fixed left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-auto flex flex-col items-center gap-2 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-md p-2">
-          <span className="text-[10px] text-slate-400">{tool === "pen" ? 30 : 100}</span>
+        <div className="fixed left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-auto flex flex-col items-center gap-2 bg-white/90 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md p-2">
+          <span className="text-[10px] text-[#a8a296]">{tool === "pen" ? 30 : 100}</span>
           <input
             type="range"
             min={tool === "pen" ? 1 : 10}
@@ -1430,19 +1522,19 @@ function PracticeInner() {
             onChange={(e) =>
               tool === "pen" ? selectPenWidth(Number(e.target.value)) : selectEraserWidth(Number(e.target.value))
             }
-            className="w-6 h-24 stylus:w-10 stylus:h-32 accent-slate-900 [writing-mode:vertical-lr] [direction:rtl] cursor-pointer"
+            className="w-6 h-24 stylus:w-10 stylus:h-32 accent-[#23272e] [writing-mode:vertical-lr] [direction:rtl] cursor-pointer"
             aria-label="Size"
           />
-          <span className="text-[10px] text-slate-400">{tool === "pen" ? 1 : 10}</span>
-          <span className="text-xs font-semibold text-slate-700 tabular-nums">
+          <span className="text-[10px] text-[#a8a296]">{tool === "pen" ? 1 : 10}</span>
+          <span className="text-xs font-semibold text-[#6b6558] tabular-nums">
             {tool === "pen" ? penWidth : eraserWidth}
           </span>
-          <div className="w-full border-t border-slate-200 my-1" />
+          <div className="w-full border-t border-[#e4e2db] my-1" />
           <button
             onClick={() => setDebug((d) => !d)}
             title="Toggle debug panel"
             className={`w-7 h-7 stylus:w-9 stylus:h-9 rounded text-[10px] font-bold ${
-              debug ? "bg-slate-900 text-white" : "text-slate-400 hover:bg-slate-100"
+              debug ? "bg-[#23272e] text-white" : "text-[#a8a296] hover:bg-[#faf9f6]"
             }`}
           >
             DBG

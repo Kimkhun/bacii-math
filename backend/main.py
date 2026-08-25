@@ -7,7 +7,11 @@ app = FastAPI(title="BACII Math Engine", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3016", "http://127.0.0.1:3016"],
+    allow_origins=[
+        "http://localhost:3000", "http://127.0.0.1:3000",
+        "http://localhost:3016", "http://127.0.0.1:3016",
+        "http://172.20.10.6:3016",  # LAN access (e.g. iPad on the same Wi-Fi)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

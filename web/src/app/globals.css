@@ -1,16 +1,21 @@
-@import url("https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@400;500;600;700&family=Caveat:wght@400;500;600&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html, body {
-  @apply bg-slate-50 text-slate-900;
-  /* Battambang covers Khmer glyphs only — Latin text falls through to system-ui. */
-  font-family: "Battambang", system-ui, -apple-system, "Segoe UI", sans-serif;
+  @apply bg-[#f2f1ed] text-[#23272e];
+  /* Inter is the UI face; Battambang only fills in for Khmer glyphs Inter lacks. */
+  font-family: "Inter", "Battambang", system-ui, -apple-system, "Segoe UI", sans-serif;
   /* Stop iOS/iPadOS Safari's rubber-band page bounce from fighting the
      canvas's own pan/scroll while writing near an edge. */
   overscroll-behavior: none;
+}
+
+/* Handwriting-style face used for re-drawn ink (review mode, red-pen mark labels). */
+.font-hand {
+  font-family: "Caveat", "Segoe Script", cursive;
 }
 
 /* Applied to the fullscreen drawing surface: a resting palm or a slow stylus
