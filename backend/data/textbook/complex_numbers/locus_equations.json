@@ -1,0 +1,49 @@
+{
+  "formula_name": "locus_equations",
+  "topic": "complex_numbers",
+  "description": "Determine the Cartesian equation of the locus of a point M with affix z=x+iy satisfying a given relation involving z and its conjugate, and identify the locus in the complex plane.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.08.38 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook, Chapter 1 (complex numbers, algebraic form) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 6,
+  "exercises": [
+    {
+      "id": "p23_24",
+      "source_page": 23,
+      "prompt_latex": "\\text{Find the equation of the locus of the point } M \\text{ with affix } z \\text{ satisfying } (2-i)z+(2+i)\\bar z = 6. \\text{ Identify the locus of } M.",
+      "technique": "Substitute z=x+iy and \\bar z=x-iy, expand, and simplify to a linear (or other) Cartesian equation in x and y; then identify the curve/line it describes."
+    },
+    {
+      "id": "p23_25",
+      "source_page": 23,
+      "prompt_latex": "\\text{Find the equation of the locus of the point } M \\text{ with affix } z \\text{ satisfying } (1+3i)z+(1-3i)\\bar z = 4. \\text{ Identify the locus of } M.",
+      "technique": "Substitute z=x+iy and \\bar z=x-iy, expand, and simplify to a linear Cartesian equation in x and y; then identify the curve/line it describes."
+    },
+    {
+      "id": "p23_26",
+      "source_page": 23,
+      "prompt_latex": "\\text{Find the equation of the locus of the point } M \\text{ with affix } z \\text{ satisfying } (z-1+2i)(\\bar z-1-2i) = 2. \\text{ Identify the locus of } M.",
+      "technique": "Substitute z=x+iy, expand the product (this is of the form |z-z_0|^2=r^2), and simplify to the equation of a circle."
+    },
+    {
+      "id": "p23_27",
+      "source_page": 23,
+      "prompt_latex": "\\text{Find the equation of the locus of the point } M \\text{ with affix } z \\text{ satisfying } z^2+(\\bar z)^2 = 2. \\text{ Identify the locus of } M.",
+      "technique": "Substitute z=x+iy, expand z^2 and (\\bar z)^2 using i^2=-1, and simplify to a Cartesian equation in x and y (a hyperbola)."
+    },
+    {
+      "id": "p23_28",
+      "source_page": 23,
+      "prompt_latex": "\\text{Find the equation of the locus of the point } M \\text{ with affix } z \\text{ satisfying } (1+iz)(1-i\\bar z) = 2. \\text{ Identify the locus of } M.",
+      "technique": "Substitute z=x+iy, expand the product using i^2=-1, and simplify to a Cartesian equation in x and y (a circle)."
+    },
+    {
+      "id": "p23_29",
+      "source_page": 23,
+      "prompt_latex": "\\text{Find the equation of the locus of the point } M \\text{ with affix } z \\text{ satisfying } (z-1)^2+(\\bar z-1)^2 = 4. \\text{ Identify the locus of } M.",
+      "technique": "Substitute z=x+iy, expand both squares using i^2=-1, and simplify to a Cartesian equation in x and y (a hyperbola)."
+    }
+  ]
+}

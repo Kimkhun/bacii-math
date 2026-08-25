@@ -1,0 +1,73 @@
+{
+  "formula_name": "roots_of_unity",
+  "topic": "complex_numbers",
+  "description": "Problems built on a primitive n-th root of unity (\\omega = \\cos\\frac{2\\pi}{n}+i\\sin\\frac{2\\pi}{n}, satisfying \\omega^n=1): grouping its powers into symmetric sums, proving those sums are real/complex-conjugate, showing they satisfy a quadratic equation, and deducing exact trigonometric values from the equation's roots.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.17.19 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook, Chapter 2 (complex numbers, trigonometric form / powers / roots) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 10,
+  "exercises": [
+    {
+      "id": "p52_30a",
+      "source_page": 52,
+      "prompt_latex": "\\text{Let } z=\\cos\\frac{2\\pi}{7}+i\\sin\\frac{2\\pi}{7}. \\text{ Calculate } A=z+z^2+z^4 \\text{ and } B=z^3+z^5+z^6.",
+      "technique": "Use z^7=1 and the sum of all 7th roots of unity equal to 0 (1+z+z^2+\\dots+z^6=0) to reduce A+B and A\\cdot B to known values, then solve for A and B."
+    },
+    {
+      "id": "p52_30b",
+      "source_page": 52,
+      "prompt_latex": "\\text{Let } z=\\cos\\frac{2\\pi}{7}+i\\sin\\frac{2\\pi}{7}. \\text{ Solve the equation } \\frac{z}{1+z^2}+\\frac{z^2}{1+z^4}+\\frac{z^3}{1+z^6} = -2.",
+      "technique": "Substitute z^7=1 to simplify each fraction's denominator (e.g. 1+z^6 = 1+z^{-1}\\cdot z^7 relations), reducing the equation using the values of A, B found above."
+    },
+    {
+      "id": "p52_31a",
+      "source_page": 52,
+      "prompt_latex": "\\text{Let } z=\\cos\\frac{2\\pi}{5}+i\\sin\\frac{2\\pi}{5}. \\text{ Let } A=z+z^4 \\text{ and } B=z^2+z^3. \\text{ Calculate } z^5 \\text{ and prove that } A \\text{ and } B \\text{ are real numbers.}",
+      "technique": "z^5=1 (5th root of unity). Show A and B are each a sum of a power and its complex conjugate (since z^4=\\bar z and z^3=\\bar{z^2} when |z|=1), hence real."
+    },
+    {
+      "id": "p53_31b",
+      "source_page": 53,
+      "prompt_latex": "\\text{Write the quadratic equation whose roots are } A \\text{ and } B, \\text{ where } A=z+z^4, B=z^2+z^3, z=\\cos\\frac{2\\pi}{5}+i\\sin\\frac{2\\pi}{5}.",
+      "technique": "Use Vieta's formulas: the quadratic is x^2-(A+B)x+AB=0, computing A+B=-1 and AB=-1 from 1+z+z^2+z^3+z^4=0 and the product expansion."
+    },
+    {
+      "id": "p53_31c",
+      "source_page": 53,
+      "prompt_latex": "\\text{Prove that } \\cos\\frac{2\\pi}{5} = \\frac{\\sqrt{5}-1}{4}.",
+      "technique": "Solve the quadratic equation found above for A=2\\cos\\frac{2\\pi}{5} (using A=z+z^4=2\\cos\\frac{2\\pi}{5}), select the correct root by sign, and simplify."
+    },
+    {
+      "id": "p53_32a",
+      "source_page": 53,
+      "prompt_latex": "\\text{Let } \\omega=\\cos\\frac{2\\pi}{7}+i\\sin\\frac{2\\pi}{7}. \\text{ Let } z=\\omega+\\omega^2+\\omega^4 \\text{ and } w=\\omega^3+\\omega^5+\\omega^6. \\text{ Find } \\omega^7 \\text{ and then show that } z \\text{ and } w \\text{ are complex conjugates.}",
+      "technique": "\\omega^7=1 (7th root of unity). Show w = \\overline{z} by pairing each term of w with the conjugate of a term of z (since \\bar\\omega=\\omega^6=\\omega^{-1}, etc.)."
+    },
+    {
+      "id": "p53_32b",
+      "source_page": 53,
+      "prompt_latex": "\\text{Show that the imaginary part of } z \\text{ is a positive number, where } z=\\omega+\\omega^2+\\omega^4, \\omega=\\cos\\frac{2\\pi}{7}+i\\sin\\frac{2\\pi}{7}.",
+      "technique": "Write z's imaginary part as \\sin\\frac{2\\pi}{7}+\\sin\\frac{4\\pi}{7}+\\sin\\frac{8\\pi}{7} and argue each/its net sum is positive using the angles' positions on the unit circle."
+    },
+    {
+      "id": "p53_32c",
+      "source_page": 53,
+      "prompt_latex": "\\text{Show that } z \\text{ and } w \\text{ are roots of the equation } (E): x^2+x+2=0, \\text{ where } z=\\omega+\\omega^2+\\omega^4, w=\\omega^3+\\omega^5+\\omega^6, \\omega=\\cos\\frac{2\\pi}{7}+i\\sin\\frac{2\\pi}{7}.",
+      "technique": "Compute z+w=-1 (using 1+\\omega+\\dots+\\omega^6=0) and z\\cdot w=2 (expanding the product using \\omega^7=1), then apply Vieta's formulas to form the quadratic and verify z,w are its roots."
+    },
+    {
+      "id": "p53_32d",
+      "source_page": 53,
+      "prompt_latex": "\\text{Solve the equation } (E): x^2+x+2=0 \\text{ and deduce } z \\text{ and } w.",
+      "technique": "Solve the quadratic with the discriminant (complex roots), then use the earlier result (imaginary part of z positive) to identify which root is z and which is w."
+    },
+    {
+      "id": "p53_32e",
+      "source_page": 53,
+      "prompt_latex": "\\text{Using the result above, deduce that } \\sin\\frac{2\\pi}{7}+\\sin\\frac{4\\pi}{7}+\\sin\\frac{8\\pi}{7} = \\frac{\\sqrt{7}}{2}.",
+      "technique": "Take the imaginary part of z (found by solving (E)) and identify it with \\sin\\frac{2\\pi}{7}+\\sin\\frac{4\\pi}{7}+\\sin\\frac{8\\pi}{7}."
+    }
+  ]
+}
