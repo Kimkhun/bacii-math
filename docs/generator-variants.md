@@ -5,15 +5,19 @@ which difficulty pools it belongs to. Derived from `backend/engine/generator.py`
 (`_INTEGRAL_VARIANT_BY_DIFFICULTY`, `_INDEFINITE_VARIANT_BY_DIFFICULTY`,
 `_LIMIT_VARIANT_BY_DIFFICULTY`, complex pools).
 
-## Complex numbers (5 question types; pools pick random params)
+## Complex numbers (9 question types; pools pick random params)
 
 | Question type | Parameterization | Tags |
 |---|---|---|
 | modulus | Pythagorean-triple pools per difficulty + random signs | `pythagorean`, `sqrt_simplify` |
 | argument | k per difficulty + 8 sign/quadrant combos | `atan2_ratio`, `quadrant_adjustment` |
 | conjugate / real_part / imaginary_part | random a, b ∈ range (b ≠ 0) | `sign_flip` / `extract_real` / `extract_imag` |
+| complex_arithmetic | random z1, z2; operation ∈ {add, subtract, multiply, divide} by difficulty (`solver/complex/arithmetic.py`) | `complex_addition` / `_subtraction` / `_multiplication` / `_division` |
+| complex_power | random z = a+bi; fixed small n (2/3/4 by difficulty), direct binomial expansion — not De Moivre (`solver/complex/power.py`) | `binomial_expansion_i_squared` |
+| de_moivre_power | z built from a "nice" (r, standard-angle) pair (`solver/complex/trig.py`'s 16-angle pool, multiples of 30°/45°) so z itself looks like a real textbook number (e.g. `2+2i√3`); n scales by difficulty, capped so `r^n ≤ 10^18` (kept displayable/gradable — the real exam's huge exponents like `(1-i)^2021` only stay tractable if left in unexpanded power form, which this app's plain-value grading doesn't support yet) (`solver/complex/de_moivre.py`) | `trig_form_conversion`, `de_moivre_formula`, `angle_reduction_mod_2pi`, `trig_to_algebraic` |
+| nth_roots | reverse-built: pick the *answer* root w from the same standard-angle pool, then present z = w^n as the given number; n by difficulty (2/2-3/3-5) (`solver/complex/nth_roots.py`) | `trig_form_conversion`, `nth_root_formula`, `trig_to_algebraic` |
 
-Gemini mode (complex only): LLM proposes a,b + type; SymPy validates.
+Gemini mode (complex only, classic 5 types only): LLM proposes a,b + type; SymPy validates.
 
 **Curated textbook exercises:** each `easy`-difficulty request for `modulus`,
 `argument`, `conjugate`, `real_part`, or `imaginary_part` has a 50% chance of
@@ -23,12 +27,24 @@ question type (`generator/complex._generate_templates`). The curated pool
 `backend/data/complex_numbers/{formula_name}.json` — only the subset of
 textbook exercises posed as a literal `z = a+bi` (plain integers, no
 powers/radicals) round-trips through the existing a+bi solver, so the curated
-pool is intentionally small (6 exercises as of 2026-08-25) versus the full
-extracted set (164 exercises across 13 technique files — most involve trig
-form, De Moivre powers, equations, or loci the solver doesn't yet support; see
-`exam-data.md`). SymPy still computes/grades the answer identically to the
-procedural pool — the curated item only supplies the a, b pair and an
-exam-authored `curated_technique` note for reference.
+pool is intentionally small (6 exercises as of 2026-08-25). SymPy still
+computes/grades the answer identically to the procedural pool — the curated
+item only supplies the a, b pair and an exam-authored `curated_technique` note
+for reference. The 4 new question types above are procedural-only for now (no
+curated pool wired in yet).
+
+**Still not templated** (of the 164 textbook exercises in
+`backend/data/complex_numbers/`, these categories have no solver yet — see
+`exam-data.md`): standalone "write z in trig form" as its own multi-part
+exercise (`trig_form_conversion.json`, `quotient_trig_form.json` — the trig
+form *value* is already reachable via modulus+argument, but grading the (r, θ)
+pair as two separate blanks needs multi-part grading like probability's
+`grade_multi`, not yet wired for topic `complex`), solving equations in z/z̄
+(`complex_equations.json`), classifying geometric loci
+(`locus_equations.json`), plotting affixes (`geometric_representation.json`),
+and the symmetric-sum/Vieta root-of-unity identities
+(`roots_of_unity.json`'s proof-style problems — `nth_roots` above only covers
+"find a root", not those).
 
 ## Limits
 

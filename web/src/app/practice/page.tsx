@@ -58,6 +58,10 @@ const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: "conjugate", label: "Conjugate" },
     { value: "real_part", label: "Real part" },
     { value: "imaginary_part", label: "Imaginary part" },
+    { value: "complex_arithmetic", label: "Arithmetic (z1, z2)" },
+    { value: "complex_power", label: "Power (z^n)" },
+    { value: "de_moivre_power", label: "De Moivre's formula" },
+    { value: "nth_roots", label: "nth roots" },
   ],
   limit: [{ value: "limit", label: "Limit" }],
   integral: [

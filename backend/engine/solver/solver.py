@@ -8,7 +8,7 @@ from .probability import _solve_probability
 
 def solve(topic, question_type, params):
     if topic == "complex":
-        return _solve_complex(question_type, params["a"], params["b"])
+        return _solve_complex(question_type, params)
     if topic == "limit":
         return _solve_limit(params)
     if topic == "integral":

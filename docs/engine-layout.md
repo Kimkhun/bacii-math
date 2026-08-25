@@ -13,7 +13,7 @@ backend/engine/
   solver.py                dispatcher: solve(topic, qt, params) → routes
   solver/                  # "the answer math" — SymPy is the only authority
     shared.py              constants + shared helpers (format_z, inline_latex, ...)
-    complex.py             modulus / argument / conjugate / real / imaginary
+    complex/               one module per exercise technique (see below)
     limits.py              _solve_limit (procedural + curated branches)
     integrals.py           _solve_indefinite / _solve_definite
     probability.py         7 structures + multi-part assembly
@@ -30,9 +30,33 @@ backend/engine/
   grader/
     probability.py         multi-part grading (grade_multi, parse_multi_answers, ...)
 
-  structures.py            integral structure registry + curated limit pool (unchanged)
+  structures.py            integral structure registry + curated limit/complex pools
   scenarios.py / formulas.py / llm.py / vision.py / explainer.py / notation.py  (unchanged)
 ```
+
+### `solver/complex/` — one module per exercise technique
+
+Further split by technique (mirrors `backend/data/complex_numbers/{formula_name}.json`),
+same pattern as the top-level solver/generator split:
+
+```
+solver/complex/
+  __init__.py       _solve_complex(question_type, params) — the package's dispatcher
+  modulus.py        |z| = sqrt(a^2+b^2)
+  argument.py       arg(z) via atan2
+  conjugate.py      z̄ = a - bi
+  real_imaginary.py Re(z) / Im(z)
+  arithmetic.py     z1 (+|-|*|/) z2
+  power.py          z^n, small n, direct algebraic expansion
+  de_moivre.py       z^n, large n, via trigonometric form + De Moivre
+  nth_roots.py       one n-th root of z (reverse-built from a clean root)
+  trig.py           shared "nice special angle" helpers for de_moivre.py/nth_roots.py
+```
+
+`_solve_complex` now takes the full `params` dict (not unpacked `a, b`) since
+different question types need different shapes (`a1/b1/a2/b2/operation`,
+`a/b/n`, `r/k/d/n`, `rho/k0/d0/n`) — `solver/solver.py`'s call site passes
+`params` straight through.
 
 The dispatchers keep the exact same names and signatures as before, so
 `services.py`, the routers, and the verify scripts never noticed the move:

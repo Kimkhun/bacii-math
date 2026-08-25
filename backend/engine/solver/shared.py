@@ -7,7 +7,10 @@ load this package without the Google LLM client stack.
 from sympy import E, Symbol, latex, oo, pi, sqrt
 
 
-QUESTION_TYPES = ("modulus", "argument", "conjugate", "real_part", "imaginary_part")
+QUESTION_TYPES = (
+    "modulus", "argument", "conjugate", "real_part", "imaginary_part",
+    "complex_arithmetic", "complex_power", "de_moivre_power", "nth_roots",
+)
 
 QUESTION_TYPES_BY_TOPIC = {
     "complex": QUESTION_TYPES,
