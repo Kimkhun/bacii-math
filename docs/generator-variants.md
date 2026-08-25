@@ -15,10 +15,25 @@ which difficulty pools it belongs to. Derived from `backend/engine/generator.py`
 
 Gemini mode (complex only): LLM proposes a,b + type; SymPy validates.
 
+**Curated textbook exercises:** each `easy`-difficulty request for `modulus`,
+`argument`, `conjugate`, `real_part`, or `imaginary_part` has a 50% chance of
+drawing a curated textbook exercise instead, if one exists for that exact
+question type (`generator/complex._generate_templates`). The curated pool
+(`engine/structures._COMPLEX_CURATED_TEMPLATES`) is parsed at import time from
+`backend/data/complex_numbers/{formula_name}.json` — only the subset of
+textbook exercises posed as a literal `z = a+bi` (plain integers, no
+powers/radicals) round-trips through the existing a+bi solver, so the curated
+pool is intentionally small (6 exercises as of 2026-08-25) versus the full
+extracted set (164 exercises across 13 technique files — most involve trig
+form, De Moivre powers, equations, or loci the solver doesn't yet support; see
+`exam-data.md`). SymPy still computes/grades the answer identically to the
+procedural pool — the curated item only supplies the a, b pair and an
+exam-authored `curated_technique` note for reference.
+
 ## Limits
 
-Each request has a 50% chance of drawing a **curated** exercise (one of the 36
-real BAC II limit questions, 2014-2025, sorted by technique into
+Each request has a 50% chance of drawing a **curated** exercise (one of the 56
+real BAC II / textbook limit questions, sorted by technique into
 `backend/data/limits/{formula_name}.json`) for the given difficulty, falling
 back to the procedural variant otherwise. Curated params carry `formula_name`
 + the exam-authored technique text (`engine/structures._LIMIT_CURATED_TEMPLATES`,
@@ -29,7 +44,11 @@ text to narrate steps while SymPy still computes/grades the answer.
 |---|---|---|---|
 | easy | polynomial (random coeffs + point) | `direct_substitution` | `direct_substitution`, `factoring_0_0` |
 | medium | removable `(x²−c²)/(x−c)` | `factor_difference_of_squares`, `cancel_common_factor`, `direct_substitution` | `rationalization_conjugate_finite`, `trig_identity_0_0`, `sinc_standard_limit`, `angle_addition_0_0`, `rationalization_sinc_combo`, `exponential_sinc_combo`, `half_angle_sinc_combo`, `exponential_standard_limit` |
-| hard | infinity rational | `divide_highest_power`, `leading_coefficient_ratio` | `conjugate_infinity`, `log_limit_infinity`, `rational_function_infinity` |
+| hard | infinity rational | `divide_highest_power`, `leading_coefficient_ratio` | `conjugate_infinity`, `log_limit_infinity`, `rational_function_infinity`, `log_limit_zero`, `indeterminate_one_infinity` |
+
+(`log_limit_zero` and `indeterminate_one_infinity` are textbook-extracted
+exercises, not exam questions — 20 items with SymPy-verified `answer_latex`
+added when they were folded into `backend/data/limits/`; see `exam-data.md`.)
 
 (One curated exercise, `2024b`, is excluded from the pool — it's an inverse
 "find a given the limit" problem, not a plain limit to solve.)

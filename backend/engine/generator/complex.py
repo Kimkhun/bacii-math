@@ -4,6 +4,7 @@ import random
 
 from engine import llm
 from engine.solver import QUESTION_TYPES, format_z, z_latex
+from engine.structures import _COMPLEX_CURATED_TEMPLATES
 
 
 _MODULUS_POOLS = {
@@ -48,6 +49,17 @@ def _build(question_type, a, b, difficulty, source):
         "source": source,
     }
 
+def _build_curated_complex(item, difficulty):
+    """A real textbook exercise from backend/data/complex_numbers/{formula_name}.json,
+    replayed through the same a+bi solver as the procedural pool (SymPy still
+    computes/grades the answer; the exam-authored technique note is carried
+    for reference, mirroring the limits curated pool in generator/limits.py)."""
+    problem = _build(item["question_type"], item["a"], item["b"], difficulty, "curated")
+    problem["params"]["formula_name"] = item["formula_name"]
+    problem["params"]["curated_technique"] = item["technique"]
+    problem["params"]["source_id"] = item["id"]
+    return problem
+
 def _sign(rng, v):
     return v if rng.random() < 0.5 else -v
 
@@ -58,6 +70,13 @@ def _generate_templates(difficulty, seed, question_type):
         raise ValueError(f"unknown question_type: {qt}")
     if difficulty not in _HI_RANGE:
         raise ValueError(f"unknown difficulty: {difficulty}")
+
+    curated_pool = [
+        t for t in _COMPLEX_CURATED_TEMPLATES
+        if t["difficulty"] == difficulty and t["question_type"] == qt
+    ]
+    if curated_pool and rng.random() < 0.5:
+        return _build_curated_complex(rng.choice(curated_pool), difficulty)
 
     if qt == "modulus":
         x, y = rng.choice(_MODULUS_POOLS[difficulty])

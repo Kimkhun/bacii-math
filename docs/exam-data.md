@@ -56,7 +56,35 @@ of truth).
   through a template) is a documented future item (exam mode / exam-bank
   pipeline).
 
-## 4. Formula catalog (content data, mounted)
+## 4. Textbook exercise extraction (`backend/data/textbook/`)
+
+- **179 exercises transcribed from a scanned grade-12 textbook** (5 PDFs,
+  107 pages), split into `textbook/complex_numbers/` (164, across 13
+  technique files: algebraic form, trig form, De Moivre/roots) and
+  `textbook/limits/` (20, across 2 files not already covered by the exam
+  bank: `log_limit_zero`, `indeterminate_one_infinity`). Kept as raw
+  extraction — no answers, no dedup against the live data folders.
+- **How it feeds the live folders:** the same files (or a subset) are copied
+  into the existing `backend/data/limits/` and a new top-level
+  `backend/data/complex_numbers/` folder, checked for `prompt_latex`
+  duplicates against the exam-derived data first (none found).
+  - **Limits:** both textbook files needed `answer_latex` added (the
+    generator's curated-limit loader requires it) — computed directly with
+    SymPy's `limit()` (e.g. `log_limit_zero`'s 0/0 log-of-(1+u) forms,
+    `indeterminate_one_infinity`'s `1^∞` forms via `lim(1+u)^(1/u)=e`), not
+    invented. Both categories added to
+    `structures._LIMIT_DIFFICULTY_BY_CATEGORY` as `hard` and are now part of
+    the live curated pool (56 total, up from 36).
+  - **Complex numbers:** most textbook exercises involve powers, radicals, De
+    Moivre, or systems the current a+bi-only solver can't replay, so only the
+    literal `z = a+bi` (plain-integer) subset with a recognized question type
+    (modulus/argument/conjugate/real_part/imaginary_part) was pulled into a
+    new curated pool — 6 exercises, `easy` difficulty
+    (`engine/structures._COMPLEX_CURATED_TEMPLATES`, mirroring the limit
+    loader's parse-once-at-import + graceful-skip pattern). See
+    `generator-variants.md` for how it's mixed into `generate()`.
+
+## 5. Formula catalog (content data, mounted)
 
 `backend/data/formulas/*.json` — merged over the built-in registry by
 `engine/formulas.py` at import; malformed entries skipped; built-ins are the

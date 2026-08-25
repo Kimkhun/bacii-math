@@ -636,6 +636,8 @@ _LIMIT_DIFFICULTY_BY_CATEGORY = {
     "conjugate_infinity": "hard",
     "log_limit_infinity": "hard",
     "rational_function_infinity": "hard",
+    "log_limit_zero": "hard",
+    "indeterminate_one_infinity": "hard",
 }
 
 _PI_SYMBOL = Symbol("pi")
@@ -727,3 +729,87 @@ def _load_limit_curated():
 
 
 _LIMIT_CURATED_TEMPLATES = _load_limit_curated()
+
+
+# ---------------------------------------------------------------------------
+# Curated complex-number exercises: textbook problems posed as a literal
+# "z = a+bi" (integer a, b) asking for modulus/argument/conjugate/real/imag
+# part — sorted by technique into backend/data/complex_numbers/{formula_name}.json.
+# Most textbook exercises involve powers, radicals, or systems the current
+# solver (plain a+bi in, one of 5 question types out) can't replay, so only
+# the literal-integer subset is parsed here; everything else is skipped, same
+# as the limit loader's graceful-skip pattern.
+# ---------------------------------------------------------------------------
+_COMPLEX_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "complex_numbers")
+
+_COMPLEX_QUESTION_TYPE_KEYWORDS = (
+    ("real part", "real_part"),
+    ("re(z)", "real_part"),
+    ("imaginary part", "imaginary_part"),
+    ("im(z)", "imaginary_part"),
+    ("conjugate", "conjugate"),
+    (r"\bar{z}", "conjugate"),
+    ("modulus", "modulus"),
+    ("|z|", "modulus"),
+    ("argument", "argument"),
+    ("arg(z)", "argument"),
+)
+
+# Anchored on "z = a+bi" immediately after "given"/"calculate ... of:" phrasing
+# (not a bare "= a+bi" that could be the RHS of an unrelated equation), and
+# rejects a trailing continuation (e.g. "-2 + 2i\sqrt{3}") so only true
+# integer-literal affixes are captured.
+_COMPLEX_LITERAL_RE = re.compile(
+    r"z\s*=\s*(-?\d+)\s*([+-])\s*(\d+)\s*i\b(?!\s*\\sqrt)"
+)
+
+
+def _classify_complex_question_type(prompt_latex):
+    low = prompt_latex.lower()
+    for keyword, qt in _COMPLEX_QUESTION_TYPE_KEYWORDS:
+        if keyword in low:
+            return qt
+    return None
+
+
+def _load_complex_curated():
+    items = []
+    for fpath in sorted(glob.glob(os.path.join(_COMPLEX_DATA_DIR, "*.json"))):
+        try:
+            data = json.load(open(fpath, encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        category = data.get("formula_name", os.path.splitext(os.path.basename(fpath))[0])
+        for ex in data.get("exercises", []):
+            prompt_latex = ex.get("prompt_latex", "")
+            # Only take the literal affix nearest "z =" that actually
+            # introduces the number (skips equation-solving exercises where
+            # "z = ..." coincidentally appears as an unrelated RHS, e.g.
+            # "(3+2i)\bar z = 9+4i").
+            intro_idx = prompt_latex.lower().find("z =")
+            if intro_idx == -1:
+                intro_idx = prompt_latex.find("z=")
+            if intro_idx == -1:
+                continue
+            m = _COMPLEX_LITERAL_RE.match(prompt_latex, intro_idx)
+            if not m:
+                continue
+            qt = _classify_complex_question_type(prompt_latex)
+            if qt is None:
+                continue
+            a = int(m.group(1))
+            b = int(m.group(2) + m.group(3))
+            items.append({
+                "id": ex["id"],
+                "formula_name": category,
+                "question_type": qt,
+                "difficulty": "easy",
+                "a": a,
+                "b": b,
+                "technique": ex.get("technique", ""),
+                "source_page": ex.get("source_page"),
+            })
+    return items
+
+
+_COMPLEX_CURATED_TEMPLATES = _load_complex_curated()
