@@ -3,6 +3,7 @@
 Every function here is best-effort: on error it returns `None` so callers can fall
 back. The math itself is never produced by an LLM — SymPy remains the source of truth.
 """
+import asyncio
 import json
 import os
 
@@ -52,8 +53,11 @@ def _gemini_client():
 
 async def _gemini_generate(prompt: str, json_mode: bool = False) -> str:
     config = types.GenerateContentConfig(response_mime_type="application/json") if json_mode else None
-    resp = await _gemini_client().aio.models.generate_content(
-        model=settings.gemini_model, contents=prompt, config=config
+    resp = await asyncio.wait_for(
+        _gemini_client().aio.models.generate_content(
+            model=settings.gemini_model, contents=prompt, config=config
+        ),
+        timeout=settings.gemini_timeout_seconds,
     )
     return resp.text
 
@@ -67,13 +71,16 @@ async def gemini_vision_generate(prompt: str, image_bytes: bytes, mime_type: str
     """
     model = settings.gemini_vision_model or settings.gemini_model
     try:
-        resp = await _gemini_client().aio.models.generate_content(
-            model=model,
-            contents=[
-                types.Part(text=prompt),
-                types.Part(inline_data=types.Blob(mime_type=mime_type, data=image_bytes)),
-            ],
-            config=types.GenerateContentConfig(response_mime_type="application/json"),
+        resp = await asyncio.wait_for(
+            _gemini_client().aio.models.generate_content(
+                model=model,
+                contents=[
+                    types.Part(text=prompt),
+                    types.Part(inline_data=types.Blob(mime_type=mime_type, data=image_bytes)),
+                ],
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            ),
+            timeout=settings.gemini_timeout_seconds,
         )
         return resp.text
     except Exception:

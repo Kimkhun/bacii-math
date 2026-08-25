@@ -404,10 +404,14 @@ async def get_attempt(db, user, attempt_id) -> dict:
 
 
 def _merge_part_state(session, part, correct=None, typed=None, work_text=None, lines_boxes=None):
-    """Merge one part's saved state into the session's JSONB state."""
-    state = session.state or {}
-    parts = state.setdefault("parts", {})
-    entry = parts.setdefault(part or "", {})
+    """Merge one part's saved state into the session's JSONB state.
+
+    Builds a brand-new nested dict so the JSONB attribute gets a genuinely new
+    object — in-place mutation + same-object reassignment would compare equal
+    and be silently skipped by SQLAlchemy's change detection (existing rows
+    never persisted part updates without this)."""
+    parts = dict((session.state or {}).get("parts") or {})
+    entry = dict(parts.get(part or "", {}))
     if typed is not None:
         entry["typed"] = typed
     if work_text is not None:
@@ -416,7 +420,8 @@ def _merge_part_state(session, part, correct=None, typed=None, work_text=None, l
         entry["lines_boxes"] = lines_boxes
     if correct is not None:
         entry["correct"] = bool(correct)
-    session.state = state
+    parts[part or ""] = entry
+    session.state = {"parts": parts}
 
 
 async def _upsert_session(db, user, question_id, part=None, correct=None, typed=None, work_text=None, lines_boxes=None):
@@ -459,6 +464,10 @@ async def save_progress(db: AsyncSession, user, req: SaveProgressRequest) -> dic
         typed=req.typed, work_text=req.work_text, lines_boxes=req.lines_boxes,
     )
     await db.commit()
+    # Refresh in the async context so the server-generated updated_at (and all
+    # other columns) are loaded before the sync summary reads them — avoids a
+    # lazy-load checkout from a sync context (asyncpg pre_ping -> MissingGreenlet).
+    await db.refresh(session)
     return _session_summary(session, question)
 
 
