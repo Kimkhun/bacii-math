@@ -127,6 +127,9 @@ export interface DetectResult {
   confidence: number;
   provider?: string;
   lines_boxes?: (number[] | null)[];
+  lines_confidence?: number[];
+  lines_alt?: string[][];
+  lines_alt_latex?: string[][];
 }
 
 export interface StepCheckLine {

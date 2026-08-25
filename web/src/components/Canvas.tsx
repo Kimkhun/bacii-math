@@ -24,6 +24,9 @@ export interface CanvasHandle {
   setEraserWidth: (width: number) => void;
   undo: () => void;
   canUndo: () => boolean;
+  redo: () => void;
+  canRedo: () => boolean;
+  eraseRegion: (box: number[]) => void;
 }
 
 export interface LineSnapshot {
@@ -39,11 +42,22 @@ interface Point {
   y: number;
 }
 
-interface Stroke {
+interface PathStroke {
+  kind: "path";
   points: Point[];
   tool: CanvasTool;
   width: number;
 }
+
+// A rectangular region erase (used by "write it again" on a mis-read line) —
+// modeled as its own stroke kind so it survives replayStrokesToInk() (canvas
+// resizes) and participates in undo/redo like any other stroke.
+interface RectStroke {
+  kind: "rect";
+  rect: { x1: number; y1: number; x2: number; y2: number };
+}
+
+type Stroke = PathStroke | RectStroke;
 
 const LINE_COLOR = "#c9d7f0";
 const MARGIN_COLOR = "#f2b8b8";
@@ -122,6 +136,7 @@ const Canvas = forwardRef<
     const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const rafRef = useRef<number | null>(null);
     const strokesRef = useRef<Stroke[]>([]);
+    const redoStackRef = useRef<Stroke[]>([]);
     const imageRef = useRef<HTMLImageElement | null>(null);
     const imageDataRef = useRef<string | null>(null);
     const drawing = useRef(false);
@@ -213,15 +228,24 @@ const Canvas = forwardRef<
       return bgCanvasRef.current;
     };
 
+    const drawStroke = (ctx: CanvasRenderingContext2D, stroke: Stroke) => {
+      if (stroke.kind === "rect") {
+        ctx.globalCompositeOperation = "destination-out";
+        const { x1, y1, x2, y2 } = stroke.rect;
+        ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+        ctx.globalCompositeOperation = "source-over";
+        return;
+      }
+      if (stroke.points.length < 1) return;
+      strokeStyleFor(ctx, stroke.tool, stroke.width);
+      drawSmoothPath(ctx, stroke.points);
+    };
+
     const replayStrokesToInk = () => {
       const inkCanvas = getInkCanvas();
       const ictx = inkCanvas.getContext("2d")!;
       ictx.clearRect(0, 0, W, H);
-      for (const stroke of strokesRef.current) {
-        if (stroke.points.length < 1) continue;
-        strokeStyleFor(ictx, stroke.tool, stroke.width);
-        drawSmoothPath(ictx, stroke.points);
-      }
+      for (const stroke of strokesRef.current) drawStroke(ictx, stroke);
       ictx.globalCompositeOperation = "source-over";
     };
 
@@ -252,9 +276,7 @@ const Canvas = forwardRef<
       const stroke = strokesRef.current[strokesRef.current.length - 1];
       if (stroke) {
         const ictx = getInkCanvas().getContext("2d")!;
-        strokeStyleFor(ictx, stroke.tool, stroke.width);
-        drawSmoothPath(ictx, stroke.points);
-        ictx.globalCompositeOperation = "source-over";
+        drawStroke(ictx, stroke);
       }
       ctx.drawImage(getInkCanvas(), 0, 0);
     };
@@ -328,7 +350,20 @@ const Canvas = forwardRef<
 
     const shiftStrokesX = (dx: number) => {
       for (const s of strokesRef.current) {
-        for (const p of s.points) p.x += dx;
+        if (s.kind === "rect") {
+          s.rect.x1 += dx;
+          s.rect.x2 += dx;
+        } else {
+          for (const p of s.points) p.x += dx;
+        }
+      }
+      for (const s of redoStackRef.current) {
+        if (s.kind === "rect") {
+          s.rect.x1 += dx;
+          s.rect.x2 += dx;
+        } else {
+          for (const p of s.points) p.x += dx;
+        }
       }
     };
 
@@ -414,7 +449,8 @@ const Canvas = forwardRef<
       drawing.current = true;
       const p = getPos(e);
       const width = toolRef.current === "pen" ? penWidthRef.current : eraserWidthRef.current;
-      strokesRef.current.push({ points: [p], tool: toolRef.current, width });
+      redoStackRef.current = [];
+      strokesRef.current.push({ kind: "path", points: [p], tool: toolRef.current, width });
       redraw();
       maybeGrow(p);
     };
@@ -448,7 +484,8 @@ const Canvas = forwardRef<
       if (!drawing.current) return;
       e.preventDefault();
       const p = getPos(e);
-      strokesRef.current[strokesRef.current.length - 1].points.push(p);
+      const stroke = strokesRef.current[strokesRef.current.length - 1];
+      if (stroke.kind === "path") stroke.points.push(p);
       requestRedraw();
       maybeGrow(p);
     };
@@ -528,6 +565,7 @@ const Canvas = forwardRef<
           imageRef.current = img;
           imageDataRef.current = dataUrl;
           strokesRef.current = [];
+          redoStackRef.current = [];
           redraw();
           onChange?.();
         };
@@ -537,6 +575,7 @@ const Canvas = forwardRef<
         imageRef.current = null;
         imageDataRef.current = null;
         strokesRef.current = [];
+        redoStackRef.current = [];
         setCanvasWidth(initialW);
         setCanvasHeight(initialH);
         wrapperRef.current?.scrollTo({ top: 0, left: 0 });
@@ -560,11 +599,28 @@ const Canvas = forwardRef<
           onChange?.();
           return;
         }
-        strokesRef.current.pop();
+        const popped = strokesRef.current.pop();
+        if (popped) redoStackRef.current.push(popped);
         redraw();
         onChange?.();
       },
       canUndo: () => strokesRef.current.length > 0 || !!imageRef.current,
+      redo: () => {
+        const restored = redoStackRef.current.pop();
+        if (!restored) return;
+        strokesRef.current.push(restored);
+        redraw();
+        onChange?.();
+      },
+      canRedo: () => redoStackRef.current.length > 0,
+      eraseRegion: (box: number[]) => {
+        if (box.length !== 4 || imageRef.current) return;
+        const [x1, y1, x2, y2] = box;
+        redoStackRef.current = [];
+        strokesRef.current.push({ kind: "rect", rect: { x1, y1, x2, y2 } });
+        redraw();
+        onChange?.();
+      },
     }));
 
     if (fullscreen) {
