@@ -32,6 +32,10 @@ def _problem_desc(topic, question_type, params):
         want = params.get("want")
         label = f"{structure}" + (f" ({want})" if want else "")
         return f"probability word problem ({label})"
+    if topic == "functions":
+        var = params.get("var", "x")
+        expr = sympify(params.get("function_expr"), locals=_calc_locals(var))
+        return f"function study of {inline_latex(expr)}"
     return f"{question_type} with {params}"
 
 

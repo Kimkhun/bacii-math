@@ -3,12 +3,14 @@ topic's generator module. ``TOPICS`` is the authoritative topic list."""
 import random
 
 from .complex import _generate_gemini, _generate_templates
+from .functions import _generate_functions
 from .integrals import _generate_indefinite, _generate_integral
-from .limits import _LIMIT_VARIANT_BY_DIFFICULTY, _generate_limit
+from .limits import _LIMIT_TECHNIQUES_BY_DIFFICULTY, _generate_limit
 from .probability import _generate_probability
 
 
-TOPICS = ("complex", "limit", "integral", "probability")
+TOPICS = ("complex", "limit", "integral", "probability", "functions")
+_VALID_DIFFICULTIES = ("easy", "medium", "hard")
 
 def _generate_expr_templates(topic, difficulty, seed, question_type, variant=None):
     rng = random.Random(seed)
@@ -19,11 +21,11 @@ def _generate_expr_templates(topic, difficulty, seed, question_type, variant=Non
     qt = question_type or allowed[0]
     if qt not in allowed:
         raise ValueError(f"question_type {qt} does not match topic {topic}")
-    if difficulty not in _LIMIT_VARIANT_BY_DIFFICULTY:
+    if difficulty not in _VALID_DIFFICULTIES:
         raise ValueError(f"unknown difficulty: {difficulty}")
 
     if topic == "limit":
-        return _generate_limit(rng, difficulty)
+        return _generate_limit(rng, difficulty, variant)
     if qt == "indefinite_integral":
         return _generate_indefinite(rng, difficulty, variant)
     return _generate_integral(rng, difficulty, variant)
@@ -34,6 +36,9 @@ async def generate(topic="complex", difficulty="medium", seed=None, question_typ
 
     if topic == "probability":
         return _generate_probability(random.Random(seed), difficulty, question_type, variant)
+
+    if topic == "functions":
+        return _generate_functions(random.Random(seed), difficulty, question_type)
 
     if topic in ("limit", "integral"):
         return _generate_expr_templates(topic, difficulty, seed, question_type, variant)

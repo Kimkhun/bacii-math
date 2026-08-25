@@ -68,8 +68,12 @@ Gotchas learned:
    - Return via `_build_expr_problem(...)` (or `_build(...)` for complex),
      including `"variant"` and any metadata in `params`.
 2. Wire the dispatch: `_generate_expr_templates` (or `generate()` for complex),
-   question-type validation lists, and `_INTEGRAL_VARIANT_BY_DIFFICULTY` /
-   `_LIMIT_VARIANT_BY_DIFFICULTY` pools.
+   question-type validation lists, and `_INTEGRAL_VARIANT_BY_DIFFICULTY` pool
+   (or, for limits, add the technique to `structures.LIMIT_TECHNIQUES` with
+   `parameterizable: True` plus a sampler in `_LIMIT_SAMPLERS` and a narration
+   handler in `solver._LIMIT_TECHNIQUE_HANDLERS` — see `generator-variants.md`;
+   only mark a technique parameterizable if it actually generalizes under
+   free coefficients, not just because integrals do).
 3. Curated exercise shapes: keep them as **parameterized templates** with
    `{a}/{b}/...` slots filled from `_COEFF_POOLS` (never verbatim fixed
    integrands) — same shape, different numbers.
@@ -112,6 +116,9 @@ the new catalog entry, `/templates` shows a live sample of the new template
   answer. For limits, the bank is also sorted by technique into
   `backend/data/limits/{formula_name}.json` and loaded straight into the
   generator's curated pool (`engine/structures._LIMIT_CURATED_TEMPLATES`) —
-  see `exam-data.md`.
+  see `exam-data.md`. `scripts/verify_limit_structures.py` additionally audits
+  the technique registry: every curated exercise maps to a known technique,
+  and every parameterizable technique's sampler produces a gradeable-correct
+  instance.
 - **Formula sheet**: the catalog JSON (`backend/data/formulas/*.json`) doubles
   as student-facing content (names, translations, the `formulas` list).

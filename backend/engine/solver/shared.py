@@ -17,6 +17,7 @@ QUESTION_TYPES_BY_TOPIC = {
     "limit": ("limit",),
     "integral": ("definite_integral", "indefinite_integral"),
     "probability": ("probability",),
+    "functions": ("study",),
 }
 
 def format_z(a, b):

@@ -1,10 +1,12 @@
 import hashlib
+import random
 import uuid
 import zlib
 
 from fastapi import HTTPException, status
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sympy import latex
 
 import cache
 from engine import explainer, formulas, generator, grader, llm, scenarios, solver, structures
@@ -12,8 +14,9 @@ from engine.generator.integrals import (
     _INDEFINITE_VARIANT_BY_DIFFICULTY,
     _INTEGRAL_VARIANT_BY_DIFFICULTY,
 )
-from models import Attempt, Explanation, Question, Step, User
-from schemas import GenerateRequest
+from engine.generator.limits import generate_limit_for_technique
+from models import Attempt, Explanation, Question, Step, StudySession, User
+from schemas import GenerateRequest, SaveProgressRequest
 
 WORK_UNREADABLE_MSG = (
     "Couldn't read your written steps clearly. Try writing larger and more spaced out, "
@@ -189,6 +192,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
         "reason": result["reason"],
         "given": result.get("given"),
         "expected": result["expected"],
+        "graph": result.get("graph"),
     }
     if is_multi:
         resp["parts"] = result.get("parts")
@@ -206,6 +210,9 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
         attempt.formula_breakdown = step_check.get("formula_breakdown")
         attempt.step_check = step_check
         resp["step_check"] = step_check
+
+    if question.topic == "functions" and work_text:
+        resp["graph_check"] = grader.grade_graph_check(question.spec, work_text.split("\n"))
 
     if not result["correct"]:
         steps_text = _steps_text(question)
@@ -229,6 +236,22 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
             )
             if check:
                 resp["work_check"] = {"content": check, "provider": provider}
+
+    # Auto-save progress: every grade updates the exercise's session so long
+    # multi-part exercises can be resumed without an explicit button.
+    if is_multi:
+        if result.get("part"):
+            session = await _upsert_session(
+                db, user, question.id, result["part"],
+                correct=result["correct"], typed=user_answer,
+                work_text=work_text, lines_boxes=lines_boxes,
+            )
+        else:
+            session = await _upsert_session(db, user, question.id)
+            for v in result.get("parts") or []:
+                _merge_part_state(session, v["label"], correct=v["correct"])
+        if result["correct"] and result.get("all_complete"):
+            session.status = "completed"
 
     await db.commit()
     return resp
@@ -256,6 +279,7 @@ async def explain_question(db, user, question_id, user_answer=None, work_text=No
         {"step_order": s.step_order, "title": s.title, "detail": s.detail, "formula": s.formula}
         for s in rows.scalars()
     ]
+    result["graph"] = solver.solve(question.topic, question.question_type, question.spec).get("graph")
     if user_answer:
         allowed = await cache.allow_gemini(str(user.id))
         step_check = None
@@ -264,6 +288,8 @@ async def explain_question(db, user, question_id, user_answer=None, work_text=No
                 question.topic, question.question_type, question.spec, work_text.split("\n")
             )
             result["step_check"] = step_check
+            if question.topic == "functions":
+                result["graph_check"] = grader.grade_graph_check(question.spec, work_text.split("\n"))
         if work_text and not _work_usable(step_check):
             result["work_check"] = {"content": WORK_UNREADABLE_MSG, "provider": "system"}
         else:
@@ -297,6 +323,7 @@ async def get_question(db, question_id) -> dict:
         "formula_tags": question.formula_tags or [],
         "formula_difficulty": formulas.formula_difficulty(question.formula_tags or []) if question.formula_tags else None,
         "steps": steps,
+        "graph": solver.solve(question.topic, question.question_type, question.spec).get("graph"),
     }
 
 
@@ -376,6 +403,133 @@ async def get_attempt(db, user, attempt_id) -> dict:
     }
 
 
+def _merge_part_state(session, part, correct=None, typed=None, work_text=None, lines_boxes=None):
+    """Merge one part's saved state into the session's JSONB state."""
+    state = session.state or {}
+    parts = state.setdefault("parts", {})
+    entry = parts.setdefault(part or "", {})
+    if typed is not None:
+        entry["typed"] = typed
+    if work_text is not None:
+        entry["work_text"] = work_text
+    if lines_boxes is not None:
+        entry["lines_boxes"] = lines_boxes
+    if correct is not None:
+        entry["correct"] = bool(correct)
+    session.state = state
+
+
+async def _upsert_session(db, user, question_id, part=None, correct=None, typed=None, work_text=None, lines_boxes=None):
+    session = await db.scalar(
+        select(StudySession).where(StudySession.user_id == user.id, StudySession.question_id == question_id)
+    )
+    if session is None:
+        session = StudySession(user_id=user.id, question_id=question_id, status="in_progress", state={"parts": {}})
+        db.add(session)
+    _merge_part_state(session, part or "", correct=correct, typed=typed, work_text=work_text, lines_boxes=lines_boxes)
+    return session
+
+
+def _session_summary(session, question=None):
+    state = session.state or {}
+    parts = state.get("parts") or {}
+    total = 0
+    if question is not None and isinstance(question.spec.get("parts"), list):
+        total = len(question.spec["parts"])
+    done = sum(1 for p in parts.values() if p.get("correct"))
+    return {
+        "id": session.id,
+        "question_id": session.question_id,
+        "status": session.status,
+        "parts_done": done,
+        "parts_total": total,
+        "updated_at": session.updated_at,
+    }
+
+
+async def save_progress(db: AsyncSession, user, req: SaveProgressRequest) -> dict:
+    """Explicit 'Save progress' button: capture the current part's typed/OCR'd
+    work so the exercise can be resumed later. Idempotent (one session per user
+    + question)."""
+    question = await db.get(Question, req.question_id)
+    if question is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
+    session = await _upsert_session(
+        db, user, req.question_id, req.part,
+        typed=req.typed, work_text=req.work_text, lines_boxes=req.lines_boxes,
+    )
+    await db.commit()
+    return _session_summary(session, question)
+
+
+async def list_progress(db: AsyncSession, user) -> list:
+    """The user's saved exercises (in-progress first, newest first)."""
+    rows = await db.execute(
+        select(StudySession, Question)
+        .join(Question, Question.id == StudySession.question_id)
+        .where(StudySession.user_id == user.id)
+        .order_by(
+            case((StudySession.status == "in_progress", 0), else_=1),
+            StudySession.updated_at.desc(),
+        )
+        .limit(50)
+    )
+    out = []
+    for s, q in rows.all():
+        summary = _session_summary(s, q)
+        summary["question"] = {
+            "id": q.id,
+            "topic": q.topic,
+            "question_type": q.question_type,
+            "difficulty": q.difficulty,
+            "prompt": q.prompt,
+            "prompt_latex": q.prompt_latex,
+        }
+        out.append(summary)
+    return out
+
+
+async def get_progress(db: AsyncSession, user, session_id) -> dict:
+    """Full saved state for resuming: the question (with params) plus every
+    part's typed answer, OCR'd work, line boxes, and correct flag."""
+    session = await db.get(StudySession, session_id)
+    if session is None or session.user_id != user.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Saved progress not found")
+    question = await db.get(Question, session.question_id)
+    parts = (session.state or {}).get("parts") or {}
+    labels = []
+    if question is not None and isinstance(question.spec.get("parts"), list):
+        labels = [str(p.get("label")) for p in question.spec["parts"] if p.get("label")]
+    ordered = {lab: parts.get(lab) or {} for lab in labels}
+    return {
+        "id": session.id,
+        "status": session.status,
+        "updated_at": session.updated_at,
+        "parts": ordered,
+        "question": {
+            "id": question.id,
+            "topic": question.topic,
+            "question_type": question.question_type,
+            "difficulty": question.difficulty,
+            "params": question.spec,
+            "prompt": question.prompt,
+            "prompt_latex": question.prompt_latex,
+            "z_display": question.z_display,
+            "source": question.source,
+            "formula_tags": question.formula_tags or [],
+        } if question is not None else None,
+    }
+
+
+async def delete_progress(db: AsyncSession, user, session_id) -> dict:
+    session = await db.get(StudySession, session_id)
+    if session is None or session.user_id != user.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Saved progress not found")
+    await db.delete(session)
+    await db.commit()
+    return {"deleted": True}
+
+
 def get_formulas_catalog() -> dict:
     """Full formula registry grouped by topic, for the admin view."""
     by_group: dict[str, list] = {}
@@ -389,7 +543,7 @@ def get_formulas_catalog() -> dict:
             "weight": e.get("weight", 1),
             "formulas": e.get("formulas") or [],
         })
-    order = [g for g in ("complex", "limit", "integral", "probability") if g in by_group]
+    order = [g for g in ("complex", "limit", "integral", "probability", "functions") if g in by_group]
     return {"topics": [{"topic": g, "entries": by_group[g]} for g in order]}
 
 
@@ -445,6 +599,7 @@ _STRUCT_PATTERNS = {
     ("complex", "real_part"): r"\operatorname{Re}(a + bi)",
     ("complex", "imaginary_part"): r"\operatorname{Im}(a + bi)",
     ("limit", "limit"): r"\lim_{x \to a} f(x)",
+    ("functions", "study"): r"g(x) = \ln\left(\frac{ax+b}{cx+d}\right)",
 }
 
 _integral_structure_payload = None
@@ -484,18 +639,72 @@ def _build_integral_structure_payload() -> dict:
                 "source_labels": struct["source_labels"],
             })
         question_types.append({"question_type": qt, "structures": entries})
-    _integral_structure_payload = {"topic": "integral", "question_types": question_types}
-    return _integral_structure_payload
+_limit_structure_payload = None
+
+
+def _build_limit_structure_payload() -> dict:
+    """One card per limit *technique* (not per parameterized shape — most limit
+    techniques are tied to a specific identity, not free coefficients; see
+    `structures.LIMIT_TECHNIQUES`). Parameterizable techniques additionally get
+    a deterministic procedurally-generated sample; curated-only techniques show
+    one real BAC II exercise instead. Memoized like the integral payload."""
+    global _limit_structure_payload
+    if _limit_structure_payload is not None:
+        return _limit_structure_payload
+
+    curated_by_technique: dict[str, list] = {}
+    for item in structures._LIMIT_CURATED_TEMPLATES:
+        curated_by_technique.setdefault(item["formula_name"], []).append(item)
+
+    entries = []
+    for technique, meta in structures.LIMIT_TECHNIQUES.items():
+        curated = sorted(curated_by_technique.get(technique, []), key=lambda it: it["id"])
+        source_labels = [it["id"] for it in curated]
+        entry = {
+            "id": technique,
+            "technique": technique,
+            "difficulty": meta["difficulty"],
+            "parameterizable": meta["parameterizable"],
+            "description": meta["description"],
+            "source_labels": source_labels,
+        }
+        if meta["parameterizable"]:
+            problem = generate_limit_for_technique(
+                random.Random(zlib.crc32(technique.encode()) & 0xFFFFFFFF), technique,
+            )
+            solution = solver.solve("limit", "limit", problem["params"])
+            entry.update({
+                "sample_prompt": problem["prompt"],
+                "sample_prompt_latex": problem.get("prompt_latex"),
+                "sample_answer": str(solution["answer_exact"]),
+                "sample_answer_latex": solution.get("answer_latex"),
+                "formula_tags": solution.get("formula_tags", []),
+            })
+        elif curated:
+            example = curated[0]
+            entry.update({
+                "sample_prompt": f"\\(\\lim_{{x \\to {latex(example['point'])}}} {latex(example['expr'])}\\)",
+                "sample_answer": example["answer_latex"],
+                "sample_answer_latex": example["answer_latex"],
+                "formula_tags": [technique],
+            })
+        entries.append(entry)
+
+    _limit_structure_payload = {
+        "topic": "limit",
+        "question_types": [{"question_type": "limit", "structures": entries}],
+    }
+    return _limit_structure_payload
 
 
 async def get_template_structures() -> dict:
     """One card per unique template structure: the symbolic slot pattern, one
     deterministic filled sample (prompt + answer), formula tags, and the source
     BAC II exercise labels that map to it. Grouped by topic → question type."""
-    topics = [_build_integral_structure_payload()]
+    topics = [_build_integral_structure_payload(), _build_limit_structure_payload()]
 
     for topic in generator.TOPICS:
-        if topic == "integral":
+        if topic in ("integral", "limit"):
             continue
         question_types = []
         for qt in solver.QUESTION_TYPES_BY_TOPIC.get(topic, ()):

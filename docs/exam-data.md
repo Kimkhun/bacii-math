@@ -16,13 +16,19 @@ of truth).
   recomputes the limit with SymPy, compares to the recorded answer, and checks
   the stated formula identities. Result: 36/37 answers pass, 1 legit skip
   (2024b parametric "find a").
-- **Windows prerequisites:** the script needs UTF-8 file handling (already
-  patched) and `pip install antlr4-python3-runtime==4.11.1` — SymPy 1.14's
-  LaTeX parser hard-requires exactly 4.11.x (`startswith("4.11")` check).
+- **antlr4 dependency:** SymPy's LaTeX parser hard-requires
+  `antlr4-python3-runtime==4.11` (exact match to the antlr grammar version
+  SymPy 1.14's parser was generated against) — this is now pinned in
+  `backend/requirements.txt` itself, not just a script prerequisite, because a
+  missing/mismatched version makes `parse_latex` raise `ImportError` for
+  *every* exercise, which used to be silently swallowed and empty the entire
+  curated pool with no visible error (see `structures._load_limit_curated`,
+  which now re-raises `ImportError` instead of skipping it like a bad prompt).
 - **Sorted by technique** into `backend/data/limits/{formula_name}.json` (13
   categories, e.g. `factoring_0_0`, `sinc_standard_limit`, `conjugate_infinity`
   — see below) — this is what the generator's curated limit pool actually
-  reads.
+  reads, and what `structures.LIMIT_TECHNIQUES` (the technique registry) is
+  keyed on.
 
 ## 2. Integral exercise extraction (`scripts/integrals_part1.py`,
    `scripts/integrals_part2.py`, `scripts/verify_integrals.py`)
@@ -42,13 +48,17 @@ of truth).
 ## 3. How the data becomes playable
 
 - All of `backend/data/` is mounted into the backend container (`./backend:/app`).
-- **Limits:** `backend/data/limits/{formula_name}.json` (37 real exercises,
-  sorted by technique) is loaded at import by
+- **Limits:** `backend/data/limits/{formula_name}.json` (37 real exercises +
+  20 textbook exercises, sorted by technique) is loaded at import by
   `engine/structures._LIMIT_CURATED_TEMPLATES`, parsed into SymPy expr/point
-  pairs, and mixed into the live limit generator (50% curated / 50%
-  procedural per request) — see `generator-variants.md`. The exam-authored
-  `technique` text narrates the solution steps; SymPy still computes/grades
-  the answer independently.
+  pairs, and mixed into the live limit generator (50% curated per request,
+  50% a random *parameterizable* technique's sampler) — see
+  `generator-variants.md` and `structures.LIMIT_TECHNIQUES`. The exam-authored
+  `technique` text narrates curated-draw steps; procedurally-sampled draws get
+  a generic per-technique narration instead. SymPy still computes/grades the
+  answer independently either way. `scripts/verify_limit_structures.py` audits
+  that every curated exercise maps to a known technique and that every
+  parameterizable technique's sampler produces a gradeable-correct instance.
 - **Integrals:** the 15 curated Part-I indefinite shapes are parameterized
   into `_INDEFINITE_TEMPLATES`; the raw `bacii-exam/integrals/` bank JSON
   itself is reference/audit data, not read live by the generator.

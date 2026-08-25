@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import services
 from core.deps import get_current_user, get_db
 from models import User
-from schemas import ExplainRequest, GenerateRequest, GradeRequest, ReplayRequest
+from schemas import ExplainRequest, GenerateRequest, GradeRequest, ReplayRequest, SaveProgressRequest
 
 router = APIRouter(prefix="/problems", tags=["problems"])
 me_router = APIRouter(tags=["history"])
@@ -51,6 +51,15 @@ async def explain(
     return await services.explain_question(db, user, req.question_id, req.user_answer, req.work_text)
 
 
+@router.post("/progress/save")
+async def save_progress(
+    req: SaveProgressRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await services.save_progress(db, user, req)
+
+
 @router.get("/{question_id}")
 async def get_question(
     question_id: uuid.UUID,
@@ -77,6 +86,29 @@ async def attempt_detail(
 @me_router.get("/stats")
 async def stats(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     return await services.get_stats(db, user)
+
+
+@me_router.get("/progress")
+async def progress_list(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    return await services.list_progress(db, user)
+
+
+@me_router.get("/progress/{session_id}")
+async def progress_detail(
+    session_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await services.get_progress(db, user, session_id)
+
+
+@me_router.delete("/progress/{session_id}")
+async def progress_delete(
+    session_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await services.delete_progress(db, user, session_id)
 
 
 @me_router.get("/formulas")

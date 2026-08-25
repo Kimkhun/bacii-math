@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, ReactNode, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 
 export type CanvasTool = "pen" | "eraser";
 
@@ -24,6 +24,9 @@ export interface CanvasHandle {
   setEraserWidth: (width: number) => void;
   undo: () => void;
   canUndo: () => boolean;
+  redo: () => void;
+  canRedo: () => boolean;
+  eraseRegion: (box: number[]) => void;
 }
 
 export interface LineSnapshot {
@@ -37,21 +40,38 @@ export interface LineSnapshot {
 interface Point {
   x: number;
   y: number;
+  // 0..1, only meaningful when the owning stroke's pointerType is "pen" —
+  // an Apple Pencil / stylus reports real pressure; mouse and touch report a
+  // constant (0.5 or 1), so we only let pressure affect width for "pen".
+  pressure?: number;
 }
 
-interface Stroke {
+interface PathStroke {
+  kind: "path";
   points: Point[];
   tool: CanvasTool;
   width: number;
+  pointerType?: string;
 }
 
-const LINE_COLOR = "#c9d7f0";
-const MARGIN_COLOR = "#f2b8b8";
-const INK_COLOR = "#1f2937";
+// A rectangular region erase (used by "write it again" on a mis-read line) —
+// modeled as its own stroke kind so it survives replayStrokesToInk() (canvas
+// resizes) and participates in undo/redo like any other stroke.
+interface RectStroke {
+  kind: "rect";
+  rect: { x1: number; y1: number; x2: number; y2: number };
+}
+
+type Stroke = PathStroke | RectStroke;
+
+const PAPER_COLOR = "#fdfcf8";
+const LINE_COLOR = "rgba(214, 221, 232, 0.85)"; // #d6dde8 @ 85%
+const MARGIN_COLOR = "rgba(230, 201, 196, 0.9)"; // #e6c9c4 @ 90%
+const INK_COLOR = "#1e2a38";
 const LINE_SPACING = 40;
 const MARGIN_X = 64;
-const FULL_W = 1600;
-const FULL_H = 1000;
+export const FULL_W = 1600;
+export const FULL_H = 1000;
 const ERASER_WIDTH = 32;
 
 // "Infinite paper": while the user is writing near the bottom of the page, grow
@@ -93,6 +113,45 @@ function drawSmoothPath(ctx: CanvasRenderingContext2D, points: Point[]) {
   ctx.stroke();
 }
 
+// 0.55x..1.25x of the selected pen size — enough to feel like a real nib
+// (thin on light touch, fuller on a firm press) without letting a heavy hand
+// blow a line out past what's still legible/OCR-able.
+const PRESSURE_MIN_SCALE = 0.55;
+const PRESSURE_MAX_SCALE = 1.25;
+
+// Same smoothing as drawSmoothPath, but strokes each midpoint-to-midpoint
+// segment individually with a width interpolated from that segment's
+// pressure — a tapered, pressure-sensitive line like a real stylus app
+// (Notability/GoodNotes/Procreate), instead of one uniform-width path.
+function drawPressurePath(ctx: CanvasRenderingContext2D, points: Point[], baseWidth: number) {
+  if (points.length === 0) return;
+  const widthAt = (p: Point) => {
+    const pr = p.pressure ?? 0.5;
+    const scale = PRESSURE_MIN_SCALE + pr * (PRESSURE_MAX_SCALE - PRESSURE_MIN_SCALE);
+    return Math.max(1, baseWidth * scale);
+  };
+  if (points.length === 1) {
+    const r = widthAt(points[0]) / 2;
+    ctx.beginPath();
+    ctx.arc(points[0].x, points[0].y, r, 0, Math.PI * 2);
+    ctx.fillStyle = ctx.strokeStyle as string;
+    ctx.fill();
+    return;
+  }
+  let prevMid = points[0];
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const mid = i === points.length - 2 ? p1 : { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+    ctx.lineWidth = widthAt(p0);
+    ctx.beginPath();
+    ctx.moveTo(prevMid.x, prevMid.y);
+    ctx.quadraticCurveTo(p0.x, p0.y, mid.x, mid.y);
+    ctx.stroke();
+    prevMid = mid;
+  }
+}
+
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2.5;
 
@@ -114,6 +173,15 @@ const Canvas = forwardRef<
     const [canvasHeight, setCanvasHeight] = useState(initialH);
     const W = fullscreen ? canvasWidth : width;
     const H = fullscreen ? canvasHeight : height;
+    // All canvas buffers (ink, ruled background, the visible element) are
+    // sized at W*dpr / H*dpr physical pixels — matching a Retina screen's real
+    // pixel density — instead of just W/H. Every consumer keeps drawing in
+    // plain logical W/H coordinates; a ctx.setTransform(dpr,...) right after
+    // getting a context is what maps that onto the bigger physical buffer, so
+    // strokes are rasterized crisply instead of being drawn low-res and then
+    // upscaled/blurred to fill the screen (the actual cause of the pixelation
+    // — the canvas simply had fewer physical pixels than the display needed).
+    const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 3) : 1;
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     // Ink lives on its own transparent layer so erasing (destination-out) never
@@ -122,9 +190,16 @@ const Canvas = forwardRef<
     const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const rafRef = useRef<number | null>(null);
     const strokesRef = useRef<Stroke[]>([]);
+    const redoStackRef = useRef<Stroke[]>([]);
     const imageRef = useRef<HTMLImageElement | null>(null);
     const imageDataRef = useRef<string | null>(null);
     const drawing = useRef(false);
+    // Which pointer is actually drawing the in-progress stroke. `drawing` alone
+    // isn't enough — it's a single shared flag, so without this a second,
+    // unrelated pointer (a resting palm generating its own move/up events)
+    // would pass the `drawing.current` check in move()/end() and either splice
+    // its own coordinates into the real stroke or end it prematurely.
+    const drawingPointerIdRef = useRef<number | null>(null);
     const toolRef = useRef<CanvasTool>("pen");
     const penWidthRef = useRef<number>(DEFAULT_PEN_WIDTH);
     const eraserWidthRef = useRef<number>(ERASER_WIDTH);
@@ -156,14 +231,14 @@ const Canvas = forwardRef<
     const getInkCanvas = () => {
       if (!inkCanvasRef.current) {
         const c = document.createElement("canvas");
-        c.width = W;
-        c.height = H;
+        c.width = W * dpr;
+        c.height = H * dpr;
         inkCanvasRef.current = c;
-      } else if (inkCanvasRef.current.height !== H || inkCanvasRef.current.width !== W) {
+      } else if (inkCanvasRef.current.height !== H * dpr || inkCanvasRef.current.width !== W * dpr) {
         // Resizing clears the buffer; replayStrokesToInk() (called right after,
         // everywhere this matters) repaints it from strokesRef, which is lossless.
-        inkCanvasRef.current.width = W;
-        inkCanvasRef.current.height = H;
+        inkCanvasRef.current.width = W * dpr;
+        inkCanvasRef.current.height = H * dpr;
       }
       return inkCanvasRef.current;
     };
@@ -182,7 +257,7 @@ const Canvas = forwardRef<
     };
 
     const drawRuled = (ctx: CanvasRenderingContext2D) => {
-      ctx.fillStyle = "#fdfdfd";
+      ctx.fillStyle = PAPER_COLOR;
       ctx.fillRect(0, 0, W, H);
       ctx.lineWidth = 1;
       ctx.strokeStyle = MARGIN_COLOR;
@@ -203,31 +278,52 @@ const Canvas = forwardRef<
     // own layer and composite it — redrawing ~300 lines on every pointer move is
     // what made the cursor lag once the canvas had grown.
     const getBgCanvas = () => {
-      if (!bgCanvasRef.current || bgCanvasRef.current.width !== W || bgCanvasRef.current.height !== H) {
+      if (!bgCanvasRef.current || bgCanvasRef.current.width !== W * dpr || bgCanvasRef.current.height !== H * dpr) {
         const c = document.createElement("canvas");
-        c.width = W;
-        c.height = H;
-        drawRuled(c.getContext("2d")!);
+        c.width = W * dpr;
+        c.height = H * dpr;
+        const bgCtx = c.getContext("2d")!;
+        bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawRuled(bgCtx);
         bgCanvasRef.current = c;
       }
       return bgCanvasRef.current;
     };
 
+    const drawStroke = (ctx: CanvasRenderingContext2D, stroke: Stroke) => {
+      if (stroke.kind === "rect") {
+        ctx.globalCompositeOperation = "destination-out";
+        const { x1, y1, x2, y2 } = stroke.rect;
+        ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+        ctx.globalCompositeOperation = "source-over";
+        return;
+      }
+      if (stroke.points.length < 1) return;
+      strokeStyleFor(ctx, stroke.tool, stroke.width);
+      if (stroke.tool === "pen" && stroke.pointerType === "pen") {
+        drawPressurePath(ctx, stroke.points, stroke.width);
+      } else {
+        drawSmoothPath(ctx, stroke.points);
+      }
+    };
+
     const replayStrokesToInk = () => {
       const inkCanvas = getInkCanvas();
       const ictx = inkCanvas.getContext("2d")!;
+      ictx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ictx.clearRect(0, 0, W, H);
-      for (const stroke of strokesRef.current) {
-        if (stroke.points.length < 1) continue;
-        strokeStyleFor(ictx, stroke.tool, stroke.width);
-        drawSmoothPath(ictx, stroke.points);
-      }
+      for (const stroke of strokesRef.current) drawStroke(ictx, stroke);
       ictx.globalCompositeOperation = "source-over";
     };
 
     const redraw = () => {
       const ctx = canvasRef.current!.getContext("2d")!;
-      ctx.drawImage(getBgCanvas(), 0, 0);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // getBgCanvas()/getInkCanvas() are themselves dpr-scaled (their natural
+      // pixel size is W*dpr x H*dpr) — drawing them with an explicit W,H
+      // destination size (rather than their natural size) is what keeps this
+      // a straight crisp copy instead of scaling by dpr twice.
+      ctx.drawImage(getBgCanvas(), 0, 0, W, H);
       if (imageRef.current) {
         const img = imageRef.current;
         const scale = Math.min((W - 32) / img.width, (H - 32) / img.height);
@@ -237,7 +333,7 @@ const Canvas = forwardRef<
         return;
       }
       replayStrokesToInk();
-      ctx.drawImage(getInkCanvas(), 0, 0);
+      ctx.drawImage(getInkCanvas(), 0, 0, W, H);
     };
 
     // Per-move repaint: replay only the in-progress stroke onto the persistent
@@ -247,16 +343,16 @@ const Canvas = forwardRef<
       rafRef.current = null;
       if (!canvasRef.current) return;
       const ctx = canvasRef.current.getContext("2d")!;
-      ctx.drawImage(getBgCanvas(), 0, 0);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.drawImage(getBgCanvas(), 0, 0, W, H);
       if (imageRef.current) return;
       const stroke = strokesRef.current[strokesRef.current.length - 1];
       if (stroke) {
         const ictx = getInkCanvas().getContext("2d")!;
-        strokeStyleFor(ictx, stroke.tool, stroke.width);
-        drawSmoothPath(ictx, stroke.points);
-        ictx.globalCompositeOperation = "source-over";
+        ictx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawStroke(ictx, stroke);
       }
-      ctx.drawImage(getInkCanvas(), 0, 0);
+      ctx.drawImage(getInkCanvas(), 0, 0, W, H);
     };
 
     const requestRedraw = () => {
@@ -315,7 +411,13 @@ const Canvas = forwardRef<
 
     const grownRef = useRef({ top: 0, left: 0 });
     const growingRef = useRef(false);
-    useEffect(() => {
+    // useLayoutEffect (not useEffect) is what makes this seamless: it runs
+    // synchronously right after the resized canvas is committed to the DOM but
+    // BEFORE the browser paints, so the repaint and the compensating scroll
+    // land in the same frame the user ever sees. A plain useEffect runs after
+    // paint, which left a real (if brief) frame where the shifted content was
+    // visible before the scroll caught up — that flash was the bug.
+    useLayoutEffect(() => {
       redraw();
       const g = grownRef.current;
       if (g.top || g.left) {
@@ -328,16 +430,41 @@ const Canvas = forwardRef<
 
     const shiftStrokesX = (dx: number) => {
       for (const s of strokesRef.current) {
-        for (const p of s.points) p.x += dx;
+        if (s.kind === "rect") {
+          s.rect.x1 += dx;
+          s.rect.x2 += dx;
+        } else {
+          for (const p of s.points) p.x += dx;
+        }
+      }
+      for (const s of redoStackRef.current) {
+        if (s.kind === "rect") {
+          s.rect.x1 += dx;
+          s.rect.x2 += dx;
+        } else {
+          for (const p of s.points) p.x += dx;
+        }
       }
     };
 
-    const getPos = (e: React.PointerEvent) => {
+    const getPos = (clientX: number, clientY: number, pressure?: number): Point => {
       const rect = canvasRef.current!.getBoundingClientRect();
       return {
-        x: ((e.clientX - rect.left) / rect.width) * W,
-        y: ((e.clientY - rect.top) / rect.height) * H,
+        x: ((clientX - rect.left) / rect.width) * W,
+        y: ((clientY - rect.top) / rect.height) * H,
+        pressure,
       };
+    };
+
+    // Left-growth needed while a stroke is still in progress, applied once
+    // that stroke ends (see the comment in maybeGrow for why).
+    const pendingGrowLeftRef = useRef(0);
+
+    const applyGrowLeft = (growLeft: number) => {
+      growingRef.current = true;
+      shiftStrokesX(growLeft);
+      grownRef.current = { top: 0, left: growLeft };
+      setCanvasWidth((w) => Math.min(MAX_WIDTH, w + growLeft));
     };
 
     const maybeGrow = (p: Point) => {
@@ -345,7 +472,24 @@ const Canvas = forwardRef<
 
       const growH = H - p.y <= GROW_THRESHOLD && H < MAX_HEIGHT ? Math.min(GROW_CHUNK, MAX_HEIGHT - H) : 0;
       const growRight = W - p.x <= GROW_THRESHOLD && W < MAX_WIDTH ? Math.min(GROW_CHUNK, MAX_WIDTH - W) : 0;
-      const growLeft = !growRight && p.x <= GROW_THRESHOLD && W < MAX_WIDTH ? Math.min(GROW_CHUNK, MAX_WIDTH - W) : 0;
+      let growLeft = !growRight && p.x <= GROW_THRESHOLD && W < MAX_WIDTH ? Math.min(GROW_CHUNK, MAX_WIDTH - W) : 0;
+
+      if (growLeft && drawing.current) {
+        // Growing left means shifting every existing point (including the
+        // stroke currently being drawn) AND scrolling the viewport to
+        // compensate — doing both while a pointer is actively down changes
+        // the DOM/layout under it mid-gesture, which iOS Safari (and others)
+        // can respond to by cancelling the touch/pen sequence outright. That's
+        // exactly what "writing near the left edge drags me to the middle,
+        // then the pen stops drawing until I lift it" was: the shift raced
+        // ahead of the pen's own next point (producing the stray jump-line),
+        // and the resulting scroll cancelled the pointer stream (silently
+        // killing the rest of that stroke). Deferring to pointerup avoids
+        // both — nothing is lost, ink drawn past the current left edge in the
+        // meantime just isn't visible until the deferred grow lands.
+        pendingGrowLeftRef.current = Math.max(pendingGrowLeftRef.current, growLeft);
+        growLeft = 0;
+      }
 
       if (!growH && !growRight && !growLeft) return;
       growingRef.current = true;
@@ -372,22 +516,15 @@ const Canvas = forwardRef<
 
     const start = (e: React.PointerEvent) => {
       updateCursor(e.clientX, e.clientY);
-      // Palm rejection: while a stylus is actively writing, ignore stray touch
-      // contacts (a resting palm) entirely rather than starting a stroke/pan with them.
-      if (e.pointerType === "touch" && activePenPointerRef.current !== null) return;
 
       if (e.pointerType === "touch") {
         (e.target as Element).setPointerCapture?.(e.pointerId);
         touchPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
         if (touchPointersRef.current.size === 2) {
-          // Second finger down: cancel any single-finger stroke just begun and
-          // switch to two-finger pan + pinch-zoom, the touch equivalent of
-          // desktop's "hold Space to pan" / scroll-wheel zoom.
-          if (drawing.current) {
-            strokesRef.current.pop();
-            drawing.current = false;
-            redraw();
-          }
+          // Second finger down: switch to two-finger pan + pinch-zoom, the
+          // touch equivalent of desktop's "hold Space to pan" / scroll-wheel
+          // zoom. (A lone finger never reaches `drawing.current`, below, so
+          // there's never a stray stroke to cancel here.)
           panningRef.current = false;
           const { center, dist } = touchCenterAndDist();
           pinchRef.current = {
@@ -400,6 +537,16 @@ const Canvas = forwardRef<
           return;
         }
         if (touchPointersRef.current.size > 2) return;
+        // Palm rejection: a lone finger contact is always treated as a
+        // resting palm (or an accidental touch), never a drawing input — it's
+        // tracked above purely so a second finger can still start a pinch/pan.
+        // This app is written with a stylus (Apple Pencil, below); the
+        // alternative — trusting a single touch until we've "seen" a pen —
+        // has an unavoidable race: a palm that lands a moment before the
+        // pencil first touches down already started drawing before we could
+        // tell, and normal handwriting posture means the palm often *does*
+        // land first.
+        return;
       }
 
       if (spaceHeld) {
@@ -412,9 +559,17 @@ const Canvas = forwardRef<
       e.preventDefault();
       if (e.pointerType === "pen") activePenPointerRef.current = e.pointerId;
       drawing.current = true;
-      const p = getPos(e);
+      drawingPointerIdRef.current = e.pointerId;
+      const p = getPos(e.clientX, e.clientY, e.pressure);
       const width = toolRef.current === "pen" ? penWidthRef.current : eraserWidthRef.current;
-      strokesRef.current.push({ points: [p], tool: toolRef.current, width });
+      redoStackRef.current = [];
+      strokesRef.current.push({
+        kind: "path",
+        points: [p],
+        tool: toolRef.current,
+        width,
+        pointerType: e.pointerType,
+      });
       redraw();
       maybeGrow(p);
     };
@@ -445,10 +600,25 @@ const Canvas = forwardRef<
         }
         return;
       }
-      if (!drawing.current) return;
+      // Only the pointer that actually started this stroke may extend it —
+      // otherwise an unrelated second pointer (a resting palm generating its
+      // own move events) would splice its coordinates into someone else's ink.
+      if (!drawing.current || e.pointerId !== drawingPointerIdRef.current) return;
       e.preventDefault();
-      const p = getPos(e);
-      strokesRef.current[strokesRef.current.length - 1].points.push(p);
+      const stroke = strokesRef.current[strokesRef.current.length - 1];
+      // A stylus can sample at a much higher rate than pointermove fires;
+      // getCoalescedEvents() recovers those in-between samples so fast
+      // strokes stay smooth instead of turning into short straight segments.
+      const native = e.nativeEvent as PointerEvent;
+      const coalesced = native.getCoalescedEvents?.() ?? [];
+      const events = coalesced.length ? coalesced : [native];
+      let p: Point = getPos(e.clientX, e.clientY, e.pressure);
+      if (stroke.kind === "path") {
+        for (const ev of events) {
+          p = getPos(ev.clientX, ev.clientY, ev.pressure);
+          stroke.points.push(p);
+        }
+      }
       requestRedraw();
       maybeGrow(p);
     };
@@ -464,9 +634,20 @@ const Canvas = forwardRef<
         panningRef.current = false;
         return;
       }
-      if (!drawing.current) return;
+      // Same reasoning as move(): an unrelated pointer lifting (a palm,
+      // mid-stroke) must not end someone else's in-progress stroke.
+      if (!drawing.current || e.pointerId !== drawingPointerIdRef.current) return;
       drawing.current = false;
+      drawingPointerIdRef.current = null;
       onChange?.();
+
+      // Now that no stroke is in progress, it's safe to apply any left-growth
+      // that got deferred while this one was being drawn (see maybeGrow).
+      if (pendingGrowLeftRef.current > 0 && !growingRef.current) {
+        const growLeft = pendingGrowLeftRef.current;
+        pendingGrowLeftRef.current = 0;
+        applyGrowLeft(growLeft);
+      }
     };
 
     useImperativeHandle(ref, () => ({
@@ -474,13 +655,17 @@ const Canvas = forwardRef<
         if (imageDataRef.current) return imageDataRef.current.split(",")[1];
         if (!strokesRef.current.length) return null;
         replayStrokesToInk();
+        // Exported at the original logical W×H (not W*dpr) — the OCR backend
+        // doesn't need Retina-level pixel density, and keeping this size
+        // unchanged avoids inflating the upload/vision-API payload. Explicit
+        // destination size scales the (now higher-fidelity) ink source down.
         const off = document.createElement("canvas");
         off.width = W;
         off.height = H;
         const octx = off.getContext("2d")!;
         octx.fillStyle = "#ffffff";
         octx.fillRect(0, 0, W, H);
-        octx.drawImage(getInkCanvas(), 0, 0);
+        octx.drawImage(getInkCanvas(), 0, 0, W, H);
         return off.toDataURL("image/png").split(",")[1];
       },
       getExportMap: () => {
@@ -507,17 +692,22 @@ const Canvas = forwardRef<
         replayStrokesToInk();
         const ink = getInkCanvas();
         const pad = 6;
+        // `boxes` are in the app's logical W×H space (same as OCR/getExportMap),
+        // but the ink canvas's actual buffer is W*dpr x H*dpr — clamp against
+        // the logical W/H, and scale the source rect by dpr when reading pixels
+        // back out. The returned x/y/w/h and the snapshot canvas itself stay in
+        // logical units (that's the space the SVG overlay positions them in).
         return boxes.map((b) => {
           if (!b || b.length !== 4) return null;
           const sx = Math.max(0, Math.floor(b[0]) - pad);
           const sy = Math.max(0, Math.floor(b[1]) - pad);
-          const sw = Math.min(ink.width, Math.ceil(b[2]) + pad) - sx;
-          const sh = Math.min(ink.height, Math.ceil(b[3]) + pad) - sy;
+          const sw = Math.min(W, Math.ceil(b[2]) + pad) - sx;
+          const sh = Math.min(H, Math.ceil(b[3]) + pad) - sy;
           if (sw <= 0 || sh <= 0) return null;
           const c = document.createElement("canvas");
           c.width = sw;
           c.height = sh;
-          c.getContext("2d")!.drawImage(ink, sx, sy, sw, sh, 0, 0, sw, sh);
+          c.getContext("2d")!.drawImage(ink, sx * dpr, sy * dpr, sw * dpr, sh * dpr, 0, 0, sw, sh);
           return { x: sx, y: sy, w: sw, h: sh, href: c.toDataURL("image/png") };
         });
       },
@@ -528,6 +718,7 @@ const Canvas = forwardRef<
           imageRef.current = img;
           imageDataRef.current = dataUrl;
           strokesRef.current = [];
+          redoStackRef.current = [];
           redraw();
           onChange?.();
         };
@@ -537,6 +728,7 @@ const Canvas = forwardRef<
         imageRef.current = null;
         imageDataRef.current = null;
         strokesRef.current = [];
+        redoStackRef.current = [];
         setCanvasWidth(initialW);
         setCanvasHeight(initialH);
         wrapperRef.current?.scrollTo({ top: 0, left: 0 });
@@ -560,26 +752,43 @@ const Canvas = forwardRef<
           onChange?.();
           return;
         }
-        strokesRef.current.pop();
+        const popped = strokesRef.current.pop();
+        if (popped) redoStackRef.current.push(popped);
         redraw();
         onChange?.();
       },
       canUndo: () => strokesRef.current.length > 0 || !!imageRef.current,
+      redo: () => {
+        const restored = redoStackRef.current.pop();
+        if (!restored) return;
+        strokesRef.current.push(restored);
+        redraw();
+        onChange?.();
+      },
+      canRedo: () => redoStackRef.current.length > 0,
+      eraseRegion: (box: number[]) => {
+        if (box.length !== 4 || imageRef.current) return;
+        const [x1, y1, x2, y2] = box;
+        redoStackRef.current = [];
+        strokesRef.current.push({ kind: "rect", rect: { x1, y1, x2, y2 } });
+        redraw();
+        onChange?.();
+      },
     }));
 
     if (fullscreen) {
       return (
-        <div ref={wrapperRef} className="fixed inset-0 overflow-auto bg-slate-200">
+        <div ref={wrapperRef} className="fixed inset-0 overflow-auto bg-[#f2f1ed]">
           <div
-            className="relative m-6 shadow-md"
+            className="relative mt-[92px] mx-8 mb-6 rounded-[3px] overflow-hidden shadow-[0px_2px_10px_0px_rgba(0,0,0,0.07)]"
             style={{ width: W * zoom, height: H * zoom }}
           >
             <canvas
               ref={canvasRef}
-              width={W}
-              height={H}
+              width={W * dpr}
+              height={H * dpr}
               style={{ width: W * zoom, height: H * zoom, display: "block" }}
-              className={`touch-none ${spaceHeld ? "cursor-grab" : "cursor-none"}`}
+              className={`stylus-surface ${spaceHeld ? "cursor-grab" : "cursor-none"}`}
               onPointerDown={start}
               onPointerMove={move}
               onPointerUp={end}
@@ -588,6 +797,7 @@ const Canvas = forwardRef<
                 hideCursor();
                 end(e);
               }}
+              onContextMenu={(e) => e.preventDefault()}
             />
             {overlay && (
               <div className="absolute inset-0 z-10 pointer-events-none overflow-visible">
@@ -615,10 +825,10 @@ const Canvas = forwardRef<
       <div className="relative">
         <canvas
           ref={canvasRef}
-          width={W}
-          height={H}
+          width={W * dpr}
+          height={H * dpr}
           style={{ aspectRatio: `${W} / ${H}` }}
-          className="w-full h-auto border border-slate-200 rounded cursor-none touch-none shadow-sm"
+          className="stylus-surface w-full h-auto border border-slate-200 rounded cursor-none shadow-sm"
           onPointerDown={start}
           onPointerMove={move}
           onPointerUp={end}
@@ -627,6 +837,7 @@ const Canvas = forwardRef<
             hideCursor();
             end(e);
           }}
+          onContextMenu={(e) => e.preventDefault()}
         />
         <div
           ref={cursorElRef}

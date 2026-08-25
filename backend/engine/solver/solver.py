@@ -1,6 +1,7 @@
 """``solve()`` dispatcher: routes a (topic, question_type, params) to the topic
 module that owns the SymPy computation, plus ``serialize()`` for the HTTP API."""
 from .complex import _solve_complex
+from .functions import _solve_function_study
 from .integrals import _solve_definite_integral, _solve_indefinite_integral
 from .limits import _solve_limit
 from .probability import _solve_probability
@@ -17,6 +18,8 @@ def solve(topic, question_type, params):
         return _solve_definite_integral(params)
     if topic == "probability":
         return _solve_probability(params)
+    if topic == "functions":
+        return _solve_function_study(params)
     raise ValueError(f"unknown topic: {topic}")
 def serialize(solution):
     return {

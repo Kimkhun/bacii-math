@@ -7,7 +7,8 @@ grading lives in ``grader.probability``.
 import math
 import re as _re
 
-from sympy import E, I, N, Symbol, binomial, im, latex, pi, re, simplify, sqrt
+from sympy import E, Expr, I, N, Symbol, binomial, im, latex, oo, pi, re, simplify, sqrt
+from sympy import solve as sym_solve
 from sympy.parsing.sympy_parser import (
     convert_xor,
     implicit_multiplication_application,
@@ -47,11 +48,14 @@ def parse_answer(text):
         .replace("×", "*")
         .replace("÷", "/")
         .replace("–", "-")
+        .replace("−", "-")
+        .replace("∞", "oo")
     )
     text = _LIM_PREFIX.sub("", text)
     text = _re.sub(r"√\s*(\d+(?:\.\d+)?)", r"sqrt(\1)", text)
     text = text.replace("√", "sqrt")
     text = _COMB_NOTATION.sub(r"binomial(\1, \2)", text)
+    text = _re.sub(r"\binf(?:inity)?\b", "oo", text)
     return parse_expr(text, local_dict=_LOCAL, transformations=_TRANS)
 
 def _numeric_close(user, expected, tol):
@@ -129,6 +133,201 @@ def _equivalent_exact(value, expected, var, diff=None):
 def _is_given_restatement(lhs: str) -> bool:
     return lhs.strip().lower() in ("z", "z bar", "z_bar", "z̄")
 
+# ---------------------------------------------------------------------------
+# answer_kind judging (function study & other study-style topics)
+#
+# Function-study answers aren't plain numbers: they're intervals (domain),
+# categorical words (odd/even, increasing, sign), one-sided infinities
+# (limits), or line equations in x and y (tangents). Each kind gets its own
+# judge; `_judge_by_kind` dispatches. `exact_only` disables the numeric
+# tolerance path (MoEYS wants exact log/fraction forms for areas). The judges
+# return (correct, reason, note) — `note` carries a gentle coaching hint.
+# ---------------------------------------------------------------------------
+
+_IV_RE = _re.compile(
+    r"(?P<l>[\(\]\[])\s*(?P<lo>-?\d+(?:\.\d+)?|oo|-oo)"
+    r"\s*(?:[,;])\s*"
+    r"(?P<hi>-?\d+(?:\.\d+)?|oo|-oo)\s*(?P<r>[\)\]\[])")
+_DOMAIN_LABEL_RE = _re.compile(r"^[Dd][A-Za-z_]*\s*=\s*")
+_XIN_RE = _re.compile(r"^[xX]\s*(?:∈|in)\s*")
+_SETMINUS_RE = _re.compile(r"^[Rℝ]\s*(?:\\|/)?\s*\{\s*(?P<pt>-?\d+(?:\.\d+)?)\s*\}$")
+_IV_INEQ_RE = _re.compile(
+    r"^\s*(?P<lo>-?\d+(?:\.\d+)?|oo|-oo)\s*<\s*[xX]\s*<\s*(?P<hi>-?\d+(?:\.\d+)?|oo|-oo)\s*$")
+_LEAD_EQ_RE = _re.compile(r"^[A-Za-z']+\s*(?:\([^)]*\))?\s*=\s*")
+
+def _strip_lead(text):
+    """Drop a leading 'lim_{...}' clause and/or a 'name =' / 'name(x) =' prefix
+    so judges see the value itself ('lim g(x) = -∞' -> '-∞')."""
+    text = text.strip()
+    text = _LIM_PREFIX.sub("", text)
+    return _LEAD_EQ_RE.sub("", text).strip()
+
+def _bound_float(v):
+    if isinstance(v, str):
+        v = v.strip().lower().replace("oo", "inf")
+        if v in ("inf", "+inf", "infinity"):
+            return float("inf")
+        if v in ("-inf", "-infinity"):
+            return float("-inf")
+    return float(v)
+
+def _iv_dict(l_ch, lo, hi, r_ch):
+    return {
+        "lo": _bound_float(lo),
+        "hi": _bound_float(hi),
+        "lo_open": l_ch in "(]",
+        "hi_open": r_ch in ")[",
+    }
+
+def _parse_interval(text):
+    """Parse a domain answer into a list of interval dicts {lo, hi, lo_open,
+    hi_open} (bounds as floats, ±inf allowed). Accepts international and French
+    brackets, unions ('(-∞,-3) ∪ (3,∞)'), and 'ℝ\\{2}' set-minus notation."""
+    text = text.strip()
+    text = text.replace("∞", "oo").replace("−", "-").replace("–", "-")
+    text = _re.sub(r"\binf(?:inity)?\b", "oo", text)
+    text = _DOMAIN_LABEL_RE.sub("", text)
+    text = _XIN_RE.sub("", text)
+    m = _SETMINUS_RE.match(text)
+    if m:
+        p = _bound_float(m.group("pt"))
+        return [
+            {"lo": float("-inf"), "hi": p, "lo_open": True, "hi_open": True},
+            {"lo": p, "hi": float("inf"), "lo_open": True, "hi_open": True},
+        ]
+    m = _IV_INEQ_RE.match(text)
+    if m:
+        return [_iv_dict("(", m.group("lo"), m.group("hi"), ")")]
+    text = text.replace("∪", " , ").replace(" u ", " , ").replace(" U ", " , ")
+    ivs = [_iv_dict(m.group("l"), m.group("lo"), m.group("hi"), m.group("r"))
+           for m in _IV_RE.finditer(text)]
+    return ivs or None
+
+def _iv_close(a, b, tol):
+    return (a == b == float("inf")) or (a == b == float("-inf")) or abs(a - b) <= tol
+
+def _judge_interval(expected, user_answer, tol):
+    user = _parse_interval(user_answer)
+    if user is None or len(user) != len(expected):
+        return False, "mismatch", None
+    for u, e in zip(user, expected):
+        if not _iv_close(u["lo"], _bound_float(e["lo"]), tol):
+            return False, "mismatch", None
+        if not _iv_close(u["hi"], _bound_float(e["hi"]), tol):
+            return False, "mismatch", None
+        if u["lo_open"] != e["lo_open"] or u["hi_open"] != e["hi_open"]:
+            return False, "mismatch", None
+    return True, "exact", None
+
+_KH = "\u1780-\u17ff"
+
+def _norm_choice(text):
+    text = text.strip().lower()
+    text = _re.sub(rf"[^a-z{_KH}]+", " ", text)
+    return " ".join(text.split())
+
+def _judge_choice(expected, choices, user_answer):
+    entry = (choices or {}).get(expected) or {}
+    norm = _norm_choice(user_answer)
+    for w in entry.get("words") or []:
+        if _norm_choice(w) == norm:
+            return True, "exact", None
+    # Accept the defining equation too (e.g. "g(-x) = -g(x)"), with a note to
+    # write the word explicitly (MoEYS rubrics award the classification).
+    n2 = _re.sub(r"[\s=]", "", user_answer.lower())
+    for p in entry.get("phrases") or []:
+        if _re.sub(r"[\s=]", "", p.lower()) == n2:
+            return True, "exact", (
+                "Correct condition — remember to write the word "
+                "“អនុគមន៍សេស” explicitly on the exam for full marks."
+            )
+    return False, "mismatch", None
+
+def _judge_infinity(expected, user_answer):
+    try:
+        value = parse_answer(_strip_lead(user_answer))
+    except Exception:
+        return False, "mismatch", None
+    if value == expected and value in (oo, -oo):
+        return True, "exact", None
+    return False, "mismatch", None
+
+def _judge_line(expected, user_answer, tol):
+    """Tangent-line answers: 'y = 2x/3', '(2/3)x', point-slope, or the implicit
+    form '3y - 2x = 0' — any equation of the same line."""
+    text = _strip_lead(user_answer)
+    x_sym, y_sym = Symbol("x"), Symbol("y")
+    if "=" in text:
+        lhs, _, rhs = text.partition("=")
+        try:
+            imp = simplify(parse_answer(lhs) - parse_answer(rhs))
+        except Exception:
+            return False, "mismatch", None
+        try:
+            sols = sym_solve(imp, y_sym) if imp.has(y_sym) else (sym_solve(imp, x_sym) if imp.has(x_sym) else [])
+        except Exception:
+            sols = []
+        for s in sols:
+            if _equivalent_exact(s, expected, x_sym) or _numeric_close(s, expected, tol):
+                return True, "exact", None
+        return False, "mismatch", None
+    try:
+        value = parse_answer(text)
+    except Exception:
+        return False, "mismatch", None
+    if _equivalent_exact(value, expected, x_sym) or _numeric_close(value, expected, tol):
+        return True, "exact", None
+    return False, "mismatch", None
+
+def _judge_expression(expected, user_answer, tol, exact_only=False):
+    text = _strip_lead(user_answer)
+    try:
+        value = parse_answer(text)
+    except Exception:
+        return False, "mismatch", None
+    var_sym = Symbol("x")
+    if _equivalent_exact(value, expected, var_sym):
+        return True, "exact", None
+    if not exact_only and _numeric_close(value, expected, tol):
+        return True, "numeric", None
+    return False, "mismatch", None
+
+def _judge_by_kind(kind, expected, user_answer, tol=_DEFAULT_TOL, choices=None, exact_only=False):
+    """Dispatch an answer to the right shape judge (interval/choice/infinity/
+    line/expression). Returns (correct, reason, note)."""
+    if kind == "interval":
+        return _judge_interval(expected, user_answer, tol)
+    if kind == "choice":
+        return _judge_choice(expected, choices, user_answer)
+    if kind == "infinity":
+        return _judge_infinity(expected, user_answer)
+    if kind == "line":
+        return _judge_line(expected, user_answer, tol)
+    return _judge_expression(expected, user_answer, tol, exact_only)
+
+def _match_checkpoint(value, cp, tol, var_sym):
+    """Line-check matcher for one checkpoint. Non-SymPy checkpoint values
+    (interval/choice structures) can't be verified from an OCR line — skip them
+    rather than flagging; ±oo checkpoints match only the same infinity."""
+    cv = cp["value"]
+    if isinstance(cv, (str, list, dict, bool)) or not isinstance(cv, (int, float, Expr)):
+        return False
+    if cv in (oo, -oo):
+        return value in (oo, -oo) and value == cv
+    try:
+        if simplify(value - cv) == 0:
+            return True
+    except Exception:
+        return False
+    if _numeric_close(value, cv, tol):
+        return True
+    if cp.get("constant_ok"):
+        try:
+            return _equivalent_const(value, cv, var_sym)
+        except Exception:
+            return False
+    return False
+
 def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     """Deterministically check each line of a student's work against the SymPy-computed
     checkpoints for this solution. Returns the first line whose claimed value
@@ -187,19 +386,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
         matched_idx = None
         var_sym = Symbol(params.get("var", "x"))
         for idx in range(pointer, len(checkpoints)):
-            expected = checkpoints[idx]["value"]
-            try:
-                diff = simplify(value - expected)
-                ok = diff == 0 or _numeric_close(value, expected, tol)
-                if not ok and checkpoints[idx].get("constant_ok"):
-                    # Antiderivative checkpoints: any F(x) + constant is a valid
-                    # antiderivative (constants cancel in F(b) − F(a)). The diff
-                    # is already computed; the fu/sampling escalation happens
-                    # only here, so numeric checkpoints never pay for it.
-                    ok = _equivalent_const(value, expected, var_sym, diff=diff)
-            except Exception:
-                ok = False
-            if ok:
+            if _match_checkpoint(value, checkpoints[idx], tol, var_sym):
                 matched_idx = idx
                 break
 
@@ -296,18 +483,11 @@ def _analyze_work_any_order(solution, params, lines, tol):
             continue
 
         best_idx = None
+        var_sym = Symbol(params.get("var", "x"))
         for idx, cp in enumerate(checkpoints):
-            try:
-                if simplify(value - cp["value"]) == 0:
-                    best_idx = idx
-                    break
-            except Exception:
-                continue
-        if best_idx is None:
-            for idx, cp in enumerate(checkpoints):
-                if _numeric_close(value, cp["value"], tol):
-                    best_idx = idx
-                    break
+            if _match_checkpoint(value, cp, tol, var_sym):
+                best_idx = idx
+                break
         if best_idx is not None:
             matched_checkpoints.add(best_idx)
             line_results.append({
@@ -361,25 +541,41 @@ def grade_part(topic, question_type, params, label, user_answer, tolerance=None)
     if m:
         user_answer = m.group(1)
     expected = part["answer_exact"]
+    display = part.get("answer_display") or str(expected)
     try:
-        correct, reason = _judge_value(expected, user_answer, tolerance if tolerance is not None else _DEFAULT_TOL)
-        given = str(parse_answer(user_answer))
+        correct, reason, note = _judge_value(
+            expected, user_answer,
+            tolerance if tolerance is not None else _DEFAULT_TOL,
+            kind=part.get("answer_kind"), choices=part.get("choices"),
+            exact_only=part.get("exact_only"),
+        )
     except Exception as exc:
-        correct, reason, given = False, f"could not parse answer: {exc}", user_answer
+        correct, reason, note = False, f"could not parse answer: {exc}", None
+    try:
+        given = str(parse_answer(user_answer))
+    except Exception:
+        given = user_answer.strip()
     verdict = {
         "label": label,
         "correct": correct,
         "reason": reason,
         "given": given,
-        "expected": str(expected),
+        "expected": display,
         "answer_decimal": part["answer_decimal"],
     }
+    if note:
+        verdict["note"] = note
+    if not isinstance(expected, (list, dict, str)):
+        expected_latex = part.get("answer_latex") or latex(expected)
+    else:
+        expected_latex = part.get("answer_latex") or display
     return {
         **verdict,
         "part": label,
         "parts": [verdict],
-        "expected_latex": latex(expected),
+        "expected_latex": expected_latex,
         "steps": solution["steps"],
+        "graph": solution.get("graph"),
         "all_complete": correct and str(solution.get("target_label")) == str(label),
     }
 
@@ -424,4 +620,5 @@ def grade(topic, question_type, params, user_answer, tolerance=None):
         "expected_latex": latex(expected),
         "answer_decimal": solution["answer_decimal"],
         "steps": solution["steps"],
+        "graph": solution.get("graph"),
     }

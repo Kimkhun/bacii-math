@@ -1,0 +1,120 @@
+{
+  "id": "function_study_2025_science_vii",
+  "source": {
+    "year": 2025,
+    "track": "science",
+    "section": "VII",
+    "subject_km": "គណិតវិទ្យា",
+    "description": "BAC II 2025 (science) Part VII: full function study of g(x) = ln((-x-3)/(x-3)).",
+    "extracted_by": "manual transcription from exam (2026-08), answers verified with SymPy"
+  },
+  "difficulty": "hard",
+  "var": "x",
+  "fn_name": "g",
+  "function_expr": "log((-x-3)/(x-3))",
+  "prompt": "We have the function g defined by g(x) = ln((-x-3)/(x-3)).\n1. Find the domain of g and determine whether g is even or odd (g is even iff g(-x)=g(x), odd iff g(-x)=-g(x)).\n2. Compute the limits of g at -3 and at 3.\n3. Study the monotonicity of g over its domain and build the variation table.\n4. In an orthonormal frame (O, i, j), let C be the graph of g. Find the equation of the tangent line T to C at the point of abscissa 0. Draw C and T. Study the sign of g(x) according to x.\n5. a. Compute the derivative of h defined by h(x) = x g(x).\n   b. Find the area of the region bounded by C, the x-axis, and the lines x = 0 and x = 1.",
+  "prompt_latex": "\\text{គេមានអនុគមន៍ } g \\text{ ដែល } g(x)=\\ln\\left(\\frac{-x-3}{x-3}\\right) .\\\\ \\text{1. រកដែនកំណត់នៃអនុគមន៍ } g \\text{ និងសិក្សាថាតើ } g \\text{ ជាអនុគមន៍គូ ឬសេស?}\\\\ \\text{2. គណនាលីមីតនៃ } g \\text{ ត្រង់ } -3 \\text{ និងត្រង់ } 3 .\\\\ \\text{3. សិក្សាអថេរភាពនៃ } g \\text{ លើដែនកំណត់របស់វា និងសង់តារាងអថេរភាព។}\\\\ \\text{4. កំណត់សមីការនៃបន្ទាត់ប៉ះ } T \\text{ ទៅនឹងក្រាប } C \\text{ ត្រង់ចំណុចដែលមានអាប់ស៊ីស } 0 \\text{ រួចសង់ក្រាប } C \\text{ និងបន្ទាត់ប៉ះ } T .\\\\ \\text{5. } (a)\\ \\text{គណនាដេរីវេនៃអនុគមន៍ } h \\text{ ដែល } h(x)=x\\,g(x) .\\quad (b)\\ \\text{រកផ្ទៃក្រឡានៃផ្នែកប្លង់នៅចន្លោះក្រាប } C \\text{ អ័ក្ស } x \\text{ និងបន្ទាត់ } x=0,\\ x=1 .",
+  "graph": {
+    "x_min": -5,
+    "x_max": 5,
+    "y_min": -4,
+    "y_max": 4,
+    "samples": 160,
+    "asymptotes": [
+      { "kind": "vertical", "x": -3 },
+      { "kind": "vertical", "x": 3 }
+    ],
+    "tangent": { "x0": 0 },
+    "points": [
+      { "x": 0, "y": 0, "label": "O" }
+    ]
+  },
+  "parts": [
+    {
+      "label": "1",
+      "want": "domain",
+      "kind": "interval",
+      "expected": [
+        { "lo": -3, "hi": 3, "lo_open": true, "hi_open": true }
+      ],
+      "display": "(-3, 3)",
+      "question_km": "រកដែនកំណត់នៃអនុគមន៍ $g$",
+      "technique": "g(x) = ln(u) is defined only when u = (-x-3)/(x-3) > 0. Numerator -x-3 = 0 at x = -3, denominator x-3 = 0 at x = 3. Build the sign table of u: (-x-3)/(x-3) is positive exactly on the interval (-3, 3), so D = (-3, 3)."
+    },
+    {
+      "label": "2",
+      "want": "parity",
+      "kind": "choice",
+      "expected": "odd",
+      "display": "odd",
+      "question_km": "សិក្សាថាតើ $g$ ជាអនុគមន៍គូ ឬសេស?",
+      "technique": "g(x) = ln(-x-3) - ln(x-3). Then g(-x) = ln(x-3) - ln(-x-3) = -[ln(-x-3) - ln(x-3)] = -g(x). Equivalently g(-x) = ln((x-3)/(-x-3)) = ln(((-x-3)/(x-3))^(-1)) = -g(x). Hence g is odd.",
+      "choices": {
+        "odd": {
+          "words": ["odd", "odd function", "សេស", "អនុគមន៍សេស", "impair", "fonction impaire"],
+          "phrases": ["g(-x)=-g(x)", "g(-x) = -g(x)"]
+        },
+        "even": {
+          "words": ["even", "even function", "គូ", "អនុគមន៍គូ", "paire", "fonction paire"]
+        },
+        "neither": {
+          "words": ["neither", "neither odd nor even", "មិនគូមិនសេស", "ni paire ni impaire"]
+        }
+      }
+    },
+    {
+      "label": "3",
+      "want": "limit",
+      "kind": "infinity",
+      "point": "-3",
+      "side": "+",
+      "expected": "-oo",
+      "display": "-∞",
+      "question_km": "គណនាលីមីតនៃ $g$ ត្រង់ $-3$",
+      "technique": "As x → -3⁺, (-x-3)/(x-3) → 0⁺/(-6) → 0⁺, so g(x) = ln(0⁺) → -∞."
+    },
+    {
+      "label": "4",
+      "want": "limit",
+      "kind": "infinity",
+      "point": "3",
+      "side": "-",
+      "expected": "oo",
+      "display": "+∞",
+      "question_km": "គណនាលីមីតនៃ $g$ ត្រង់ $3$",
+      "technique": "As x → 3⁻, (-x-3)/(x-3) → (-6)/0⁻ → +∞, so g(x) = ln(+∞) → +∞."
+    },
+    {
+      "label": "5",
+      "want": "tangent",
+      "kind": "line",
+      "x0": 0,
+      "expected": "2*x/3",
+      "display": "y = 2x/3",
+      "question_km": "កំណត់សមីការបន្ទាត់ប៉ះ $T$ ត្រង់ចំណុចដែលមានអាប់ស៊ីស $0$",
+      "technique": "g(0) = ln 1 = 0. The derivative is g'(x) = (-1)/(-x-3) - 1/(x-3) = 6/((-x-3)(x-3)), so g'(0) = 6/9 = 2/3. Tangent: y - 0 = (2/3)(x - 0), i.e. y = 2x/3."
+    },
+    {
+      "label": "6",
+      "want": "derivative_product",
+      "kind": "expression",
+      "h_expr": "x*log((-x-3)/(x-3))",
+      "expected": "diff",
+      "display": "h'(x) = ln((−x−3)/(x−3)) − 6x/(x²−9)",
+      "question_km": "គណនាដេរីវេនៃអនុគមន៍ $h$ ដែល $h(x) = x\\,g(x)$",
+      "technique": "h(x) = x g(x), so by the product rule h'(x) = g(x) + x g'(x) = ln((-x-3)/(x-3)) + 6x/((-x-3)(x-3)) = ln((-x-3)/(x-3)) - 6x/(x²-9)."
+    },
+    {
+      "label": "7",
+      "want": "integral",
+      "kind": "expression",
+      "lower": "0",
+      "upper": "1",
+      "expected": "-3*log(9) + log(2) + 3*log(8)",
+      "display": "ln 2 + 3 ln 8 − 3 ln 9",
+      "exact_only": true,
+      "question_km": "រកផ្ទៃក្រឡានៅចន្លោះក្រាប $C$ អ័ក្ស $x$ និងបន្ទាត់ $x=0,\\ x=1$",
+      "technique": "From h' = g + x g' and g' = -6/(x²-9), we get g(x) = h'(x) + 6x/(x²-9). Then S = ∫₀¹ g dx = ∫₀¹ [h'(x) + 6x/(x²-9)] dx = [h(x)]₀¹ + 3[ln|x²-9|]₀¹ = (ln 2 - 0) + 3(ln 8 - ln 9) = ln 2 + 3 ln 8 - 3 ln 9."
+    }
+  ]
+}

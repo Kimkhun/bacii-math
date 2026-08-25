@@ -6,7 +6,13 @@ import re as _re
 from sympy import Symbol
 
 from ..solver import solve
-from .grader import _DEFAULT_TOL, _equivalent_exact, _numeric_close, parse_answer
+from .grader import (
+    _DEFAULT_TOL,
+    _equivalent_exact,
+    _judge_by_kind,
+    _numeric_close,
+    parse_answer,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -75,15 +81,19 @@ def parse_multi_answers(text, labels):
                 break
     return result
 
-def _judge_value(expected, user_answer, tol=_DEFAULT_TOL):
-    """Judge one answer value against an expected expression (probability)."""
+def _judge_value(expected, user_answer, tol=_DEFAULT_TOL, kind=None, choices=None, exact_only=False):
+    """Judge one answer value against an expected expression (probability), or
+    dispatch to the right answer-shape judge for study-style topics (functions):
+    interval / choice / infinity / line / expression."""
+    if kind:
+        return _judge_by_kind(kind, expected, user_answer, tol, choices=choices, exact_only=exact_only)
     user = parse_answer(user_answer)
     x = Symbol("x")
     if _equivalent_exact(user, expected, x):
-        return True, "exact"
+        return True, "exact", None
     if _numeric_close(user, expected, tol):
-        return True, "numeric"
-    return False, "mismatch"
+        return True, "numeric", None
+    return False, "mismatch", None
 
 def grade_multi(topic, question_type, params, submissions):
     """Grade every sub-part of a multi-part question.
@@ -100,30 +110,39 @@ def grade_multi(topic, question_type, params, submissions):
     for part in parts:
         label = part["label"]
         value = submissions.get(label)
-        expected = str(part["answer_exact"])
+        display = part.get("answer_display") or str(part["answer_exact"])
         if not value:
             verdicts.append({
                 "label": label, "correct": False, "reason": "unanswered",
-                "given": None, "expected": expected,
+                "given": None, "expected": display,
                 "answer_decimal": part["answer_decimal"],
             })
             continue
         try:
-            correct, reason = _judge_value(part["answer_exact"], value)
-            given = str(parse_answer(value))
+            correct, reason, note = _judge_value(
+                part["answer_exact"], value, kind=part.get("answer_kind"),
+                choices=part.get("choices"), exact_only=part.get("exact_only"),
+            )
         except Exception as exc:
             verdicts.append({
                 "label": label, "correct": False,
                 "reason": f"could not parse answer: {exc}",
-                "given": value, "expected": expected,
+                "given": value, "expected": display,
                 "answer_decimal": part["answer_decimal"],
             })
             continue
-        verdicts.append({
+        try:
+            given = str(parse_answer(value))
+        except Exception:
+            given = value.strip()
+        verdict = {
             "label": label, "correct": correct, "reason": reason,
-            "given": given, "expected": expected,
+            "given": given, "expected": display,
             "answer_decimal": part["answer_decimal"],
-        })
+        }
+        if note:
+            verdict["note"] = note
+        verdicts.append(verdict)
 
     n_correct = sum(1 for v in verdicts if v["correct"])
     n_total = len(verdicts)
@@ -137,6 +156,7 @@ def grade_multi(topic, question_type, params, submissions):
         "expected": str(solution["answer_exact"]),
         "answer_decimal": solution["answer_decimal"],
         "steps": solution["steps"],
+        "graph": solution.get("graph"),
         "target_label": solution.get("target_label"),
     }
 

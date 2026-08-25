@@ -127,6 +127,9 @@ export interface DetectResult {
   confidence: number;
   provider?: string;
   lines_boxes?: (number[] | null)[];
+  lines_confidence?: number[];
+  lines_alt?: string[][];
+  lines_alt_latex?: string[][];
 }
 
 export interface StepCheckLine {
@@ -161,6 +164,8 @@ export interface Explanation {
   work_check?: { content: string; provider: string } | null;
   step_check?: StepCheck | null;
   steps?: { step_order: number; title: string; detail: string; formula?: string | null }[];
+  graph?: GraphSpec | null;
+  graph_check?: GraphCheck | null;
 }
 
 export interface PartVerdict {
@@ -169,6 +174,35 @@ export interface PartVerdict {
   reason?: string;
   given?: string | null;
   expected?: string;
+  note?: string;
+}
+
+export interface GraphPoint {
+  x: number;
+  y: number;
+  label?: string;
+}
+
+export interface GraphSpec {
+  x_min: number;
+  x_max: number;
+  y_min: number;
+  y_max: number;
+  curve: number[][][];
+  vertical_asymptotes: number[];
+  tangent?: number[][];
+  points: GraphPoint[];
+}
+
+export interface GraphCheckItem {
+  label: string;
+  found: boolean;
+}
+
+export interface GraphCheck {
+  items: GraphCheckItem[];
+  found: number;
+  total: number;
 }
 
 export interface GradeResult {
@@ -183,6 +217,8 @@ export interface GradeResult {
   explanation?: Explanation;
   work_check?: { content: string; provider: string } | null;
   step_check?: StepCheck | null;
+  graph?: GraphSpec | null;
+  graph_check?: GraphCheck | null;
 }
 
 export interface Attempt {
@@ -201,6 +237,38 @@ export interface Attempt {
   work_text?: string | null;
   step_check?: StepCheck | null;
   created_at: string;
+}
+
+export interface SavedPartState {
+  typed?: string;
+  work_text?: string | null;
+  lines_boxes?: (number[] | null)[] | null;
+  correct?: boolean;
+}
+
+export interface SessionSummary {
+  id: string;
+  question_id: string;
+  status: string;
+  parts_done: number;
+  parts_total: number;
+  updated_at: string;
+  question?: {
+    id: string;
+    topic: string;
+    question_type: string;
+    difficulty: string;
+    prompt: string;
+    prompt_latex: string | null;
+  };
+}
+
+export interface SessionDetail {
+  id: string;
+  status: string;
+  updated_at: string;
+  question: Question;
+  parts: Record<string, SavedPartState>;
 }
 
 export interface AttemptDetail {
@@ -312,6 +380,20 @@ export const api = {
     }),
   explain: (question_id: string, user_answer?: string, work_text?: string) =>
     request<Explanation>("/problems/explain", { method: "POST", body: { question_id, user_answer, work_text } }),
+  saveProgress: (
+    question_id: string,
+    part?: string,
+    typed?: string,
+    work_text?: string,
+    lines_boxes?: (number[] | null)[]
+  ) =>
+    request<SessionSummary>("/problems/progress/save", {
+      method: "POST",
+      body: { question_id, part, typed, work_text, lines_boxes },
+    }),
+  myProgress: () => request<SessionSummary[]>("/progress"),
+  progress: (id: string) => request<SessionDetail>(`/progress/${id}`),
+  deleteProgress: (id: string) => request<{ deleted: boolean }>(`/progress/${id}`, { method: "DELETE" }),
   attempts: () => request<Attempt[]>("/attempts"),
   attempt: (id: string) => request<AttemptDetail>(`/attempts/${id}`),
   stats: () => request<Stats>("/stats"),

@@ -57,3 +57,11 @@ class ExplainRequest(BaseModel):
 
 class ReplayRequest(BaseModel):
     question_id: uuid.UUID
+
+
+class SaveProgressRequest(BaseModel):
+    question_id: uuid.UUID
+    part: str | None = None
+    typed: str | None = None
+    work_text: str | None = None
+    lines_boxes: list | None = None

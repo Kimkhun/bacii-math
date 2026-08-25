@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Live API verification for the probability topic (needs the stack running).
 
 Run:  python scripts/verify_probability_live.py   (from repo root)

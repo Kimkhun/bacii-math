@@ -3,15 +3,17 @@
 import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
-import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, LineSnapshot, PEN_WIDTHS } from "@/components/Canvas";
+import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, FULL_W, LineSnapshot, PEN_WIDTHS } from "@/components/Canvas";
 import MathText from "@/components/MathText";
-import QuestionCard from "@/components/QuestionCard";
-import { api, Question, GradeResult, Explanation, DetectResult } from "@/lib/api";
+import DisambiguationCard, { DisambiguationCandidate } from "@/components/DisambiguationCard";
+import FunctionGraph from "@/components/FunctionGraph";
+import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary } from "@/lib/api";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
 
-const CURSIVE = "'Segoe Script', 'Comic Sans MS', cursive";
+const CURSIVE = "'Caveat', 'Segoe Script', cursive";
 
 const MARK_STAGGER_MS = 1000;
+const SESSION_TOTAL = 20;
 
 // Keyframes for the red-pen marks + line pops (shared by every part's canvas).
 const MARKS_STYLE = `
@@ -58,10 +60,6 @@ const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: "conjugate", label: "Conjugate" },
     { value: "real_part", label: "Real part" },
     { value: "imaginary_part", label: "Imaginary part" },
-    { value: "complex_arithmetic", label: "Arithmetic (z1, z2)" },
-    { value: "complex_power", label: "Power (z^n)" },
-    { value: "de_moivre_power", label: "De Moivre's formula" },
-    { value: "nth_roots", label: "nth roots" },
   ],
   limit: [{ value: "limit", label: "Limit" }],
   integral: [
@@ -69,7 +67,21 @@ const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: "indefinite_integral", label: "Indefinite integral" },
   ],
   probability: [{ value: "probability", label: "Probability" }],
+  functions: [{ value: "study", label: "Curve study & area" }],
 };
+
+interface AmbiguousLine {
+  index: number;
+  primary: DisambiguationCandidate;
+  candidates: DisambiguationCandidate[];
+}
+
+interface SessionConfig {
+  mode: string;
+  topic: string;
+  questionType: string;
+  difficulty: string;
+}
 
 // Re-draw a past attempt's OCR'd writing at its stored box positions. The text
 // is squashed to fit its original box (lengthAdjust) so it reads as it did on
@@ -335,17 +347,32 @@ export default function PracticePage() {
   );
 }
 
+const TOOLBAR_POS_KEY = "bacii:toolbarPos";
+
 function PracticeInner() {
   const canvasRefs = useRef<(CanvasHandle | null)[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const pendingDetectRef = useRef<DetectResult | null>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const toolbarDraggingRef = useRef(false);
+  const toolbarDragOffsetRef = useRef({ x: 0, y: 0 });
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [partIndex, setPartIndex] = useState(0);
   const [exerciseDone, setExerciseDone] = useState(false);
+
+  // Session setup (shown before the canvas). Once started, `sessionActive`
+  // drives the "Question N of 20" header + Skip; config stays fixed for the
+  // whole session.
+  const [sessionActive, setSessionActive] = useState(false);
+  const [sessionIndex, setSessionIndex] = useState(1);
+  const [sessionCorrect, setSessionCorrect] = useState(0);
+  const [sessionDone, setSessionDone] = useState(false);
   const [mode, setMode] = useState("templates");
   const [topic, setTopic] = useState("complex");
   const [questionType, setQuestionType] = useState("any");
   const [difficulty, setDifficulty] = useState("medium");
+  const sessionConfigRef = useRef<SessionConfig | null>(null);
 
   // Per-part state: every sub-part (A/B/C/...) owns its own canvas, typed
   // answer, OCR result, and red-pen marks. Single-part topics use index 0.
@@ -359,6 +386,9 @@ function PracticeInner() {
   const [linePopsByPart, setLinePopsByPart] = useState<(ReactNode[] | null)[]>([]);
 
   const [explanation, setExplanation] = useState<Explanation | null>(null);
+  const [hintLevel, setHintLevel] = useState(0);
+  const [ambiguityQueue, setAmbiguityQueue] = useState<AmbiguousLine[] | null>(null);
+  const [ambiguityResolved, setAmbiguityResolved] = useState<Record<number, DisambiguationCandidate>>({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [debug, setDebug] = useState(false);
@@ -366,11 +396,13 @@ function PracticeInner() {
   const [penWidth, setPenWidth] = useState<number>(PEN_WIDTHS.medium);
   const [eraserWidth, setEraserWidth] = useState<number>(32);
   const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [streak, setStreak] = useState(0);
+  // null = docked centered-bottom (default). Once dragged, an explicit
+  // top-left pixel position takes over and is remembered per device.
+  const [toolbarPos, setToolbarPos] = useState<{ x: number; y: number } | null>(null);
   const [reviewMode, setReviewMode] = useState(false);
-  const [reviewLines, setReviewLines] = useState<string[]>([]);
-  const [reviewBoxes, setReviewBoxes] = useState<(number[] | null)[]>([]);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -381,8 +413,8 @@ function PracticeInner() {
   const currentPart = partLabels.length ? partLabels[Math.min(partIndex, partLabels.length - 1)] : null;
 
   // Write the idx-th slot of a per-part array, growing it as needed. The
-// conditional type extracts the array's element type (e.g. `string | null` for
-// `(string | null)[]`) so callers can pass null without inference fights.
+  // conditional type extracts the array's element type (e.g. `string | null` for
+  // `(string | null)[]`) so callers can pass null without inference fights.
   const setAt = <T extends unknown[]>(
     setter: React.Dispatch<React.SetStateAction<T>>,
     idx: number,
@@ -434,6 +466,9 @@ function PracticeInner() {
     setMarksByPart(Array(m).fill(null));
     setLinePopsByPart(Array(m).fill(null));
     setExplanation(null);
+    setHintLevel(0);
+    setAmbiguityQueue(null);
+    setAmbiguityResolved({});
     setError("");
   };
 
@@ -488,8 +523,6 @@ function PracticeInner() {
           const lines = d.work_text.split("\n");
           setAt(setWorkTextByPart, partIndex, d.work_text);
           setAt(setWorkLatexByPart, partIndex, null);
-          setReviewLines(lines);
-          setReviewBoxes(d.lines_boxes ?? []);
           const map = activeCanvas()?.getExportMap();
           if (map && d.lines_boxes?.length) {
             const det = { lines, lines_boxes: d.lines_boxes } as DetectResult;
@@ -531,9 +564,19 @@ function PracticeInner() {
     canvasRefs.current.forEach((c) => c?.setEraserWidth(w));
   };
 
-  const undo = () => activeCanvas()?.undo();
+  const undo = () => {
+    activeCanvas()?.undo();
+    markDirty();
+  };
+  const redo = () => {
+    activeCanvas()?.redo();
+    markDirty();
+  };
 
-  const markDirty = () => setCanUndo(activeCanvas()?.canUndo() ?? false);
+  const markDirty = () => {
+    setCanUndo(activeCanvas()?.canUndo() ?? false);
+    setCanRedo(activeCanvas()?.canRedo() ?? false);
+  };
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -541,7 +584,13 @@ function PracticeInner() {
       if (tag === "INPUT" || tag === "TEXTAREA") return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
-        undo();
+        if (e.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        redo();
         return;
       }
       const k = e.key.toLowerCase();
@@ -562,29 +611,124 @@ function PracticeInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tool, penWidth, eraserWidth]);
 
-  const zoomIn = () => setZoom((z) => Math.min(2.5, Math.round((z + 0.25) * 100) / 100));
-  const zoomOut = () => setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100));
+  // Once the user has picked a zoom level themselves (buttons or pinch),
+  // stop auto-fitting on resize/rotation so we never yank the view out from
+  // under them mid-write.
+  const userZoomedRef = useRef(false);
+  const zoomIn = () => {
+    userZoomedRef.current = true;
+    setZoom((z) => Math.min(2.5, Math.round((z + 0.25) * 100) / 100));
+  };
+  const zoomOut = () => {
+    userZoomedRef.current = true;
+    setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100));
+  };
   const zoomReset = () => setZoom(1);
+  const onCanvasZoomChange = (z: number) => {
+    userZoomedRef.current = true;
+    setZoom(z);
+  };
 
-  const newQuestion = async () => {
-    if (reviewMode) {
-      setReviewMode(false);
-      setReviewLines([]);
-      setReviewBoxes([]);
-      router.replace("/practice");
+  // Tablet-first default: fit the page to the screen width on open, like a
+  // notes app does, instead of dropping the user into a 100%-zoom page they
+  // have to scroll sideways just to see the margin.
+  useEffect(() => {
+    const fitToWidth = () => {
+      if (userZoomedRef.current) return;
+      const available = window.innerWidth - 48;
+      const fit = Math.min(1, Math.max(0.5, Math.floor((available / FULL_W) * 20) / 20));
+      setZoom(fit);
+    };
+    fitToWidth();
+    window.addEventListener("resize", fitToWidth);
+    window.addEventListener("orientationchange", fitToWidth);
+    return () => {
+      window.removeEventListener("resize", fitToWidth);
+      window.removeEventListener("orientationchange", fitToWidth);
+    };
+  }, []);
+
+  // Keep the (movable) toolbar fully on-screen, using its actual measured size.
+  const clampToolbarPos = (x: number, y: number) => {
+    const el = toolbarRef.current;
+    const w = el?.offsetWidth ?? 320;
+    const h = el?.offsetHeight ?? 56;
+    const maxX = Math.max(8, window.innerWidth - w - 8);
+    const maxY = Math.max(8, window.innerHeight - h - 8);
+    return { x: Math.min(Math.max(8, x), maxX), y: Math.min(Math.max(8, y), maxY) };
+  };
+
+  // Restore a remembered position (per device) on mount, and re-clamp on resize
+  // so the toolbar never ends up stranded off-screen after a viewport change.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(TOOLBAR_POS_KEY);
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (typeof p?.x === "number" && typeof p?.y === "number") setToolbarPos(clampToolbarPos(p.x, p.y));
+      }
+    } catch {
+      /* ignore malformed/unavailable storage */
     }
+    const onResize = () => setToolbarPos((p) => (p ? clampToolbarPos(p.x, p.y) : p));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const startToolbarDrag = (e: React.PointerEvent) => {
+    e.preventDefault();
+    const el = toolbarRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    toolbarDragOffsetRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    toolbarDraggingRef.current = true;
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+  };
+
+  const moveToolbarDrag = (e: React.PointerEvent) => {
+    if (!toolbarDraggingRef.current) return;
+    const { x, y } = toolbarDragOffsetRef.current;
+    setToolbarPos(clampToolbarPos(e.clientX - x, e.clientY - y));
+  };
+
+  const endToolbarDrag = () => {
+    if (!toolbarDraggingRef.current) return;
+    toolbarDraggingRef.current = false;
+    setToolbarPos((p) => {
+      if (p) {
+        try {
+          localStorage.setItem(TOOLBAR_POS_KEY, JSON.stringify(p));
+        } catch {
+          /* storage unavailable — position just won't persist */
+        }
+      }
+      return p;
+    });
+  };
+
+  const generateOne = async (cfg: SessionConfig) => {
+    const q = await api.generate(
+      cfg.topic === "complex" ? cfg.mode : "templates",
+      cfg.difficulty,
+      cfg.topic,
+      cfg.questionType === "any" ? undefined : cfg.questionType
+    );
+    setQuestion(q);
+    initPartState(q.params?.parts?.length ?? 0);
+  };
+
+  const startSession = async () => {
     setError("");
-    activeCanvas()?.clear();
     setBusy(true);
     try {
-      const q = await api.generate(
-        topic === "complex" ? mode : "templates",
-        difficulty,
-        topic,
-        questionType === "any" ? undefined : questionType
-      );
-      setQuestion(q);
-      initPartState(q.params?.parts?.length ?? 0);
+      const cfg: SessionConfig = { mode, topic, questionType, difficulty };
+      sessionConfigRef.current = cfg;
+      await generateOne(cfg);
+      setSessionIndex(1);
+      setSessionCorrect(0);
+      setSessionDone(false);
+      setSessionActive(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate");
     } finally {
@@ -592,12 +736,38 @@ function PracticeInner() {
     }
   };
 
+  const advanceSession = async (wasCorrect: boolean) => {
+    if (wasCorrect) setSessionCorrect((c) => c + 1);
+    if (sessionIndex >= SESSION_TOTAL) {
+      setSessionDone(true);
+      return;
+    }
+    setError("");
+    activeCanvas()?.clear();
+    setBusy(true);
+    try {
+      await generateOne(sessionConfigRef.current!);
+      setSessionIndex((i) => i + 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const skip = () => advanceSession(false);
+
+  const endSession = () => {
+    setSessionActive(false);
+    setSessionDone(false);
+    setQuestion(null);
+    initPartState(0);
+  };
+
   const uploadImage = () => fileRef.current?.click();
 
   const exitReview = () => {
     setReviewMode(false);
-    setReviewLines([]);
-    setReviewBoxes([]);
     setQuestion(null);
     initPartState(0);
     activeCanvas()?.clear();
@@ -614,43 +784,23 @@ function PracticeInner() {
     reader.readAsDataURL(file);
   };
 
-  const check = async () => {
-    if (!question) {
-      setError("Generate a question first.");
-      return;
-    }
-    setError("");
-    setResult(null);
-    setExplanation(null);
-    setMarks(null);
-    setLinePops(null);
+  // Runs the actual grade call + marks/sounds, given the FINAL resolved lines
+  // (i.e. after any ambiguity has been confirmed/rejected by the student).
+  const finalizeCheck = async (det: DetectResult, resolvedLines: string[], resolvedLatex: string[]) => {
+    if (!question) return;
+    const finalDet: DetectResult = { ...det, lines: resolvedLines, lines_latex: resolvedLatex };
     setBusy(true);
     try {
-      let answer = typed.trim();
-      let work: string | undefined;
-      let detResult: DetectResult | undefined;
-      if (!answer) {
-        const ink = activeCanvas()?.getImageBase64();
-        if (!ink) {
-          setError("Write an answer on the page, upload an image, or type one.");
-          return;
-        }
-        const det = await api.detect(ink);
-        detResult = det;
-        setDetectResult(det);
-        setDetected(det.raw_text || "(nothing detected)");
-        work = det.lines?.length ? det.lines.join("\n") : undefined;
-        setWorkText(work ?? null);
-        setWorkLatex(det.lines_latex?.length ? det.lines_latex : null);
-        if (!det.raw_text) {
-          setError("Could not read the handwriting. Try writing larger or clearer.");
-          return;
-        }
-        answer = det.raw_text;
-      }
-      const res = await api.grade(question.id, answer, work, detResult?.lines_boxes, currentPart ?? undefined);
+      const work = resolvedLines.length ? resolvedLines.join("\n") : undefined;
+      setWorkText(work ?? null);
+      setWorkLatex(resolvedLatex.length ? resolvedLatex : null);
+      setDetectResult(finalDet);
+      setDetected(finalDet.raw_text || resolvedLines[resolvedLines.length - 1] || "(nothing detected)");
+      const answer = finalDet.raw_text || resolvedLines[resolvedLines.length - 1] || "";
+      const res = await api.grade(question.id, answer, work, finalDet.lines_boxes, currentPart ?? undefined);
       setResult(res);
-      if (res.correct && res.all_complete) {
+      const nowDone = res.correct && res.all_complete;
+      if (nowDone) {
         setExerciseDone(true);
       } else if (res.correct && currentPart && partLabels.length > 1) {
         setPartIndex((i) => Math.min(i + 1, partLabels.length - 1));
@@ -658,14 +808,10 @@ function PracticeInner() {
       if (res.explanation) setExplanation(res.explanation);
       const map = activeCanvas()?.getExportMap();
       const nextMarks =
-        map && detResult && detResult.lines_boxes?.length ? buildMarks(detResult, res, map, debug) : null;
+        map && finalDet.lines_boxes?.length ? buildMarks(finalDet, res, map, debug) : null;
       setMarks(nextMarks);
-      // Live-mode line pop: snapshot each line's actual ink and overlay it with a
-      // grow-and-settle animation, synced to the sounds. At scale 1 the snapshot
-      // covers the identical ink beneath, so the written line itself appears to
-      // swell. Review mode pops its re-drawn text lines instead.
-      if (map && detResult?.lines_boxes?.length && !reviewMode) {
-        const snaps = activeCanvas()?.getLineSnapshots(detResult.lines_boxes);
+      if (map && finalDet.lines_boxes?.length && !reviewMode) {
+        const snaps = activeCanvas()?.getLineSnapshots(finalDet.lines_boxes);
         if (snaps?.some(Boolean)) {
           setLinePops(
             snaps.map((s: LineSnapshot | null, i: number) =>
@@ -689,41 +835,239 @@ function PracticeInner() {
       }
       const newStreak = updateStreak(res.correct);
       setStreak(newStreak);
+      if (nowDone && sessionActive) advanceSession(true);
 
-// Play the grade sounds in sync with the progressive reveal. When the answer is
-// correct (SymPy-verified), EVERY line celebrates with a rising ding — the
-// intermediate verdicts may not match real handwriting, so the pitch must not
-// depend on them. When wrong: correct lines ding (rising from 0), only the
-// first wrong line thuds, and a final victory ping lands on the stamp.
-const events = nextMarks ? markEvents(detResult!, res) : [];
-if (events.length) {
-  if (res.correct) {
-    events.forEach((_, i) => {
-      setTimeout(() => playMarkSound(true, Math.max(newStreak - 1, 0) + i), i * MARK_STAGGER_MS);
-    });
-    setTimeout(
-      () => playMarkSound(true, Math.max(newStreak - 1, 0) + events.length),
-      events.length * MARK_STAGGER_MS
-    );
-  } else {
-    let correctSeen = 0;
-    let thudPlayed = false;
-    events.forEach((e, i) => {
-      const delay = i * MARK_STAGGER_MS;
-      if (e.correct) {
-        setTimeout(() => playMarkSound(true, correctSeen), delay);
-        correctSeen += 1;
-      } else if (!thudPlayed) {
-        thudPlayed = true;
-        setTimeout(() => playMarkSound(false, 0), delay);
+      // Play the grade sounds in sync with the progressive reveal. When the answer is
+      // correct (SymPy-verified), EVERY line celebrates with a rising ding — the
+      // intermediate verdicts may not match real handwriting, so the pitch must not
+      // depend on them. When wrong: correct lines ding (rising from 0), only the
+      // first wrong line thuds, and a final victory ping lands on the stamp.
+      const events = nextMarks ? markEvents(finalDet, res) : [];
+      if (events.length) {
+        if (res.correct) {
+          events.forEach((_, i) => {
+            setTimeout(() => playMarkSound(true, Math.max(newStreak - 1, 0) + i), i * MARK_STAGGER_MS);
+          });
+          setTimeout(
+            () => playMarkSound(true, Math.max(newStreak - 1, 0) + events.length),
+            events.length * MARK_STAGGER_MS
+          );
+        } else {
+          let correctSeen = 0;
+          let thudPlayed = false;
+          events.forEach((e, i) => {
+            const delay = i * MARK_STAGGER_MS;
+            if (e.correct) {
+              setTimeout(() => playMarkSound(true, correctSeen), delay);
+              correctSeen += 1;
+            } else if (!thudPlayed) {
+              thudPlayed = true;
+              setTimeout(() => playMarkSound(false, 0), delay);
+            }
+          });
+        }
+      } else {
+        playGradeSound(res.correct);
       }
-    });
-  }
-} else {
-  playGradeSound(res.correct);
-}
     } catch (err) {
       setError(err instanceof Error ? err.message : "Check failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const check = async () => {
+    if (!question) {
+      setError("Generate a question first.");
+      return;
+    }
+    setError("");
+    setResult(null);
+    setExplanation(null);
+    setMarks(null);
+    setLinePops(null);
+    setBusy(true);
+    try {
+      const answer = typed.trim();
+      if (answer) {
+        // Typed answers skip OCR entirely, so there's nothing to disambiguate.
+        const finalDet = { lines: [], lines_latex: [], raw_text: answer } as unknown as DetectResult;
+        setBusy(false);
+        await finalizeCheck(finalDet, [], []);
+        return;
+      }
+      const ink = activeCanvas()?.getImageBase64();
+      if (!ink) {
+        setError("Write an answer on the page, upload an image, or type one.");
+        setBusy(false);
+        return;
+      }
+      const det = await api.detect(ink);
+      setDetectResult(det);
+      if (!det.raw_text && !det.lines?.length) {
+        setError("Could not read the handwriting. Try writing larger or clearer.");
+        setBusy(false);
+        return;
+      }
+
+      const queue: AmbiguousLine[] = [];
+      (det.lines ?? []).forEach((text, i) => {
+        const alts = det.lines_alt?.[i] ?? [];
+        if (!alts.length) return;
+        const altLatex = det.lines_alt_latex?.[i] ?? [];
+        queue.push({
+          index: i,
+          primary: { text, latex: det.lines_latex?.[i] },
+          candidates: alts.map((t, j) => ({ text: t, latex: altLatex[j] })),
+        });
+      });
+
+      if (queue.length) {
+        pendingDetectRef.current = det;
+        setAmbiguityResolved({});
+        setAmbiguityQueue(queue);
+        setBusy(false);
+        return;
+      }
+
+      setBusy(false);
+      await finalizeCheck(det, det.lines ?? [], det.lines_latex ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Check failed");
+      setBusy(false);
+    }
+  };
+
+  const resolveAmbiguity = (pick: DisambiguationCandidate | null) => {
+    if (!ambiguityQueue || !ambiguityQueue.length) return;
+    const [current, ...rest] = ambiguityQueue;
+    const resolved = { ...ambiguityResolved };
+    if (pick) resolved[current.index] = pick;
+    if (rest.length) {
+      setAmbiguityResolved(resolved);
+      setAmbiguityQueue(rest);
+      return;
+    }
+    // Queue exhausted — build the final lines using every resolution (falling
+    // back to the OCR's original reading for lines the student confirmed as-is).
+    const det = pendingDetectRef.current;
+    pendingDetectRef.current = null;
+    setAmbiguityQueue(null);
+    setAmbiguityResolved({});
+    if (!det) return;
+    const lines = (det.lines ?? []).map((t, i) => resolved[i]?.text ?? t);
+    const latex = (det.lines_latex ?? []).map((t, i) => resolved[i]?.latex ?? t);
+    finalizeCheck(det, lines, latex);
+  };
+
+  const writeLineAgain = () => {
+    if (!ambiguityQueue || !ambiguityQueue.length) return;
+    const [current, ...rest] = ambiguityQueue;
+    const det = pendingDetectRef.current;
+    const box = det?.lines_boxes?.[current.index];
+    if (box) activeCanvas()?.eraseRegion(box);
+    pendingDetectRef.current = null;
+    setAmbiguityQueue(null);
+    setAmbiguityResolved({});
+    markDirty();
+    setError("Redraw that line, then check your work again.");
+  };
+
+  const [sessions, setSessions] = useState<SessionSummary[] | null>(null);
+  const [savedFlash, setSavedFlash] = useState<string | null>(null);
+  const [resumeWriting, setResumeWriting] = useState<(DetectResult | null)[]>([]);
+
+  useEffect(() => {
+    if (!sessionActive && !reviewMode) {
+      api.myProgress().then(setSessions).catch(() => {});
+    }
+  }, [sessionActive, reviewMode]);
+
+  const saveProgressNow = async () => {
+    if (!question) {
+      setError("Generate a question first.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      let ty = typed.trim();
+      let wt = workText;
+      let boxes = detectResult?.lines_boxes ?? null;
+      if (!ty && !wt) {
+        const ink = activeCanvas()?.getImageBase64();
+        if (ink) {
+          const det = await api.detect(ink);
+          setDetectResult(det);
+          setDetected(det.raw_text || "(nothing detected)");
+          wt = det.lines?.length ? det.lines.join("\n") : null;
+          boxes = det.lines_boxes ?? null;
+          setWorkText(wt);
+          setWorkLatex(det.lines_latex?.length ? det.lines_latex : null);
+        }
+      }
+      const summary = await api.saveProgress(
+        question.id, currentPart ?? undefined,
+        ty || undefined, wt ?? undefined, boxes ?? undefined,
+      );
+      setSavedFlash(`Saved (${summary.parts_done}/${summary.parts_total} parts)`);
+      setTimeout(() => setSavedFlash(null), 3000);
+      api.myProgress().then(setSessions).catch(() => {});
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deleteSession = async (id: string) => {
+    try {
+      await api.deleteProgress(id);
+      setSessions((s) => (s ? s.filter((x) => x.id !== id) : s));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+    }
+  };
+
+  const loadSession = async (id: string) => {
+    setBusy(true);
+    try {
+      const d = await api.progress(id);
+      const labels = Object.keys(d.parts);
+      if (!d.question) throw new Error("Question missing from saved progress");
+      setQuestion(d.question);
+      initPartState(labels.length);
+      setSessionActive(true);
+      setReviewMode(false);
+      setResumeWriting(Array(labels.length).fill(null));
+      let firstUndone = labels.length - 1;
+      const allDone = labels.length > 0;
+      labels.forEach((lab, i) => {
+        const st = d.parts[lab];
+        if (!st) return;
+        setAt(setTypedByPart, i, st.typed ?? "");
+        setAt(setWorkTextByPart, i, st.work_text ?? null);
+        setAt(setWorkLatexByPart, i, null);
+        if (st.lines_boxes?.length) {
+          const det = {
+            lines: (st.work_text ?? "").split("\n").filter(Boolean),
+            lines_boxes: st.lines_boxes,
+          } as DetectResult;
+          setAt(setResumeWriting, i, det);
+        }
+        if (st.correct) {
+          setAt(setResultByPart, i, {
+            correct: true, reason: "saved", expected: "", attempt_id: "",
+          } as GradeResult);
+        } else if (firstUndone === labels.length - 1) {
+          firstUndone = i;
+        }
+      });
+      setExerciseDone(allDone && labels.every((lab) => d.parts[lab]?.correct));
+      setPartIndex(firstUndone);
+      router.replace("/practice");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to resume");
     } finally {
       setBusy(false);
     }
@@ -742,14 +1086,23 @@ if (events.length) {
     }
   };
 
+  // Hint: reveals one more solution step per click instead of the whole
+  // explanation at once. Fetches the explanation lazily on first click.
+  const showHint = async () => {
+    if (!explanation) {
+      await showExplanation();
+      setHintLevel(1);
+      return;
+    }
+    setHintLevel((n) => Math.min(n + 1, explanation.steps?.length ?? n + 1));
+  };
+
   const replayReview = async () => {
     if (!question) return;
     setBusy(true);
     try {
       const q = await api.replay(question.id);
       setReviewMode(false);
-      setReviewLines([]);
-      setReviewBoxes([]);
       setQuestion(q);
       initPartState(q.params?.parts?.length ?? 0);
       activeCanvas()?.clear();
@@ -761,11 +1114,170 @@ if (events.length) {
     }
   };
 
+  const showSetup = !reviewMode && !sessionActive;
+
+  if (showSetup) {
+    return (
+      <AuthGuard>
+        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#f2f1ed] px-4">
+          <div className="w-full max-w-md bg-white border border-[#e4e2db] rounded-2xl shadow-sm p-6 space-y-4">
+            <div>
+              <h1 className="text-xl font-bold text-[#23272e]">Start a practice session</h1>
+              <p className="mt-1 text-sm text-[#8a857b]">
+                {SESSION_TOTAL} questions, handwritten and graded instantly.
+              </p>
+            </div>
+            <div className="space-y-3">
+              <label className="block">
+                <span className="text-xs font-medium text-[#6b6558]">Topic</span>
+                <select
+                  value={topic}
+                  onChange={(e) => {
+                    setTopic(e.target.value);
+                    setQuestionType("any");
+                  }}
+                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
+                >
+                  <option value="complex">Complex numbers</option>
+                  <option value="limit">Limits</option>
+                  <option value="integral">Integrals</option>
+                  <option value="probability">Probability</option>
+                  <option value="functions">Functions</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium text-[#6b6558]">Question type</span>
+                <select
+                  value={questionType}
+                  onChange={(e) => setQuestionType(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
+                >
+                  <option value="any">Any type</option>
+                  {TYPE_OPTIONS[topic].map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium text-[#6b6558]">Difficulty</span>
+                <select
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </label>
+              {topic === "complex" && (
+                <label className="block">
+                  <span className="text-xs font-medium text-[#6b6558]">Generation mode</span>
+                  <select
+                    value={mode}
+                    onChange={(e) => setMode(e.target.value)}
+                    className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
+                  >
+                    <option value="templates">Templates</option>
+                    <option value="gemini">Gemini</option>
+                  </select>
+                </label>
+              )}
+            </div>
+            {sessions && sessions.length > 0 && (
+              <div className="border-t border-[#e4e2db] pt-3 space-y-2">
+                <div className="text-xs font-semibold text-[#6b6558] uppercase">
+                  Resume a saved exercise
+                </div>
+                <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                  {sessions.map((s) => (
+                    <div
+                      key={s.id}
+                      className="flex items-center justify-between gap-2 rounded-lg border border-[#dddad1] bg-[#faf9f6] p-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-xs font-medium text-[#23272e] truncate">
+                          {(s.question?.prompt ?? "").split("\n")[0]}
+                        </div>
+                        <div className="text-[11px] text-[#8a857b]">
+                          {s.question?.question_type.replace("_", " ")} · {s.parts_done}/{s.parts_total} parts
+                          {s.status === "completed" ? " · done" : ""}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <button
+                          onClick={() => loadSession(s.id)}
+                          disabled={busy}
+                          className="px-2.5 py-1 rounded-md bg-[#23272e] text-white text-xs font-medium hover:bg-[#31363f]"
+                        >
+                          Resume
+                        </button>
+                        <button
+                          onClick={() => deleteSession(s.id)}
+                          disabled={busy}
+                          className="px-2 py-1 rounded-md border border-[#dddad1] text-xs text-[#8a857b] hover:bg-white"
+                          title="Delete saved progress"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {error && <p className="text-xs text-red-600">{error}</p>}
+            <button
+              onClick={startSession}
+              disabled={busy}
+              className="w-full px-4 py-2.5 rounded-lg bg-[#23272e] text-white text-sm font-semibold hover:bg-[#31363f] disabled:opacity-50"
+            >
+              {busy ? "Starting..." : `Start session (${SESSION_TOTAL} questions)`}
+            </button>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
+
+  if (sessionDone) {
+    return (
+      <AuthGuard>
+        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#f2f1ed] px-4">
+          <div className="w-full max-w-md bg-white border border-[#e4e2db] rounded-2xl shadow-sm p-6 text-center space-y-4">
+            <h1 className="text-xl font-bold text-[#23272e]">Session complete!</h1>
+            <p className="text-4xl font-extrabold text-emerald-600">
+              {sessionCorrect} / {SESSION_TOTAL}
+            </p>
+            <p className="text-sm text-[#8a857b]">correct on the first check</p>
+            <div className="flex gap-2">
+              <button
+                onClick={startSession}
+                disabled={busy}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-[#23272e] text-white text-sm font-semibold hover:bg-[#31363f] disabled:opacity-50"
+              >
+                Start another session
+              </button>
+              <button
+                onClick={endSession}
+                className="px-4 py-2.5 rounded-lg border border-[#dddad1] text-sm font-medium hover:bg-[#faf9f6]"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
+
   return (
     <AuthGuard>
       <div className="relative">
         {reviewMode && (
-          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-slate-900/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto">
+          <div className="fixed top-[76px] left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto">
             <span>Reviewing a past attempt — your writing is restored, draw on it or start fresh.</span>
             <button
               onClick={replayReview}
@@ -783,13 +1295,14 @@ if (events.length) {
           </div>
         )}
         <style>{MARKS_STYLE}</style>
+
         {partLabels.length > 0 && (
           <div
-            className={`fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 backdrop-blur border border-slate-200 rounded-lg shadow-md px-2 py-1.5 pointer-events-auto ${
-              reviewMode ? "top-16" : "top-3"
+            className={`fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md px-2 py-1.5 pointer-events-auto ${
+              reviewMode ? "top-[124px]" : "top-[76px]"
             }`}
           >
-            <span className="text-xs text-slate-400 pr-1">Part</span>
+            <span className="text-xs text-[#8a857b] pr-1">Part</span>
             {partLabels.map((lab, i) => {
               const done = !!resultByPart[i]?.correct;
               return (
@@ -797,12 +1310,12 @@ if (events.length) {
                   key={lab}
                   onClick={() => setActivePart(i)}
                   disabled={busy}
-                  className={`px-2.5 py-1 rounded text-sm font-semibold transition-colors ${
+                  className={`px-2.5 py-1 stylus:px-3 stylus:py-2 rounded text-sm font-semibold transition-colors ${
                     i === partIndex
-                      ? "bg-slate-900 text-white"
+                      ? "bg-[#23272e] text-white"
                       : done
                       ? "bg-emerald-100 text-emerald-800"
-                      : "text-slate-600 hover:bg-slate-100"
+                      : "text-[#6b6558] hover:bg-[#faf9f6]"
                   }`}
                 >
                   {done ? "✓ " : ""}
@@ -812,6 +1325,7 @@ if (events.length) {
             })}
           </div>
         )}
+
         {partLabels.length > 0 ? (
           partLabels.map((lab, i) => (
             <div key={lab} className={i === partIndex ? "" : "hidden"}>
@@ -822,12 +1336,13 @@ if (events.length) {
                 fullscreen
                 zoom={zoom}
                 onChange={markDirty}
-                onZoomChange={setZoom}
+                onZoomChange={onCanvasZoomChange}
                 overlay={
-                  marksByPart[i]?.length || linePopsByPart[i]?.length ? (
+                  marksByPart[i]?.length || linePopsByPart[i]?.length || (i === partIndex && ambiguityQueue?.length) ? (
                     <>
                       {linePopsByPart[i]}
                       {marksByPart[i]}
+                      {i === partIndex && renderAmbiguityCard()}
                     </>
                   ) : undefined
                 }
@@ -842,178 +1357,409 @@ if (events.length) {
             fullscreen
             zoom={zoom}
             onChange={markDirty}
-            onZoomChange={setZoom}
-            overlay={marks?.length || linePops?.length ? (
-              <>
-                {linePops}
-                {marks}
-              </>
-            ) : undefined}
+            onZoomChange={onCanvasZoomChange}
+            overlay={
+              marks?.length || linePops?.length || ambiguityQueue?.length ? (
+                <>
+                  {linePops}
+                  {marks}
+                  {renderAmbiguityCard()}
+                </>
+              ) : undefined
+            }
           />
         )}
 
-        <div className="fixed inset-x-3 top-3 z-10 flex flex-wrap items-start justify-between gap-3 pointer-events-none">
-          <div className="pointer-events-auto w-full sm:w-auto sm:max-w-md sm:flex-1">
+        {/* Question bar: Find <prompt> ................ Question N of 20  Skip */}
+        <div className="fixed inset-x-0 top-0 z-10 min-h-[68px] bg-white border-b border-[#e4e2db] flex items-center justify-between gap-3 pl-7 pr-6 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <div className="flex items-center gap-2.5 min-w-0">
             {question ? (
-              <QuestionCard
-                prompt={question.prompt}
-                promptLatex={question.prompt_latex}
-                questionType={question.question_type}
-                difficulty={question.difficulty}
-                formulaTags={question.formula_tags}
-                formulaDifficulty={question.formula_difficulty}
-                parts={partLabels}
-                currentPart={currentPart}
-              />
-            ) : (
-              <div className="bg-white/90 backdrop-blur border border-slate-200 rounded-lg p-4 text-slate-500 shadow-md">
-                Click “New Question” to start.
+              <div className="flex items-baseline gap-2.5 min-w-0">
+                <span className="font-medium text-[#23272e] text-base shrink-0">Find</span>
+                {question.prompt_latex ? (
+                  <MathText text={`\\(${question.prompt_latex}\\)`} className="text-[#23272e]" />
+                ) : (
+                  <span className="font-medium text-[#23272e]">{question.prompt}</span>
+                )}
               </div>
+            ) : (
+              <span className="text-[#8a857b] text-sm">Loading question…</span>
             )}
           </div>
 
-          <div className="pointer-events-auto w-full sm:w-auto sm:max-w-md bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-md p-3 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={newQuestion}
-                disabled={busy}
-                className="px-3 py-2 rounded-md bg-slate-900 text-white text-sm font-medium hover:bg-slate-700 disabled:opacity-50"
+          <div className="flex items-center gap-3.5 shrink-0">
+            {streak > 0 && (
+              <span
+                className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-xs font-semibold whitespace-nowrap"
+                title="Consecutive correct answers"
               >
-                New Question
-              </button>
-              <select
-                value={topic}
-                onChange={(e) => {
-                  setTopic(e.target.value);
-                  setQuestionType("any");
-                }}
-                className="px-2 py-2 border border-slate-300 rounded-md text-sm"
-              >
-                <option value="complex">Complex numbers</option>
-                <option value="limit">Limits</option>
-                <option value="integral">Integrals</option>
-                <option value="probability">Probability</option>
-              </select>
-              <select
-                value={mode}
-                onChange={(e) => setMode(e.target.value)}
-                disabled={topic !== "complex"}
-                className="px-2 py-2 border border-slate-300 rounded-md text-sm disabled:opacity-50"
-              >
-                <option value="templates">Templates</option>
-                <option value="gemini">Gemini</option>
-              </select>
-              <select
-                value={questionType}
-                onChange={(e) => setQuestionType(e.target.value)}
-                className="px-2 py-2 border border-slate-300 rounded-md text-sm"
-              >
-                <option value="any">Any type</option>
-                {TYPE_OPTIONS[topic].map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                className="px-2 py-2 border border-slate-300 rounded-md text-sm"
-              >
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-              <button
-                onClick={uploadImage}
-                className="px-3 py-2 rounded border border-slate-300 text-sm hover:bg-slate-50"
-              >
-                Upload image...
-              </button>
-              <button
-                onClick={undo}
-                disabled={!canUndo}
-                className="px-3 py-2 rounded border border-slate-300 text-sm hover:bg-slate-50 disabled:opacity-50"
-              >
-                Undo
-              </button>
-              <div className="flex items-center rounded-md border border-slate-300 overflow-hidden text-sm">
-                <button onClick={zoomOut} className="px-2.5 py-2 hover:bg-slate-50" title="Zoom out">
-                  −
-                </button>
-                <button
-                  onClick={zoomReset}
-                  className="px-2 py-2 border-x border-slate-300 hover:bg-slate-50 min-w-[3.5rem] text-center"
-                  title="Reset zoom"
-                >
-                  {Math.round(zoom * 100)}%
-                </button>
-                <button onClick={zoomIn} className="px-2.5 py-2 hover:bg-slate-50" title="Zoom in">
-                  +
-                </button>
-              </div>
-              <button
-                onClick={() => {
-                  activeCanvas()?.clear();
-                  setDetected(null);
-                  setWorkText(null);
-                  setDetectResult(null);
-                  setMarks(null);
-    setLinePops(null);
-                }}
-                className="px-3 py-2 rounded border border-slate-300 text-sm hover:bg-slate-50"
-              >
-                Clear
-              </button>
-              <label className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={debug}
-                  onChange={(e) => setDebug(e.target.checked)}
-                  className="accent-slate-900"
-                />
-                Debug
-              </label>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-slate-600 whitespace-nowrap">Or type:</label>
-              <input
-                value={typed}
-                onChange={(e) => setTyped(e.target.value)}
-                placeholder={
-                  currentPart
-                    ? `e.g. 14/99 (part ${currentPart})`
-                    : question?.params?.parts?.length
-                    ? "e.g. A: 14/99, B: 14/33, C: 7/99, D: 92/99"
-                    : "e.g. 5 or pi/4"
-                }
-                className="flex-1 px-2 py-2 border border-slate-300 rounded-md text-sm"
-              />
-              <button
-                onClick={check}
-                disabled={busy}
-                className="px-4 py-2 rounded-md bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 disabled:opacity-50"
-              >
-                {busy ? "Working..." : "Check Answer"}
-              </button>
-              {streak > 0 && (
-                <span
-                  className="px-2 py-1 rounded-md bg-amber-100 text-amber-800 text-xs font-semibold whitespace-nowrap"
-                  title="Consecutive correct answers — pitch of the grade sound rises with it"
-                >
-                  Streak: {streak}
-                </span>
-              )}
-            </div>
-
-            {error && <p className="text-xs text-red-600">{error}</p>}
+                🔥 {streak}
+              </span>
+            )}
+            {sessionActive && (
+              <span className="text-[12.5px] text-[#8a857b] whitespace-nowrap">
+                Question {sessionIndex} of {SESSION_TOTAL}
+              </span>
+            )}
+            {savedFlash && (
+              <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                {savedFlash}
+              </span>
+            )}
+            <button
+              onClick={saveProgressNow}
+              disabled={busy || !question}
+              className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
+              title="Save progress for later"
+            >
+              Save
+            </button>
+            <button
+              onClick={skip}
+              disabled={busy}
+              className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
+            >
+              Skip
+            </button>
           </div>
         </div>
 
+        {error && (
+          <div className="fixed top-[76px] left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+            <p className="pointer-events-auto bg-red-50 border border-red-200 text-red-700 text-xs rounded-md px-3 py-1.5 shadow-md">
+              {error}
+            </p>
+          </div>
+        )}
+
+        {/* Right-side results / explanation panel */}
+        <div className="fixed right-3 bottom-24 z-10 w-[calc(100vw-1.5rem)] sm:w-96 max-h-[55vh] overflow-y-auto pointer-events-auto space-y-3">
+          {result && (
+            <div
+              className={`rounded-lg p-3 border shadow-md ${
+                result.correct ? "bg-emerald-50/95 border-emerald-200" : "bg-red-50/95 border-red-200"
+              }`}
+            >
+              <div className="font-bold text-[#23272e]">
+                {exerciseDone
+                  ? "Exercise complete!"
+                  : result.correct
+                  ? `Part ${result.part ?? ""} correct`
+                  : "Incorrect"}
+              </div>
+              {partLabels.length > 0 && (
+                <div className="mt-1 flex items-center gap-1 text-xs">
+                  {partLabels.map((lab, i) => (
+                    <span
+                      key={lab}
+                      className={`px-1.5 py-0.5 rounded ${
+                        i < partIndex || (exerciseDone && i === partIndex)
+                          ? "bg-emerald-600 text-white"
+                          : i === partIndex
+                          ? "bg-[#23272e] text-white"
+                          : "bg-[#e4e2db] text-[#8a857b]"
+                      }`}
+                    >
+                      {lab}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {result.parts?.length ? (
+                <div className="mt-2 space-y-1 text-sm">
+                  {result.parts.map((pv) => (
+                    <div
+                      key={pv.label}
+                      className={`rounded px-2 py-1 ${
+                        pv.correct ? "bg-emerald-100/80 text-emerald-900" : "bg-red-100/80 text-red-900"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold">
+                          {pv.correct ? "✓" : "✗"} Part {pv.label}
+                        </span>
+                        <span className="text-xs">
+                          {pv.given ? `you: ${pv.given} · ` : ""}
+                          {pv.correct ? "" : `expected ${pv.expected}`}
+                          {!pv.correct && !pv.given ? "(unanswered)" : ""}
+                        </span>
+                      </div>
+                      {pv.note && (
+                        <div className="mt-0.5 text-xs text-emerald-800/90">{pv.note}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                !result.correct && (
+                  <div className="mt-1 text-sm text-[#3f3c35]">
+                    Expected: <span className="font-medium">{result.expected}</span>
+                  </div>
+                )
+              )}
+              <div className="mt-1 text-xs text-[#8a857b]">Reason: {result.reason}</div>
+              {result.graph && (
+                <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                  <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
+                    Reference graph — compare with your drawing
+                  </div>
+                  <FunctionGraph graph={result.graph} />
+                  {result.graph_check && (
+                    <div className="mt-2 text-xs">
+                      <div className="text-[#8a857b]">Labels your drawing includes:</div>
+                      <div className="mt-0.5 flex flex-wrap gap-x-2">
+                        {result.graph_check.items.map((it) => (
+                          <span
+                            key={it.label}
+                            className={it.found ? "text-emerald-700 font-semibold" : "text-[#8a857b] opacity-60"}
+                          >
+                            {it.label} {it.found ? "✓" : "·"}
+                          </span>
+                        ))}
+                      </div>
+                      {result.graph_check.found < result.graph_check.total && (
+                        <div className="mt-1 text-[#8a857b] text-[11px]">
+                          Missing labels aren't counted wrong — add them and redraw to match the
+                          reference curve.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {(explanation || workText) && (
+            <div className="bg-white/90 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md p-3">
+              {workText && workText.split("\n").length > 1 && (
+                <div className="mb-2 pb-2 border-b border-[#e4e2db]">
+                  <div className="text-xs text-[#8a857b] uppercase font-medium">Your work</div>
+                  <div className="mt-1 text-sm space-y-0.5">
+                    {workText.split("\n").map((line, idx) => {
+                      const lineNo = idx + 1;
+                      const errLine = result?.step_check?.first_error_line;
+                      const isError = errLine === lineNo;
+                      const latex = workLatex?.[idx];
+                      const lineRes = result?.step_check?.line_results.find((r) => r.line === lineNo);
+                      const formulaName = lineRes?.formula ? lineRes.formula.replaceAll("_", " ") : null;
+                      return (
+                        <div key={idx} className={isError ? "text-red-700 font-semibold" : "text-[#6b6558]"}>
+                          {isError ? "→ " : ""}
+                          {latex ? <MathText text={`\\(${latex}\\)`} /> : <MathText text={line} />}
+                          {isError && formulaName && (
+                            <span className="ml-1 text-xs opacity-70">({formulaName})</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {explanation && (
+                <div className="text-sm leading-relaxed">
+                  {explanation.steps?.length ? (
+                    <div className="space-y-1.5 mb-2">
+                      <div className="text-xs font-medium text-[#8a857b] uppercase">Solution</div>
+                      {explanation.steps.slice(0, hintLevel || explanation.steps.length).map((s) => (
+                        <div key={s.step_order} className="flex gap-1.5">
+                          <span className="font-medium text-[#23272e] whitespace-nowrap">Step {s.step_order}:</span>
+                          <MathText text={s.detail} className="text-[#3f3c35]" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  {(!hintLevel || hintLevel >= (explanation.steps?.length ?? 0)) && (
+                    <MathText text={explanation.content} className="whitespace-pre-wrap" />
+                  )}
+                  {explanation.work_check?.content && (
+                    <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                      <div className="text-xs font-medium text-[#8a857b] uppercase">Your work check</div>
+                      <MathText text={explanation.work_check.content} className="mt-1 whitespace-pre-wrap" />
+                    </div>
+                  )}
+                  {explanation.graph && (
+                    <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                      <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
+                        Reference graph
+                      </div>
+                      <FunctionGraph graph={explanation.graph} />
+                      {explanation.graph_check && (
+                        <div className="mt-2 text-xs">
+                          <div className="text-[#8a857b]">Labels your drawing includes:</div>
+                          <div className="mt-0.5 flex flex-wrap gap-x-2">
+                            {explanation.graph_check.items.map((it) => (
+                              <span
+                                key={it.label}
+                                className={it.found ? "text-emerald-700 font-semibold" : "text-[#8a857b] opacity-60"}
+                              >
+                                {it.label} {it.found ? "✓" : "·"}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Toolbar — docked bottom-center (respecting the safe area) by default,
+            drag the grip to move it anywhere. Buttons pick up bigger touch
+            targets under `stylus:` (pointer: coarse — finger/pen tablets)
+            without bloating them for precise mouse users, and the row wraps
+            instead of overflowing off-screen on a narrower portrait tablet. */}
+        <div
+          ref={toolbarRef}
+          className="fixed z-10 pointer-events-auto flex items-center gap-1.5 bg-white rounded-xl shadow-[0px_2px_8px_0px_rgba(0,0,0,0.08)] p-2"
+          style={
+            toolbarPos
+              ? { left: toolbarPos.x, top: toolbarPos.y }
+              : { left: "50%", bottom: "max(24px, env(safe-area-inset-bottom))", transform: "translateX(-50%)" }
+          }
+        >
+          <div
+            onPointerDown={startToolbarDrag}
+            onPointerMove={moveToolbarDrag}
+            onPointerUp={endToolbarDrag}
+            onPointerCancel={endToolbarDrag}
+            title="Drag to move"
+            className="self-stretch flex flex-col flex-wrap items-center justify-center gap-[3px] px-1.5 cursor-grab active:cursor-grabbing touch-none"
+          >
+            {Array.from({ length: 6 }).map((_, i) => (
+              <span key={i} className="w-1 h-1 rounded-full bg-[#c7c2b6]" />
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 max-w-[85vw]">
+            <div className="flex items-center gap-0.5 bg-[#f1f0ec] rounded-[9px] p-[3px]">
+              <button
+                onClick={() => selectTool("pen")}
+                title="Pen (P)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "pen"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Pen
+              </button>
+              <button
+                onClick={() => selectTool("eraser")}
+                title="Eraser (E)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "eraser"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Eraser
+              </button>
+            </div>
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
+            >
+              Undo
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
+            >
+              Redo
+            </button>
+            <div className="w-px h-[26px] bg-[#e4e2db]" />
+            <button
+              onClick={() => {
+                activeCanvas()?.clear();
+                setDetected(null);
+                setWorkText(null);
+                setDetectResult(null);
+                setMarks(null);
+                setLinePops(null);
+                markDirty();
+              }}
+              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#9a9488] hover:bg-[#faf9f6]"
+            >
+              Clear
+            </button>
+            <button
+              onClick={showHint}
+              disabled={busy || !question}
+              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
+            >
+              {explanation?.steps?.length && hintLevel >= explanation.steps.length ? "All hints shown" : "Hint"}
+            </button>
+            <button
+              onClick={uploadImage}
+              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6]"
+            >
+              Upload
+            </button>
+            <div className="flex items-center rounded-[7px] border border-[#dddad1] overflow-hidden text-xs">
+              <button onClick={zoomOut} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-[#faf9f6] text-[#6b6558]" title="Zoom out">
+                −
+              </button>
+              <span className="px-1.5 min-w-[2.5rem] text-center text-[#8a857b]">{Math.round(zoom * 100)}%</span>
+              <button onClick={zoomIn} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-[#faf9f6] text-[#6b6558]" title="Zoom in">
+                +
+              </button>
+            </div>
+            <input
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder="or type answer"
+              className="w-28 px-3 py-2.5 stylus:py-3 border border-[#dddad1] rounded-[7px] text-xs placeholder:text-[#a8a296]"
+            />
+            <button
+              onClick={check}
+              disabled={busy}
+              className="px-[15px] py-2.5 stylus:px-6 stylus:py-3.5 rounded-[7px] bg-[#23272e] text-white text-[12.5px] font-medium hover:bg-[#31363f] disabled:opacity-50"
+            >
+              {busy ? "Working..." : "Check my work"}
+            </button>
+          </div>
+        </div>
+
+        {/* Pen/eraser size + debug, tucked into an unobtrusive corner strip */}
+        <div className="fixed left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-auto flex flex-col items-center gap-2 bg-white/90 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md p-2">
+          <span className="text-[10px] text-[#a8a296]">{tool === "pen" ? 30 : 100}</span>
+          <input
+            type="range"
+            min={tool === "pen" ? 1 : 10}
+            max={tool === "pen" ? 30 : 100}
+            step={1}
+            value={tool === "pen" ? penWidth : eraserWidth}
+            onChange={(e) =>
+              tool === "pen" ? selectPenWidth(Number(e.target.value)) : selectEraserWidth(Number(e.target.value))
+            }
+            className="w-6 h-24 stylus:w-10 stylus:h-32 accent-[#23272e] [writing-mode:vertical-lr] [direction:rtl] cursor-pointer"
+            aria-label="Size"
+          />
+          <span className="text-[10px] text-[#a8a296]">{tool === "pen" ? 1 : 10}</span>
+          <span className="text-xs font-semibold text-[#6b6558] tabular-nums">
+            {tool === "pen" ? penWidth : eraserWidth}
+          </span>
+          <div className="w-full border-t border-[#e4e2db] my-1" />
+          <button
+            onClick={() => setDebug((d) => !d)}
+            title="Toggle debug panel"
+            className={`w-7 h-7 stylus:w-9 stylus:h-9 rounded text-[10px] font-bold ${
+              debug ? "bg-[#23272e] text-white" : "text-[#a8a296] hover:bg-[#faf9f6]"
+            }`}
+          >
+            DBG
+          </button>
+        </div>
+
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+
         {debug && (
-          <div className="fixed left-3 bottom-3 z-10 w-[calc(100vw-1.5rem)] sm:w-[26rem] max-h-[45vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur text-slate-100 rounded-lg p-3 text-xs space-y-2 shadow-lg">
+          <div className="fixed left-20 bottom-3 z-10 w-[calc(100vw-6rem)] sm:w-[26rem] max-h-[45vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur text-slate-100 rounded-lg p-3 text-xs space-y-2 shadow-lg">
             <div className="font-semibold text-slate-300">Debug</div>
             <div>
               <span className="text-slate-400">Question:</span> {question?.prompt ?? "none"}
@@ -1037,6 +1783,7 @@ if (events.length) {
                           <tr className="text-slate-400">
                             <th className="pr-2">#</th>
                             <th className="pr-2">verdict</th>
+                            <th className="pr-2">conf</th>
                             <th className="pr-2">box</th>
                             <th>text</th>
                           </tr>
@@ -1060,6 +1807,9 @@ if (events.length) {
                                 <td className="pr-2 py-0.5 text-slate-200">{i + 1}</td>
                                 <td className={`pr-2 py-0.5 ${vc}`}>{verdict}</td>
                                 <td className="pr-2 py-0.5 text-slate-400">
+                                  {detectResult.lines_confidence?.[i]?.toFixed(2) ?? "—"}
+                                </td>
+                                <td className="pr-2 py-0.5 text-slate-400">
                                   {JSON.stringify(detectResult.lines_boxes?.[i] ?? null)}
                                 </td>
                                 <td className="py-0.5 text-slate-300 whitespace-nowrap">{ln}</td>
@@ -1070,16 +1820,11 @@ if (events.length) {
                       </table>
                     </div>
                   )}
-                  <pre className="mt-1 whitespace-pre-wrap break-all">
-                    {JSON.stringify(detectResult, null, 2)}
-                  </pre>
+                  <pre className="mt-1 whitespace-pre-wrap break-all">{JSON.stringify(detectResult, null, 2)}</pre>
                 </>
               ) : (
                 "no detection yet"
               )}
-            </div>
-            <div>
-              <span className="text-slate-400">Typed answer:</span> {typed || "(none)"}
             </div>
             <div>
               <span className="text-slate-400">Grade:</span>{" "}
@@ -1097,211 +1842,33 @@ if (events.length) {
             </div>
           </div>
         )}
-
-        <div className="fixed right-3 bottom-3 z-10 w-[calc(100vw-1.5rem)] sm:w-96 max-h-[55vh] overflow-y-auto pointer-events-auto space-y-3">
-          {detected !== null && (
-            <div className="bg-white/90 backdrop-blur border border-slate-200 rounded-lg p-3 shadow-md">
-              {workText && workText.split("\n").length > 1 && (
-                <div className="mb-2 pb-2 border-b border-slate-200">
-                  <div className="text-xs text-slate-500 uppercase font-medium">Your work</div>
-                  <div className="mt-1 text-sm space-y-0.5">
-                    {workText.split("\n").map((line, idx) => {
-                      const lineNo = idx + 1;
-                      const errLine = result?.step_check?.first_error_line;
-                      const isError = errLine === lineNo;
-                      const latex = workLatex?.[idx];
-                      const lineRes = result?.step_check?.line_results.find((r) => r.line === lineNo);
-                      const formulaName = lineRes?.formula
-                        ? lineRes.formula.replaceAll("_", " ")
-                        : null;
-                      return (
-                        <div
-                          key={idx}
-                          className={isError ? "text-red-700 font-semibold" : "text-slate-600"}
-                        >
-                          {isError ? "→ " : ""}
-                          {latex ? <MathText text={`\\(${latex}\\)`} /> : <MathText text={line} />}
-                          {isError && formulaName && (
-                            <span className="ml-1 text-xs opacity-70">({formulaName})</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <div className="text-xs text-slate-500 uppercase font-medium">Detected answer</div>
-                {detectResult?.provider && (
-                  <div className="text-[10px] text-slate-400">OCR: {detectResult.provider}</div>
-                )}
-              </div>
-              <div className="mt-1 text-lg font-semibold">{detected}</div>
-            </div>
-          )}
-
-          {result && (
-            <div
-              className={`rounded-lg p-3 border shadow-md ${
-                result.correct
-                  ? "bg-emerald-50/95 border-emerald-200"
-                  : "bg-red-50/95 border-red-200"
-              }`}
-            >
-              <div className="font-bold text-slate-900">
-                {exerciseDone
-                  ? "Exercise complete!"
-                  : result.correct
-                  ? `Part ${result.part ?? ""} correct`
-                  : "Incorrect"}
-              </div>
-              {partLabels.length > 0 && (
-                <div className="mt-1 flex items-center gap-1 text-xs">
-                  {partLabels.map((lab, i) => (
-                    <span
-                      key={lab}
-                      className={`px-1.5 py-0.5 rounded ${
-                        i < partIndex || (exerciseDone && i === partIndex)
-                          ? "bg-emerald-600 text-white"
-                          : i === partIndex
-                          ? "bg-slate-900 text-white"
-                          : "bg-slate-200 text-slate-500"
-                      }`}
-                    >
-                      {lab}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {result.parts?.length ? (
-                <div className="mt-2 space-y-1 text-sm">
-                  {result.parts.map((pv) => (
-                    <div
-                      key={pv.label}
-                      className={`flex items-center justify-between rounded px-2 py-1 ${
-                        pv.correct ? "bg-emerald-100/80 text-emerald-900" : "bg-red-100/80 text-red-900"
-                      }`}
-                    >
-                      <span className="font-semibold">
-                        {pv.correct ? "✓" : "✗"} Part {pv.label}
-                      </span>
-                      <span className="text-xs">
-                        {pv.given ? `you: ${pv.given} · ` : ""}
-                        {pv.correct ? "" : `expected ${pv.expected}`}
-                        {!pv.correct && !pv.given ? "(unanswered)" : ""}
-                      </span>
-                    </div>
-                  ))}
-                  {result.correct && result.part && !exerciseDone && partLabels.length > 1 && (
-                    <div className="pt-1 text-xs text-emerald-800">
-                      Part {result.part} is right — now solve part {partLabels[partIndex]}.
-                    </div>
-                  )}
-                </div>
-              ) : (
-                !result.correct && (
-                  <div className="mt-1 text-sm text-slate-700">
-                    Expected: <span className="font-medium">{result.expected}</span>
-                  </div>
-                )
-              )}
-              <div className="mt-1 text-xs text-slate-500">Reason: {result.reason}</div>
-            </div>
-          )}
-
-          <div className="bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-md p-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900 text-sm">Explanation</h3>
-              <button
-                onClick={showExplanation}
-                disabled={busy || !question}
-                className="px-2 py-1 rounded-md border border-slate-300 text-xs hover:bg-slate-50 disabled:opacity-50"
-              >
-                Show steps
-              </button>
-            </div>
-            {explanation ? (
-              <div className="mt-2 text-sm leading-relaxed">
-                {explanation.steps?.length ? (
-                  <div className="space-y-1.5 mb-3">
-                    <div className="text-xs font-medium text-slate-500 uppercase">Solution</div>
-                    {explanation.steps.map((s) => (
-                      <div key={s.step_order} className="flex gap-1.5">
-                        <span className="font-medium text-slate-900 whitespace-nowrap">
-                          Step {s.step_order}:
-                        </span>
-                        <MathText text={s.detail} className="text-slate-700" />
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-                <MathText text={explanation.content} className="whitespace-pre-wrap" />
-                {explanation.work_check?.content && (
-                  <div className="mt-3 border-t border-slate-200 pt-2">
-                    <div className="text-xs font-medium text-slate-500 uppercase">Your work check</div>
-                    <MathText text={explanation.work_check.content} className="mt-1 whitespace-pre-wrap" />
-                  </div>
-                )}
-                <div className="mt-2 text-xs text-slate-400">
-                  {explanation.provider}
-                  {explanation.intervened ? " · AI" : ""}
-                </div>
-              </div>
-            ) : (
-              <div className="mt-2 text-sm text-slate-400">
-                {result?.correct
-                  ? "Nice work! Click “Show steps” to see it."
-                  : result && !result.correct
-                  ? "Click “Show steps” for a full solution."
-                  : "Explanation will appear here."}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="fixed left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-auto flex flex-col items-center gap-2 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-md p-2">
-          <button
-            onClick={() => selectTool("pen")}
-            title="Pen (P)"
-            className={`w-9 h-9 flex items-center justify-center rounded-md text-lg ${
-              tool === "pen" ? "bg-slate-900" : "hover:bg-slate-100"
-            }`}
-          >
-            <span className={tool === "pen" ? "grayscale brightness-0 invert" : ""}>✏️</span>
-          </button>
-          <button
-            onClick={() => selectTool("eraser")}
-            title="Eraser (E)"
-            className={`w-9 h-9 flex items-center justify-center rounded-md text-lg ${
-              tool === "eraser" ? "bg-slate-900" : "hover:bg-slate-100"
-            }`}
-          >
-            <span className={tool === "eraser" ? "grayscale brightness-0 invert" : ""}>🧽</span>
-          </button>
-          <div className="w-full border-t border-slate-200 my-1" />
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-[10px] text-slate-400">{tool === "pen" ? 30 : 100}</span>
-            <input
-              type="range"
-              min={tool === "pen" ? 1 : 10}
-              max={tool === "pen" ? 30 : 100}
-              step={1}
-              value={tool === "pen" ? penWidth : eraserWidth}
-              onChange={(e) =>
-                tool === "pen"
-                  ? selectPenWidth(Number(e.target.value))
-                  : selectEraserWidth(Number(e.target.value))
-              }
-              className="w-6 h-28 accent-slate-900 [writing-mode:vertical-lr] [direction:rtl] cursor-pointer"
-              aria-label="Size"
-            />
-            <span className="text-[10px] text-slate-400">{tool === "pen" ? 1 : 10}</span>
-            <span className="text-xs font-semibold text-slate-700 tabular-nums">
-              {tool === "pen" ? penWidth : eraserWidth}
-            </span>
-          </div>
-        </div>
       </div>
     </AuthGuard>
   );
+
+  function renderAmbiguityCard() {
+    if (!ambiguityQueue || !ambiguityQueue.length) return null;
+    const current = ambiguityQueue[0];
+    const box = pendingDetectRef.current?.lines_boxes?.[current.index];
+    const map = activeCanvas()?.getExportMap();
+    if (!box || box.length !== 4 || !map) return null;
+    const rect = {
+      x1: map.offsetX + box[0] * map.scale,
+      y1: map.offsetY + box[1] * map.scale,
+      x2: map.offsetX + box[2] * map.scale,
+      y2: map.offsetY + box[3] * map.scale,
+    };
+    return (
+      <DisambiguationCard
+        lineNumber={current.index + 1}
+        box={rect}
+        canvasW={map.canvasW}
+        primary={current.primary}
+        candidates={current.candidates}
+        onPick={(i) => resolveAmbiguity(current.candidates[i])}
+        onNone={() => resolveAmbiguity(null)}
+        onWriteAgain={writeLineAgain}
+      />
+    );
+  }
 }

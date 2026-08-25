@@ -1,0 +1,445 @@
+{
+ "audit": {
+  "2014a": {
+   "status": "mapped",
+   "technique": "factoring_0_0"
+  },
+  "2014b": {
+   "status": "mapped",
+   "technique": "trig_identity_0_0"
+  },
+  "2014c": {
+   "status": "mapped",
+   "technique": "conjugate_infinity"
+  },
+  "2014d": {
+   "status": "mapped",
+   "technique": "exponential_sinc_combo"
+  },
+  "2014e": {
+   "status": "mapped",
+   "technique": "log_limit_infinity"
+  },
+  "2015a": {
+   "status": "mapped",
+   "technique": "rationalization_conjugate_finite"
+  },
+  "2015b": {
+   "status": "mapped",
+   "technique": "trig_identity_0_0"
+  },
+  "2015c": {
+   "status": "mapped",
+   "technique": "sinc_standard_limit"
+  },
+  "2016a": {
+   "status": "mapped",
+   "technique": "factoring_0_0"
+  },
+  "2016b": {
+   "status": "mapped",
+   "technique": "rationalization_conjugate_finite"
+  },
+  "2016c": {
+   "status": "mapped",
+   "technique": "sinc_standard_limit"
+  },
+  "2017a": {
+   "status": "mapped",
+   "technique": "factoring_0_0"
+  },
+  "2017b": {
+   "status": "mapped",
+   "technique": "sinc_standard_limit"
+  },
+  "2017c": {
+   "status": "mapped",
+   "technique": "rationalization_sinc_combo"
+  },
+  "2018a": {
+   "status": "mapped",
+   "technique": "factoring_0_0"
+  },
+  "2018b": {
+   "status": "mapped",
+   "technique": "sinc_standard_limit"
+  },
+  "2018c": {
+   "status": "mapped",
+   "technique": "angle_addition_0_0"
+  },
+  "2019a": {
+   "status": "mapped",
+   "technique": "conjugate_infinity"
+  },
+  "2019b": {
+   "status": "mapped",
+   "technique": "trig_identity_0_0"
+  },
+  "2019c": {
+   "status": "mapped",
+   "technique": "trig_identity_0_0"
+  },
+  "2021a": {
+   "status": "mapped",
+   "technique": "direct_substitution"
+  },
+  "2021b": {
+   "status": "mapped",
+   "technique": "sinc_standard_limit"
+  },
+  "2021c": {
+   "status": "mapped",
+   "technique": "log_limit_infinity"
+  },
+  "2022a": {
+   "status": "mapped",
+   "technique": "direct_substitution"
+  },
+  "2022b": {
+   "status": "mapped",
+   "technique": "rationalization_conjugate_finite"
+  },
+  "2022c": {
+   "status": "mapped",
+   "technique": "sinc_standard_limit"
+  },
+  "2023a": {
+   "status": "mapped",
+   "technique": "log_limit_infinity"
+  },
+  "2023b": {
+   "status": "mapped",
+   "technique": "trig_identity_0_0"
+  },
+  "2023c": {
+   "status": "mapped",
+   "technique": "rationalization_conjugate_finite"
+  },
+  "2024a": {
+   "status": "mapped",
+   "technique": "direct_substitution"
+  },
+  "2024b": {
+   "status": "excluded",
+   "excluded_reason": "implicit 'find a' ask (lim ... = 1, find a) rather than a plain limit \u2014 doesn't round-trip through parse_latex"
+  },
+  "2024c": {
+   "status": "mapped",
+   "technique": "conjugate_infinity"
+  },
+  "2024d": {
+   "status": "mapped",
+   "technique": "half_angle_sinc_combo"
+  },
+  "2025a": {
+   "status": "mapped",
+   "technique": "direct_substitution"
+  },
+  "2025b": {
+   "status": "mapped",
+   "technique": "exponential_standard_limit"
+  },
+  "2025c": {
+   "status": "mapped",
+   "technique": "rationalization_conjugate_finite"
+  },
+  "2025d": {
+   "status": "mapped",
+   "technique": "angle_addition_0_0"
+  },
+  "p102_1a": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1b": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1c": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1d": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1e": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1f": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1g": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1h": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1i": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1j": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p98_1a": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1b": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1c": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1d": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1e": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1f": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1g": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1h": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1i": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1j": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  }
+ },
+ "grade_results": {
+  "direct_substitution": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "1",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "2",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(exp(1*x) + 1)/(2*exp(1*x))"
+  },
+  "factoring_0_0": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "15/11",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "26/11",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(4*x**2 - 17*x + 4)/(3*x**2 - 13*x + 4)"
+  },
+  "rationalization_conjugate_finite": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "54",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "55",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(x**3 + 27)/(sqrt(x + (4)) - (1))"
+  },
+  "sinc_standard_limit": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "63",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "64",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "9*sin(7*x)/x"
+  },
+  "rationalization_sinc_combo": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "1/6",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "7/6",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(sqrt(9 + x) - sqrt(9 - x))/sin(2*x)"
+  },
+  "exponential_sinc_combo": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "9",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "10",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(exp(5*x) + exp(-5*x))*sin(3*x)**2/(2*x**2)"
+  },
+  "half_angle_sinc_combo": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "3",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "sin(4*x)*(1 - cos(1*x))/x**3"
+  },
+  "exponential_standard_limit": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "4/3",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "7/3",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(exp(-4*x) - 1)/(exp(-3*x) - 1)"
+  },
+  "conjugate_infinity": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-3/2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "-1/2",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "sqrt(1*x**2 + 3*x + 0) - (1*x + (3))"
+  },
+  "log_limit_infinity": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "-7",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "-6",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "7*x*(ln(x + (-1)) - ln(x))"
+  },
+  "rational_function_infinity": {
+   "correct": true,
+   "checks": [
+    {
+     "answer": "3/2",
+     "expected": true,
+     "got": true,
+     "reason": "exact"
+    },
+    {
+     "answer": "5/2",
+     "expected": false,
+     "got": false,
+     "reason": "mismatch"
+    }
+   ],
+   "sample_expr": "(3*x**2+9*x)/(2*x**2+8)"
+  }
+ },
+ "counts": {
+  "exercises_total": 57,
+  "mapped": 56,
+  "excluded": 1,
+  "uncovered": 0,
+  "techniques_total": 15,
+  "parameterizable": 11,
+  "curated_only": 4,
+  "all_checks_pass": true
+ },
+ "excluded_reasons": {
+  "2024b": "implicit 'find a' ask (lim ... = 1, find a) rather than a plain limit \u2014 doesn't round-trip through parse_latex"
+ }
+}

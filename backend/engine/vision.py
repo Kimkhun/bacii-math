@@ -37,6 +37,17 @@ normalized coordinates [x1, y1, x2, y2] each between 0 and 1, relative to the im
 (left=0, right=1, top=0, bottom=1). The box must tightly enclose the line's actual ink
 strokes (not empty space above/below). lines_boxes[i] must correspond one-to-one to lines[i].
 
+For each line, ALSO give "lines_confidence": your confidence (float 0-1) that "lines"[i]
+is exactly what was written, and "lines_alt"/"lines_alt_latex": up to 2 GENUINELY plausible
+alternate readings of that SAME line (plain text and LaTeX, same format rules as "lines"/
+"lines_latex" above) when — and ONLY when — the ink is truly ambiguous (e.g. it's unclear
+whether a term sits inside or outside a fraction, an unclear bracket grouping, a digit that
+could be read two ways, a division bar that might or might not extend under a term). Do NOT
+invent alternates for lines you can read clearly — leave "lines_alt"/"lines_alt_latex" as
+empty lists [] for those, which will be most lines. lines_confidence[i]/lines_alt[i]/
+lines_alt_latex[i] must correspond one-to-one to lines[i] (lines_alt[i] and lines_alt_latex[i]
+are themselves lists, e.g. lines_alt[2] = ["(x - 2)(x + 2)(x + 2)"] for one alternate).
+
 IMPORTANT — "lines" MUST be plain-text math, NEVER LaTeX. Do NOT use \frac, \textstyle,
 \displaystyle, \left, \right, \sqrt{}, or any backslash commands in "lines". Khmer glyphs are
 allowed in "lines" (they are plain text, not LaTeX). Fractions go as
@@ -58,19 +69,28 @@ Respond with ONLY a JSON object, no markdown, no extra text, in this exact shape
 {"lines": ["<line 1 plain ASCII>", "<line 2 plain ASCII>", ...],
  "lines_latex": ["<line 1 as LaTeX>", "<line 2 as LaTeX>", ...],
  "lines_boxes": [[x1, y1, x2, y2], [x1, y1, x2, y2], ...],
+ "lines_confidence": [<float 0-1 per line>, ...],
+ "lines_alt": [[], ["<alt reading of an ambiguous line>"], [], ...],
+ "lines_alt_latex": [[], ["<same alt as LaTeX>"], [], ...],
  "raw_text": "<final answer only, as plain text, e.g. 13 or -9+69 or pi/4 or 3-4i>",
  "latex": "<final answer only, as LaTeX>",
  "tokens": ["<ordered individual symbols/numbers of the final answer>"],
  "confidence": <float 0-1, your confidence in the final answer>}
 
-Example — the canvas shows "lim (x^2-16)/(x-4)" then "= ((x-4)(x+4))/(x-4)" then "= x+4" then "= 8":
+Example — the canvas shows "lim (x^2-16)/(x-4)" then "= ((x-4)(x+4))/(x-4)" then "= x+4" then "= 8",
+where line 2's fraction bar length is ambiguous (could be read as missing the "/(x-4)" denominator
+entirely, or as an extra "(x+4)" factor tacked onto the numerator):
 {"lines": ["lim_{x -> 4} (x^2-16)/(x-4)", "= ((x-4)(x+4))/(x-4)", "= x+4", "= 8"],
  "lines_latex": ["\lim_{x \to 4} \frac{x^2-16}{x-4}", "= \frac{(x-4)(x+4)}{x-4}", "= x+4", "= 8"],
  "lines_boxes": [[0.1, 0.05, 0.95, 0.2], [0.1, 0.25, 0.9, 0.4], [0.1, 0.45, 0.6, 0.6], [0.1, 0.65, 0.5, 0.8]],
+ "lines_confidence": [0.95, 0.6, 0.9, 0.95],
+ "lines_alt": [[], ["(x - 2)(x + 2)(x + 2)"], [], []],
+ "lines_alt_latex": [[], ["(x - 2)(x + 2)(x + 2)"], [], []],
  "raw_text": "8", "latex": "8", "tokens": ["8"], "confidence": 0.9}
 
 Only if the image is completely blank (no ink at all), respond with:
-{"lines": [], "lines_latex": [], "lines_boxes": [], "raw_text": "", "latex": "", "tokens": [], "confidence": 0.0}
+{"lines": [], "lines_latex": [], "lines_boxes": [], "lines_confidence": [], "lines_alt": [],
+ "lines_alt_latex": [], "raw_text": "", "latex": "", "tokens": [], "confidence": 0.0}
 """
 
 
@@ -130,6 +150,10 @@ def normalize_line(line: str) -> str:
 
 def normalize_lines(lines) -> list[str]:
     return [normalize_line(line) for line in lines]
+
+
+def normalize_alt_lists(alt_lists: list[list[str]]) -> list[list[str]]:
+    return [normalize_lines(alts) for alts in alt_lists]
 
 
 def _preprocess(image: Image.Image) -> tuple[Image.Image, dict | None]:
@@ -228,6 +252,9 @@ def _finalize(parsed: dict, provider: str, crop: dict | None = None) -> dict:
     parsed.setdefault("lines", [])
     parsed.setdefault("lines_latex", [])
     parsed.setdefault("lines_boxes", [])
+    parsed.setdefault("lines_confidence", [])
+    parsed.setdefault("lines_alt", [])
+    parsed.setdefault("lines_alt_latex", [])
     parsed.setdefault("raw_text", "")
     parsed.setdefault("latex", "")
     parsed.setdefault("tokens", [])
@@ -235,14 +262,29 @@ def _finalize(parsed: dict, provider: str, crop: dict | None = None) -> dict:
     # Plain lines feed analyze_work / the LLM, so normalize any leaked LaTeX.
     # lines_latex is display-only and kept as LaTeX.
     parsed["lines"] = normalize_lines(parsed.get("lines", []))
+    n = len(parsed["lines"])
     boxes = parsed.get("lines_boxes") or []
     # Boxes must line up one-to-one with lines or the overlay misaligns — drop all
     # of them when they don't (the UI falls back to the panel-only view).
-    if len(boxes) == len(parsed["lines"]):
+    if len(boxes) == n:
         mapped = _map_boxes_to_original(boxes, crop)
-        parsed["lines_boxes"] = mapped or [None] * len(parsed["lines"])
+        parsed["lines_boxes"] = mapped or [None] * n
     else:
-        parsed["lines_boxes"] = [None] * len(parsed["lines"])
+        parsed["lines_boxes"] = [None] * n
+
+    conf = parsed.get("lines_confidence") or []
+    parsed["lines_confidence"] = list(conf[:n]) + [1.0] * (n - len(conf)) if len(conf) <= n else conf[:n]
+
+    alts = parsed.get("lines_alt") or []
+    alts = [a if isinstance(a, list) else [] for a in alts]
+    parsed["lines_alt"] = normalize_alt_lists((alts[:n] + [[]] * (n - len(alts))) if len(alts) <= n else alts[:n])
+
+    alts_latex = parsed.get("lines_alt_latex") or []
+    alts_latex = [a if isinstance(a, list) else [] for a in alts_latex]
+    parsed["lines_alt_latex"] = (
+        (alts_latex[:n] + [[]] * (n - len(alts_latex))) if len(alts_latex) <= n else alts_latex[:n]
+    )
+
     parsed["provider"] = provider
     return parsed
 

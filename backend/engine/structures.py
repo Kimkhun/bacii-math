@@ -813,3 +813,101 @@ def _load_complex_curated():
 
 
 _COMPLEX_CURATED_TEMPLATES = _load_complex_curated()
+
+
+# ---------------------------------------------------------------------------
+# Limit technique registry: one entry per solution technique (not per
+# parameterized shape). Flags parameterizability so the generator can draw a
+# dynamic sampler for parameterizable techniques or fall back to curated-only
+# BAC II templates for ones where coefficients don't generalize cleanly.
+# ---------------------------------------------------------------------------
+LIMIT_TECHNIQUES = {
+    "direct_substitution": {
+        "difficulty": "easy",
+        "parameterizable": True,
+        "description": "Evaluate by substituting the target point directly into polynomial, rational, or exponential expressions.",
+    },
+    "factoring_0_0": {
+        "difficulty": "easy",
+        "parameterizable": True,
+        "description": "0/0 indeterminate form resolved by factoring the common (x-c) root from numerator and denominator, cancelling, and substituting.",
+    },
+    "rationalization_conjugate_finite": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at a finite point involving a square root: multiply by the conjugate to rationalize, then cancel and substitute.",
+    },
+    "trig_identity_0_0": {
+        "difficulty": "medium",
+        "parameterizable": False,
+        "description": "0/0 at a finite point using a Pythagorean/trig identity (e.g. sin^2x-1, 1-cos^2x) to factor and cancel. Curated-only: "
+                        "the identity only collapses cleanly at specific angles (sin/cos = 0, +-1), so it doesn't generalize to free coefficients.",
+    },
+    "sinc_standard_limit": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at x=0 using the standard limit sin(kx)/(kx) -> 1, possibly after a linear substitution.",
+    },
+    "angle_addition_0_0": {
+        "difficulty": "medium",
+        "parameterizable": False,
+        "description": "0/0 at x=pi/3 (or similar): rewrite a linear combination a*sin x + b*cos x via the angle-addition identity as "
+                        "R*sin(x - phi), then apply the sinc limit. Curated-only: only specific (a, b, point) triples form a known angle.",
+    },
+    "rationalization_sinc_combo": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at x=0 combining conjugate rationalization of a square-root numerator with the standard sinc limit sin x / x -> 1.",
+    },
+    "exponential_sinc_combo": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at x=0 combining a continuous exponential factor with the standard sinc-squared limit (sin x / x)^2 -> 1.",
+    },
+    "half_angle_sinc_combo": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at x=0 combining sin x factoring with the half-angle limit (1-cos x)/x^2 -> 1/2 and/or the sinc limit.",
+    },
+    "exponential_standard_limit": {
+        "difficulty": "medium",
+        "parameterizable": True,
+        "description": "0/0 at x=0 using the standard exponential limit (e^{kx}-1)/x -> k.",
+    },
+    "conjugate_infinity": {
+        "difficulty": "hard",
+        "parameterizable": True,
+        "description": "Infinity minus infinity at infinity involving a square root: multiply and divide by the conjugate to collapse the "
+                        "difference, then divide by the dominant power.",
+    },
+    "log_limit_infinity": {
+        "difficulty": "hard",
+        "parameterizable": True,
+        "description": "Indeterminate form at infinity involving logarithms: reduce to the standard limit ln(1+u)/u -> 1 as u -> 0.",
+    },
+    "rational_function_infinity": {
+        "difficulty": "hard",
+        "parameterizable": True,
+        "description": "Infinity/infinity at infinity for a rational function: the limit of same-degree polynomial ratios equals the ratio "
+                        "of leading coefficients.",
+    },
+    "log_limit_zero": {
+        "difficulty": "hard",
+        "parameterizable": False,
+        "description": "Indeterminate limit as x->0 involving logarithms (e.g. x*ln(x) -> 0).",
+    },
+    "indeterminate_one_infinity": {
+        "difficulty": "hard",
+        "parameterizable": False,
+        "description": "1^infinity indeterminate forms resolved via standard exponential limits.",
+    },
+}
+
+
+def all_limit_techniques():
+    return dict(LIMIT_TECHNIQUES)
+
+
+def limit_source_label_map():
+    """exam exercise id -> technique id, for every curated limit exercise."""
+    return {item["id"]: item["formula_name"] for item in _LIMIT_CURATED_TEMPLATES}
