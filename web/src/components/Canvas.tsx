@@ -40,6 +40,10 @@ export interface LineSnapshot {
 interface Point {
   x: number;
   y: number;
+  // 0..1, only meaningful when the owning stroke's pointerType is "pen" —
+  // an Apple Pencil / stylus reports real pressure; mouse and touch report a
+  // constant (0.5 or 1), so we only let pressure affect width for "pen".
+  pressure?: number;
 }
 
 interface PathStroke {
@@ -47,6 +51,7 @@ interface PathStroke {
   points: Point[];
   tool: CanvasTool;
   width: number;
+  pointerType?: string;
 }
 
 // A rectangular region erase (used by "write it again" on a mis-read line) —
@@ -64,8 +69,8 @@ const MARGIN_COLOR = "#f2b8b8";
 const INK_COLOR = "#1f2937";
 const LINE_SPACING = 40;
 const MARGIN_X = 64;
-const FULL_W = 1600;
-const FULL_H = 1000;
+export const FULL_W = 1600;
+export const FULL_H = 1000;
 const ERASER_WIDTH = 32;
 
 // "Infinite paper": while the user is writing near the bottom of the page, grow
@@ -105,6 +110,45 @@ function drawSmoothPath(ctx: CanvasRenderingContext2D, points: Point[]) {
   const last = points[points.length - 1];
   ctx.lineTo(last.x, last.y);
   ctx.stroke();
+}
+
+// 0.55x..1.25x of the selected pen size — enough to feel like a real nib
+// (thin on light touch, fuller on a firm press) without letting a heavy hand
+// blow a line out past what's still legible/OCR-able.
+const PRESSURE_MIN_SCALE = 0.55;
+const PRESSURE_MAX_SCALE = 1.25;
+
+// Same smoothing as drawSmoothPath, but strokes each midpoint-to-midpoint
+// segment individually with a width interpolated from that segment's
+// pressure — a tapered, pressure-sensitive line like a real stylus app
+// (Notability/GoodNotes/Procreate), instead of one uniform-width path.
+function drawPressurePath(ctx: CanvasRenderingContext2D, points: Point[], baseWidth: number) {
+  if (points.length === 0) return;
+  const widthAt = (p: Point) => {
+    const pr = p.pressure ?? 0.5;
+    const scale = PRESSURE_MIN_SCALE + pr * (PRESSURE_MAX_SCALE - PRESSURE_MIN_SCALE);
+    return Math.max(1, baseWidth * scale);
+  };
+  if (points.length === 1) {
+    const r = widthAt(points[0]) / 2;
+    ctx.beginPath();
+    ctx.arc(points[0].x, points[0].y, r, 0, Math.PI * 2);
+    ctx.fillStyle = ctx.strokeStyle as string;
+    ctx.fill();
+    return;
+  }
+  let prevMid = points[0];
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const mid = i === points.length - 2 ? p1 : { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+    ctx.lineWidth = widthAt(p0);
+    ctx.beginPath();
+    ctx.moveTo(prevMid.x, prevMid.y);
+    ctx.quadraticCurveTo(p0.x, p0.y, mid.x, mid.y);
+    ctx.stroke();
+    prevMid = mid;
+  }
 }
 
 const MIN_ZOOM = 0.5;
@@ -238,7 +282,11 @@ const Canvas = forwardRef<
       }
       if (stroke.points.length < 1) return;
       strokeStyleFor(ctx, stroke.tool, stroke.width);
-      drawSmoothPath(ctx, stroke.points);
+      if (stroke.tool === "pen" && stroke.pointerType === "pen") {
+        drawPressurePath(ctx, stroke.points, stroke.width);
+      } else {
+        drawSmoothPath(ctx, stroke.points);
+      }
     };
 
     const replayStrokesToInk = () => {
@@ -367,11 +415,12 @@ const Canvas = forwardRef<
       }
     };
 
-    const getPos = (e: React.PointerEvent) => {
+    const getPos = (clientX: number, clientY: number, pressure?: number): Point => {
       const rect = canvasRef.current!.getBoundingClientRect();
       return {
-        x: ((e.clientX - rect.left) / rect.width) * W,
-        y: ((e.clientY - rect.top) / rect.height) * H,
+        x: ((clientX - rect.left) / rect.width) * W,
+        y: ((clientY - rect.top) / rect.height) * H,
+        pressure,
       };
     };
 
@@ -447,10 +496,16 @@ const Canvas = forwardRef<
       e.preventDefault();
       if (e.pointerType === "pen") activePenPointerRef.current = e.pointerId;
       drawing.current = true;
-      const p = getPos(e);
+      const p = getPos(e.clientX, e.clientY, e.pressure);
       const width = toolRef.current === "pen" ? penWidthRef.current : eraserWidthRef.current;
       redoStackRef.current = [];
-      strokesRef.current.push({ kind: "path", points: [p], tool: toolRef.current, width });
+      strokesRef.current.push({
+        kind: "path",
+        points: [p],
+        tool: toolRef.current,
+        width,
+        pointerType: e.pointerType,
+      });
       redraw();
       maybeGrow(p);
     };
@@ -483,9 +538,20 @@ const Canvas = forwardRef<
       }
       if (!drawing.current) return;
       e.preventDefault();
-      const p = getPos(e);
       const stroke = strokesRef.current[strokesRef.current.length - 1];
-      if (stroke.kind === "path") stroke.points.push(p);
+      // A stylus can sample at a much higher rate than pointermove fires;
+      // getCoalescedEvents() recovers those in-between samples so fast
+      // strokes stay smooth instead of turning into short straight segments.
+      const native = e.nativeEvent as PointerEvent;
+      const coalesced = native.getCoalescedEvents?.() ?? [];
+      const events = coalesced.length ? coalesced : [native];
+      let p: Point = getPos(e.clientX, e.clientY, e.pressure);
+      if (stroke.kind === "path") {
+        for (const ev of events) {
+          p = getPos(ev.clientX, ev.clientY, ev.pressure);
+          stroke.points.push(p);
+        }
+      }
       requestRedraw();
       maybeGrow(p);
     };
@@ -635,7 +701,7 @@ const Canvas = forwardRef<
               width={W}
               height={H}
               style={{ width: W * zoom, height: H * zoom, display: "block" }}
-              className={`touch-none ${spaceHeld ? "cursor-grab" : "cursor-none"}`}
+              className={`stylus-surface ${spaceHeld ? "cursor-grab" : "cursor-none"}`}
               onPointerDown={start}
               onPointerMove={move}
               onPointerUp={end}
@@ -644,6 +710,7 @@ const Canvas = forwardRef<
                 hideCursor();
                 end(e);
               }}
+              onContextMenu={(e) => e.preventDefault()}
             />
             {overlay && (
               <div className="absolute inset-0 z-10 pointer-events-none overflow-visible">
@@ -674,7 +741,7 @@ const Canvas = forwardRef<
           width={W}
           height={H}
           style={{ aspectRatio: `${W} / ${H}` }}
-          className="w-full h-auto border border-slate-200 rounded cursor-none touch-none shadow-sm"
+          className="stylus-surface w-full h-auto border border-slate-200 rounded cursor-none shadow-sm"
           onPointerDown={start}
           onPointerMove={move}
           onPointerUp={end}
@@ -683,6 +750,7 @@ const Canvas = forwardRef<
             hideCursor();
             end(e);
           }}
+          onContextMenu={(e) => e.preventDefault()}
         />
         <div
           ref={cursorElRef}

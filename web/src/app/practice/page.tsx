@@ -3,7 +3,7 @@
 import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
-import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, LineSnapshot, PEN_WIDTHS } from "@/components/Canvas";
+import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, FULL_W, LineSnapshot, PEN_WIDTHS } from "@/components/Canvas";
 import MathText from "@/components/MathText";
 import DisambiguationCard, { DisambiguationCandidate } from "@/components/DisambiguationCard";
 import { api, Question, GradeResult, Explanation, DetectResult } from "@/lib/api";
@@ -601,9 +601,42 @@ function PracticeInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tool, penWidth, eraserWidth]);
 
-  const zoomIn = () => setZoom((z) => Math.min(2.5, Math.round((z + 0.25) * 100) / 100));
-  const zoomOut = () => setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100));
+  // Once the user has picked a zoom level themselves (buttons or pinch),
+  // stop auto-fitting on resize/rotation so we never yank the view out from
+  // under them mid-write.
+  const userZoomedRef = useRef(false);
+  const zoomIn = () => {
+    userZoomedRef.current = true;
+    setZoom((z) => Math.min(2.5, Math.round((z + 0.25) * 100) / 100));
+  };
+  const zoomOut = () => {
+    userZoomedRef.current = true;
+    setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100));
+  };
   const zoomReset = () => setZoom(1);
+  const onCanvasZoomChange = (z: number) => {
+    userZoomedRef.current = true;
+    setZoom(z);
+  };
+
+  // Tablet-first default: fit the page to the screen width on open, like a
+  // notes app does, instead of dropping the user into a 100%-zoom page they
+  // have to scroll sideways just to see the margin.
+  useEffect(() => {
+    const fitToWidth = () => {
+      if (userZoomedRef.current) return;
+      const available = window.innerWidth - 48;
+      const fit = Math.min(1, Math.max(0.5, Math.floor((available / FULL_W) * 20) / 20));
+      setZoom(fit);
+    };
+    fitToWidth();
+    window.addEventListener("resize", fitToWidth);
+    window.addEventListener("orientationchange", fitToWidth);
+    return () => {
+      window.removeEventListener("resize", fitToWidth);
+      window.removeEventListener("orientationchange", fitToWidth);
+    };
+  }, []);
 
   const generateOne = async (cfg: SessionConfig) => {
     const q = await api.generate(
@@ -1065,7 +1098,7 @@ function PracticeInner() {
                   key={lab}
                   onClick={() => setActivePart(i)}
                   disabled={busy}
-                  className={`px-2.5 py-1 rounded text-sm font-semibold transition-colors ${
+                  className={`px-2.5 py-1 stylus:px-3 stylus:py-2 rounded text-sm font-semibold transition-colors ${
                     i === partIndex
                       ? "bg-slate-900 text-white"
                       : done
@@ -1091,7 +1124,7 @@ function PracticeInner() {
                 fullscreen
                 zoom={zoom}
                 onChange={markDirty}
-                onZoomChange={setZoom}
+                onZoomChange={onCanvasZoomChange}
                 overlay={
                   marksByPart[i]?.length || linePopsByPart[i]?.length || (i === partIndex && ambiguityQueue?.length) ? (
                     <>
@@ -1112,7 +1145,7 @@ function PracticeInner() {
             fullscreen
             zoom={zoom}
             onChange={markDirty}
-            onZoomChange={setZoom}
+            onZoomChange={onCanvasZoomChange}
             overlay={
               marks?.length || linePops?.length || ambiguityQueue?.length ? (
                 <>
@@ -1126,7 +1159,7 @@ function PracticeInner() {
         )}
 
         {/* Top bar: Find <prompt> ................ Question N of 20  Skip */}
-        <div className="fixed inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-3 pointer-events-none">
+        <div className="fixed inset-x-0 top-0 z-10 flex items-start justify-between gap-3 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] pointer-events-none">
           <div className="pointer-events-auto max-w-2xl bg-white/95 backdrop-blur border border-slate-200 rounded-lg shadow-md px-4 py-2.5">
             {question ? (
               <div className="flex items-baseline gap-2 text-lg text-slate-900">
@@ -1159,7 +1192,7 @@ function PracticeInner() {
             <button
               onClick={skip}
               disabled={busy}
-              className="px-3 py-1.5 rounded-md border border-slate-300 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+              className="px-3 py-1.5 stylus:px-4 stylus:py-2.5 rounded-md border border-slate-300 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
             >
               Skip
             </button>
@@ -1292,13 +1325,17 @@ function PracticeInner() {
           )}
         </div>
 
-        {/* Bottom pill toolbar */}
-        <div className="fixed inset-x-0 bottom-3 z-10 flex justify-center pointer-events-none px-3">
-          <div className="pointer-events-auto flex items-center gap-1 bg-white/95 backdrop-blur border border-slate-200 rounded-full shadow-lg px-2 py-2">
+        {/* Bottom pill toolbar. Buttons pick up bigger touch targets under
+            `stylus:` (pointer: coarse — finger/pen tablets) without bloating
+            them for precise mouse users, and the pill wraps instead of
+            overflowing off-screen on a narrower portrait tablet. Bottom
+            padding respects the safe area for iPad landscape/PWA use. */}
+        <div className="fixed inset-x-0 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-10 flex justify-center pointer-events-none px-3">
+          <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-1 max-w-[95vw] bg-white/95 backdrop-blur border border-slate-200 rounded-[1.75rem] shadow-lg px-2 py-2">
             <button
               onClick={() => selectTool("pen")}
               title="Pen (P)"
-              className={`px-3 py-2 rounded-full text-sm font-medium ${
+              className={`px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium ${
                 tool === "pen" ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
               }`}
             >
@@ -1307,7 +1344,7 @@ function PracticeInner() {
             <button
               onClick={() => selectTool("eraser")}
               title="Eraser (E)"
-              className={`px-3 py-2 rounded-full text-sm font-medium ${
+              className={`px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium ${
                 tool === "eraser" ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
               }`}
             >
@@ -1317,14 +1354,14 @@ function PracticeInner() {
             <button
               onClick={undo}
               disabled={!canUndo}
-              className="px-3 py-2 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+              className="px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40"
             >
               Undo
             </button>
             <button
               onClick={redo}
               disabled={!canRedo}
-              className="px-3 py-2 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+              className="px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40"
             >
               Redo
             </button>
@@ -1338,7 +1375,7 @@ function PracticeInner() {
                 setLinePops(null);
                 markDirty();
               }}
-              className="px-3 py-2 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100"
+              className="px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
               Clear
             </button>
@@ -1346,22 +1383,22 @@ function PracticeInner() {
             <button
               onClick={showHint}
               disabled={busy || !question}
-              className="px-3 py-2 rounded-full text-sm font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-40"
+              className="px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-40"
             >
               {explanation?.steps?.length && hintLevel >= explanation.steps.length ? "All hints shown" : "Hint"}
             </button>
             <button
               onClick={uploadImage}
-              className="px-3 py-2 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100"
+              className="px-3 py-2 stylus:px-4 stylus:py-3 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
               Upload
             </button>
             <div className="flex items-center rounded-full border border-slate-200 overflow-hidden text-xs ml-1">
-              <button onClick={zoomOut} className="px-2 py-2 hover:bg-slate-50" title="Zoom out">
+              <button onClick={zoomOut} className="px-2 py-2 stylus:px-3 stylus:py-3 hover:bg-slate-50" title="Zoom out">
                 −
               </button>
               <span className="px-1.5 min-w-[2.5rem] text-center text-slate-500">{Math.round(zoom * 100)}%</span>
-              <button onClick={zoomIn} className="px-2 py-2 hover:bg-slate-50" title="Zoom in">
+              <button onClick={zoomIn} className="px-2 py-2 stylus:px-3 stylus:py-3 hover:bg-slate-50" title="Zoom in">
                 +
               </button>
             </div>
@@ -1369,12 +1406,12 @@ function PracticeInner() {
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
               placeholder="or type answer"
-              className="ml-1 w-28 px-2 py-2 border border-slate-200 rounded-full text-xs"
+              className="ml-1 w-28 px-2 py-2 stylus:py-3 border border-slate-200 rounded-full text-xs"
             />
             <button
               onClick={check}
               disabled={busy}
-              className="ml-1 px-5 py-2.5 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 disabled:opacity-50"
+              className="ml-1 px-5 py-2.5 stylus:px-6 stylus:py-3.5 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 disabled:opacity-50"
             >
               {busy ? "Working..." : "Check my work"}
             </button>
@@ -1393,7 +1430,7 @@ function PracticeInner() {
             onChange={(e) =>
               tool === "pen" ? selectPenWidth(Number(e.target.value)) : selectEraserWidth(Number(e.target.value))
             }
-            className="w-6 h-24 accent-slate-900 [writing-mode:vertical-lr] [direction:rtl] cursor-pointer"
+            className="w-6 h-24 stylus:w-10 stylus:h-32 accent-slate-900 [writing-mode:vertical-lr] [direction:rtl] cursor-pointer"
             aria-label="Size"
           />
           <span className="text-[10px] text-slate-400">{tool === "pen" ? 1 : 10}</span>
@@ -1404,7 +1441,7 @@ function PracticeInner() {
           <button
             onClick={() => setDebug((d) => !d)}
             title="Toggle debug panel"
-            className={`w-7 h-7 rounded text-[10px] font-bold ${
+            className={`w-7 h-7 stylus:w-9 stylus:h-9 rounded text-[10px] font-bold ${
               debug ? "bg-slate-900 text-white" : "text-slate-400 hover:bg-slate-100"
             }`}
           >

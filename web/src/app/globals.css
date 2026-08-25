@@ -4,8 +4,21 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+html, body {
   @apply bg-slate-50 text-slate-900;
   /* Battambang covers Khmer glyphs only — Latin text falls through to system-ui. */
   font-family: "Battambang", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Stop iOS/iPadOS Safari's rubber-band page bounce from fighting the
+     canvas's own pan/scroll while writing near an edge. */
+  overscroll-behavior: none;
+}
+
+/* Applied to the fullscreen drawing surface: a resting palm or a slow stylus
+   stroke must never trigger text selection, the iOS "Copy/Look Up" callout,
+   or the browser's own touch gestures — the canvas handles pan/zoom itself. */
+.stylus-surface {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
