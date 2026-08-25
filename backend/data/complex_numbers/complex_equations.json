@@ -1,0 +1,85 @@
+{
+  "formula_name": "complex_equations",
+  "topic": "complex_numbers",
+  "description": "Solve equations involving complex unknowns: equations with z and its conjugate, systems of two linear equations in two complex unknowns, and quadratic equations with complex coefficients.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.08.38 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook, Chapter 1 (complex numbers, algebraic form) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 12,
+  "exercises": [
+    {
+      "id": "p21_12",
+      "source_page": 21,
+      "prompt_latex": "\\text{Determine the complex number } z \\text{ knowing that } (1+i)z + (3+2i)\\bar z = 9+4i.",
+      "technique": "Write z=x+iy, substitute, expand, and equate real and imaginary parts to solve for x and y."
+    },
+    {
+      "id": "p21_13",
+      "source_page": 21,
+      "prompt_latex": "\\text{Determine the real numbers } x \\text{ and } y \\text{ knowing that } (2+3i)x + (3-i)y = 7+5i.",
+      "technique": "Expand and equate the real part and imaginary part separately to get a 2x2 real linear system in x and y."
+    },
+    {
+      "id": "p22_16a",
+      "source_page": 22,
+      "prompt_latex": "\\text{Solve the following system of equations in the set of complex numbers:} \\begin{cases} z_1+(2+i)z_2 = 4+5i \\\\ (1+3i)z_1+2z_2 = 2+6i \\end{cases}",
+      "technique": "Linear system in two complex unknowns; solve by substitution or elimination treating i as a constant satisfying i^2=-1."
+    },
+    {
+      "id": "p22_16b",
+      "source_page": 22,
+      "prompt_latex": "\\text{Solve the following system of equations in the set of complex numbers:} \\begin{cases} 2z_1-(1+i)z_2 = 6+2i \\\\ (2+i)z_1+iz_2 = 3+8i \\end{cases}",
+      "technique": "Linear system in two complex unknowns; solve by substitution or elimination treating i as a constant satisfying i^2=-1."
+    },
+    {
+      "id": "p22_17a",
+      "source_page": 22,
+      "prompt_latex": "\\text{Solve the following equation in the set of complex numbers: } z^2+2z+5=0.",
+      "technique": "Quadratic with real coefficients and negative discriminant: use the quadratic formula with the discriminant expressed via i."
+    },
+    {
+      "id": "p22_17b",
+      "source_page": 22,
+      "prompt_latex": "\\text{Solve the following equation in the set of complex numbers: } z^2-4z+5=0.",
+      "technique": "Quadratic with real coefficients and negative discriminant: use the quadratic formula with the discriminant expressed via i."
+    },
+    {
+      "id": "p22_17c",
+      "source_page": 22,
+      "prompt_latex": "\\text{Solve the following equation in the set of complex numbers: } 2z^2-6z+5=0.",
+      "technique": "Quadratic with real coefficients and negative discriminant: use the quadratic formula with the discriminant expressed via i."
+    },
+    {
+      "id": "p22_17d",
+      "source_page": 22,
+      "prompt_latex": "\\text{Solve the following equation in the set of complex numbers: } 9z^2-6z+17=0.",
+      "technique": "Quadratic with real coefficients and negative discriminant: use the quadratic formula with the discriminant expressed via i."
+    },
+    {
+      "id": "p22_18",
+      "source_page": 22,
+      "prompt_latex": "\\text{Determine the real numbers } p \\text{ and } q \\text{ knowing that } z_1=3+i \\text{ is one root of the equation } z^2+pz+q=0. \\text{ Then compute the other root } z_2 \\text{ of the equation.}",
+      "technique": "For a quadratic with real coefficients, complex roots come in conjugate pairs, so z_2=\\bar z_1; use sum/product of roots (z_1+z_2=-p, z_1 z_2=q) to find p and q."
+    },
+    {
+      "id": "p22_19a",
+      "source_page": 22,
+      "prompt_latex": "\\text{Solve the following equation in the set of complex numbers: } z^2-(4+3i)z+1+5i=0.",
+      "technique": "Quadratic with complex coefficients: compute the (complex) discriminant, find its square root in the form a+bi, then apply the quadratic formula."
+    },
+    {
+      "id": "p22_19b",
+      "source_page": 22,
+      "prompt_latex": "\\text{Solve the following equation in the set of complex numbers: } (1+i)z^2+(1-7i)z-8+6i=0.",
+      "technique": "Quadratic with complex coefficients: compute the (complex) discriminant, find its square root in the form a+bi, then apply the quadratic formula."
+    },
+    {
+      "id": "p22_20",
+      "source_page": 22,
+      "prompt_latex": "\\text{Determine the real number } a \\text{ knowing that the equation } z^2-(5+2i)z+a+4i=0 \\text{ has one real root and one complex (non-real) root.}",
+      "technique": "Substitute a real root z=x (x real) into the equation, separate real and imaginary parts to find x and a, then find the other root."
+    }
+  ]
+}

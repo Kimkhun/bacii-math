@@ -1,0 +1,106 @@
+{
+  "formula_name": "de_moivre_power",
+  "topic": "complex_numbers",
+  "description": "Computing integer powers of complex numbers by converting to trigonometric form and applying De Moivre's formula z^n = r^n(cos n theta + i sin n theta), including MCQ power computations, sums of conjugate powers, and geometric-series-of-powers sums.",
+  "source": {
+    "files": [
+      "Scanned Document 24-8-26 at 9.13.16 at night.pdf",
+      "Scanned Document 24-8-26 at 9.17.19 at night.pdf"
+    ],
+    "description": "Cambodian BAC II grade-12 math textbook, De Moivre power exercises spanning two scanned volumes (continuous question numbering) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 15,
+  "exercises": [
+    {
+      "id": "p47_1",
+      "source_page": 47,
+      "prompt_latex": "\\text{Given } z = 1+i \\text{. The value of } z^{100} \\text{ is:} \\quad \\text{(ក) } -2^{50} \\quad \\text{(ខ) } 2^{50} \\quad \\text{(គ) } 2^{50}i \\quad \\text{(ង) } -2^{50}i \\quad \\text{(ច) other answer}",
+      "technique": "De Moivre: convert to trig form then z^n = r^n(cos n theta + i sin n theta)"
+    },
+    {
+      "id": "p47_2",
+      "source_page": 47,
+      "prompt_latex": "\\text{Given } z = \\cos\\frac{\\pi}{12}+i\\sin\\frac{\\pi}{12} \\text{. Calculate } z^{100} \\text{:} \\quad \\text{(ក) } \\cos\\frac{\\pi}{4}+i\\sin\\frac{\\pi}{4} \\quad \\text{(ខ) } \\cos\\frac{\\pi}{3}+i\\sin\\frac{\\pi}{3} \\quad \\text{(គ) } \\cos\\frac{\\pi}{6}+i\\sin\\frac{\\pi}{6} \\quad \\text{(ង) } \\cos\\frac{3\\pi}{4}+i\\sin\\frac{3\\pi}{4} \\quad \\text{(ច) other answer}",
+      "technique": "De Moivre: (cos theta + i sin theta)^n = cos(n theta) + i sin(n theta), reduce n*theta mod 2*pi"
+    },
+    {
+      "id": "p47_3",
+      "source_page": 47,
+      "prompt_latex": "\\text{Given } x \\in \\mathbb{R} \\text{. Compute } \\dfrac{\\left(\\cos\\frac{x}{2}+i\\sin\\frac{x}{2}\\right)^7}{\\left(\\cos\\frac{2x}{3}+i\\sin\\frac{2x}{3}\\right)^5} \\text{:} \\quad \\text{(ក) } \\cos\\frac{x}{6}+i\\sin\\frac{x}{6} \\quad \\text{(ខ) } \\cos\\frac{5x}{6}+i\\sin\\frac{5x}{6} \\quad \\text{(គ) } \\cos\\frac{2x}{3}+i\\sin\\frac{2x}{3} \\quad \\text{(ង) } \\cos\\frac{7x}{6}+i\\sin\\frac{7x}{6} \\quad \\text{(ច) other answer}",
+      "technique": "De Moivre on numerator and denominator, then quotient of trig-form powers"
+    },
+    {
+      "id": "p47_4",
+      "source_page": 47,
+      "prompt_latex": "\\text{Given } z = \\sqrt{2+\\sqrt{2}}+i\\sqrt{2-\\sqrt{2}} \\text{. The value of } z^{14} \\text{ is:} \\quad \\text{(ក) } 2^{14}\\left(\\cos\\frac{7\\pi}{4}+i\\sin\\frac{7\\pi}{4}\\right) \\quad \\text{(ខ) } 2^{14}\\left(\\cos\\frac{3\\pi}{4}+i\\sin\\frac{3\\pi}{4}\\right) \\quad \\text{(គ) } 2^{14}\\left(\\cos\\frac{5\\pi}{4}+i\\sin\\frac{5\\pi}{4}\\right) \\quad \\text{(ង) } 2^{14}\\left(\\cos\\frac{\\pi}{4}+i\\sin\\frac{\\pi}{4}\\right) \\quad \\text{(ច) other answer}",
+      "technique": "convert z to trig form via half-angle identities, then apply De Moivre"
+    },
+    {
+      "id": "p48_5a",
+      "source_page": 48,
+      "prompt_latex": "\\text{Calculate: } z = (1+i\\sqrt{3})^{100}",
+      "technique": "Convert to trig form (r,\\theta), apply De Moivre's formula z^n=r^n(\\cos n\\theta+i\\sin n\\theta), reduce angle mod 2\\pi."
+    },
+    {
+      "id": "p48_5b",
+      "source_page": 48,
+      "prompt_latex": "\\text{Calculate: } z = (1-i)^{2021}",
+      "technique": "Convert to trig form, apply De Moivre's formula, reduce angle mod 2\\pi."
+    },
+    {
+      "id": "p48_5c",
+      "source_page": 48,
+      "prompt_latex": "\\text{Calculate: } z = (-\\sqrt{3}+i)^{200}",
+      "technique": "Convert to trig form, apply De Moivre's formula, reduce angle mod 2\\pi."
+    },
+    {
+      "id": "p48_5d",
+      "source_page": 48,
+      "prompt_latex": "\\text{Calculate: } z = (-2-2i\\sqrt{3})^{555}",
+      "technique": "Convert to trig form, apply De Moivre's formula, reduce angle mod 2\\pi."
+    },
+    {
+      "id": "p48_6a",
+      "source_page": 48,
+      "prompt_latex": "\\text{Calculate: } z = (2+2i\\sqrt{3})^{7} + (2-2i\\sqrt{3})^{7}",
+      "technique": "Sum of a complex number's power and its conjugate's power: convert each to trig form, apply De Moivre, sum (imaginary parts cancel, giving 2r^n\\cos n\\theta)."
+    },
+    {
+      "id": "p48_6b",
+      "source_page": 48,
+      "prompt_latex": "\\text{Calculate: } z = (4\\sqrt{3}+4i)^{1000} + (4\\sqrt{3}-4i)^{1000}",
+      "technique": "Sum of a complex number's power and its conjugate's power via trig form and De Moivre's formula."
+    },
+    {
+      "id": "p48_6c",
+      "source_page": 48,
+      "prompt_latex": "\\text{Calculate: } z = \\left(\\frac{1+i}{\\sqrt{2}}\\right)^n + \\left(\\frac{1-i}{\\sqrt{2}}\\right)^n, \\text{ where } n \\in \\mathbb{Z}",
+      "technique": "Sum of conjugate powers with parametrized exponent n; convert base to trig form (modulus 1) and simplify using De Moivre's formula to 2\\cos(n\\pi/4)."
+    },
+    {
+      "id": "p48_7",
+      "source_page": 48,
+      "prompt_latex": "\\text{Calculate: } S = (1+i) + (1+i)^2 + (1+i)^3 + \\dots + (1+i)^{2021}",
+      "technique": "Sum of a geometric series whose common ratio is a complex number; use the finite geometric series formula S = a\\frac{r^n-1}{r-1}, then simplify using trig form / De Moivre for the resulting power."
+    },
+    {
+      "id": "p52_29",
+      "source_page": 52,
+      "prompt_latex": "\\text{Calculate the 7th power of } z = -\\frac{1}{2} + i\\frac{\\sqrt{3}}{2}",
+      "technique": "Convert to trig form (modulus 1, argument 2\\pi/3), apply De Moivre's formula for n=7."
+    },
+    {
+      "id": "p50_18",
+      "source_page": 50,
+      "prompt_latex": "\\text{Let } Z = \\cos\\frac{2\\pi}{7} + i\\sin\\frac{2\\pi}{7}. \\text{ Write } w = (1+z)^6 \\text{ in trigonometric form.}",
+      "technique": "Add 1 to a point on the unit circle (use half-angle/sum-to-product identities to write 1+z in trig form), then apply De Moivre's formula to raise to the 6th power."
+    },
+    {
+      "id": "p49_15c",
+      "source_page": 49,
+      "prompt_latex": "\\text{Write the complex number } w = -\\frac{1}{2}+i\\frac{1}{2} \\text{ in trigonometric form, then calculate } w^4, \\text{ writing the result in algebraic form.}",
+      "technique": "Compute modulus and argument of w, apply De Moivre's formula for the 4th power, then convert the result back to algebraic form."
+    }
+  ]
+}

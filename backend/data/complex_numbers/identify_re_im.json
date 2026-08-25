@@ -1,0 +1,25 @@
+{
+  "formula_name": "identify_re_im",
+  "topic": "complex_numbers",
+  "description": "Identify the real part Re(z) or imaginary part Im(z) of a complex number given in algebraic form a+bi. Multiple-choice exercises.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.08.38 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook, Chapter 1 (complex numbers, algebraic form) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 2,
+  "exercises": [
+    {
+      "id": "p20_1",
+      "source_page": 20,
+      "prompt_latex": "\\text{Given the complex number } z = 7+2i. \\text{ The real part of } z \\text{ is: (a) } Re(z)=7 \\quad \\text{(b) } Re(z)=-7 \\quad \\text{(c) } Re(z)=2 \\quad \\text{(d) } Re(z)=-2 \\quad \\text{(e) another answer}",
+      "technique": "Definition of real part: for z=a+bi, Re(z)=a."
+    },
+    {
+      "id": "p20_2",
+      "source_page": 20,
+      "prompt_latex": "\\text{Given the complex number } z = 5-4i. \\text{ The imaginary part of } z \\text{ is: (a) } Im(z)=5 \\quad \\text{(b) } Im(z)=-5 \\quad \\text{(c) } Im(z)=-4 \\quad \\text{(d) } Im(z)=4 \\quad \\text{(e) another answer}",
+      "technique": "Definition of imaginary part: for z=a+bi, Im(z)=b."
+    }
+  ]
+}
