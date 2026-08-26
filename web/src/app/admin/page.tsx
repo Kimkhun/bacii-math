@@ -5,10 +5,10 @@ import AuthGuard from "@/components/AuthGuard";
 import MathText from "@/components/MathText";
 import { api, FormulaCatalog, TemplateStructures } from "@/lib/api";
 
-type Tab = "formulas" | "templates";
+type Tab = "overview" | "formulas" | "templates";
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<Tab>("formulas");
+  const [tab, setTab] = useState<Tab>("overview");
   const [topicFilter, setTopicFilter] = useState("all");
   const [catalog, setCatalog] = useState<FormulaCatalog | null>(null);
   const [inventory, setInventory] = useState<TemplateStructures | null>(null);
@@ -43,6 +43,42 @@ export default function AdminPage() {
     (t) => topicFilter === "all" || t.topic === topicFilter
   );
 
+  // Per-topic rollup for the Overview dashboard: how many question types and
+  // exercise-level structures (a limit technique, an integral variant, a
+  // probability scenario, ...) each topic actually has right now, plus which
+  // difficulties and how many are backed by a real curated BAC II exercise
+  // (source_labels non-empty) vs. purely procedural.
+  const topicOverview = (inventory?.topics ?? []).map((t) => {
+    const questionTypes = t.question_types.map((qt) => ({
+      question_type: qt.question_type,
+      count: qt.structures.length,
+    }));
+    const allStructures = t.question_types.flatMap((qt) => qt.structures);
+    const difficulties = [...new Set(allStructures.map((s) => s.difficulty))];
+    const curated = allStructures.filter((s) => s.source_labels.length > 0).length;
+    return {
+      topic: t.topic,
+      questionTypes,
+      structureCount: allStructures.length,
+      difficulties,
+      curated,
+      formulaCount: catalog?.topics.find((c) => c.topic === t.topic)?.entries.length ?? 0,
+    };
+  });
+
+  const visibleOverviewTopics = topicOverview.filter(
+    (t) => topicFilter === "all" || t.topic === topicFilter
+  );
+
+  const totals = {
+    topics: topicOverview.length,
+    questionTypes: topicOverview.reduce((n, t) => n + t.questionTypes.length, 0),
+    structures: topicOverview.reduce((n, t) => n + t.structureCount, 0),
+    formulas: (catalog?.topics ?? []).reduce((n, t) => n + t.entries.length, 0),
+  };
+
+  const DIFFICULTY_ORDER = ["easy", "medium", "hard"];
+
   return (
     <AuthGuard>
       <div className="max-w-5xl mx-auto px-4 py-8">
@@ -53,7 +89,7 @@ export default function AdminPage() {
         ) : (
           <>
             <div className="flex items-center gap-2 mb-3">
-              {(["formulas", "templates"] as Tab[]).map((t) => (
+              {(["overview", "formulas", "templates"] as Tab[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
@@ -61,7 +97,7 @@ export default function AdminPage() {
                     tab === t ? "bg-slate-900 text-white" : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  {t === "formulas" ? "Formulas" : "Templates"}
+                  {t === "overview" ? "Overview" : t === "formulas" ? "Formulas" : "Templates"}
                 </button>
               ))}
             </div>
@@ -81,6 +117,68 @@ export default function AdminPage() {
                 </button>
               ))}
             </div>
+
+            {tab === "overview" && (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+                  {[
+                    { label: "Topics", value: totals.topics },
+                    { label: "Question types", value: totals.questionTypes },
+                    { label: "Exercise types", value: totals.structures },
+                    { label: "Formulas", value: totals.formulas },
+                  ].map((card) => (
+                    <div key={card.label} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+                      <div className="text-2xl font-bold text-slate-900">{card.value}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">{card.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-4">
+                  {visibleOverviewTopics.map((t) => (
+                    <section key={t.topic} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+                        <h2 className="text-lg font-semibold text-slate-900 capitalize">
+                          {t.topic.replace("_", " ")}
+                        </h2>
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                            {t.questionTypes.length} question type{t.questionTypes.length === 1 ? "" : "s"}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                            {t.structureCount} exercise type{t.structureCount === 1 ? "" : "s"}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                            {t.formulaCount} formula{t.formulaCount === 1 ? "" : "s"}
+                          </span>
+                          {t.curated > 0 && (
+                            <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800">
+                              {t.curated} curated (real BAC II)
+                            </span>
+                          )}
+                          {DIFFICULTY_ORDER.filter((d) => t.difficulties.includes(d)).map((d) => (
+                            <span key={d} className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 capitalize">
+                              {d}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {t.questionTypes.map((qt) => (
+                          <span
+                            key={qt.question_type}
+                            className="px-2.5 py-1 rounded-full border border-slate-200 text-xs text-slate-700"
+                          >
+                            {qt.question_type.replace("_", " ")}
+                            <span className="ml-1.5 text-slate-400">{qt.count}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              </>
+            )}
 
             {tab === "formulas" &&
               visibleFormulaTopics.map((topic) => (

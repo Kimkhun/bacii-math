@@ -53,6 +53,11 @@ function markEvents(det: DetectResult, res: GradeResult): { correct: boolean }[]
   return events;
 }
 
+// Values are plain `question_type` strings for topics where that's the only
+// axis of variety (complex, functions). For topics whose real variety is a
+// *technique*/*scenario* one level below question_type (limit's techniques,
+// probability's scenario catalog, integral's per-kind variants), the value is
+// encoded as "<question_type>:<variant>" — see splitTypeValue().
 const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
   complex: [
     { value: "modulus", label: "Modulus" },
@@ -61,14 +66,53 @@ const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: "real_part", label: "Real part" },
     { value: "imaginary_part", label: "Imaginary part" },
   ],
-  limit: [{ value: "limit", label: "Limit" }],
-  integral: [
-    { value: "definite_integral", label: "Definite integral" },
-    { value: "indefinite_integral", label: "Indefinite integral" },
+  limit: [
+    { value: "limit:direct_substitution", label: "Direct substitution" },
+    { value: "limit:factoring_0_0", label: "Factoring (0/0)" },
+    { value: "limit:rationalization_conjugate_finite", label: "Conjugate rationalization" },
+    { value: "limit:sinc_standard_limit", label: "Standard limit sin(x)/x" },
+    { value: "limit:exponential_standard_limit", label: "Standard limit (eˣ-1)/x" },
+    { value: "limit:rationalization_sinc_combo", label: "Conjugate + sinc combo" },
+    { value: "limit:exponential_sinc_combo", label: "Exponential + sinc combo" },
+    { value: "limit:half_angle_sinc_combo", label: "Half-angle + sinc combo" },
+    { value: "limit:rational_function_infinity", label: "Rational function at infinity" },
+    { value: "limit:conjugate_infinity", label: "Conjugate at infinity" },
+    { value: "limit:log_limit_infinity", label: "Logarithmic limit at infinity" },
   ],
-  probability: [{ value: "probability", label: "Probability" }],
+  integral: [
+    { value: "definite_integral", label: "Definite integral (any)" },
+    { value: "definite_integral:polynomial", label: "Definite — polynomial" },
+    { value: "definite_integral:linear_argument", label: "Definite — linear argument" },
+    { value: "definite_integral:mixed_sum", label: "Definite — mixed sum" },
+    { value: "definite_integral:trig", label: "Definite — trig" },
+    { value: "definite_integral:u_substitution", label: "Definite — u-substitution" },
+    { value: "definite_integral:by_parts", label: "Definite — by parts" },
+    { value: "indefinite_integral", label: "Indefinite integral (any)" },
+    { value: "indefinite_integral:power", label: "Indefinite — power" },
+    { value: "indefinite_integral:expand", label: "Indefinite — expand" },
+    { value: "indefinite_integral:split", label: "Indefinite — split" },
+    { value: "indefinite_integral:linear_argument", label: "Indefinite — linear argument" },
+    { value: "indefinite_integral:usub", label: "Indefinite — u-substitution" },
+    { value: "indefinite_integral:trig_sec", label: "Indefinite — trig (sec²)" },
+  ],
+  probability: [
+    { value: "probability:exercise_bag_split_atleast", label: "Balls from a bag" },
+    { value: "probability:exercise_two_bag_odd_even", label: "Two bags of numbered balls" },
+    { value: "probability:exercise_two_box_colors", label: "Two boxes of colors" },
+    { value: "probability:exercise_banknotes", label: "Banknotes" },
+    { value: "probability:exercise_pens", label: "Pens" },
+    { value: "probability:exercise_students", label: "Students" },
+  ],
   functions: [{ value: "study", label: "Curve study & area" }],
 };
+
+// Splits a TYPE_OPTIONS value into the {question_type, variant} pair the
+// generate API actually wants (see the TYPE_OPTIONS comment above).
+function splitTypeValue(value: string): { question_type?: string; variant?: string } {
+  const i = value.indexOf(":");
+  if (i === -1) return { question_type: value };
+  return { question_type: value.slice(0, i), variant: value.slice(i + 1) };
+}
 
 interface AmbiguousLine {
   index: number;
@@ -817,11 +861,14 @@ function PracticeInner() {
   };
 
   const generateOne = async (cfg: SessionConfig): Promise<SessionSlot> => {
+    const { question_type, variant } =
+      cfg.questionType === "any" ? {} : splitTypeValue(cfg.questionType);
     const q = await api.generate(
       cfg.topic === "complex" ? cfg.mode : "templates",
       cfg.difficulty,
       cfg.topic,
-      cfg.questionType === "any" ? undefined : cfg.questionType
+      question_type,
+      variant
     );
     return buildSlot(q);
   };

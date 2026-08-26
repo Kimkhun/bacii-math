@@ -364,10 +364,10 @@ export const api = {
   login: (email: string, password: string) =>
     request<AuthResponse>("/auth/login", { method: "POST", body: { email, password }, auth: "none" }),
   me: () => request<User>("/auth/me"),
-  generate: (generation_mode: string, difficulty: string, topic: string = "complex", question_type?: string) =>
+  generate: (generation_mode: string, difficulty: string, topic: string = "complex", question_type?: string, variant?: string) =>
     request<Question>("/problems/generate", {
       method: "POST",
-      body: { generation_mode, difficulty, topic, question_type },
+      body: { generation_mode, difficulty, topic, question_type, variant },
     }),
   replay: (question_id: string) =>
     request<Question>("/problems/replay", { method: "POST", body: { question_id } }),

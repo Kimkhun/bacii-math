@@ -29,7 +29,9 @@ def _work_usable(step_check: dict | None) -> bool:
 
 
 async def create_question(db: AsyncSession, req: GenerateRequest) -> dict:
-    problem = await generator.generate(req.topic, req.difficulty, req.seed, req.question_type, req.generation_mode)
+    problem = await generator.generate(
+        req.topic, req.difficulty, req.seed, req.question_type, req.generation_mode, variant=req.variant
+    )
     return await persist_problem(db, problem)
 
 
@@ -648,6 +650,11 @@ def _build_integral_structure_payload() -> dict:
                 "source_labels": struct["source_labels"],
             })
         question_types.append({"question_type": qt, "structures": entries})
+
+    _integral_structure_payload = {"topic": "integral", "question_types": question_types}
+    return _integral_structure_payload
+
+
 _limit_structure_payload = None
 
 
@@ -672,9 +679,17 @@ def _build_limit_structure_payload() -> dict:
         entry = {
             "id": technique,
             "technique": technique,
+            "question_type": "limit",
             "difficulty": meta["difficulty"],
             "parameterizable": meta["parameterizable"],
             "description": meta["description"],
+            # Limit techniques don't share one symbolic shape the way e.g.
+            # integral's "ax^2+bx+c" family does — a solving-technique
+            # description is the closest equivalent to what the pattern box
+            # shows for other topics, and (unlike sample_prompt) it's the
+            # same for every instance of the technique, not one example.
+            "pattern": meta["description"],
+            "pattern_latex": None,
             "source_labels": source_labels,
         }
         if meta["parameterizable"]:
