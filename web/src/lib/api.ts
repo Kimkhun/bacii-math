@@ -118,6 +118,27 @@ export interface Question {
   formula_difficulty?: string;
 }
 
+export interface QuestionStep {
+  step_order: number;
+  title: string;
+  detail: string;
+  formula?: string | null;
+}
+
+export interface QuestionDetail {
+  id: string;
+  question_type: string;
+  difficulty: string;
+  prompt: string;
+  prompt_latex: string | null;
+  z_display: string;
+  source: string;
+  formula_tags: string[];
+  formula_difficulty?: string | null;
+  steps: QuestionStep[];
+  graph?: GraphSpec | null;
+}
+
 export interface DetectResult {
   lines: string[];
   lines_latex: string[];
@@ -236,6 +257,7 @@ export interface Attempt {
   formula_breakdown?: FormulaResult[] | null;
   work_text?: string | null;
   step_check?: StepCheck | null;
+  hints_used?: number;
   created_at: string;
 }
 
@@ -281,6 +303,7 @@ export interface AttemptDetail {
   step_check?: StepCheck | null;
   lines_boxes?: (number[] | null)[] | null;
   formula_breakdown?: FormulaResult[] | null;
+  hints_used?: number;
   created_at: string;
   question: {
     id: string;
@@ -304,6 +327,13 @@ export interface FormulaStat {
   missed: number;
 }
 
+export interface FormulaVariant {
+  topic: string;
+  question_type: string;
+  variant: string | null;
+  difficulty: string;
+}
+
 export interface FormulaEntry {
   id: string;
   name_en: string | null;
@@ -311,6 +341,7 @@ export interface FormulaEntry {
   latex: string | null;
   weight: number;
   formulas: string[];
+  variants: FormulaVariant[];
 }
 
 export interface FormulaCatalog {
@@ -371,12 +402,20 @@ export const api = {
     }),
   replay: (question_id: string) =>
     request<Question>("/problems/replay", { method: "POST", body: { question_id } }),
+  question: (question_id: string) => request<QuestionDetail>(`/problems/${question_id}`),
   detect: (image_base64: string) =>
     request<DetectResult>("/vision/detect", { method: "POST", body: { image_base64 } }),
-  grade: (question_id: string, user_answer: string, work_text?: string, lines_boxes?: (number[] | null)[], part?: string) =>
+  grade: (
+    question_id: string,
+    user_answer: string,
+    work_text?: string,
+    lines_boxes?: (number[] | null)[],
+    part?: string,
+    hints_used?: number
+  ) =>
     request<GradeResult>("/problems/grade", {
       method: "POST",
-      body: { question_id, user_answer, work_text, lines_boxes, part },
+      body: { question_id, user_answer, work_text, lines_boxes, part, hints_used },
     }),
   explain: (question_id: string, user_answer?: string, work_text?: string) =>
     request<Explanation>("/problems/explain", { method: "POST", body: { question_id, user_answer, work_text } }),

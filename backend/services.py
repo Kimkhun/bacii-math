@@ -147,7 +147,7 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
     return {"content": content, "provider": provider, "intervened": intervened, "trigger": trigger}
 
 
-async def grade_question(db, user, question_id, user_answer, work_text=None, lines_boxes=None, part=None) -> dict:
+async def grade_question(db, user, question_id, user_answer, work_text=None, lines_boxes=None, part=None, hints_used=0) -> dict:
     question = await db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
@@ -184,6 +184,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
         reason=result["reason"],
         work_text=work_text,
         lines_boxes=lines_boxes,
+        hints_used=hints_used,
     )
     db.add(attempt)
     await db.flush()
@@ -351,6 +352,7 @@ async def list_attempts(db, user, limit=50) -> list:
             "correct": a.correct,
             "reason": a.reason,
             "formula_breakdown": a.formula_breakdown,
+            "hints_used": a.hints_used,
             "created_at": a.created_at,
         }
         for a, q in rows.all()
@@ -389,6 +391,7 @@ async def get_attempt(db, user, attempt_id) -> dict:
         "step_check": attempt.step_check,
         "lines_boxes": attempt.lines_boxes,
         "formula_breakdown": attempt.formula_breakdown,
+        "hints_used": attempt.hints_used,
         "created_at": attempt.created_at,
         "question": {
             "id": question.id,
@@ -541,8 +544,11 @@ async def delete_progress(db: AsyncSession, user, session_id) -> dict:
     return {"deleted": True}
 
 
-def get_formulas_catalog() -> dict:
-    """Full formula registry grouped by topic, for the admin view."""
+async def get_formulas_catalog() -> dict:
+    """Full formula registry grouped by topic, for the admin view and the
+    student-facing formula sheet. Each entry carries `variants`: every
+    generator (topic, question_type, variant, difficulty) combo known to
+    touch that formula, so a "Practice this" link can force it directly."""
     by_group: dict[str, list] = {}
     for tag, e in formulas.FORMULA_REGISTRY.items():
         g = e.get("group") or "other"
@@ -553,6 +559,7 @@ def get_formulas_catalog() -> dict:
             "latex": e.get("latex"),
             "weight": e.get("weight", 1),
             "formulas": e.get("formulas") or [],
+            "variants": await generator.variants_for_formula(tag),
         })
     order = [g for g in ("complex", "limit", "integral", "probability", "functions") if g in by_group]
     return {"topics": [{"topic": g, "entries": by_group[g]} for g in order]}
@@ -788,7 +795,18 @@ async def get_stats(db, user) -> dict:
     )
     by_topic = [{"question_type": qt, "attempts": t, "correct": c or 0} for qt, t, c in rows.all()]
 
-    breakdowns = (await db.scalars(select(Attempt.formula_breakdown).where(Attempt.user_id == user.id))).all()
+    # Restricted to incorrect attempts only: the step-check runs on every
+    # attempt (including correct ones solved via a valid alternative path),
+    # so counting a correct attempt's non-standard-path checkpoints as
+    # "missed" would flag a fake weakness. Only a genuinely wrong final
+    # answer means the formula was actually fumbled.
+    breakdowns = (
+        await db.scalars(
+            select(Attempt.formula_breakdown).where(
+                Attempt.user_id == user.id, Attempt.correct.is_(False)
+            )
+        )
+    ).all()
     by_formula: dict[str, dict] = {}
     for bd in breakdowns:
         for item in bd or []:

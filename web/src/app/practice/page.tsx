@@ -1,13 +1,14 @@
 "use client";
 
 import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, FULL_W, LineSnapshot, PEN_WIDTHS } from "@/components/Canvas";
 import MathText from "@/components/MathText";
 import DisambiguationCard, { DisambiguationCandidate } from "@/components/DisambiguationCard";
 import FunctionGraph from "@/components/FunctionGraph";
-import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary } from "@/lib/api";
+import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry } from "@/lib/api";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
 
 const CURSIVE = "'Caveat', 'Segoe Script', cursive";
@@ -477,6 +478,7 @@ function PracticeInner() {
   // top-left pixel position takes over and is remembered per device.
   const [toolbarPos, setToolbarPos] = useState<{ x: number; y: number } | null>(null);
   const [reviewMode, setReviewMode] = useState(false);
+  const [practicingFormula, setPracticingFormula] = useState<{ id: string; name: string } | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -616,6 +618,63 @@ function PracticeInner() {
         setReviewMode(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load attempt");
+      } finally {
+        setBusy(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Forced formula practice: /practice?formula=<id> (from the formula sheet's
+  // "Practice" link, or a post-grade "Practice this" prompt) looks up the
+  // formula's known generator variants and forces the first one, starting a
+  // normal session so Skip/the question strip/Save all keep working. Falls
+  // back to a normal random session if the formula has no known variant
+  // (e.g. it's curated-only, with nothing procedural to force).
+  useEffect(() => {
+    const formulaId = searchParams.get("formula");
+    if (!formulaId) return;
+    (async () => {
+      setError("");
+      setBusy(true);
+      try {
+        const catalog = await api.formulas();
+        let entry: FormulaEntry | undefined;
+        for (const t of catalog.topics) {
+          entry = t.entries.find((e) => e.id === formulaId);
+          if (entry) break;
+        }
+        const ref = entry?.variants?.[0];
+        const cfg: SessionConfig = ref
+          ? {
+              mode: "templates",
+              topic: ref.topic,
+              questionType: ref.variant ? `${ref.question_type}:${ref.variant}` : ref.question_type,
+              difficulty: ref.difficulty,
+            }
+          : { mode, topic, questionType: "any", difficulty };
+        sessionConfigRef.current = cfg;
+        // Keep the topic/type/difficulty dropdowns in sync with the forced
+        // config — they read from this state, not sessionConfigRef, and
+        // Skip/the question strip only reuse this state as their *next*
+        // question's config once the user changes a dropdown themselves.
+        setMode(cfg.mode);
+        setTopic(cfg.topic);
+        setQuestionType(cfg.questionType);
+        setDifficulty(cfg.difficulty);
+        const slot = await generateOne(cfg);
+        const slots = Array(SESSION_TOTAL).fill(null);
+        slots[0] = slot;
+        setSessionSlots(slots);
+        applySlot(slot);
+        setSessionIndex(1);
+        setSessionCorrect(0);
+        setSessionDone(false);
+        setSessionActive(true);
+        setPracticingFormula({ id: formulaId, name: entry?.name_en ?? formulaId.replaceAll("_", " ") });
+        router.replace("/practice");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to start formula practice");
       } finally {
         setBusy(false);
       }
@@ -876,6 +935,7 @@ function PracticeInner() {
   const startSession = async () => {
     setError("");
     setBusy(true);
+    setPracticingFormula(null);
     try {
       const cfg: SessionConfig = { mode, topic, questionType, difficulty };
       sessionConfigRef.current = cfg;
@@ -985,6 +1045,7 @@ function PracticeInner() {
     setQuestion(null);
     setSessionSlots(Array(SESSION_TOTAL).fill(null));
     initPartState(0);
+    setPracticingFormula(null);
   };
 
   const uploadImage = () => fileRef.current?.click();
@@ -1020,7 +1081,7 @@ function PracticeInner() {
       setDetectResult(finalDet);
       setDetected(finalDet.raw_text || resolvedLines[resolvedLines.length - 1] || "(nothing detected)");
       const answer = finalDet.raw_text || resolvedLines[resolvedLines.length - 1] || "";
-      const res = await api.grade(question.id, answer, work, finalDet.lines_boxes, currentPart ?? undefined);
+      const res = await api.grade(question.id, answer, work, finalDet.lines_boxes, currentPart ?? undefined, hintLevel);
       setResult(res);
       const nowDone = res.correct && res.all_complete;
       if (nowDone) {
@@ -1539,6 +1600,8 @@ function PracticeInner() {
     );
   }
 
+  const bannerShown = reviewMode || !!practicingFormula;
+
   return (
     <AuthGuard>
       <div className="relative">
@@ -1560,12 +1623,25 @@ function PracticeInner() {
             </button>
           </div>
         )}
+        {practicingFormula && !reviewMode && (
+          <div className="fixed top-[76px] left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto">
+            <span>
+              Practicing: <span className="font-semibold capitalize">{practicingFormula.name}</span>
+            </span>
+            <button
+              onClick={() => setPracticingFormula(null)}
+              className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-medium"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         <style>{MARKS_STYLE}</style>
 
         {partLabels.length > 0 && (
           <div
             className={`fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md px-2 py-1.5 pointer-events-auto ${
-              reviewMode ? "top-[124px]" : "top-[76px]"
+              bannerShown ? "top-[124px]" : "top-[76px]"
             }`}
           >
             <span className="text-xs text-[#8a857b] pr-1">Part</span>
@@ -1594,7 +1670,9 @@ function PracticeInner() {
 
         {sessionActive && !reviewMode && (
           <div
-            className="fixed right-3 top-[76px] z-30 flex items-center gap-1 bg-white/95 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md px-1.5 py-1.5 pointer-events-auto"
+            className={`fixed right-3 z-30 flex items-center gap-1 bg-white/95 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md px-1.5 py-1.5 pointer-events-auto ${
+              practicingFormula ? "top-[124px]" : "top-[76px]"
+            }`}
           >
             <button
               onClick={() => goToQuestion(sessionIndex - 1)}
@@ -1841,6 +1919,22 @@ function PracticeInner() {
                 )
               )}
               <div className="mt-1 text-xs text-[#8a857b]">Reason: {result.reason}</div>
+              {!result.correct &&
+                result.step_check?.first_error_line != null &&
+                (() => {
+                  const fumbled = result.step_check!.line_results.find(
+                    (l) => l.line === result.step_check!.first_error_line
+                  )?.formula;
+                  if (!fumbled) return null;
+                  return (
+                    <Link
+                      href={`/practice?formula=${fumbled}`}
+                      className="mt-2 inline-block px-2.5 py-1 rounded-md bg-[#23272e] text-white text-xs font-medium hover:bg-[#31363f]"
+                    >
+                      Practice: {fumbled.replaceAll("_", " ")}
+                    </Link>
+                  );
+                })()}
               {result.graph && (
                 <div className="mt-3 border-t border-[#e4e2db] pt-2">
                   <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">

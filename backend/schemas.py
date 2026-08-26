@@ -51,6 +51,7 @@ class GradeRequest(BaseModel):
     work_text: str | None = None
     lines_boxes: list | None = None
     part: str | None = None
+    hints_used: int = 0
 
 
 class ExplainRequest(BaseModel):

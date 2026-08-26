@@ -66,6 +66,11 @@ export default function HistoryPage() {
                     >
                       {a.correct ? "Correct" : "Wrong"}
                     </span>
+                    {!!a.hints_used && (
+                      <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-700">
+                        {a.hints_used} hint{a.hints_used === 1 ? "" : "s"} used
+                      </span>
+                    )}
                     <span className="ml-auto">{new Date(a.created_at).toLocaleString()}</span>
                   </div>
 
