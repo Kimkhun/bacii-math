@@ -14,10 +14,12 @@ export interface CanvasExportMap {
 
 export interface CanvasHandle {
   getImageBase64: () => string | null;
+  getInkSnapshot: () => string | null;
   getExportMap: () => CanvasExportMap;
   getLineSnapshots: (boxes: (number[] | null)[]) => (LineSnapshot | null)[];
   hasInk: () => boolean;
   loadImage: (dataUrl: string) => void;
+  loadBackgroundInk: (dataUrl: string) => void;
   clear: () => void;
   setTool: (tool: CanvasTool) => void;
   setPenWidth: (width: number) => void;
@@ -62,7 +64,19 @@ interface RectStroke {
   rect: { x1: number; y1: number; x2: number; y2: number };
 }
 
-type Stroke = PathStroke | RectStroke;
+// A previously-drawn page restored as a single flattened layer (used when
+// returning to a question navigated away from mid-answer). Unlike
+// loadImage()/imageRef (the "uploaded photo" path, which is read-only and
+// blocks further drawing), this is just another stroke — the student can keep
+// writing on top of it, erase parts of it, and undo it as one step.
+interface RasterStroke {
+  kind: "raster";
+  img: HTMLImageElement;
+  w: number;
+  h: number;
+}
+
+type Stroke = PathStroke | RectStroke | RasterStroke;
 
 const PAPER_COLOR = "#fdfcf8";
 const LINE_COLOR = "rgba(214, 221, 232, 0.85)"; // #d6dde8 @ 85%
@@ -229,16 +243,28 @@ const Canvas = forwardRef<
     };
 
     const getInkCanvas = () => {
+      // Rounded once and compared/assigned as the same integer throughout —
+      // canvas.width/height always read back as whole pixels, but W * dpr is
+      // essentially never exactly one (devicePixelRatio is a float like
+      // 1.7999999523162842), so comparing against the raw product mismatched
+      // on nearly every call. That made getInkCanvas() clear+resize (wiping
+      // whatever was just painted) on every single call instead of only on
+      // real size changes — including the second call in redraw(), right
+      // after replayStrokesToInk() had just repainted it, and on every
+      // pointer-move frame during redrawCurrentStroke(). Net effect: ink was
+      // drawn correctly but erased again before it ever reached the screen.
+      const w = Math.round(W * dpr);
+      const h = Math.round(H * dpr);
       if (!inkCanvasRef.current) {
         const c = document.createElement("canvas");
-        c.width = W * dpr;
-        c.height = H * dpr;
+        c.width = w;
+        c.height = h;
         inkCanvasRef.current = c;
-      } else if (inkCanvasRef.current.height !== H * dpr || inkCanvasRef.current.width !== W * dpr) {
+      } else if (inkCanvasRef.current.height !== h || inkCanvasRef.current.width !== w) {
         // Resizing clears the buffer; replayStrokesToInk() (called right after,
         // everywhere this matters) repaints it from strokesRef, which is lossless.
-        inkCanvasRef.current.width = W * dpr;
-        inkCanvasRef.current.height = H * dpr;
+        inkCanvasRef.current.width = w;
+        inkCanvasRef.current.height = h;
       }
       return inkCanvasRef.current;
     };
@@ -278,10 +304,13 @@ const Canvas = forwardRef<
     // own layer and composite it — redrawing ~300 lines on every pointer move is
     // what made the cursor lag once the canvas had grown.
     const getBgCanvas = () => {
-      if (!bgCanvasRef.current || bgCanvasRef.current.width !== W * dpr || bgCanvasRef.current.height !== H * dpr) {
+      // Same rounding as getInkCanvas() — see the comment there.
+      const w = Math.round(W * dpr);
+      const h = Math.round(H * dpr);
+      if (!bgCanvasRef.current || bgCanvasRef.current.width !== w || bgCanvasRef.current.height !== h) {
         const c = document.createElement("canvas");
-        c.width = W * dpr;
-        c.height = H * dpr;
+        c.width = w;
+        c.height = h;
         const bgCtx = c.getContext("2d")!;
         bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
         drawRuled(bgCtx);
@@ -296,6 +325,11 @@ const Canvas = forwardRef<
         const { x1, y1, x2, y2 } = stroke.rect;
         ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
         ctx.globalCompositeOperation = "source-over";
+        return;
+      }
+      if (stroke.kind === "raster") {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(stroke.img, 0, 0, stroke.w, stroke.h);
         return;
       }
       if (stroke.points.length < 1) return;
@@ -390,7 +424,7 @@ const Canvas = forwardRef<
       if (!fullscreen) return;
       const isTextInput = (el: EventTarget | null) => {
         const tag = (el as HTMLElement)?.tagName;
-        return tag === "INPUT" || tag === "TEXTAREA";
+        return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
       };
       const onKeyDown = (e: KeyboardEvent) => {
         if (e.code !== "Space" || isTextInput(e.target)) return;
@@ -401,11 +435,18 @@ const Canvas = forwardRef<
         if (e.code !== "Space") return;
         setSpaceHeld(false);
       };
+      // Safety net: if the keyup is ever missed (focus jumps to a native
+      // dropdown/OS dialog mid-hold, tab switch, etc.), space-pan mode would
+      // otherwise latch "on" forever and every future click would pan instead
+      // of draw — with no error to explain why the pen "stopped working".
+      const onBlur = () => setSpaceHeld(false);
       window.addEventListener("keydown", onKeyDown);
       window.addEventListener("keyup", onKeyUp);
+      window.addEventListener("blur", onBlur);
       return () => {
         window.removeEventListener("keydown", onKeyDown);
         window.removeEventListener("keyup", onKeyUp);
+        window.removeEventListener("blur", onBlur);
       };
     }, [fullscreen]);
 
@@ -433,15 +474,18 @@ const Canvas = forwardRef<
         if (s.kind === "rect") {
           s.rect.x1 += dx;
           s.rect.x2 += dx;
-        } else {
+        } else if (s.kind === "path") {
           for (const p of s.points) p.x += dx;
         }
+        // "raster" strokes (restored old work) stay pinned at their original
+        // (0,0) origin — they're a flattened snapshot of the page as it was,
+        // not something meaningful to translate piecemeal.
       }
       for (const s of redoStackRef.current) {
         if (s.kind === "rect") {
           s.rect.x1 += dx;
           s.rect.x2 += dx;
-        } else {
+        } else if (s.kind === "path") {
           for (const p of s.points) p.x += dx;
         }
       }
@@ -668,6 +712,19 @@ const Canvas = forwardRef<
         octx.drawImage(getInkCanvas(), 0, 0, W, H);
         return off.toDataURL("image/png").split(",")[1];
       },
+      getInkSnapshot: () => {
+        // Same ink layer as getImageBase64(), but with a transparent
+        // background instead of getImageBase64()'s opaque white fill (which
+        // is right for OCR, but would blot out the ruled paper lines if
+        // drawn back as a restore layer via loadBackgroundInk()).
+        if (imageDataRef.current || !strokesRef.current.length) return null;
+        replayStrokesToInk();
+        const off = document.createElement("canvas");
+        off.width = W;
+        off.height = H;
+        off.getContext("2d")!.drawImage(getInkCanvas(), 0, 0, W, H);
+        return off.toDataURL("image/png");
+      },
       getExportMap: () => {
         // Maps exported-image pixel coords (what the OCR boxes are in) to canvas
         // internal coords. For strokes the export IS the canvas, so scale 1.
@@ -718,6 +775,24 @@ const Canvas = forwardRef<
           imageRef.current = img;
           imageDataRef.current = dataUrl;
           strokesRef.current = [];
+          redoStackRef.current = [];
+          redraw();
+          onChange?.();
+        };
+        img.src = dataUrl;
+      },
+      loadBackgroundInk: (dataUrl: string) => {
+        // Unlike loadImage(), this appends a normal (editable, undoable)
+        // stroke rather than switching into the read-only "uploaded photo"
+        // mode — used to restore a question's ink when navigating back to it
+        // mid-answer, without freezing the canvas against further writing.
+        const img = new Image();
+        img.onload = () => {
+          // naturalWidth/Height, not the enclosing W/H — those reflect
+          // whatever THIS canvas instance's size happens to be right now,
+          // which won't match the logical size the snapshot was exported at
+          // if the page had grown (infinite paper) before it was captured.
+          strokesRef.current.push({ kind: "raster", img, w: img.naturalWidth, h: img.naturalHeight });
           redoStackRef.current = [];
           redraw();
           onChange?.();

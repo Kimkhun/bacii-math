@@ -83,6 +83,35 @@ interface SessionConfig {
   difficulty: string;
 }
 
+// Snapshot of one part's canvas-adjacent state, captured when navigating away
+// from a question so it can be restored verbatim on return.
+interface PartState {
+  typed: string;
+  detected: string | null;
+  workText: string | null;
+  workLatex: string[] | null;
+  detectResult: DetectResult | null;
+  result: GradeResult | null;
+  marks: ReactNode[] | null;
+  linePops: ReactNode[] | null;
+  // Raw ink snapshot (data URL), captured whenever navigating away from a
+  // part that hasn't been graded yet — grading already preserves the look of
+  // the work via `marks`/`linePops`, but ungraded strokes have nothing else
+  // recording them. Restored via Canvas.loadBackgroundInk() so the student
+  // can keep writing on top of it instead of landing on a frozen image.
+  canvasImage?: string | null;
+}
+
+// One slot in the session's 1..SESSION_TOTAL question list. Slots are filled
+// lazily as the student reaches them; visiting an already-filled slot restores
+// its saved progress instead of generating a new question.
+interface SessionSlot {
+  question: Question;
+  partIndex: number;
+  exerciseDone: boolean;
+  parts: PartState[];
+}
+
 // Re-draw a past attempt's OCR'd writing at its stored box positions. The text
 // is squashed to fit its original box (lengthAdjust) so it reads as it did on
 // the page. Cursive font keeps the "handwritten" feel without storing images.
@@ -373,6 +402,7 @@ function PracticeInner() {
   const [questionType, setQuestionType] = useState("any");
   const [difficulty, setDifficulty] = useState("medium");
   const sessionConfigRef = useRef<SessionConfig | null>(null);
+  const [sessionSlots, setSessionSlots] = useState<(SessionSlot | null)[]>(Array(SESSION_TOTAL).fill(null));
 
   // Per-part state: every sub-part (A/B/C/...) owns its own canvas, typed
   // answer, OCR result, and red-pen marks. Single-part topics use index 0.
@@ -707,15 +737,93 @@ function PracticeInner() {
     });
   };
 
-  const generateOne = async (cfg: SessionConfig) => {
+  const emptyPartState = (): PartState => ({
+    typed: "",
+    detected: null,
+    workText: null,
+    workLatex: null,
+    detectResult: null,
+    result: null,
+    marks: null,
+    linePops: null,
+    canvasImage: null,
+  });
+
+  const buildSlot = (q: Question): SessionSlot => {
+    const n = Math.max(1, q.params?.parts?.length ?? 0);
+    return { question: q, partIndex: 0, exerciseDone: false, parts: Array.from({ length: n }, emptyPartState) };
+  };
+
+  // Load a slot's saved progress into the live per-part state so the canvas
+  // and results panel reflect exactly what the student left behind.
+  const applySlot = (slot: SessionSlot) => {
+    setQuestion(slot.question);
+    setPartIndex(slot.partIndex);
+    setExerciseDone(slot.exerciseDone);
+    setTypedByPart(slot.parts.map((p) => p.typed));
+    setDetectedByPart(slot.parts.map((p) => p.detected));
+    setWorkTextByPart(slot.parts.map((p) => p.workText));
+    setWorkLatexByPart(slot.parts.map((p) => p.workLatex));
+    setDetectResultByPart(slot.parts.map((p) => p.detectResult));
+    setResultByPart(slot.parts.map((p) => p.result));
+    setMarksByPart(slot.parts.map((p) => p.marks));
+    setLinePopsByPart(slot.parts.map((p) => p.linePops));
+    setExplanation(null);
+    setHintLevel(0);
+    setAmbiguityQueue(null);
+    setAmbiguityResolved({});
+    setError("");
+    // Every part's canvas is mounted simultaneously (only hidden via CSS for
+    // non-active parts), so this also wipes any stale ink left over from a
+    // DIFFERENT question that happened to reuse the same part-label keys.
+    canvasRefs.current.forEach((cv, i) => {
+      if (!cv) return;
+      cv.clear();
+      const img = slot.parts[i]?.canvasImage;
+      if (img) cv.loadBackgroundInk(img);
+    });
+  };
+
+  // Snapshot the currently-visible question's state into a slot, so it can be
+  // restored later if the student navigates away and comes back. `freshPart`/
+  // `freshExerciseDone` let a caller that just computed a grade result supply
+  // it directly — React batches the setXxxByPart calls that precede this, so
+  // reading them back from state in the same synchronous pass would be stale.
+  const captureSlot = (freshPart?: PartState, freshExerciseDone?: boolean): SessionSlot | null => {
+    if (!question) return null;
+    const n = Math.max(1, question.params?.parts?.length ?? 0);
+    const parts: PartState[] = Array.from({ length: n }, (_, i) => {
+      const base: PartState =
+        i === partIndex && freshPart
+          ? freshPart
+          : {
+              typed: typedByPart[i] ?? "",
+              detected: detectedByPart[i] ?? null,
+              workText: workTextByPart[i] ?? null,
+              workLatex: workLatexByPart[i] ?? null,
+              detectResult: detectResultByPart[i] ?? null,
+              result: resultByPart[i] ?? null,
+              marks: marksByPart[i] ?? null,
+              linePops: linePopsByPart[i] ?? null,
+            };
+      // Snapshot whatever's actually drawn right now, independent of grading
+      // state — this is what lets an unchecked, half-written answer survive
+      // Skip / jumping to another question and come back intact.
+      const cv = canvasRefs.current[i];
+      const canvasImage = cv?.hasInk() ? cv.getInkSnapshot() : null;
+      return { ...base, canvasImage: canvasImage ?? null };
+    });
+    return { question, partIndex, exerciseDone: freshExerciseDone ?? exerciseDone, parts };
+  };
+
+  const generateOne = async (cfg: SessionConfig): Promise<SessionSlot> => {
     const q = await api.generate(
       cfg.topic === "complex" ? cfg.mode : "templates",
       cfg.difficulty,
       cfg.topic,
       cfg.questionType === "any" ? undefined : cfg.questionType
     );
-    setQuestion(q);
-    initPartState(q.params?.parts?.length ?? 0);
+    return buildSlot(q);
   };
 
   const startSession = async () => {
@@ -724,7 +832,11 @@ function PracticeInner() {
     try {
       const cfg: SessionConfig = { mode, topic, questionType, difficulty };
       sessionConfigRef.current = cfg;
-      await generateOne(cfg);
+      const slot = await generateOne(cfg);
+      const slots = Array(SESSION_TOTAL).fill(null);
+      slots[0] = slot;
+      setSessionSlots(slots);
+      applySlot(slot);
       setSessionIndex(1);
       setSessionCorrect(0);
       setSessionDone(false);
@@ -736,18 +848,62 @@ function PracticeInner() {
     }
   };
 
-  const advanceSession = async (wasCorrect: boolean) => {
+  // Free navigation between the session's 1..SESSION_TOTAL questions. Saves
+  // the current question's progress into its slot, then either restores the
+  // target slot (already visited) or generates it fresh (first visit).
+  const goToQuestion = async (i: number, currentOverride?: SessionSlot | null) => {
+    if (i < 1 || i > SESSION_TOTAL || i === sessionIndex || busy) return;
+    setError("");
+    const current = currentOverride !== undefined ? currentOverride : captureSlot();
+    const slots = sessionSlots.slice();
+    if (current) slots[sessionIndex - 1] = current;
+    let target = slots[i - 1];
+    activeCanvas()?.clear();
+    if (!target) {
+      setBusy(true);
+      try {
+        target = await generateOne(sessionConfigRef.current!);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to generate");
+        setBusy(false);
+        return;
+      }
+      setBusy(false);
+    }
+    slots[i - 1] = target;
+    setSessionSlots(slots);
+    applySlot(target);
+    setSessionIndex(i);
+  };
+
+  const advanceSession = async (wasCorrect: boolean, currentOverride?: SessionSlot | null) => {
     if (wasCorrect) setSessionCorrect((c) => c + 1);
     if (sessionIndex >= SESSION_TOTAL) {
       setSessionDone(true);
       return;
     }
+    await goToQuestion(sessionIndex + 1, currentOverride);
+  };
+
+  const skip = () => goToQuestion(Math.min(sessionIndex + 1, SESSION_TOTAL));
+
+  // Switch topic/question type mid-session: the remaining question list no
+  // longer matches, so clear every other slot and regenerate the current one.
+  const changeTopic = async (nextTopic: string) => {
+    if (nextTopic === topic) return;
+    setTopic(nextTopic);
+    setQuestionType("any");
+    const cfg: SessionConfig = { mode, topic: nextTopic, questionType: "any", difficulty };
+    sessionConfigRef.current = cfg;
     setError("");
     activeCanvas()?.clear();
     setBusy(true);
     try {
-      await generateOne(sessionConfigRef.current!);
-      setSessionIndex((i) => i + 1);
+      const slot = await generateOne(cfg);
+      const slots = Array(SESSION_TOTAL).fill(null);
+      slots[sessionIndex - 1] = slot;
+      setSessionSlots(slots);
+      applySlot(slot);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate");
     } finally {
@@ -755,12 +911,32 @@ function PracticeInner() {
     }
   };
 
-  const skip = () => advanceSession(false);
+  const changeQuestionType = async (nextType: string) => {
+    if (nextType === questionType) return;
+    setQuestionType(nextType);
+    const cfg: SessionConfig = { mode, topic, questionType: nextType, difficulty };
+    sessionConfigRef.current = cfg;
+    setError("");
+    activeCanvas()?.clear();
+    setBusy(true);
+    try {
+      const slot = await generateOne(cfg);
+      const slots = Array(SESSION_TOTAL).fill(null);
+      slots[sessionIndex - 1] = slot;
+      setSessionSlots(slots);
+      applySlot(slot);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const endSession = () => {
     setSessionActive(false);
     setSessionDone(false);
     setQuestion(null);
+    setSessionSlots(Array(SESSION_TOTAL).fill(null));
     initPartState(0);
   };
 
@@ -835,7 +1011,19 @@ function PracticeInner() {
       }
       const newStreak = updateStreak(res.correct);
       setStreak(newStreak);
-      if (nowDone && sessionActive) advanceSession(true);
+      if (nowDone && sessionActive) {
+        const freshPart: PartState = {
+          typed,
+          detected: finalDet.raw_text || resolvedLines[resolvedLines.length - 1] || "(nothing detected)",
+          workText: work ?? null,
+          workLatex: resolvedLatex.length ? resolvedLatex : null,
+          detectResult: finalDet,
+          result: res,
+          marks: nextMarks,
+          linePops: null,
+        };
+        advanceSession(true, captureSlot(freshPart, true));
+      }
 
       // Play the grade sounds in sync with the progressive reveal. When the answer is
       // correct (SymPy-verified), EVERY line celebrates with a rising ding — the
@@ -1063,8 +1251,39 @@ function PracticeInner() {
           firstUndone = i;
         }
       });
-      setExerciseDone(allDone && labels.every((lab) => d.parts[lab]?.correct));
+      const done = allDone && labels.every((lab) => d.parts[lab]?.correct);
+      setExerciseDone(done);
       setPartIndex(firstUndone);
+
+      // Seed slot 1 so the question strip works for a resumed exercise too;
+      // further questions in this ad-hoc session are generated in the same topic.
+      const slot: SessionSlot = {
+        question: d.question,
+        partIndex: firstUndone,
+        exerciseDone: done,
+        parts: labels.map((lab) => ({
+          typed: d.parts[lab]?.typed ?? "",
+          detected: null,
+          workText: d.parts[lab]?.work_text ?? null,
+          workLatex: null,
+          detectResult: null,
+          result: d.parts[lab]?.correct
+            ? ({ correct: true, reason: "saved", expected: "", attempt_id: "" } as GradeResult)
+            : null,
+          marks: null,
+          linePops: null,
+        })),
+      };
+      const slots = Array(SESSION_TOTAL).fill(null);
+      slots[0] = slot;
+      setSessionSlots(slots);
+      setSessionIndex(1);
+      sessionConfigRef.current = {
+        mode: "templates",
+        topic: d.question.topic,
+        questionType: d.question.question_type,
+        difficulty: d.question.difficulty,
+      };
       router.replace("/practice");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to resume");
@@ -1326,6 +1545,52 @@ function PracticeInner() {
           </div>
         )}
 
+        {sessionActive && !reviewMode && (
+          <div
+            className="fixed right-3 top-[76px] z-30 flex items-center gap-1 bg-white/95 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md px-1.5 py-1.5 pointer-events-auto"
+          >
+            <button
+              onClick={() => goToQuestion(sessionIndex - 1)}
+              disabled={busy || sessionIndex <= 1}
+              className="px-1.5 py-1 rounded text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-30"
+              title="Previous question"
+            >
+              ‹
+            </button>
+            <div className="flex items-center gap-0.5 max-w-[220px] overflow-x-auto">
+              {Array.from({ length: SESSION_TOTAL }, (_, idx) => idx + 1).map((n) => {
+                const slot = sessionSlots[n - 1];
+                const done = !!slot?.exerciseDone;
+                return (
+                  <button
+                    key={n}
+                    onClick={() => goToQuestion(n)}
+                    disabled={busy}
+                    className={`shrink-0 w-6 h-6 rounded text-[11px] font-semibold transition-colors ${
+                      n === sessionIndex
+                        ? "bg-[#23272e] text-white"
+                        : done
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "text-[#6b6558] hover:bg-[#faf9f6]"
+                    }`}
+                    title={`Question ${n}${done ? " (done)" : ""}`}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => goToQuestion(sessionIndex + 1)}
+              disabled={busy || sessionIndex >= SESSION_TOTAL}
+              className="px-1.5 py-1 rounded text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-30"
+              title="Next question"
+            >
+              ›
+            </button>
+          </div>
+        )}
+
         {partLabels.length > 0 ? (
           partLabels.map((lab, i) => (
             <div key={lab} className={i === partIndex ? "" : "hidden"}>
@@ -1388,6 +1653,37 @@ function PracticeInner() {
           </div>
 
           <div className="flex items-center gap-3.5 shrink-0">
+            {sessionActive && !reviewMode && (
+              <>
+                <select
+                  value={topic}
+                  onChange={(e) => changeTopic(e.target.value)}
+                  disabled={busy}
+                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white disabled:opacity-50"
+                  title="Switch topic"
+                >
+                  <option value="complex">Complex numbers</option>
+                  <option value="limit">Limits</option>
+                  <option value="integral">Integrals</option>
+                  <option value="probability">Probability</option>
+                  <option value="functions">Functions</option>
+                </select>
+                <select
+                  value={questionType}
+                  onChange={(e) => changeQuestionType(e.target.value)}
+                  disabled={busy}
+                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white disabled:opacity-50"
+                  title="Switch question type"
+                >
+                  <option value="any">Any type</option>
+                  {TYPE_OPTIONS[topic].map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
             {streak > 0 && (
               <span
                 className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-xs font-semibold whitespace-nowrap"
@@ -1398,7 +1694,7 @@ function PracticeInner() {
             )}
             {sessionActive && (
               <span className="text-[12.5px] text-[#8a857b] whitespace-nowrap">
-                Question {sessionIndex} of {SESSION_TOTAL}
+                Q{sessionIndex}/{SESSION_TOTAL} · {sessionCorrect} correct
               </span>
             )}
             {savedFlash && (
