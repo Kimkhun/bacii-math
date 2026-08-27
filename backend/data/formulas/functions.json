@@ -121,5 +121,76 @@
     "formulas": [
       "\\int \\frac{u'}{u}\\,dx = \\ln|u| + C"
     ]
+  },
+  "rational_domain": {
+    "name_en": "Domain of a rational function",
+    "name_km": "ដែនកំណត់នៃអនុគមន៍សនិទាន",
+    "latex": "D_f = \\{x \\in \\mathbb{R} \\mid Q(x) \\neq 0\\}",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "f = \\frac{P}{Q} \\text{ defined } \\iff Q(x) \\neq 0"
+    ]
+  },
+  "euclidean_division": {
+    "name_en": "Polynomial (Euclidean) division",
+    "name_km": "ចែកពហុធា (ចំនួនសេស)",
+    "latex": "P(x) = (x-a)Q(x) + r",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "\\frac{P(x)}{x-a} = Q(x) + \\frac{r}{x-a}"
+    ]
+  },
+  "oblique_asymptote": {
+    "name_en": "Oblique asymptote",
+    "name_km": "អាស៊ីមតូតទ្រេត",
+    "latex": "y = ax + b,\\quad a = \\lim_{x\\to\\infty}\\frac{f(x)}{x},\\quad b = \\lim_{x\\to\\infty}(f(x)-ax)",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "a = \\lim_{x\\to\\infty} \\frac{f(x)}{x}",
+      "b = \\lim_{x\\to\\infty} (f(x) - ax)"
+    ]
+  },
+  "horizontal_asymptote": {
+    "name_en": "Horizontal asymptote",
+    "name_km": "អាស៊ីមតូតដេក",
+    "latex": "y = \\lim_{x\\to\\infty} f(x)",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "\\lim_{x\\to\\infty} f(x) = L \\Rightarrow y = L"
+    ]
+  },
+  "position_asymptote": {
+    "name_en": "Position of the curve vs its asymptote",
+    "name_km": "ទីតាំងខ្សែកោងធៀបនឹងអាស៊ីមតូត",
+    "latex": "\\text{sign of } f(x) - (ax+b)",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "f(x) - (ax+b) > 0 \\Rightarrow C \\text{ above } d"
+    ]
+  },
+  "center_symmetry": {
+    "name_en": "Center of symmetry",
+    "name_km": "ផ្ចិតឆ្លុះ",
+    "latex": "f(a+t) + f(a-t) = 2b",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "I(a,b) \\text{ center of symmetry } \\iff f(a+t)+f(a-t) = 2b"
+    ]
+  },
+  "graph_drawing": {
+    "name_en": "Sketching the graph",
+    "name_km": "ការសង់ក្រាប",
+    "latex": "\\text{curve } (C) \\text{ with its asymptotes and tangents}",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "\\text{draw the curve, its asymptotes and tangents}"
+    ]
   }
 }

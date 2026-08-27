@@ -95,6 +95,14 @@ export default function HistoryPage() {
                     )}
                   </div>
 
+                  {a.strokes_thumb && (
+                    <img
+                      src={a.strokes_thumb}
+                      alt="Your handwriting"
+                      className="mt-2 max-h-36 w-auto max-w-full rounded border border-slate-200 bg-white shadow-sm object-contain"
+                    />
+                  )}
+
                   {missed.length > 0 && (
                     <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                       <span className="text-slate-400">Missed formulas:</span>

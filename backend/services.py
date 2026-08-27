@@ -9,11 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sympy import latex
 
 import cache
-from engine import explainer, formulas, generator, grader, llm, scenarios, solver, structures
+from engine import explainer, formulas, generator, graph_grader, grader, llm, scenarios, solver, structures
 from engine.generator.integrals import (
     _INDEFINITE_VARIANT_BY_DIFFICULTY,
     _INTEGRAL_VARIANT_BY_DIFFICULTY,
 )
+from engine.generator.functions import _FUNCTION_CURATED_TEMPLATES
 from engine.generator.limits import generate_limit_for_technique
 from models import Attempt, Explanation, Question, Step, StudySession, User
 from schemas import GenerateRequest, SaveProgressRequest
@@ -147,7 +148,7 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
     return {"content": content, "provider": provider, "intervened": intervened, "trigger": trigger}
 
 
-async def grade_question(db, user, question_id, user_answer, work_text=None, lines_boxes=None, part=None, hints_used=0) -> dict:
+async def grade_question(db, user, question_id, user_answer, work_text=None, lines_boxes=None, part=None, hints_used=0, strokes=None, strokes_thumb=None) -> dict:
     question = await db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
@@ -185,6 +186,8 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
         work_text=work_text,
         lines_boxes=lines_boxes,
         hints_used=hints_used,
+        strokes=strokes,
+        strokes_thumb=strokes_thumb,
     )
     db.add(attempt)
     await db.flush()
@@ -248,6 +251,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
                 db, user, question.id, result["part"],
                 correct=result["correct"], typed=user_answer,
                 work_text=work_text, lines_boxes=lines_boxes,
+                strokes=strokes, strokes_thumb=strokes_thumb,
             )
         else:
             session = await _upsert_session(db, user, question.id)
@@ -258,6 +262,34 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
 
     await db.commit()
     return resp
+
+
+async def grade_graph_drawing(db, user, question_id, strokes_thumb) -> dict:
+    """Grade a student's hand-drawn graph against the reference using Gemini vision."""
+    question = await db.get(Question, question_id)
+    if question is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
+    if question.topic != "functions":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Graph grading only available for function exercises")
+
+    spec = question.spec or {}
+    graph = spec.get("graph")
+    if not graph:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "This question has no reference graph")
+
+    allowed = await cache.allow_gemini(str(user.id))
+    if not allowed:
+        return {"error": "rate_limited", "message": "Too many requests. Try again later."}
+
+    result = await graph_grader.grade_graph(
+        graph=graph,
+        function_expr=spec.get("function_expr", ""),
+        exercise_text=question.prompt,
+        student_thumb=strokes_thumb,
+    )
+    if result is None:
+        return {"error": "gemini_failed", "message": "Graph grading unavailable. Try again later."}
+    return result
 
 
 async def explain_question(db, user, question_id, user_answer=None, work_text=None) -> dict:
@@ -353,6 +385,7 @@ async def list_attempts(db, user, limit=50) -> list:
             "reason": a.reason,
             "formula_breakdown": a.formula_breakdown,
             "hints_used": a.hints_used,
+            "strokes_thumb": a.strokes_thumb,
             "created_at": a.created_at,
         }
         for a, q in rows.all()
@@ -392,6 +425,8 @@ async def get_attempt(db, user, attempt_id) -> dict:
         "lines_boxes": attempt.lines_boxes,
         "formula_breakdown": attempt.formula_breakdown,
         "hints_used": attempt.hints_used,
+        "strokes": attempt.strokes,
+        "strokes_thumb": attempt.strokes_thumb,
         "created_at": attempt.created_at,
         "question": {
             "id": question.id,
@@ -408,7 +443,7 @@ async def get_attempt(db, user, attempt_id) -> dict:
     }
 
 
-def _merge_part_state(session, part, correct=None, typed=None, work_text=None, lines_boxes=None):
+def _merge_part_state(session, part, correct=None, typed=None, work_text=None, lines_boxes=None, strokes=None, strokes_thumb=None):
     """Merge one part's saved state into the session's JSONB state.
 
     Builds a brand-new nested dict so the JSONB attribute gets a genuinely new
@@ -423,20 +458,24 @@ def _merge_part_state(session, part, correct=None, typed=None, work_text=None, l
         entry["work_text"] = work_text
     if lines_boxes is not None:
         entry["lines_boxes"] = lines_boxes
+    if strokes is not None:
+        entry["strokes"] = strokes
+    if strokes_thumb is not None:
+        entry["strokes_thumb"] = strokes_thumb
     if correct is not None:
         entry["correct"] = bool(correct)
     parts[part or ""] = entry
     session.state = {"parts": parts}
 
 
-async def _upsert_session(db, user, question_id, part=None, correct=None, typed=None, work_text=None, lines_boxes=None):
+async def _upsert_session(db, user, question_id, part=None, correct=None, typed=None, work_text=None, lines_boxes=None, strokes=None, strokes_thumb=None):
     session = await db.scalar(
         select(StudySession).where(StudySession.user_id == user.id, StudySession.question_id == question_id)
     )
     if session is None:
         session = StudySession(user_id=user.id, question_id=question_id, status="in_progress", state={"parts": {}})
         db.add(session)
-    _merge_part_state(session, part or "", correct=correct, typed=typed, work_text=work_text, lines_boxes=lines_boxes)
+    _merge_part_state(session, part or "", correct=correct, typed=typed, work_text=work_text, lines_boxes=lines_boxes, strokes=strokes, strokes_thumb=strokes_thumb)
     return session
 
 
@@ -467,6 +506,7 @@ async def save_progress(db: AsyncSession, user, req: SaveProgressRequest) -> dic
     session = await _upsert_session(
         db, user, req.question_id, req.part,
         typed=req.typed, work_text=req.work_text, lines_boxes=req.lines_boxes,
+        strokes=req.strokes, strokes_thumb=req.strokes_thumb,
     )
     await db.commit()
     # Refresh in the async context so the server-generated updated_at (and all
@@ -583,16 +623,30 @@ async def get_template_inventory() -> dict:
                 elif topic == "probability":
                     variants = scenarios.VARIANT_BY_DIFFICULTY[diff]
                 for variant in variants:
-                    # Show several deterministic samples per variant so the
-                    # parameterized variety (not just one shape) is visible.
-                    samples = 1 if topic == "complex" else 3
-                    for i in range(samples):
-                        try:
-                            problem = await generator.generate(
-                                topic, diff, seed=hash((topic, qt, diff, variant, i)) & 0xFFFFFFFF,
-                                question_type=qt, generation_mode="templates", variant=variant,
-                            )
-                        except Exception:
+                    # One deterministic sample per variant — enough to show the
+                    # shape without repeating the same exercise N times for
+                    # curated-only topics (e.g. functions, which has no
+                    # parameterized sampler). Curated picks are retried until
+                    # distinct so the three difficulty rows never show the same
+                    # exercise twice.
+                    seen_ids: set = set()
+                    for i in range(1):
+                        problem = None
+                        for attempt in range(6):
+                            try:
+                                cand = await generator.generate(
+                                    topic, diff, seed=hash((topic, qt, diff, variant, attempt)) & 0xFFFFFFFF,
+                                    question_type=qt, generation_mode="templates", variant=variant,
+                                )
+                            except Exception:
+                                continue
+                            pid = (cand.get("params") or {}).get("id")
+                            if pid is None or pid not in seen_ids:
+                                problem = cand
+                                if pid is not None:
+                                    seen_ids.add(pid)
+                                break
+                        if problem is None:
                             continue
                         solution = solver.solve(topic, problem["question_type"], problem["params"])
                         difficulties.append({
@@ -728,18 +782,69 @@ def _build_limit_structure_payload() -> dict:
     return _limit_structure_payload
 
 
-async def get_template_structures() -> dict:
-    """One card per unique template structure: the symbolic slot pattern, one
-    deterministic filled sample (prompt + answer), formula tags, and the source
-    BAC II exercise labels that map to it. Grouped by topic → question type."""
-    topics = [_build_integral_structure_payload(), _build_limit_structure_payload()]
+_STRUCTURE_PAYLOAD_CACHE: dict[str, dict] = {}
 
-    for topic in generator.TOPICS:
-        if topic in ("integral", "limit"):
-            continue
-        question_types = []
-        for qt in solver.QUESTION_TYPES_BY_TOPIC.get(topic, ()):
-            entries = []
+
+async def _build_topic_structure_payload(topic: str) -> dict:
+    """Full structure cards for one topic, memoized per topic so repeat
+    requests (and per-topic admin lazy-loading) never re-solve everything."""
+    cached = _STRUCTURE_PAYLOAD_CACHE.get(topic)
+    if cached is not None:
+        return cached
+    if topic == "integral":
+        payload = _build_integral_structure_payload()
+    elif topic == "limit":
+        payload = _build_limit_structure_payload()
+    else:
+        payload = await _build_generic_topic_payload(topic)
+    _STRUCTURE_PAYLOAD_CACHE[topic] = payload
+    return payload
+
+
+async def _build_generic_topic_payload(topic: str) -> dict:
+    """Structure cards for complex / probability / functions (the topics with
+    no dedicated payload builder)."""
+    question_types = []
+    for qt in solver.QUESTION_TYPES_BY_TOPIC.get(topic, ()):
+        entries = []
+        if topic == "functions":
+            # One card per curated exercise (not one per difficulty): each
+            # card shows the exercise's own symbolic pattern and its full
+            # MoEYS sample, so the admin view reflects all 6 real studies.
+            for item in _FUNCTION_CURATED_TEMPLATES:
+                try:
+                    params = {k: v for k, v in item.items()
+                              if k not in ("prompt", "prompt_latex", "pattern", "pattern_latex")}
+                    solution = solver.solve(topic, "study", params)
+                except Exception:
+                    continue
+                entries.append({
+                    "id": f"functions:study:{item.get('id')}",
+                    "question_type": "study",
+                    "difficulty": item.get("difficulty", "hard"),
+                    "pattern": item.get("pattern") or "function study",
+                    "pattern_latex": item.get("pattern_latex"),
+                    "sample_prompt": item.get("prompt") or "",
+                    "sample_prompt_latex": item.get("prompt_latex"),
+                    "sample_answer": str(solution["answer_exact"]),
+                    "sample_answer_latex": solution.get("answer_latex"),
+                    "formula_tags": solution.get("formula_tags", []),
+                    "source_labels": [f"BAC II study: {item.get('id')}"],
+                    "graph": solution.get("graph"),
+                    "parts": [
+                        {
+                            "label": p["label"],
+                            "want": p.get("want"),
+                            "answer_kind": p.get("answer_kind"),
+                            "question_km": p.get("question_km"),
+                            "answer": str(p["answer_exact"]),
+                            "answer_latex": p.get("answer_latex"),
+                            "answer_display": p.get("answer_display"),
+                        }
+                        for p in solution.get("parts", [])
+                    ],
+                })
+        else:
             for diff in ("easy", "medium", "hard"):
                 variants = [None]
                 if topic == "probability":
@@ -771,10 +876,99 @@ async def get_template_structures() -> dict:
                         "formula_tags": solution.get("formula_tags", []),
                         "source_labels": [],
                     })
-            question_types.append({"question_type": qt, "structures": entries})
-        topics.append({"topic": topic, "question_types": question_types})
+        question_types.append({"question_type": qt, "structures": entries})
+    return {"topic": topic, "question_types": question_types}
 
+
+async def get_template_structures(topic: str | None = None) -> dict:
+    """One card per unique template structure: the symbolic slot pattern, one
+    deterministic filled sample (prompt + answer), formula tags, and the source
+    BAC II exercise labels that map to it. Grouped by topic → question type.
+
+    Pass ``topic=`` to build just that topic (memoized per topic), so the admin
+    page can lazy-load topics one at a time instead of paying for all of them
+    on first paint."""
+    if topic is not None:
+        if topic not in generator.TOPICS:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"unknown topic: {topic}")
+        return {"topics": [await _build_topic_structure_payload(topic)]}
+
+    topics = []
+    for t in generator.TOPICS:
+        topics.append(await _build_topic_structure_payload(t))
     return {"topics": topics}
+
+
+def _topic_structure_summary(topic: str) -> dict:
+    """Cheap per-topic rollup (no SymPy solving): question-type counts,
+    difficulties, and curated-exercise counts — matches what
+    ``_build_topic_structure_payload`` emits. Feeds the admin Overview tab."""
+    if topic == "integral":
+        qts: dict[str, int] = {}
+        diffs: set = set()
+        curated = 0
+        for s in structures.all_integral_structures():
+            qts[s["question_type"]] = qts.get(s["question_type"], 0) + 1
+            diffs.add(s.get("difficulty"))
+            if s.get("source_labels"):
+                curated += 1
+        return {
+            "topic": topic,
+            "question_types": [{"question_type": qt, "count": n} for qt, n in qts.items()],
+            "structure_count": sum(qts.values()),
+            "difficulties": sorted(diffs),
+            "curated": curated,
+        }
+
+    if topic == "limit":
+        curated_techniques = {
+            item["formula_name"] for item in structures._LIMIT_CURATED_TEMPLATES
+        }
+        diffs = {meta["difficulty"] for meta in structures.LIMIT_TECHNIQUES.values()}
+        return {
+            "topic": topic,
+            "question_types": [{"question_type": "limit", "count": len(structures.LIMIT_TECHNIQUES)}],
+            "structure_count": len(structures.LIMIT_TECHNIQUES),
+            "difficulties": sorted(diffs),
+            "curated": len(curated_techniques),
+        }
+
+    if topic == "probability":
+        count = sum(len(scenarios.VARIANT_BY_DIFFICULTY.get(d, ())) for d in ("easy", "medium", "hard"))
+        return {
+            "topic": topic,
+            "question_types": [{"question_type": "probability", "count": count}],
+            "structure_count": count,
+            "difficulties": ["easy", "medium", "hard"],
+            "curated": 0,
+        }
+
+    if topic == "functions":
+        items = _FUNCTION_CURATED_TEMPLATES
+        diffs = {item.get("difficulty", "hard") for item in items}
+        return {
+            "topic": topic,
+            "question_types": [{"question_type": "study", "count": len(items)}],
+            "structure_count": len(items),
+            "difficulties": sorted(diffs),
+            "curated": len(items),
+        }
+
+    # complex: one card per (question type, difficulty), curated labels empty.
+    qts = solver.QUESTION_TYPES_BY_TOPIC.get(topic, ())
+    return {
+        "topic": topic,
+        "question_types": [{"question_type": qt, "count": 3} for qt in qts],
+        "structure_count": 3 * len(qts),
+        "difficulties": ["easy", "medium", "hard"],
+        "curated": 0,
+    }
+
+
+async def get_template_summary() -> dict:
+    """Admin Overview rollup: per-topic counts computed from the static
+    registries (no expensive per-structure SymPy solving)."""
+    return {"topics": [_topic_structure_summary(t) for t in generator.TOPICS]}
 
 
 async def get_stats(db, user) -> dict:

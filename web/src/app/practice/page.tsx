@@ -8,13 +8,12 @@ import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, FULL_W, LineSnapshot
 import MathText from "@/components/MathText";
 import DisambiguationCard, { DisambiguationCandidate } from "@/components/DisambiguationCard";
 import FunctionGraph from "@/components/FunctionGraph";
-import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry } from "@/lib/api";
+import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, StrokeDoc } from "@/lib/api";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
 
 const CURSIVE = "'Caveat', 'Segoe Script', cursive";
 
 const MARK_STAGGER_MS = 1000;
-const SESSION_TOTAL = 20;
 
 // Keyframes for the red-pen marks + line pops (shared by every part's canvas).
 const MARKS_STYLE = `
@@ -145,16 +144,6 @@ interface PartState {
   // recording them. Restored via Canvas.loadBackgroundInk() so the student
   // can keep writing on top of it instead of landing on a frozen image.
   canvasImage?: string | null;
-}
-
-// One slot in the session's 1..SESSION_TOTAL question list. Slots are filled
-// lazily as the student reaches them; visiting an already-filled slot restores
-// its saved progress instead of generating a new question.
-interface SessionSlot {
-  question: Question;
-  partIndex: number;
-  exerciseDone: boolean;
-  parts: PartState[];
 }
 
 // Re-draw a past attempt's OCR'd writing at its stored box positions. The text
@@ -435,19 +424,11 @@ function PracticeInner() {
   const [partIndex, setPartIndex] = useState(0);
   const [exerciseDone, setExerciseDone] = useState(false);
 
-  // Session setup (shown before the canvas). Once started, `sessionActive`
-  // drives the "Question N of 20" header + Skip; config stays fixed for the
-  // whole session.
-  const [sessionActive, setSessionActive] = useState(false);
-  const [sessionIndex, setSessionIndex] = useState(1);
-  const [sessionCorrect, setSessionCorrect] = useState(0);
-  const [sessionDone, setSessionDone] = useState(false);
+  // Practice config (defaults until the student picks something and generates).
   const [mode, setMode] = useState("templates");
   const [topic, setTopic] = useState("complex");
   const [questionType, setQuestionType] = useState("any");
   const [difficulty, setDifficulty] = useState("medium");
-  const sessionConfigRef = useRef<SessionConfig | null>(null);
-  const [sessionSlots, setSessionSlots] = useState<(SessionSlot | null)[]>(Array(SESSION_TOTAL).fill(null));
 
   // Per-part state: every sub-part (A/B/C/...) owns its own canvas, typed
   // answer, OCR result, and red-pen marks. Single-part topics use index 0.
@@ -461,6 +442,7 @@ function PracticeInner() {
   const [linePopsByPart, setLinePopsByPart] = useState<(ReactNode[] | null)[]>([]);
 
   const [explanation, setExplanation] = useState<Explanation | null>(null);
+  const [graphGrade, setGraphGrade] = useState<GraphGradeResult | null>(null);
   const [hintLevel, setHintLevel] = useState(0);
   const [ambiguityQueue, setAmbiguityQueue] = useState<AmbiguousLine[] | null>(null);
   const [ambiguityResolved, setAmbiguityResolved] = useState<Record<number, DisambiguationCandidate>>({});
@@ -470,6 +452,9 @@ function PracticeInner() {
   const [tool, setTool] = useState<CanvasTool>("pen");
   const [penWidth, setPenWidth] = useState<number>(PEN_WIDTHS.medium);
   const [eraserWidth, setEraserWidth] = useState<number>(32);
+  const [gridStep, setGridStep] = useState<{ x: number; y: number }>({ x: 1, y: 1 });
+  const [gridScale, setGridScale] = useState(40);
+  const [gridOn, setGridOn] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -552,6 +537,8 @@ function PracticeInner() {
     setPartIndex(i);
     setExplanation(null);
     setError("");
+    // Each part's canvas owns its own grid — reflect it in the toolbar flag.
+    setGridOn(canvasRefs.current[i]?.hasGrid() ?? false);
   };
 
   useEffect(() => {
@@ -615,6 +602,7 @@ function PracticeInner() {
             step_check: d.step_check ?? undefined,
           });
         }
+        if (d.strokes) setPendingStrokes([d.strokes]);
         setReviewMode(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load attempt");
@@ -627,10 +615,9 @@ function PracticeInner() {
 
   // Forced formula practice: /practice?formula=<id> (from the formula sheet's
   // "Practice" link, or a post-grade "Practice this" prompt) looks up the
-  // formula's known generator variants and forces the first one, starting a
-  // normal session so Skip/the question strip/Save all keep working. Falls
-  // back to a normal random session if the formula has no known variant
-  // (e.g. it's curated-only, with nothing procedural to force).
+  // formula's known generator variants and forces the first one, loading it
+  // straight into the canvas. Falls back to a normal random question if the
+  // formula has no known variant (e.g. it's curated-only).
   useEffect(() => {
     const formulaId = searchParams.get("formula");
     if (!formulaId) return;
@@ -653,24 +640,14 @@ function PracticeInner() {
               difficulty: ref.difficulty,
             }
           : { mode, topic, questionType: "any", difficulty };
-        sessionConfigRef.current = cfg;
         // Keep the topic/type/difficulty dropdowns in sync with the forced
-        // config — they read from this state, not sessionConfigRef, and
-        // Skip/the question strip only reuse this state as their *next*
-        // question's config once the user changes a dropdown themselves.
+        // config — they read from this state, and "New question" reuses it.
         setMode(cfg.mode);
         setTopic(cfg.topic);
         setQuestionType(cfg.questionType);
         setDifficulty(cfg.difficulty);
-        const slot = await generateOne(cfg);
-        const slots = Array(SESSION_TOTAL).fill(null);
-        slots[0] = slot;
-        setSessionSlots(slots);
-        applySlot(slot);
-        setSessionIndex(1);
-        setSessionCorrect(0);
-        setSessionDone(false);
-        setSessionActive(true);
+        const q = await generateQuestion(cfg);
+        loadQuestion(q);
         setPracticingFormula({ id: formulaId, name: entry?.name_en ?? formulaId.replaceAll("_", " ") });
         router.replace("/practice");
       } catch (err) {
@@ -695,6 +672,44 @@ function PracticeInner() {
   const selectEraserWidth = (w: number) => {
     setEraserWidth(w);
     canvasRefs.current.forEach((c) => c?.setEraserWidth(w));
+  };
+
+  // Axes is a drawing tool: selecting it spawns the grid (if absent) and
+  // enters axes-edit mode (tap the canvas to move the origin, use the toolbar
+  // scale/Δ controls to resize). Clicking it again while in axes mode hides the
+  // grid and returns to the pen.
+  const selectAxes = () => {
+    const c = activeCanvas();
+    if (!c) return;
+    if (tool === "axes" && gridOn) {
+      c.hideGrid();
+      setGridOn(false);
+      selectTool("pen");
+      return;
+    }
+    if (!gridOn) {
+      c.spawnGrid(gridStep.x, gridStep.y, null, gridScale);
+      setGridOn(true);
+    }
+    selectTool("axes");
+    markDirty();
+  };
+
+  const changeGridStep = (axis: "x" | "y", v: number) => {
+    if (!Number.isFinite(v)) return;
+    const val = Math.max(0.5, Math.min(50, v));
+    setGridStep((s) => {
+      const next = { ...s, [axis]: val };
+      if (gridOn) activeCanvas()?.setGridSteps(next.x, next.y);
+      return next;
+    });
+  };
+
+  const changeGridScale = (v: number) => {
+    if (!Number.isFinite(v)) return;
+    const val = Math.max(10, Math.min(200, v));
+    setGridScale(val);
+    if (gridOn) activeCanvas()?.setGridScale(val);
   };
 
   const undo = () => {
@@ -731,18 +746,26 @@ function PracticeInner() {
         selectTool("pen");
       } else if (k === "e") {
         selectTool("eraser");
+      } else if (k === "r") {
+        selectTool("ruler");
+      } else if (k === "g") {
+        selectAxes();
+      } else if (k === "c") {
+        selectTool("curve");
+      } else if (k === "o") {
+        selectTool("ellipse");
       } else if (k === "[") {
-        if (tool === "pen") selectPenWidth(Math.max(1, penWidth - 1));
-        else selectEraserWidth(Math.max(10, eraserWidth - 1));
+        if (tool === "eraser") selectEraserWidth(Math.max(10, eraserWidth - 1));
+        else selectPenWidth(Math.max(1, penWidth - 1));
       } else if (k === "]") {
-        if (tool === "pen") selectPenWidth(Math.min(30, penWidth + 1));
-        else selectEraserWidth(Math.min(100, eraserWidth + 1));
+        if (tool === "eraser") selectEraserWidth(Math.min(100, eraserWidth + 1));
+        else selectPenWidth(Math.min(30, penWidth + 1));
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tool, penWidth, eraserWidth]);
+  }, [tool, penWidth, eraserWidth, gridOn]);
 
   // Once the user has picked a zoom level themselves (buttons or pinch),
   // stop auto-fitting on resize/rotation so we never yank the view out from
@@ -840,114 +863,57 @@ function PracticeInner() {
     });
   };
 
-  const emptyPartState = (): PartState => ({
-    typed: "",
-    detected: null,
-    workText: null,
-    workLatex: null,
-    detectResult: null,
-    result: null,
-    marks: null,
-    linePops: null,
-    canvasImage: null,
-  });
-
-  const buildSlot = (q: Question): SessionSlot => {
+  // Load a question into the live per-part state so the canvases and results
+  // panel reflect a fresh exercise (or a resumed/forced one).
+  const loadQuestion = (q: Question) => {
     const n = Math.max(1, q.params?.parts?.length ?? 0);
-    return { question: q, partIndex: 0, exerciseDone: false, parts: Array.from({ length: n }, emptyPartState) };
-  };
-
-  // Load a slot's saved progress into the live per-part state so the canvas
-  // and results panel reflect exactly what the student left behind.
-  const applySlot = (slot: SessionSlot) => {
-    setQuestion(slot.question);
-    setPartIndex(slot.partIndex);
-    setExerciseDone(slot.exerciseDone);
-    setTypedByPart(slot.parts.map((p) => p.typed));
-    setDetectedByPart(slot.parts.map((p) => p.detected));
-    setWorkTextByPart(slot.parts.map((p) => p.workText));
-    setWorkLatexByPart(slot.parts.map((p) => p.workLatex));
-    setDetectResultByPart(slot.parts.map((p) => p.detectResult));
-    setResultByPart(slot.parts.map((p) => p.result));
-    setMarksByPart(slot.parts.map((p) => p.marks));
-    setLinePopsByPart(slot.parts.map((p) => p.linePops));
-    setExplanation(null);
-    setHintLevel(0);
-    setAmbiguityQueue(null);
-    setAmbiguityResolved({});
-    setError("");
+    setQuestion(q);
+    initPartState(n);
     // Every part's canvas is mounted simultaneously (only hidden via CSS for
     // non-active parts), so this also wipes any stale ink left over from a
     // DIFFERENT question that happened to reuse the same part-label keys.
-    canvasRefs.current.forEach((cv, i) => {
-      if (!cv) return;
-      cv.clear();
-      const img = slot.parts[i]?.canvasImage;
-      if (img) cv.loadBackgroundInk(img);
+    canvasRefs.current.forEach((cv) => {
+      if (cv) cv.clear();
     });
   };
 
-  // Snapshot the currently-visible question's state into a slot, so it can be
-  // restored later if the student navigates away and comes back. `freshPart`/
-  // `freshExerciseDone` let a caller that just computed a grade result supply
-  // it directly — React batches the setXxxByPart calls that precede this, so
-  // reading them back from state in the same synchronous pass would be stale.
-  const captureSlot = (freshPart?: PartState, freshExerciseDone?: boolean): SessionSlot | null => {
-    if (!question) return null;
-    const n = Math.max(1, question.params?.parts?.length ?? 0);
-    const parts: PartState[] = Array.from({ length: n }, (_, i) => {
-      const base: PartState =
-        i === partIndex && freshPart
-          ? freshPart
-          : {
-              typed: typedByPart[i] ?? "",
-              detected: detectedByPart[i] ?? null,
-              workText: workTextByPart[i] ?? null,
-              workLatex: workLatexByPart[i] ?? null,
-              detectResult: detectResultByPart[i] ?? null,
-              result: resultByPart[i] ?? null,
-              marks: marksByPart[i] ?? null,
-              linePops: linePopsByPart[i] ?? null,
-            };
-      // Snapshot whatever's actually drawn right now, independent of grading
-      // state — this is what lets an unchecked, half-written answer survive
-      // Skip / jumping to another question and come back intact.
-      const cv = canvasRefs.current[i];
-      const canvasImage = cv?.hasInk() ? cv.getInkSnapshot() : null;
-      return { ...base, canvasImage: canvasImage ?? null };
+  // Once a question's canvases are mounted, auto-fit a grid on the
+  // draw-the-graph part to the exercise's reference window, so the student
+  // draws directly over where the graph lives (no manual centering).
+  useEffect(() => {
+    if (!question) return;
+    const parts = (question.params?.parts ?? []) as { label: string; want?: string }[];
+    const graph = question.params?.graph as
+      | { x_min?: number; x_max?: number; y_min?: number; y_max?: number }
+      | undefined;
+    if (!graph || typeof graph.x_min !== "number") return;
+    parts.forEach((p, i) => {
+      if (p.want === "draw") {
+        canvasRefs.current[i]?.fitGridToWindow(graph.x_min!, graph.x_max!, graph.y_min!, graph.y_max!);
+      }
     });
-    return { question, partIndex, exerciseDone: freshExerciseDone ?? exerciseDone, parts };
-  };
+  }, [question]);
 
-  const generateOne = async (cfg: SessionConfig): Promise<SessionSlot> => {
+  const generateQuestion = async (cfg: SessionConfig): Promise<Question> => {
     const { question_type, variant } =
       cfg.questionType === "any" ? {} : splitTypeValue(cfg.questionType);
-    const q = await api.generate(
+    return api.generate(
       cfg.topic === "complex" ? cfg.mode : "templates",
       cfg.difficulty,
       cfg.topic,
       question_type,
       variant
     );
-    return buildSlot(q);
   };
 
-  const startSession = async () => {
+  const newQuestion = async () => {
     setError("");
     setBusy(true);
     setPracticingFormula(null);
     try {
       const cfg: SessionConfig = { mode, topic, questionType, difficulty };
-      sessionConfigRef.current = cfg;
-      const slot = await generateOne(cfg);
-      const slots = Array(SESSION_TOTAL).fill(null);
-      slots[0] = slot;
-      setSessionSlots(slots);
-      applySlot(slot);
-      setSessionIndex(1);
-      setSessionCorrect(0);
-      setSessionDone(false);
-      setSessionActive(true);
+      const q = await generateQuestion(cfg);
+      loadQuestion(q);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate");
     } finally {
@@ -955,96 +921,26 @@ function PracticeInner() {
     }
   };
 
-  // Free navigation between the session's 1..SESSION_TOTAL questions. Saves
-  // the current question's progress into its slot, then either restores the
-  // target slot (already visited) or generates it fresh (first visit).
-  const goToQuestion = async (i: number, currentOverride?: SessionSlot | null) => {
-    if (i < 1 || i > SESSION_TOTAL || i === sessionIndex || busy) return;
-    setError("");
-    const current = currentOverride !== undefined ? currentOverride : captureSlot();
-    const slots = sessionSlots.slice();
-    if (current) slots[sessionIndex - 1] = current;
-    let target = slots[i - 1];
-    activeCanvas()?.clear();
-    if (!target) {
-      setBusy(true);
-      try {
-        target = await generateOne(sessionConfigRef.current!);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to generate");
-        setBusy(false);
-        return;
-      }
-      setBusy(false);
-    }
-    slots[i - 1] = target;
-    setSessionSlots(slots);
-    applySlot(target);
-    setSessionIndex(i);
-  };
-
-  const advanceSession = async (wasCorrect: boolean, currentOverride?: SessionSlot | null) => {
-    if (wasCorrect) setSessionCorrect((c) => c + 1);
-    if (sessionIndex >= SESSION_TOTAL) {
-      setSessionDone(true);
-      return;
-    }
-    await goToQuestion(sessionIndex + 1, currentOverride);
-  };
-
-  const skip = () => goToQuestion(Math.min(sessionIndex + 1, SESSION_TOTAL));
-
-  // Switch topic/question type mid-session: the remaining question list no
-  // longer matches, so clear every other slot and regenerate the current one.
-  const changeTopic = async (nextTopic: string) => {
+  // Update the config dropdowns — they only take effect when the student
+  // presses "New question" (no auto-regeneration while selecting).
+  const changeTopic = (nextTopic: string) => {
     if (nextTopic === topic) return;
     setTopic(nextTopic);
     setQuestionType("any");
-    const cfg: SessionConfig = { mode, topic: nextTopic, questionType: "any", difficulty };
-    sessionConfigRef.current = cfg;
-    setError("");
-    activeCanvas()?.clear();
-    setBusy(true);
-    try {
-      const slot = await generateOne(cfg);
-      const slots = Array(SESSION_TOTAL).fill(null);
-      slots[sessionIndex - 1] = slot;
-      setSessionSlots(slots);
-      applySlot(slot);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate");
-    } finally {
-      setBusy(false);
-    }
   };
 
-  const changeQuestionType = async (nextType: string) => {
+  const changeQuestionType = (nextType: string) => {
     if (nextType === questionType) return;
     setQuestionType(nextType);
-    const cfg: SessionConfig = { mode, topic, questionType: nextType, difficulty };
-    sessionConfigRef.current = cfg;
-    setError("");
-    activeCanvas()?.clear();
-    setBusy(true);
-    try {
-      const slot = await generateOne(cfg);
-      const slots = Array(SESSION_TOTAL).fill(null);
-      slots[sessionIndex - 1] = slot;
-      setSessionSlots(slots);
-      applySlot(slot);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate");
-    } finally {
-      setBusy(false);
-    }
   };
 
-  const endSession = () => {
-    setSessionActive(false);
-    setSessionDone(false);
+  const changeDifficulty = (next: string) => setDifficulty(next);
+  const changeMode = (next: string) => setMode(next);
+
+  const clearPractice = () => {
     setQuestion(null);
-    setSessionSlots(Array(SESSION_TOTAL).fill(null));
     initPartState(0);
+    activeCanvas()?.clear();
     setPracticingFormula(null);
   };
 
@@ -1081,7 +977,14 @@ function PracticeInner() {
       setDetectResult(finalDet);
       setDetected(finalDet.raw_text || resolvedLines[resolvedLines.length - 1] || "(nothing detected)");
       const answer = finalDet.raw_text || resolvedLines[resolvedLines.length - 1] || "";
-      const res = await api.grade(question.id, answer, work, finalDet.lines_boxes, currentPart ?? undefined, hintLevel);
+      const strokes = activeCanvas()?.getStrokes() ?? null;
+      const strokesThumb = activeCanvas()?.getStrokesThumb() ?? null;
+      const strokesToSend =
+        strokes && JSON.stringify(strokes).length <= 500_000 ? strokes : null;
+      const res = await api.grade(
+        question.id, answer, work, finalDet.lines_boxes, currentPart ?? undefined, hintLevel,
+        strokesToSend, strokesThumb,
+      );
       setResult(res);
       const nowDone = res.correct && res.all_complete;
       if (nowDone) {
@@ -1090,6 +993,12 @@ function PracticeInner() {
         setPartIndex((i) => Math.min(i + 1, partLabels.length - 1));
       }
       if (res.explanation) setExplanation(res.explanation);
+      if (question.topic === "functions" && res.graph) {
+        const thumb = activeCanvas()?.getInkSnapshot();
+        if (thumb) {
+          api.gradeGraph(question.id, thumb).then((gg) => setGraphGrade(gg)).catch(() => {});
+        }
+      }
       const map = activeCanvas()?.getExportMap();
       const nextMarks =
         map && finalDet.lines_boxes?.length ? buildMarks(finalDet, res, map, debug) : null;
@@ -1119,19 +1028,6 @@ function PracticeInner() {
       }
       const newStreak = updateStreak(res.correct);
       setStreak(newStreak);
-      if (nowDone && sessionActive) {
-        const freshPart: PartState = {
-          typed,
-          detected: finalDet.raw_text || resolvedLines[resolvedLines.length - 1] || "(nothing detected)",
-          workText: work ?? null,
-          workLatex: resolvedLatex.length ? resolvedLatex : null,
-          detectResult: finalDet,
-          result: res,
-          marks: nextMarks,
-          linePops: null,
-        };
-        advanceSession(true, captureSlot(freshPart, true));
-      }
 
       // Play the grade sounds in sync with the progressive reveal. When the answer is
       // correct (SymPy-verified), EVERY line celebrates with a rising ding — the
@@ -1180,9 +1076,42 @@ function PracticeInner() {
     setError("");
     setResult(null);
     setExplanation(null);
+    setGraphGrade(null);
     setMarks(null);
     setLinePops(null);
     setBusy(true);
+
+    // A "draw the graph" part has no numeric answer — checking it runs the
+    // graph-drawing check (gradeGraph) on the ink instead of OCR grading.
+    const partsArr = (question.params?.parts ?? []) as { label: string; want?: string }[];
+    const activeMeta = currentPart ? partsArr.find((p) => p.label === currentPart) : undefined;
+    if (activeMeta?.want === "draw") {
+      const thumb = activeCanvas()?.getInkSnapshot();
+      if (!thumb) {
+        setError("Draw the graph on the page first.");
+        setBusy(false);
+        return;
+      }
+      try {
+        const gg = await api.gradeGraph(question.id, thumb);
+        setGraphGrade(gg);
+        setResult({
+          correct: true,
+          reason: "graph",
+          expected: "",
+          attempt_id: "",
+          part: currentPart ?? undefined,
+          all_complete: true,
+        } as GradeResult);
+        setExerciseDone(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Graph check failed");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     try {
       const answer = typed.trim();
       if (answer) {
@@ -1272,12 +1201,24 @@ function PracticeInner() {
   const [sessions, setSessions] = useState<SessionSummary[] | null>(null);
   const [savedFlash, setSavedFlash] = useState<string | null>(null);
   const [resumeWriting, setResumeWriting] = useState<(DetectResult | null)[]>([]);
+  // Vector strokes to restore into per-part canvases once they mount (resume +
+  // review). Loaded in an effect so canvasRefs are populated after re-render.
+  const [pendingStrokes, setPendingStrokes] = useState<(StrokeDoc | null)[] | null>(null);
 
   useEffect(() => {
-    if (!sessionActive && !reviewMode) {
+    if (!pendingStrokes) return;
+    pendingStrokes.forEach((doc, i) => {
+      const c = canvasRefs.current[i];
+      if (c && doc) c.loadStrokes(doc);
+    });
+    setPendingStrokes(null);
+  }, [pendingStrokes]);
+
+  useEffect(() => {
+    if (!reviewMode && !question) {
       api.myProgress().then(setSessions).catch(() => {});
     }
-  }, [sessionActive, reviewMode]);
+  }, [reviewMode, question]);
 
   const saveProgressNow = async () => {
     if (!question) {
@@ -1302,9 +1243,14 @@ function PracticeInner() {
           setWorkLatex(det.lines_latex?.length ? det.lines_latex : null);
         }
       }
+      const strokes = activeCanvas()?.getStrokes() ?? null;
+      const strokesThumb = activeCanvas()?.getStrokesThumb() ?? null;
+      const strokesToSend =
+        strokes && JSON.stringify(strokes).length <= 500_000 ? strokes : null;
       const summary = await api.saveProgress(
         question.id, currentPart ?? undefined,
         ty || undefined, wt ?? undefined, boxes ?? undefined,
+        strokesToSend, strokesThumb,
       );
       setSavedFlash(`Saved (${summary.parts_done}/${summary.parts_total} parts)`);
       setTimeout(() => setSavedFlash(null), 3000);
@@ -1333,9 +1279,9 @@ function PracticeInner() {
       if (!d.question) throw new Error("Question missing from saved progress");
       setQuestion(d.question);
       initPartState(labels.length);
-      setSessionActive(true);
       setReviewMode(false);
       setResumeWriting(Array(labels.length).fill(null));
+      const strokesArr: (StrokeDoc | null)[] = Array(labels.length).fill(null);
       let firstUndone = labels.length - 1;
       const allDone = labels.length > 0;
       labels.forEach((lab, i) => {
@@ -1344,6 +1290,7 @@ function PracticeInner() {
         setAt(setTypedByPart, i, st.typed ?? "");
         setAt(setWorkTextByPart, i, st.work_text ?? null);
         setAt(setWorkLatexByPart, i, null);
+        if (st.strokes) strokesArr[i] = st.strokes;
         if (st.lines_boxes?.length) {
           const det = {
             lines: (st.work_text ?? "").split("\n").filter(Boolean),
@@ -1362,36 +1309,14 @@ function PracticeInner() {
       const done = allDone && labels.every((lab) => d.parts[lab]?.correct);
       setExerciseDone(done);
       setPartIndex(firstUndone);
+      setPendingStrokes(strokesArr);
 
-      // Seed slot 1 so the question strip works for a resumed exercise too;
-      // further questions in this ad-hoc session are generated in the same topic.
-      const slot: SessionSlot = {
-        question: d.question,
-        partIndex: firstUndone,
-        exerciseDone: done,
-        parts: labels.map((lab) => ({
-          typed: d.parts[lab]?.typed ?? "",
-          detected: null,
-          workText: d.parts[lab]?.work_text ?? null,
-          workLatex: null,
-          detectResult: null,
-          result: d.parts[lab]?.correct
-            ? ({ correct: true, reason: "saved", expected: "", attempt_id: "" } as GradeResult)
-            : null,
-          marks: null,
-          linePops: null,
-        })),
-      };
-      const slots = Array(SESSION_TOTAL).fill(null);
-      slots[0] = slot;
-      setSessionSlots(slots);
-      setSessionIndex(1);
-      sessionConfigRef.current = {
-        mode: "templates",
-        topic: d.question.topic,
-        questionType: d.question.question_type,
-        difficulty: d.question.difficulty,
-      };
+      // Keep the config dropdowns in sync so "New question" generates in the
+      // resumed exercise's topic/type/difficulty.
+      setMode("templates");
+      setTopic(d.question.topic);
+      setQuestionType(d.question.question_type);
+      setDifficulty(d.question.difficulty);
       router.replace("/practice");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to resume");
@@ -1440,165 +1365,6 @@ function PracticeInner() {
       setBusy(false);
     }
   };
-
-  const showSetup = !reviewMode && !sessionActive;
-
-  if (showSetup) {
-    return (
-      <AuthGuard>
-        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#f2f1ed] px-4">
-          <div className="w-full max-w-md bg-white border border-[#e4e2db] rounded-2xl shadow-sm p-6 space-y-4">
-            <div>
-              <h1 className="text-xl font-bold text-[#23272e]">Start a practice session</h1>
-              <p className="mt-1 text-sm text-[#8a857b]">
-                {SESSION_TOTAL} questions, handwritten and graded instantly.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <label className="block">
-                <span className="text-xs font-medium text-[#6b6558]">Topic</span>
-                <select
-                  value={topic}
-                  onChange={(e) => {
-                    setTopic(e.target.value);
-                    setQuestionType("any");
-                  }}
-                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
-                >
-                  <option value="complex">Complex numbers</option>
-                  <option value="limit">Limits</option>
-                  <option value="integral">Integrals</option>
-                  <option value="probability">Probability</option>
-                  <option value="functions">Functions</option>
-                </select>
-              </label>
-              <label className="block">
-                <span className="text-xs font-medium text-[#6b6558]">Question type</span>
-                <select
-                  value={questionType}
-                  onChange={(e) => setQuestionType(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
-                >
-                  <option value="any">Any type</option>
-                  {TYPE_OPTIONS[topic].map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <span className="text-xs font-medium text-[#6b6558]">Difficulty</span>
-                <select
-                  value={difficulty}
-                  onChange={(e) => setDifficulty(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </label>
-              {topic === "complex" && (
-                <label className="block">
-                  <span className="text-xs font-medium text-[#6b6558]">Generation mode</span>
-                  <select
-                    value={mode}
-                    onChange={(e) => setMode(e.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
-                  >
-                    <option value="templates">Templates</option>
-                    <option value="gemini">Gemini</option>
-                  </select>
-                </label>
-              )}
-            </div>
-            {sessions && sessions.length > 0 && (
-              <div className="border-t border-[#e4e2db] pt-3 space-y-2">
-                <div className="text-xs font-semibold text-[#6b6558] uppercase">
-                  Resume a saved exercise
-                </div>
-                <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                  {sessions.map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex items-center justify-between gap-2 rounded-lg border border-[#dddad1] bg-[#faf9f6] p-2"
-                    >
-                      <div className="min-w-0">
-                        <div className="text-xs font-medium text-[#23272e] truncate">
-                          {(s.question?.prompt ?? "").split("\n")[0]}
-                        </div>
-                        <div className="text-[11px] text-[#8a857b]">
-                          {s.question?.question_type.replace("_", " ")} · {s.parts_done}/{s.parts_total} parts
-                          {s.status === "completed" ? " · done" : ""}
-                        </div>
-                      </div>
-                      <div className="flex gap-1 shrink-0">
-                        <button
-                          onClick={() => loadSession(s.id)}
-                          disabled={busy}
-                          className="px-2.5 py-1 rounded-md bg-[#23272e] text-white text-xs font-medium hover:bg-[#31363f]"
-                        >
-                          Resume
-                        </button>
-                        <button
-                          onClick={() => deleteSession(s.id)}
-                          disabled={busy}
-                          className="px-2 py-1 rounded-md border border-[#dddad1] text-xs text-[#8a857b] hover:bg-white"
-                          title="Delete saved progress"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {error && <p className="text-xs text-red-600">{error}</p>}
-            <button
-              onClick={startSession}
-              disabled={busy}
-              className="w-full px-4 py-2.5 rounded-lg bg-[#23272e] text-white text-sm font-semibold hover:bg-[#31363f] disabled:opacity-50"
-            >
-              {busy ? "Starting..." : `Start session (${SESSION_TOTAL} questions)`}
-            </button>
-          </div>
-        </div>
-      </AuthGuard>
-    );
-  }
-
-  if (sessionDone) {
-    return (
-      <AuthGuard>
-        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#f2f1ed] px-4">
-          <div className="w-full max-w-md bg-white border border-[#e4e2db] rounded-2xl shadow-sm p-6 text-center space-y-4">
-            <h1 className="text-xl font-bold text-[#23272e]">Session complete!</h1>
-            <p className="text-4xl font-extrabold text-emerald-600">
-              {sessionCorrect} / {SESSION_TOTAL}
-            </p>
-            <p className="text-sm text-[#8a857b]">correct on the first check</p>
-            <div className="flex gap-2">
-              <button
-                onClick={startSession}
-                disabled={busy}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-[#23272e] text-white text-sm font-semibold hover:bg-[#31363f] disabled:opacity-50"
-              >
-                Start another session
-              </button>
-              <button
-                onClick={endSession}
-                className="px-4 py-2.5 rounded-lg border border-[#dddad1] text-sm font-medium hover:bg-[#faf9f6]"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      </AuthGuard>
-    );
-  }
 
   const bannerShown = reviewMode || !!practicingFormula;
 
@@ -1668,54 +1434,6 @@ function PracticeInner() {
           </div>
         )}
 
-        {sessionActive && !reviewMode && (
-          <div
-            className={`fixed right-3 z-30 flex items-center gap-1 bg-white/95 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md px-1.5 py-1.5 pointer-events-auto ${
-              practicingFormula ? "top-[124px]" : "top-[76px]"
-            }`}
-          >
-            <button
-              onClick={() => goToQuestion(sessionIndex - 1)}
-              disabled={busy || sessionIndex <= 1}
-              className="px-1.5 py-1 rounded text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-30"
-              title="Previous question"
-            >
-              ‹
-            </button>
-            <div className="flex items-center gap-0.5 max-w-[220px] overflow-x-auto">
-              {Array.from({ length: SESSION_TOTAL }, (_, idx) => idx + 1).map((n) => {
-                const slot = sessionSlots[n - 1];
-                const done = !!slot?.exerciseDone;
-                return (
-                  <button
-                    key={n}
-                    onClick={() => goToQuestion(n)}
-                    disabled={busy}
-                    className={`shrink-0 w-6 h-6 rounded text-[11px] font-semibold transition-colors ${
-                      n === sessionIndex
-                        ? "bg-[#23272e] text-white"
-                        : done
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "text-[#6b6558] hover:bg-[#faf9f6]"
-                    }`}
-                    title={`Question ${n}${done ? " (done)" : ""}`}
-                  >
-                    {n}
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              onClick={() => goToQuestion(sessionIndex + 1)}
-              disabled={busy || sessionIndex >= SESSION_TOTAL}
-              className="px-1.5 py-1 rounded text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-30"
-              title="Next question"
-            >
-              ›
-            </button>
-          </div>
-        )}
-
         {partLabels.length > 0 ? (
           partLabels.map((lab, i) => (
             <div key={lab} className={i === partIndex ? "" : "hidden"}>
@@ -1773,19 +1491,20 @@ function PracticeInner() {
                 )}
               </div>
             ) : (
-              <span className="text-[#8a857b] text-sm">Loading question…</span>
+              <span className="text-[#8a857b] text-sm">
+                Pick a topic &amp; difficulty, then press New question.
+              </span>
             )}
           </div>
 
           <div className="flex items-center gap-3.5 shrink-0">
-            {sessionActive && !reviewMode && (
+            {!reviewMode && (
               <>
                 <select
                   value={topic}
                   onChange={(e) => changeTopic(e.target.value)}
-                  disabled={busy}
-                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white disabled:opacity-50"
-                  title="Switch topic"
+                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                  title="Topic"
                 >
                   <option value="complex">Complex numbers</option>
                   <option value="limit">Limits</option>
@@ -1796,9 +1515,8 @@ function PracticeInner() {
                 <select
                   value={questionType}
                   onChange={(e) => changeQuestionType(e.target.value)}
-                  disabled={busy}
-                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white disabled:opacity-50"
-                  title="Switch question type"
+                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                  title="Question type"
                 >
                   <option value="any">Any type</option>
                   {TYPE_OPTIONS[topic].map((t) => (
@@ -1807,6 +1525,27 @@ function PracticeInner() {
                     </option>
                   ))}
                 </select>
+                <select
+                  value={difficulty}
+                  onChange={(e) => changeDifficulty(e.target.value)}
+                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                  title="Difficulty"
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+                {topic === "complex" && (
+                  <select
+                    value={mode}
+                    onChange={(e) => changeMode(e.target.value)}
+                    className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                    title="Generation mode"
+                  >
+                    <option value="templates">Templates</option>
+                    <option value="gemini">Gemini</option>
+                  </select>
+                )}
               </>
             )}
             {streak > 0 && (
@@ -1817,15 +1556,52 @@ function PracticeInner() {
                 🔥 {streak}
               </span>
             )}
-            {sessionActive && (
-              <span className="text-[12.5px] text-[#8a857b] whitespace-nowrap">
-                Q{sessionIndex}/{SESSION_TOTAL} · {sessionCorrect} correct
-              </span>
-            )}
             {savedFlash && (
               <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
                 {savedFlash}
               </span>
+            )}
+            {sessions && sessions.length > 0 && !reviewMode && (
+              <details className="relative">
+                <summary className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+                  Saved ({sessions.length})
+                </summary>
+                <div className="absolute right-0 top-full mt-1.5 w-72 max-h-64 overflow-y-auto bg-white border border-[#e4e2db] rounded-lg shadow-lg p-2 space-y-1.5 z-40">
+                  {sessions.map((s) => (
+                    <div
+                      key={s.id}
+                      className="flex items-center justify-between gap-2 rounded-md border border-[#e4e2db] bg-[#faf9f6] p-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-xs font-medium text-[#23272e] truncate">
+                          {(s.question?.prompt ?? "").split("\n")[0]}
+                        </div>
+                        <div className="text-[11px] text-[#8a857b]">
+                          {s.question?.question_type.replace("_", " ")} · {s.parts_done}/{s.parts_total} parts
+                          {s.status === "completed" ? " · done" : ""}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <button
+                          onClick={() => loadSession(s.id)}
+                          disabled={busy}
+                          className="px-2.5 py-1 rounded-md bg-[#23272e] text-white text-xs font-medium hover:bg-[#31363f]"
+                        >
+                          Resume
+                        </button>
+                        <button
+                          onClick={() => deleteSession(s.id)}
+                          disabled={busy}
+                          className="px-2 py-1 rounded-md border border-[#dddad1] text-xs text-[#8a857b] hover:bg-white"
+                          title="Delete saved progress"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
             )}
             <button
               onClick={saveProgressNow}
@@ -1836,11 +1612,12 @@ function PracticeInner() {
               Save
             </button>
             <button
-              onClick={skip}
+              onClick={newQuestion}
               disabled={busy}
-              className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
+              className="px-[15px] py-2 stylus:px-5 stylus:py-3 rounded-[7px] bg-[#23272e] text-white text-[12.5px] font-semibold hover:bg-[#31363f] disabled:opacity-50"
+              title="Generate a new question"
             >
-              Skip
+              {busy ? "Working..." : "New question"}
             </button>
           </div>
         </div>
@@ -1868,6 +1645,15 @@ function PracticeInner() {
                   ? `Part ${result.part ?? ""} correct`
                   : "Incorrect"}
               </div>
+              {exerciseDone && (
+                <button
+                  onClick={newQuestion}
+                  disabled={busy}
+                  className="mt-2 w-full px-3 py-2 rounded-lg bg-[#23272e] text-white text-xs font-semibold hover:bg-[#31363f] disabled:opacity-50"
+                >
+                  {busy ? "Working..." : "Next question →"}
+                </button>
+              )}
               {partLabels.length > 0 && (
                 <div className="mt-1 flex items-center gap-1 text-xs">
                   {partLabels.map((lab, i) => (
@@ -1960,6 +1746,53 @@ function PracticeInner() {
                           reference curve.
                         </div>
                       )}
+                    </div>
+                  )}
+                  {graphGrade && !graphGrade.error && (
+                    <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                      <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
+                        Graph Drawing Assessment
+                      </div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className={`text-lg font-bold ${graphGrade.score! >= 80 ? "text-emerald-700" : graphGrade.score! >= 60 ? "text-amber-600" : "text-red-600"}`}>
+                          {graphGrade.score}/100
+                        </span>
+                        <div className="flex gap-1.5 text-xs">
+                          {graphGrade.curve_correct !== undefined && (
+                            <span className={graphGrade.curve_correct ? "text-emerald-700" : "text-red-600"}>
+                              Curve {graphGrade.curve_correct ? "✓" : "✗"}
+                            </span>
+                          )}
+                          {graphGrade.asymptotes_correct !== undefined && (
+                            <span className={graphGrade.asymptotes_correct ? "text-emerald-700" : "text-red-600"}>
+                              Asymptotes {graphGrade.asymptotes_correct ? "✓" : "✗"}
+                            </span>
+                          )}
+                          {graphGrade.tangent_correct !== null && graphGrade.tangent_correct !== undefined && (
+                            <span className={graphGrade.tangent_correct ? "text-emerald-700" : "text-red-600"}>
+                              Tangent {graphGrade.tangent_correct ? "✓" : "✗"}
+                            </span>
+                          )}
+                          {graphGrade.points_correct !== undefined && (
+                            <span className={graphGrade.points_correct ? "text-emerald-700" : "text-red-600"}>
+                              Points {graphGrade.points_correct ? "✓" : "✗"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {graphGrade.feedback && (
+                        <p className="text-xs text-[#3f3c35] mb-1">{graphGrade.feedback}</p>
+                      )}
+                      {graphGrade.suggestions && graphGrade.suggestions.length > 0 && (
+                        <ul className="text-[11px] text-[#8a857b] list-disc list-inside space-y-0.5">
+                          {graphGrade.suggestions.map((s, i) => <li key={i}>{s}</li>)}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                  {graphGrade?.error === "rate_limited" && (
+                    <div className="mt-2 text-[11px] text-[#8a857b]">
+                      Graph assessment unavailable (rate limited).
                     </div>
                   )}
                 </div>
@@ -2094,7 +1927,113 @@ function PracticeInner() {
               >
                 Eraser
               </button>
+              <button
+                onClick={() => selectTool("ruler")}
+                title="Straight line / ruler (R)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "ruler"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Line
+              </button>
+              <button
+                onClick={() => selectTool("curve")}
+                title="Curve — drag to bend a smooth line (C)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "curve"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Curve
+              </button>
+              <button
+                onClick={() => selectTool("ellipse")}
+                title="Ellipse — drag corner-to-corner (O)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "ellipse"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Ellipse
+              </button>
             </div>
+            <button
+              onClick={selectAxes}
+              title="Coordinate axes (G): select to spawn, tap the page to move the origin, use scale/Δ to resize"
+              className={`px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border text-[12.5px] font-medium ${
+                tool === "axes" && gridOn
+                  ? "border-[#23272e] bg-[#23272e] text-white"
+                  : gridOn
+                  ? "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]"
+                  : "border-[#e4e2db] text-[#6b6558] hover:bg-[#faf9f6]"
+              }`}
+            >
+              {tool === "axes" && gridOn ? "Axes ✓" : "Axes"}
+            </button>
+            {tool === "axes" && gridOn && (
+              <>
+                <div className="flex items-center gap-1.5 rounded-[7px] border border-[#e4e2db] px-2 py-1.5 text-[12px] text-[#6b6558]" title="Zoom: pixels per unit">
+                  <span>scale</span>
+                  <input
+                    type="number"
+                    min={10}
+                    max={200}
+                    step={5}
+                    value={gridScale}
+                    onChange={(e) => changeGridScale(Number(e.target.value))}
+                    className="w-12 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
+                    aria-label="Grid scale (px per unit)"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 rounded-[7px] border border-[#e4e2db] px-2 py-1.5 text-[12px] text-[#6b6558]">
+                  <span>Δx</span>
+                  <input
+                    type="number"
+                    min={0.5}
+                    max={50}
+                    step={0.5}
+                    value={gridStep.x}
+                    onChange={(e) => changeGridStep("x", Number(e.target.value))}
+                    className="w-11 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
+                    aria-label="Grid x step"
+                  />
+                  <span>Δy</span>
+                  <input
+                    type="number"
+                    min={0.5}
+                    max={50}
+                    step={0.5}
+                    value={gridStep.y}
+                    onChange={(e) => changeGridStep("y", Number(e.target.value))}
+                    className="w-11 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
+                    aria-label="Grid y step"
+                  />
+                </div>
+                {question?.params?.graph && (
+                  <button
+                    onClick={() => {
+                      const g = question.params.graph as {
+                        x_min?: number;
+                        x_max?: number;
+                        y_min?: number;
+                        y_max?: number;
+                      };
+                      if (typeof g.x_min === "number") {
+                        activeCanvas()?.fitGridToWindow(g.x_min!, g.x_max!, g.y_min!, g.y_max!);
+                      }
+                    }}
+                    className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6]"
+                    title="Re-fit the grid to the exercise's reference window"
+                  >
+                    Fit
+                  </button>
+                )}
+              </>
+            )}
             <button
               onClick={undo}
               disabled={!canUndo}
@@ -2164,22 +2103,24 @@ function PracticeInner() {
 
         {/* Pen/eraser size + debug, tucked into an unobtrusive corner strip */}
         <div className="fixed left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-auto flex flex-col items-center gap-2 bg-white/90 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md p-2">
-          <span className="text-[10px] text-[#a8a296]">{tool === "pen" ? 30 : 100}</span>
+          <span className="text-[10px] text-[#a8a296]">{tool === "eraser" ? 100 : 30}</span>
           <input
             type="range"
-            min={tool === "pen" ? 1 : 10}
-            max={tool === "pen" ? 30 : 100}
+            min={tool === "eraser" ? 10 : 1}
+            max={tool === "eraser" ? 100 : 30}
             step={1}
-            value={tool === "pen" ? penWidth : eraserWidth}
+            value={tool === "eraser" ? eraserWidth : penWidth}
             onChange={(e) =>
-              tool === "pen" ? selectPenWidth(Number(e.target.value)) : selectEraserWidth(Number(e.target.value))
+              tool === "eraser"
+                ? selectEraserWidth(Number(e.target.value))
+                : selectPenWidth(Number(e.target.value))
             }
             className="w-6 h-24 stylus:w-10 stylus:h-32 accent-[#23272e] [writing-mode:vertical-lr] [direction:rtl] cursor-pointer"
             aria-label="Size"
           />
-          <span className="text-[10px] text-[#a8a296]">{tool === "pen" ? 1 : 10}</span>
+          <span className="text-[10px] text-[#a8a296]">{tool === "eraser" ? 10 : 1}</span>
           <span className="text-xs font-semibold text-[#6b6558] tabular-nums">
-            {tool === "pen" ? penWidth : eraserWidth}
+            {tool === "eraser" ? eraserWidth : penWidth}
           </span>
           <div className="w-full border-t border-[#e4e2db] my-1" />
           <button

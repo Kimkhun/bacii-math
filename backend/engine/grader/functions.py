@@ -29,6 +29,14 @@ def _asym_pattern(xv):
     return rf"x\s*[=:]\s*(?<![-\d]){float(xv):g}\b"
 
 
+def _line_pattern(label):
+    """Regex for a written oblique/horizontal asymptote label like 'y = x+1'
+    or 'y = x/2' or 'y = -1'. Both label and text are space-normalized and use
+    ASCII hyphens before matching."""
+    s = label.strip().replace(" ", "").replace("−", "-").replace("–", "-")
+    return re.escape(s)
+
+
 def _slope_pattern(m):
     n, d = m.as_numer_denom()
     pats = [
@@ -55,11 +63,19 @@ def grade_graph_check(params, lines):
     items = []
 
     for a in graph.get("asymptotes", []):
-        if a.get("kind") != "vertical":
+        if a.get("kind") == "vertical":
+            xv = a["x"]
+            found = re.search(_asym_pattern(xv), text) is not None
+            items.append({"label": f"x = {_fmt(xv)}", "found": found})
             continue
-        xv = a["x"]
-        found = re.search(_asym_pattern(xv), text) is not None
-        items.append({"label": f"x = {_fmt(xv)}", "found": found})
+        if a.get("kind") not in ("oblique", "horizontal"):
+            continue
+        label = a.get("label") or a.get("line") or ""
+        if not label:
+            continue
+        pattern = _line_pattern(label)
+        found = bool(re.search(pattern, text.replace(" ", "")))
+        items.append({"label": label, "found": found})
 
     t = graph.get("tangent")
     if t:

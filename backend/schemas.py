@@ -52,6 +52,13 @@ class GradeRequest(BaseModel):
     lines_boxes: list | None = None
     part: str | None = None
     hints_used: int = 0
+    strokes: dict | None = None
+    strokes_thumb: str | None = None
+
+
+class GradeGraphRequest(BaseModel):
+    question_id: uuid.UUID
+    strokes_thumb: str
 
 
 class ExplainRequest(BaseModel):
@@ -70,3 +77,5 @@ class SaveProgressRequest(BaseModel):
     typed: str | None = None
     work_text: str | None = None
     lines_boxes: list | None = None
+    strokes: dict | None = None
+    strokes_thumb: str | None = None

@@ -1,5 +1,9 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8016";
 
+import type { StrokeDocument } from "@/components/Canvas";
+
+export type StrokeDoc = StrokeDocument;
+
 const ACCESS_KEY = "bacii_access";
 const REFRESH_KEY = "bacii_refresh";
 
@@ -212,6 +216,13 @@ export interface GraphSpec {
   curve: number[][][];
   vertical_asymptotes: number[];
   tangent?: number[][];
+  tangents?: number[][][];
+  asymptote_lines?: {
+    kind: string;
+    points: number[][];
+    line: string;
+    label?: string;
+  }[];
   points: GraphPoint[];
 }
 
@@ -224,6 +235,18 @@ export interface GraphCheck {
   items: GraphCheckItem[];
   found: number;
   total: number;
+}
+
+export interface GraphGradeResult {
+  score?: number;
+  curve_correct?: boolean;
+  asymptotes_correct?: boolean;
+  tangent_correct?: boolean | null;
+  points_correct?: boolean;
+  feedback?: string;
+  suggestions?: string[];
+  error?: string;
+  message?: string;
 }
 
 export interface GradeResult {
@@ -258,6 +281,7 @@ export interface Attempt {
   work_text?: string | null;
   step_check?: StepCheck | null;
   hints_used?: number;
+  strokes_thumb?: string | null;
   created_at: string;
 }
 
@@ -265,6 +289,8 @@ export interface SavedPartState {
   typed?: string;
   work_text?: string | null;
   lines_boxes?: (number[] | null)[] | null;
+  strokes?: StrokeDoc | null;
+  strokes_thumb?: string | null;
   correct?: boolean;
 }
 
@@ -304,6 +330,8 @@ export interface AttemptDetail {
   lines_boxes?: (number[] | null)[] | null;
   formula_breakdown?: FormulaResult[] | null;
   hints_used?: number;
+  strokes?: StrokeDoc | null;
+  strokes_thumb?: string | null;
   created_at: string;
   question: {
     id: string;
@@ -375,10 +403,30 @@ export interface TemplateStructure {
   sample_answer_latex?: string | null;
   formula_tags: string[];
   source_labels: string[];
+  graph?: GraphSpec | null;
+  parts?: {
+    label: string;
+    want?: string;
+    answer_kind?: string;
+    question_km?: string;
+    answer: string;
+    answer_latex?: string;
+    answer_display?: string;
+  }[];
 }
 
 export interface TemplateStructures {
   topics: { topic: string; question_types: { question_type: string; structures: TemplateStructure[] }[] }[];
+}
+
+export interface TemplateSummary {
+  topics: {
+    topic: string;
+    question_types: { question_type: string; count: number }[];
+    structure_count: number;
+    difficulties: string[];
+    curated: number;
+  }[];
 }
 
 export interface Stats {
@@ -411,11 +459,13 @@ export const api = {
     work_text?: string,
     lines_boxes?: (number[] | null)[],
     part?: string,
-    hints_used?: number
+    hints_used?: number,
+    strokes?: StrokeDoc | null,
+    strokes_thumb?: string | null
   ) =>
     request<GradeResult>("/problems/grade", {
       method: "POST",
-      body: { question_id, user_answer, work_text, lines_boxes, part, hints_used },
+      body: { question_id, user_answer, work_text, lines_boxes, part, hints_used, strokes, strokes_thumb },
     }),
   explain: (question_id: string, user_answer?: string, work_text?: string) =>
     request<Explanation>("/problems/explain", { method: "POST", body: { question_id, user_answer, work_text } }),
@@ -424,11 +474,13 @@ export const api = {
     part?: string,
     typed?: string,
     work_text?: string,
-    lines_boxes?: (number[] | null)[]
+    lines_boxes?: (number[] | null)[],
+    strokes?: StrokeDoc | null,
+    strokes_thumb?: string | null
   ) =>
     request<SessionSummary>("/problems/progress/save", {
       method: "POST",
-      body: { question_id, part, typed, work_text, lines_boxes },
+      body: { question_id, part, typed, work_text, lines_boxes, strokes, strokes_thumb },
     }),
   myProgress: () => request<SessionSummary[]>("/progress"),
   progress: (id: string) => request<SessionDetail>(`/progress/${id}`),
@@ -438,5 +490,12 @@ export const api = {
   stats: () => request<Stats>("/stats"),
   formulas: () => request<FormulaCatalog>("/formulas"),
   templates: () => request<TemplateInventory>("/templates"),
-  templateStructures: () => request<TemplateStructures>("/templates/structures"),
+  templateStructures: (topic?: string) =>
+    request<TemplateStructures>(`/templates/structures${topic ? `?topic=${topic}` : ""}`),
+  templateSummary: () => request<TemplateSummary>("/templates/summary"),
+  gradeGraph: (question_id: string, strokes_thumb: string) =>
+    request<GraphGradeResult>("/problems/grade-graph", {
+      method: "POST",
+      body: { question_id, strokes_thumb },
+    }),
 };

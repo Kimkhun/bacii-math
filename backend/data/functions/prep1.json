@@ -1,0 +1,97 @@
+{
+  "id": "function_study_prep_exercise_1",
+  "source": {
+    "year": null,
+    "track": "preparation",
+    "section": "I",
+    "subject_km": "គណិតវិទ្យា",
+    "description": "Preparation exam — function exercise I: f(x) = (x^2+3x+6)/(x+2) — decomposition, oblique asymptote, position, derivative, extrema, limits.",
+    "extracted_by": "manual transcription from preparation exam (2026-08), answers verified with SymPy"
+  },
+  "difficulty": "hard",
+  "var": "x",
+  "fn_name": "f",
+  "function_expr": "(x**2 + 3*x + 6)/(x + 2)",
+  "pattern": "f(x) = (x^2 + 3x + 6)/(x + 2)",
+  "pattern_latex": "f(x) = \\frac{x^2 + 3x + 6}{x + 2}",
+  "prompt": "We have the function f defined by f(x) = (x^2 + 3x + 6)/(x + 2).\n1. Find the real numbers a, b, c such that f(x) = ax + b + c/(x+2).\n2. Show that the line (d) with equation y = x + 1 is an oblique asymptote of the graph (C) of f.\n3. Study the position of (C) relative to (d).\n4. Compute the derivative of f and find the extrema of f.\n5. Compute the limits of f at -2, at -infinity and at +infinity. Deduce the vertical asymptote of (C). Draw (C) and (d).",
+  "prompt_latex": "\\text{គេមានអនុគមន៍ } f \\text{ ដែល } f(x)=\\frac{x^2+3x+6}{x+2} .\\\\ \\text{1. កំណត់ចំនួនពិត } a, b, c \\text{ ដែល } f(x)=ax+b+\\frac{c}{x+2} .\\\\ \\text{2. បង្ហាញថាបន្ទាត់ } (d):\\ y=x+1 \\text{ ជាអាស៊ីមតូតទ្រេតនៃក្រាប } (C) \\text{ តាងអនុគមន៍ } f .\\\\ \\text{3. សិក្សាទីតាំងធៀបរវាងក្រាប } (C) \\text{ និងបន្ទាត់ } (d) .\\\\ \\text{4. គណនាដេរីវេនៃ } f \\text{ រួចរកបរមាធៀបនៃ } f .\\\\ \\text{5. គណនាលីមីតនៃ } f \\text{ ត្រង់ } -2 \\text{ ; } -\\infty \\text{ និង } +\\infty \\text{ រួចទាញរកអាស៊ីមតូតឈរនៃក្រាប } (C) \\text{ និងសង់ក្រាប } (C),\\ (d) .",
+  "graph": {
+    "x_min": -8,
+    "x_max": 5,
+    "y_min": -9,
+    "y_max": 9,
+    "samples": 200,
+    "asymptotes": [
+      { "kind": "vertical", "x": -2 },
+      { "kind": "oblique", "line": "x + 1", "label": "y = x+1" }
+    ],
+    "points": [
+      { "x": 0, "y": 3, "label": "min" },
+      { "x": -4, "y": -5, "label": "max" }
+    ]
+  },
+  "parts": [
+    {
+      "label": "1",
+      "want": "decompose",
+      "kind": "expression",
+      "expected": "x + 1 + 4/(x + 2)",
+      "display": "f(x) = x + 1 + 4/(x+2),  i.e. a=1, b=1, c=4",
+      "question_km": "កំណត់ចំនួនពិត $a, b, c$ ដែល $f(x) = ax + b + \\frac{c}{x+2}$",
+      "technique": "Divide x²+3x+6 by x+2: (x+2)(x+1) = x²+3x+2, remainder 4. So f(x) = x+1 + 4/(x+2): a=1, b=1, c=4."
+    },
+    {
+      "label": "2",
+      "want": "asymptote",
+      "kind": "line",
+      "expected": "x + 1",
+      "display": "y = x + 1",
+      "question_km": "បង្ហាញថាបន្ទាត់ $(d): y = x+1$ ជាអាស៊ីមតូតទ្រេតនៃក្រាប $(C)$",
+      "technique": "From part 1, f(x) - (x+1) = 4/(x+2) → 0 as x → ±∞, so (d): y = x+1 is the oblique asymptote of (C)."
+    },
+    {
+      "label": "3",
+      "want": "position",
+      "kind": "interval",
+      "expected": [
+        { "lo": -2, "hi": 10000000000.0, "lo_open": true, "hi_open": true }
+      ],
+      "display": "(−2, ∞)",
+      "question_km": "សិក្សាទីតាំងធៀបរវាងក្រាប $(C)$ និងបន្ទាត់ $(d)$",
+      "line_expr": "x + 1",
+      "technique": "f(x) - (x+1) = 4/(x+2), which is positive exactly when x+2 > 0, i.e. x > -2. So (C) is above (d) on (-2, ∞) and below on (-∞, -2)."
+    },
+    {
+      "label": "4",
+      "want": "derivative",
+      "kind": "expression",
+      "expected": "x*(x + 4)/(x + 2)**2",
+      "display": "f'(x) = x(x+4)/(x+2)²",
+      "question_km": "គណនាដេរីវេនៃ $f$ រួចរកបរមាធៀបនៃ $f$",
+      "technique": "f'(x) = 1 - 4/(x+2)² = ((x+2)² - 4)/(x+2)² = x(x+4)/(x+2)². Critical points x = -4 and x = 0: local maximum at x=-4 (f=-5), local minimum at x=0 (f=3).",
+      "extra_checkpoints": [
+        { "label": "local max f(-4)", "value": "-5" },
+        { "label": "local min f(0)", "value": "3" }
+      ]
+    },
+    {
+      "label": "5",
+      "want": "limits",
+      "kind": "infinity",
+      "items": [
+        { "point": "-2", "side": "-" },
+        { "point": "-2", "side": "+" },
+        { "point": "-oo" },
+        { "point": "oo" }
+      ],
+      "expected": "oo",
+      "display": "lim at -2⁻ = -∞, -2⁺ = +∞, -∞ = -∞, +∞ = +∞",
+      "question_km": "គណនាលីមីតនៃ $f$ ត្រង់ $-2$ ; $-\\infty$ និង $+\\infty$ រួចទាញរកអាស៊ីមតូតឈរ",
+      "technique": "As x → -2⁻ the numerator → 4 > 0 and x+2 → 0⁻ so f → -∞; as x → -2⁺, f → +∞ (so x = -2 is the vertical asymptote). f(x) = x+1+4/(x+2) behaves like x, so f → -∞ at -∞ and +∞ at +∞.",
+      "extra_checkpoints": [
+        { "label": "vertical asymptote x=-2", "value": "-2", "formula": "vertical_asymptote" }
+      ]
+    }
+  ]
+}

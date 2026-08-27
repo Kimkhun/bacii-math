@@ -74,6 +74,8 @@ class Attempt(Base):
     lines_boxes: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
     formula_breakdown: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
     hints_used: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    strokes: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    strokes_thumb: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

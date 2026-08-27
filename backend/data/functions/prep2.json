@@ -1,0 +1,121 @@
+{
+  "id": "function_study_prep_exercise_2",
+  "source": {
+    "year": null,
+    "track": "preparation",
+    "section": "II",
+    "subject_km": "គណិតវិទ្យា",
+    "description": "Preparation exam — function exercise II: f(x) = x - 1 + 4/(x-2) — domain, asymptotes, derivative, tangent, position, center of symmetry.",
+    "extracted_by": "manual transcription from preparation exam (2026-08), answers verified with SymPy"
+  },
+  "difficulty": "hard",
+  "var": "x",
+  "fn_name": "f",
+  "function_expr": "x - 1 + 4/(x - 2)",
+  "pattern": "f(x) = x - 1 + 4/(x - 2)",
+  "pattern_latex": "f(x) = x - 1 + \\frac{4}{x - 2}",
+  "prompt": "We have the function f defined by f(x) = x - 1 + 4/(x-2), with graph (C).\n1. Find the domain of f and the limits of f at the ends of the domain.\n2. Find the equations of the vertical and oblique asymptotes of (C).\n3. Compute f'(x) and build the variation table of f.\n4. Find the equation of the tangent to (C) at the point of abscissa 3.\n5. Study the position of (C) relative to its oblique asymptote.\n6. Show that the point I(2; 1) is the center of symmetry of (C).\n7. Draw (C).",
+  "prompt_latex": "\\text{គេមានអនុគមន៍ } y=f(x)=x-1+\\frac{4}{x-2} \\text{ មានក្រាប } (C) .\\\\ \\text{1. រកដែនកំណត់នៃ } f \\text{ រួចរកលីមីតនៃ } f \\text{ ត្រង់ចុងដែនកំណត់។}\\\\ \\text{2. រកសមីការអាស៊ីមតូតឈរ និងអាស៊ីមតូតទ្រេតនៃក្រាប } (C) .\\\\ \\text{3. គណនា } f'(x) \\text{ រួចសង់តារាងអថេរភាពនៃ } f .\\\\ \\text{4. រកសមីការបន្ទាត់ប៉ះនឹងក្រាប } (C) \\text{ ត្រង់ចំណុចមានអាប់ស៊ីសស្មើ } 3 .\\\\ \\text{5. សិក្សាទីតាំងខ្សែកោង } (C) \\text{ ធៀបនឹងអាស៊ីមតូតទ្រេតរបស់វា។}\\\\ \\text{6. បង្ហាញថាចំណុច } I(2;1) \\text{ ជាផ្ចិតឆ្លុះនៃខ្សែកោង } (C) .\\\\ \\text{7. សង់ក្រាប } (C) .",
+  "graph": {
+    "x_min": -4,
+    "x_max": 8,
+    "y_min": -8,
+    "y_max": 8,
+    "samples": 200,
+    "asymptotes": [
+      { "kind": "vertical", "x": 2 },
+      { "kind": "oblique", "line": "x - 1", "label": "y = x-1" }
+    ],
+    "tangent": { "x0": 3 },
+    "points": [
+      { "x": 0, "y": -3, "label": "max" },
+      { "x": 4, "y": 5, "label": "min" },
+      { "x": 2, "y": 1, "label": "I" }
+    ]
+  },
+  "parts": [
+    {
+      "label": "1",
+      "want": "domain",
+      "kind": "interval",
+      "expected": [
+        { "lo": -10000000000.0, "hi": 2, "lo_open": true, "hi_open": true },
+        { "lo": 2, "hi": 10000000000.0, "lo_open": true, "hi_open": true }
+      ],
+      "display": "(-∞, 2) ∪ (2, ∞)",
+      "question_km": "រកដែនកំណត់នៃ $f$ រួចរកលីមីតនៃ $f$ ត្រង់ចុងដែនកំណត់",
+      "technique": "f(x) = x - 1 + 4/(x-2) is defined wherever x - 2 ≠ 0, i.e. x ≠ 2. Hence D = R \\ {2} = (-∞,2) ∪ (2,∞). At the ends: f → -∞ as x → 2⁻, +∞ as x → 2⁺, -∞ at -∞ and +∞ at +∞.",
+      "extra_checkpoints": [
+        { "label": "lim x->2^-", "value": "-oo", "formula": "vertical_asymptote" },
+        { "label": "lim x->2^+", "value": "oo", "formula": "vertical_asymptote" },
+        { "label": "lim x->-oo", "value": "-oo", "formula": "vertical_asymptote" },
+        { "label": "lim x->+oo", "value": "oo", "formula": "vertical_asymptote" }
+      ]
+    },
+    {
+      "label": "2",
+      "want": "asymptote",
+      "kind": "line",
+      "expected": "x - 1",
+      "display": "y = x - 1",
+      "question_km": "រកសមីការអាស៊ីមតូតឈរ និងអាស៊ីមតូតទ្រេតនៃក្រាប $(C)$",
+      "technique": "f(x) - (x-1) = 4/(x-2) → 0 as x → ±∞, so the oblique asymptote is y = x - 1. The vertical asymptote x = 2 comes from the limits in part 1.",
+      "extra_checkpoints": [
+        { "label": "vertical asymptote x=2", "value": "2", "formula": "vertical_asymptote" }
+      ]
+    },
+    {
+      "label": "3",
+      "want": "derivative",
+      "kind": "expression",
+      "expected": "x*(x - 4)/(x - 2)**2",
+      "display": "f'(x) = x(x-4)/(x-2)²",
+      "question_km": "គណនា $f'(x)$ រួចសង់តារាងអថេរភាពនៃ $f$",
+      "technique": "f'(x) = 1 - 4/(x-2)² = ((x-2)² - 4)/(x-2)² = x(x-4)/(x-2)². Critical points x = 0 and x = 4: local maximum at x=0 (f=-3), local minimum at x=4 (f=5).",
+      "extra_checkpoints": [
+        { "label": "local max f(0)", "value": "-3" },
+        { "label": "local min f(4)", "value": "5" }
+      ]
+    },
+    {
+      "label": "4",
+      "want": "tangent",
+      "kind": "line",
+      "x0": 3,
+      "expected": "-3*x + 15",
+      "display": "y = -3x + 15",
+      "question_km": "រកសមីការបន្ទាត់ប៉ះនឹងក្រាប $(C)$ ត្រង់ចំណុចមានអាប់ស៊ីសស្មើ $3$",
+      "technique": "f(3) = 6 and f'(3) = -3. The tangent is y - 6 = -3(x - 3), i.e. y = -3x + 15."
+    },
+    {
+      "label": "5",
+      "want": "position",
+      "kind": "interval",
+      "expected": [
+        { "lo": 2, "hi": 10000000000.0, "lo_open": true, "hi_open": true }
+      ],
+      "display": "(2, ∞)",
+      "question_km": "សិក្សាទីតាំងខ្សែកោង $(C)$ ធៀបនឹងអាស៊ីមតូតទ្រេត",
+      "line_expr": "x - 1",
+      "technique": "f(x) - (x-1) = 4/(x-2), positive exactly when x > 2. So (C) is above (d) on (2, ∞) and below on (-∞, 2)."
+    },
+    {
+      "label": "6",
+      "want": "symmetry",
+      "kind": "expression",
+      "x0": "2",
+      "y0": "1",
+      "expected": "2",
+      "display": "f(2+t) + f(2-t) = 2, so I(2;1) is the center of symmetry",
+      "question_km": "បង្ហាញថាចំណុច $I(2;1)$ ជាផ្ចិតឆ្លុះនៃខ្សែកោង $(C)$",
+      "technique": "f(2+t) = 1+t + 4/t and f(2-t) = 1-t - 4/t, so f(2+t) + f(2-t) = 2 = 2×1. Hence I(2;1) is the center of symmetry of (C)."
+    },
+    {
+      "label": "7",
+      "want": "draw",
+      "kind": "draw",
+      "question_km": "សង់ក្រាប $(C)$",
+      "technique": "Sketch (C) with the vertical asymptote x = 2, the oblique asymptote y = x-1, the tangent at x = 3, and the labeled points (extrema and the center I)."
+    }
+  ]
+}

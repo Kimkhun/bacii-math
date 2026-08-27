@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import services
 from core.deps import get_current_user, get_db
 from models import User
-from schemas import ExplainRequest, GenerateRequest, GradeRequest, ReplayRequest, SaveProgressRequest
+from schemas import ExplainRequest, GenerateRequest, GradeGraphRequest, GradeRequest, ReplayRequest, SaveProgressRequest
 
 router = APIRouter(prefix="/problems", tags=["problems"])
 me_router = APIRouter(tags=["history"])
@@ -40,8 +40,18 @@ async def grade(
     db: AsyncSession = Depends(get_db),
 ):
     return await services.grade_question(
-        db, user, req.question_id, req.user_answer, req.work_text, req.lines_boxes, req.part, req.hints_used
+        db, user, req.question_id, req.user_answer, req.work_text, req.lines_boxes, req.part, req.hints_used,
+        req.strokes, req.strokes_thumb
     )
+
+
+@router.post("/grade-graph")
+async def grade_graph(
+    req: GradeGraphRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await services.grade_graph_drawing(db, user, req.question_id, req.strokes_thumb)
 
 
 @router.post("/explain")
@@ -124,5 +134,14 @@ async def templates(user: User = Depends(get_current_user), db: AsyncSession = D
 
 
 @me_router.get("/templates/structures")
-async def template_structures(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
-    return await services.get_template_structures()
+async def template_structures(
+    topic: str | None = None,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await services.get_template_structures(topic=topic)
+
+
+@me_router.get("/templates/summary")
+async def template_summary(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    return await services.get_template_summary()

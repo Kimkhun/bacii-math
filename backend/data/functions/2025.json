@@ -12,6 +12,8 @@
   "var": "x",
   "fn_name": "g",
   "function_expr": "log((-x-3)/(x-3))",
+  "pattern": "g(x) = ln((-x-3)/(x-3))",
+  "pattern_latex": "g(x) = \\ln\\left(\\frac{-x-3}{x-3}\\right)",
   "prompt": "We have the function g defined by g(x) = ln((-x-3)/(x-3)).\n1. Find the domain of g and determine whether g is even or odd (g is even iff g(-x)=g(x), odd iff g(-x)=-g(x)).\n2. Compute the limits of g at -3 and at 3.\n3. Study the monotonicity of g over its domain and build the variation table.\n4. In an orthonormal frame (O, i, j), let C be the graph of g. Find the equation of the tangent line T to C at the point of abscissa 0. Draw C and T. Study the sign of g(x) according to x.\n5. a. Compute the derivative of h defined by h(x) = x g(x).\n   b. Find the area of the region bounded by C, the x-axis, and the lines x = 0 and x = 1.",
   "prompt_latex": "\\text{គេមានអនុគមន៍ } g \\text{ ដែល } g(x)=\\ln\\left(\\frac{-x-3}{x-3}\\right) .\\\\ \\text{1. រកដែនកំណត់នៃអនុគមន៍ } g \\text{ និងសិក្សាថាតើ } g \\text{ ជាអនុគមន៍គូ ឬសេស?}\\\\ \\text{2. គណនាលីមីតនៃ } g \\text{ ត្រង់ } -3 \\text{ និងត្រង់ } 3 .\\\\ \\text{3. សិក្សាអថេរភាពនៃ } g \\text{ លើដែនកំណត់របស់វា និងសង់តារាងអថេរភាព។}\\\\ \\text{4. កំណត់សមីការនៃបន្ទាត់ប៉ះ } T \\text{ ទៅនឹងក្រាប } C \\text{ ត្រង់ចំណុចដែលមានអាប់ស៊ីស } 0 \\text{ រួចសង់ក្រាប } C \\text{ និងបន្ទាត់ប៉ះ } T .\\\\ \\text{5. } (a)\\ \\text{គណនាដេរីវេនៃអនុគមន៍ } h \\text{ ដែល } h(x)=x\\,g(x) .\\quad (b)\\ \\text{រកផ្ទៃក្រឡានៃផ្នែកប្លង់នៅចន្លោះក្រាប } C \\text{ អ័ក្ស } x \\text{ និងបន្ទាត់ } x=0,\\ x=1 .",
   "graph": {

@@ -2,7 +2,21 @@
 
 import { forwardRef, ReactNode, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 
-export type CanvasTool = "pen" | "eraser";
+export type CanvasTool = "pen" | "eraser" | "ruler" | "axes" | "curve" | "ellipse";
+
+// A spawned coordinate system on the paper (background layer, not ink): axes
+// crossing at (ox, oy) with integer gridlines every stepX/stepY units (each
+// unit = `scale` pixels), tick marks + numeric labels on each axis starting at
+// 0. Tick extents are recomputed from the current paper size at draw time, so
+// the grid auto-extends as the canvas grows. Drawn behind the ink so the
+// eraser can't damage it and OCR/thumbnail exports exclude it.
+export interface GridState {
+  ox: number;
+  oy: number;
+  stepX: number;
+  stepY: number;
+  scale: number;
+}
 
 export interface CanvasExportMap {
   canvasW: number;
@@ -17,8 +31,11 @@ export interface CanvasHandle {
   getInkSnapshot: () => string | null;
   getExportMap: () => CanvasExportMap;
   getLineSnapshots: (boxes: (number[] | null)[]) => (LineSnapshot | null)[];
+  getStrokes: () => StrokeDocument | null;
+  getStrokesThumb: (maxWidth?: number) => string | null;
   hasInk: () => boolean;
   loadImage: (dataUrl: string) => void;
+  loadStrokes: (data: StrokeDocument) => void;
   loadBackgroundInk: (dataUrl: string) => void;
   clear: () => void;
   setTool: (tool: CanvasTool) => void;
@@ -29,6 +46,13 @@ export interface CanvasHandle {
   redo: () => void;
   canRedo: () => boolean;
   eraseRegion: (box: number[]) => void;
+  spawnGrid: (stepX: number, stepY: number, origin?: { x: number; y: number } | null, scale?: number) => void;
+  setGridSteps: (stepX: number, stepY: number) => void;
+  setGridScale: (scale: number) => void;
+  moveGrid: (ox: number, oy: number) => void;
+  hideGrid: () => void;
+  fitGridToWindow: (xMin: number, xMax: number, yMin: number, yMax: number) => void;
+  hasGrid: () => boolean;
 }
 
 export interface LineSnapshot {
@@ -56,6 +80,46 @@ interface PathStroke {
   pointerType?: string;
 }
 
+// A straight segment drawn with the ruler tool (pen-down = start point, drag =
+// preview, pen-up = commit). Stored as its own stroke kind so it's undoable,
+// erasable, and survives save/resume like any other stroke.
+interface LineStroke {
+  kind: "line";
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  tool: "ruler";
+  width: number;
+}
+
+// A smooth bendable curve drawn with the curve tool: a quadratic bézier from
+// the start point through a control point to the end point (drag to place the
+// control / bend). Undoable, erasable, serializable like any stroke.
+interface CurveStroke {
+  kind: "curve";
+  x0: number;
+  y0: number;
+  cx: number;
+  cy: number;
+  x1: number;
+  y1: number;
+  tool: "curve";
+  width: number;
+}
+
+// An axis-aligned ellipse drawn with the ellipse tool (drag corner-to-corner;
+// cx/cy/rx/ry define the bounding box). Useful for conic sketches.
+interface EllipseStroke {
+  kind: "ellipse";
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  tool: "ellipse";
+  width: number;
+}
+
 // A rectangular region erase (used by "write it again" on a mis-read line) —
 // modeled as its own stroke kind so it survives replayStrokesToInk() (canvas
 // resizes) and participates in undo/redo like any other stroke.
@@ -76,7 +140,35 @@ interface RasterStroke {
   h: number;
 }
 
-type Stroke = PathStroke | RectStroke | RasterStroke;
+type Stroke = PathStroke | RectStroke | RasterStroke | LineStroke | CurveStroke | EllipseStroke;
+
+// The serializable subset of a stroke document. Raster strokes are excluded —
+// they hold an HTMLImageElement (from loadBackgroundInk) that can't be
+// JSON-serialized, so only vector pen/eraser ink survives in history/resume.
+type SerializableStroke = Exclude<Stroke, RasterStroke>;
+
+// Deep-copy strokes so the exported document never aliases the live refs (a
+// pointer still writing would otherwise mutate the saved snapshot later).
+const cloneStrokes = (arr: Stroke[]): SerializableStroke[] =>
+  arr
+    .filter((s): s is SerializableStroke => s.kind !== "raster")
+    .map((s) =>
+      s.kind === "path"
+        ? { ...s, points: s.points.map((p) => ({ ...p })) }
+        : { ...s }
+    );
+
+// Serializable stroke document — the full state Canvas.getStrokes() exports and
+// loadStrokes() restores. width/height capture the canvas size at save time
+// (the page grows while writing), strokes is the ordered history (including
+// eraser strokes), and redoStack lets a restored session keep undo/redo.
+export interface StrokeDocument {
+  width: number;
+  height: number;
+  strokes: SerializableStroke[];
+  redoStack: SerializableStroke[];
+  grid?: GridState | null;
+}
 
 const PAPER_COLOR = "#fdfcf8";
 const LINE_COLOR = "rgba(214, 221, 232, 0.85)"; // #d6dde8 @ 85%
@@ -195,7 +287,24 @@ const Canvas = forwardRef<
     // strokes are rasterized crisply instead of being drawn low-res and then
     // upscaled/blurred to fill the screen (the actual cause of the pixelation
     // — the canvas simply had fewer physical pixels than the display needed).
-    const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 3) : 1;
+    // Browser zoom changes window.devicePixelRatio; keeping dpr as reactive state
+    // (refreshed on window resize) means every repaint uses the current pixel
+    // ratio, so the background/grid/ink layers don't vanish or blur after zoom.
+    const [dpr, setDpr] = useState<number>(() =>
+      Math.min(typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1, 3)
+    );
+    useEffect(() => {
+      const onResize = () => setDpr(Math.min(window.devicePixelRatio || 1, 3));
+      window.addEventListener("resize", onResize);
+      return () => window.removeEventListener("resize", onResize);
+    }, []);
+    useEffect(() => {
+      // dpr changed → buffer sizes changed; drop the cached layers and repaint.
+      bgCanvasRef.current = null;
+      inkCanvasRef.current = null;
+      redraw();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dpr]);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     // Ink lives on its own transparent layer so erasing (destination-out) never
@@ -217,12 +326,30 @@ const Canvas = forwardRef<
     const toolRef = useRef<CanvasTool>("pen");
     const penWidthRef = useRef<number>(DEFAULT_PEN_WIDTH);
     const eraserWidthRef = useRef<number>(ERASER_WIDTH);
+    const gridRef = useRef<GridState | null>(null);
     const cursorElRef = useRef<HTMLDivElement>(null);
+    // Axes drag-to-pan: origin + pointer position at drag start.
+    const gridPanRef = useRef<{ px: number; py: number; ox: number; oy: number } | null>(null);
+    // Curve tool: samples during the drag to find the bend (max deviation).
+    const curveSamplesRef = useRef<Point[]>([]);
+    // Ellipse tool: the corner where the drag started.
+    const ellipseStartRef = useRef<Point | null>(null);
 
     const updateCursor = (clientX: number, clientY: number) => {
       const el = cursorElRef.current;
       if (!el) return;
-      const isPen = toolRef.current === "pen";
+      if (toolRef.current === "axes") {
+        el.style.width = "18px";
+        el.style.height = "18px";
+        el.style.background = "transparent";
+        el.style.border = "1.5px solid #334155";
+        el.style.borderRadius = "2px";
+        el.style.left = `${clientX}px`;
+        el.style.top = `${clientY}px`;
+        el.style.display = "block";
+        return;
+      }
+      const isPen = toolRef.current !== "eraser";
       const w = Math.max(2, (isPen ? penWidthRef.current : eraserWidthRef.current) * zoom);
       el.style.width = `${w}px`;
       el.style.height = `${w}px`;
@@ -285,6 +412,12 @@ const Canvas = forwardRef<
     const drawRuled = (ctx: CanvasRenderingContext2D) => {
       ctx.fillStyle = PAPER_COLOR;
       ctx.fillRect(0, 0, W, H);
+      const grid = gridRef.current;
+      if (grid) {
+        // A coordinate grid replaces the ruled writing paper entirely.
+        drawGrid(ctx, grid);
+        return;
+      }
       ctx.lineWidth = 1;
       ctx.strokeStyle = MARGIN_COLOR;
       ctx.beginPath();
@@ -298,6 +431,109 @@ const Canvas = forwardRef<
         ctx.lineTo(W, y);
         ctx.stroke();
       }
+    };
+
+    // Coordinate system spawned on the background layer: black axes through the
+    // origin, faint gray gridlines at each step plus even fainter half-step
+    // minor lines (line only, no label), black tick marks + numeric labels on
+    // each axis starting at 0. Tick extents are computed from the CURRENT paper
+    // W/H, so the grid extends automatically as the infinite canvas grows.
+    const drawGrid = (ctx: CanvasRenderingContext2D, grid: GridState) => {
+      const { ox, oy, stepX, stepY, scale } = grid;
+      const dx = stepX * scale;
+      const dy = stepY * scale;
+      if (dx <= 0 || dy <= 0) return;
+      const fmt = (v: number) => String(Number(v.toFixed(2)));
+      const left = Math.ceil(ox / dx);
+      const right = Math.ceil((W - ox) / dx);
+      const up = Math.ceil(oy / dy);
+      const down = Math.ceil((H - oy) / dy);
+      ctx.save();
+      ctx.lineWidth = 1;
+      // half-step minor lines (no labels)
+      ctx.strokeStyle = "rgba(15, 23, 42, 0.05)";
+      for (let i = -2 * left - 1; i <= 2 * right + 1; i++) {
+        const x = ox + (i / 2) * dx;
+        if (i % 2 === 0) continue;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+      for (let i = -2 * down - 1; i <= 2 * up + 1; i++) {
+        const y = oy - (i / 2) * dy;
+        if (i % 2 === 0) continue;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+      // major gridlines
+      ctx.strokeStyle = "rgba(15, 23, 42, 0.1)";
+      for (let i = -left; i <= right; i++) {
+        const x = ox + i * dx;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+      for (let i = -down; i <= up; i++) {
+        const y = oy - i * dy;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+      // axes (black)
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "#1e293b";
+      ctx.beginPath();
+      ctx.moveTo(0, oy);
+      ctx.lineTo(W, oy);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(ox, 0);
+      ctx.lineTo(ox, H);
+      ctx.stroke();
+      // tick marks
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#334155";
+      const tick = 5;
+      for (let i = -left; i <= right; i++) {
+        if (i === 0) continue;
+        const x = ox + i * dx;
+        ctx.beginPath();
+        ctx.moveTo(x, oy - tick);
+        ctx.lineTo(x, oy + tick);
+        ctx.stroke();
+      }
+      for (let i = -down; i <= up; i++) {
+        if (i === 0) continue;
+        const y = oy - i * dy;
+        ctx.beginPath();
+        ctx.moveTo(ox - tick, y);
+        ctx.lineTo(ox + tick, y);
+        ctx.stroke();
+      }
+      // labels
+      ctx.fillStyle = "#334155";
+      ctx.font = "11px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      for (let i = -left; i <= right; i++) {
+        if (i === 0) continue;
+        ctx.fillText(fmt(i * stepX), ox + i * dx, oy + 6);
+      }
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      for (let i = -down; i <= up; i++) {
+        if (i === 0) continue;
+        ctx.fillText(fmt(i * stepY), ox - 5, oy - i * dy);
+      }
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText("0", ox + 6, oy + 6);
+      ctx.restore();
     };
 
     // The ruled background is static per canvas size, so render it once into its
@@ -330,6 +566,37 @@ const Canvas = forwardRef<
       if (stroke.kind === "raster") {
         ctx.globalCompositeOperation = "source-over";
         ctx.drawImage(stroke.img, 0, 0, stroke.w, stroke.h);
+        return;
+      }
+      if (stroke.kind === "line") {
+        strokeStyleFor(ctx, stroke.tool, stroke.width);
+        ctx.beginPath();
+        ctx.moveTo(stroke.x1, stroke.y1);
+        ctx.lineTo(stroke.x2, stroke.y2);
+        ctx.stroke();
+        return;
+      }
+      if (stroke.kind === "curve") {
+        strokeStyleFor(ctx, stroke.tool, stroke.width);
+        ctx.beginPath();
+        ctx.moveTo(stroke.x0, stroke.y0);
+        ctx.quadraticCurveTo(stroke.cx, stroke.cy, stroke.x1, stroke.y1);
+        ctx.stroke();
+        return;
+      }
+      if (stroke.kind === "ellipse") {
+        strokeStyleFor(ctx, stroke.tool, stroke.width);
+        ctx.beginPath();
+        ctx.ellipse(
+          stroke.cx,
+          stroke.cy,
+          Math.max(1, Math.abs(stroke.rx)),
+          Math.max(1, Math.abs(stroke.ry)),
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.stroke();
         return;
       }
       if (stroke.points.length < 1) return;
@@ -384,7 +651,17 @@ const Canvas = forwardRef<
       if (stroke) {
         const ictx = getInkCanvas().getContext("2d")!;
         ictx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        drawStroke(ictx, stroke);
+        if (stroke.kind === "line" || stroke.kind === "curve" || stroke.kind === "ellipse") {
+          // These shapes' geometry changes every move, so overlaying them would
+          // leave a trail of stale copies. Replay the committed strokes, then
+          // the live shape, for a clean preview — cheap enough because these
+          // tools produce few strokes.
+          ictx.clearRect(0, 0, W, H);
+          for (const s of strokesRef.current.slice(0, -1)) drawStroke(ictx, s);
+          drawStroke(ictx, stroke);
+        } else {
+          drawStroke(ictx, stroke);
+        }
       }
       ctx.drawImage(getInkCanvas(), 0, 0, W, H);
     };
@@ -476,6 +753,15 @@ const Canvas = forwardRef<
           s.rect.x2 += dx;
         } else if (s.kind === "path") {
           for (const p of s.points) p.x += dx;
+        } else if (s.kind === "line") {
+          s.x1 += dx;
+          s.x2 += dx;
+        } else if (s.kind === "curve") {
+          s.x0 += dx;
+          s.cx += dx;
+          s.x1 += dx;
+        } else if (s.kind === "ellipse") {
+          s.cx += dx;
         }
         // "raster" strokes (restored old work) stay pinned at their original
         // (0,0) origin — they're a flattened snapshot of the page as it was,
@@ -487,7 +773,20 @@ const Canvas = forwardRef<
           s.rect.x2 += dx;
         } else if (s.kind === "path") {
           for (const p of s.points) p.x += dx;
+        } else if (s.kind === "line") {
+          s.x1 += dx;
+          s.x2 += dx;
+        } else if (s.kind === "curve") {
+          s.x0 += dx;
+          s.cx += dx;
+          s.x1 += dx;
+        } else if (s.kind === "ellipse") {
+          s.cx += dx;
         }
+      }
+      if (gridRef.current) {
+        gridRef.current.ox += dx;
+        bgCanvasRef.current = null;
       }
     };
 
@@ -558,8 +857,76 @@ const Canvas = forwardRef<
       };
     };
 
+    const moveGridTo = (ox: number, oy: number) => {
+      if (!gridRef.current || imageRef.current) return;
+      gridRef.current.ox = ox;
+      gridRef.current.oy = oy;
+      bgCanvasRef.current = null;
+      redraw();
+      onChange?.();
+    };
+
+    // Snap a point to the nearest grid intersection when a grid is active.
+    const snapToGrid = (p: Point): Point => {
+      const g = gridRef.current;
+      if (!g) return p;
+      const dx = g.stepX * g.scale;
+      const dy = g.stepY * g.scale;
+      if (dx <= 0 || dy <= 0) return p;
+      return {
+        x: g.ox + Math.round((p.x - g.ox) / dx) * dx,
+        y: g.oy - Math.round((g.oy - p.y) / dy) * dy,
+      };
+    };
+
+    // The sample farthest from the straight line A→B — used as the bend point
+    // of a curve being dragged out (so the curve bows where you deviated most).
+    const farthestFromSegment = (samples: Point[], a: Point, b: Point) => {
+      let best = a;
+      let bestDist = 0;
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      for (const s of samples) {
+        let d: number;
+        if (len < 1e-6) {
+          d = Math.hypot(s.x - a.x, s.y - a.y);
+        } else {
+          const t = Math.max(0, Math.min(1, ((s.x - a.x) * (b.x - a.x) + (s.y - a.y) * (b.y - a.y)) / (len * len)));
+          const px = a.x + t * (b.x - a.x);
+          const py = a.y + t * (b.y - a.y);
+          d = Math.hypot(s.x - px, s.y - py);
+        }
+        if (d > bestDist) {
+          bestDist = d;
+          best = s;
+        }
+      }
+      return best;
+    };
+
     const start = (e: React.PointerEvent) => {
       updateCursor(e.clientX, e.clientY);
+
+      // Axes edit mode: drag to pan the origin (pinch zooms, handled in move).
+      if (toolRef.current === "axes") {
+        const p = getPos(e.clientX, e.clientY, e.pressure);
+        if (e.pointerType === "touch") {
+          (e.target as Element).setPointerCapture?.(e.pointerId);
+          touchPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          if (touchPointersRef.current.size === 2) {
+            const { center, dist } = touchCenterAndDist();
+            pinchRef.current = { center, dist, scrollLeft: 0, scrollTop: 0, zoom: gridRef.current?.scale ?? 40 };
+            return;
+          }
+        }
+        gridPanRef.current = {
+          px: p.x,
+          py: p.y,
+          ox: gridRef.current?.ox ?? p.x,
+          oy: gridRef.current?.oy ?? p.y,
+        };
+        (e.target as Element).setPointerCapture?.(e.pointerId);
+        return;
+      }
 
       if (e.pointerType === "touch") {
         (e.target as Element).setPointerCapture?.(e.pointerId);
@@ -605,15 +972,52 @@ const Canvas = forwardRef<
       drawing.current = true;
       drawingPointerIdRef.current = e.pointerId;
       const p = getPos(e.clientX, e.clientY, e.pressure);
-      const width = toolRef.current === "pen" ? penWidthRef.current : eraserWidthRef.current;
+      const width = toolRef.current === "eraser" ? eraserWidthRef.current : penWidthRef.current;
       redoStackRef.current = [];
-      strokesRef.current.push({
-        kind: "path",
-        points: [p],
-        tool: toolRef.current,
-        width,
-        pointerType: e.pointerType,
-      });
+      if (toolRef.current === "ruler") {
+        const sp = snapToGrid(p);
+        strokesRef.current.push({
+          kind: "line",
+          x1: sp.x,
+          y1: sp.y,
+          x2: sp.x,
+          y2: sp.y,
+          tool: "ruler",
+          width: penWidthRef.current,
+        });
+      } else if (toolRef.current === "curve") {
+        curveSamplesRef.current = [p];
+        strokesRef.current.push({
+          kind: "curve",
+          x0: p.x,
+          y0: p.y,
+          cx: p.x,
+          cy: p.y,
+          x1: p.x,
+          y1: p.y,
+          tool: "curve",
+          width: penWidthRef.current,
+        });
+      } else if (toolRef.current === "ellipse") {
+        ellipseStartRef.current = p;
+        strokesRef.current.push({
+          kind: "ellipse",
+          cx: p.x,
+          cy: p.y,
+          rx: 0,
+          ry: 0,
+          tool: "ellipse",
+          width: penWidthRef.current,
+        });
+      } else {
+        strokesRef.current.push({
+          kind: "path",
+          points: [p],
+          tool: toolRef.current,
+          width,
+          pointerType: e.pointerType,
+        });
+      }
       redraw();
       maybeGrow(p);
     };
@@ -622,6 +1026,32 @@ const Canvas = forwardRef<
       updateCursor(e.clientX, e.clientY);
       if (e.pointerType === "touch" && touchPointersRef.current.has(e.pointerId)) {
         touchPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      }
+
+      // Axes mode: pinch zooms the grid scale, drag pans the origin.
+      if (toolRef.current === "axes") {
+        if (pinchRef.current && touchPointersRef.current.size === 2) {
+          const { dist } = touchCenterAndDist();
+          const pinchStart = pinchRef.current;
+          if (gridRef.current) {
+            const ns = Math.min(200, Math.max(10, gridRef.current.scale * (dist / pinchStart.dist)));
+            if (ns !== gridRef.current.scale) {
+              gridRef.current.scale = ns;
+              bgCanvasRef.current = null;
+              redraw();
+              onChange?.();
+            }
+          }
+          return;
+        }
+        if (gridPanRef.current) {
+          const p = getPos(e.clientX, e.clientY, e.pressure);
+          moveGridTo(
+            gridPanRef.current.ox + (p.x - gridPanRef.current.px),
+            gridPanRef.current.oy + (p.y - gridPanRef.current.py)
+          );
+        }
+        return;
       }
 
       if (pinchRef.current && touchPointersRef.current.size === 2) {
@@ -657,7 +1087,27 @@ const Canvas = forwardRef<
       const coalesced = native.getCoalescedEvents?.() ?? [];
       const events = coalesced.length ? coalesced : [native];
       let p: Point = getPos(e.clientX, e.clientY, e.pressure);
-      if (stroke.kind === "path") {
+      if (stroke.kind === "line") {
+        p = getPos(e.clientX, e.clientY, e.pressure);
+        const sp = snapToGrid(p);
+        stroke.x2 = sp.x;
+        stroke.y2 = sp.y;
+      } else if (stroke.kind === "curve") {
+        p = getPos(e.clientX, e.clientY, e.pressure);
+        curveSamplesRef.current.push(p);
+        const bend = farthestFromSegment(curveSamplesRef.current, { x: stroke.x0, y: stroke.y0 }, p);
+        stroke.cx = bend.x;
+        stroke.cy = bend.y;
+        stroke.x1 = p.x;
+        stroke.y1 = p.y;
+      } else if (stroke.kind === "ellipse") {
+        p = getPos(e.clientX, e.clientY, e.pressure);
+        const s = ellipseStartRef.current ?? p;
+        stroke.cx = (s.x + p.x) / 2;
+        stroke.cy = (s.y + p.y) / 2;
+        stroke.rx = (p.x - s.x) / 2;
+        stroke.ry = (p.y - s.y) / 2;
+      } else if (stroke.kind === "path") {
         for (const ev of events) {
           p = getPos(ev.clientX, ev.clientY, ev.pressure);
           stroke.points.push(p);
@@ -668,6 +1118,9 @@ const Canvas = forwardRef<
     };
 
     const end = (e: React.PointerEvent) => {
+      gridPanRef.current = null;
+      curveSamplesRef.current = [];
+      ellipseStartRef.current = null;
       if (e.pointerType === "touch") {
         touchPointersRef.current.delete(e.pointerId);
         if (touchPointersRef.current.size < 2) pinchRef.current = null;
@@ -723,6 +1176,32 @@ const Canvas = forwardRef<
         off.width = W;
         off.height = H;
         off.getContext("2d")!.drawImage(getInkCanvas(), 0, 0, W, H);
+        return off.toDataURL("image/png");
+      },
+      getStrokes: () => {
+        if (imageRef.current || !strokesRef.current.length) return null;
+        return {
+          width: W,
+          height: H,
+          strokes: cloneStrokes(strokesRef.current),
+          redoStack: cloneStrokes(redoStackRef.current),
+          grid: gridRef.current ? { ...gridRef.current } : null,
+        };
+      },
+      getStrokesThumb: (maxWidth = 320) => {
+        // Small PNG data URL of the ink (white paper) for history cards. Only
+        // meaningful for drawn strokes — uploaded images have no ink layer.
+        if (imageRef.current || !strokesRef.current.length) return null;
+        replayStrokesToInk();
+        const tw = Math.min(maxWidth, W);
+        const th = Math.max(1, Math.round((H * tw) / W));
+        const off = document.createElement("canvas");
+        off.width = tw;
+        off.height = th;
+        const octx = off.getContext("2d")!;
+        octx.fillStyle = "#ffffff";
+        octx.fillRect(0, 0, tw, th);
+        octx.drawImage(getInkCanvas(), 0, 0, tw, th);
         return off.toDataURL("image/png");
       },
       getExportMap: () => {
@@ -781,6 +1260,19 @@ const Canvas = forwardRef<
         };
         img.src = dataUrl;
       },
+      loadStrokes: (data) => {
+        if (!data || !Array.isArray(data.strokes)) return;
+        imageRef.current = null;
+        imageDataRef.current = null;
+        strokesRef.current = data.strokes;
+        redoStackRef.current = Array.isArray(data.redoStack) ? data.redoStack : [];
+        gridRef.current = data.grid ? { ...data.grid } : null;
+        bgCanvasRef.current = null;
+        if (typeof data.width === "number" && data.width > 0) setCanvasWidth(Math.min(MAX_WIDTH, data.width));
+        if (typeof data.height === "number" && data.height > 0) setCanvasHeight(Math.min(MAX_HEIGHT, data.height));
+        redraw();
+        onChange?.();
+      },
       loadBackgroundInk: (dataUrl: string) => {
         // Unlike loadImage(), this appends a normal (editable, undoable)
         // stroke rather than switching into the read-only "uploaded photo"
@@ -804,6 +1296,8 @@ const Canvas = forwardRef<
         imageDataRef.current = null;
         strokesRef.current = [];
         redoStackRef.current = [];
+        gridRef.current = null;
+        bgCanvasRef.current = null;
         setCanvasWidth(initialW);
         setCanvasHeight(initialH);
         wrapperRef.current?.scrollTo({ top: 0, left: 0 });
@@ -849,6 +1343,66 @@ const Canvas = forwardRef<
         redraw();
         onChange?.();
       },
+      spawnGrid: (stepX, stepY, origin, scale) => {
+        if (!stepX || !stepY || stepX <= 0 || stepY <= 0) return;
+        if (imageRef.current) return;
+        gridRef.current = {
+          ox: origin?.x ?? W / 2,
+          oy: origin?.y ?? H / 2,
+          stepX,
+          stepY,
+          scale: scale && scale > 0 ? scale : 40,
+        };
+        bgCanvasRef.current = null;
+        redraw();
+        onChange?.();
+      },
+      setGridSteps: (stepX, stepY) => {
+        if (!gridRef.current || !stepX || !stepY || stepX <= 0 || stepY <= 0) return;
+        gridRef.current.stepX = stepX;
+        gridRef.current.stepY = stepY;
+        bgCanvasRef.current = null;
+        redraw();
+        onChange?.();
+      },
+      setGridScale: (scale) => {
+        if (!gridRef.current || !scale || scale <= 0) return;
+        gridRef.current.scale = scale;
+        bgCanvasRef.current = null;
+        redraw();
+        onChange?.();
+      },
+      moveGrid: (ox, oy) => {
+        moveGridTo(ox, oy);
+      },
+      hideGrid: () => {
+        if (!gridRef.current) return;
+        gridRef.current = null;
+        bgCanvasRef.current = null;
+        redraw();
+        onChange?.();
+      },
+      fitGridToWindow: (xMin, xMax, yMin, yMax) => {
+        if (imageRef.current) return;
+        const ww = xMax - xMin;
+        const wh = yMax - yMin;
+        if (ww <= 0 || wh <= 0) return;
+        const scale = Math.max(10, Math.min(200, Math.min(W / ww, H / wh) * 0.9));
+        const ox = W / 2 - ((xMin + xMax) / 2) * scale;
+        const oy = H / 2 + ((yMin + yMax) / 2) * scale;
+        const prev = gridRef.current;
+        gridRef.current = {
+          ox,
+          oy,
+          stepX: prev?.stepX ?? 1,
+          stepY: prev?.stepY ?? 1,
+          scale,
+        };
+        bgCanvasRef.current = null;
+        redraw();
+        onChange?.();
+      },
+      hasGrid: () => !!gridRef.current,
     }));
 
     if (fullscreen) {

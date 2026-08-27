@@ -69,22 +69,54 @@ export default function FunctionGraph({ graph }: { graph: GraphSpec }) {
         <line key={`a${v}`} x1={xTo(v)} y1={pad} x2={xTo(v)} y2={H - pad} stroke="#dc2626" strokeWidth={1.5} strokeDasharray="6 4" />
       ))}
 
+      {/* oblique / horizontal asymptote lines */}
+      {(graph.asymptote_lines ?? []).map((al, i) => {
+        const [p1, p2] = al.points ?? [];
+        if (!p1 || !p2) return null;
+        const inRange = (p: number[]) => inX(p[0]) && inY(p[1]);
+        const len = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+        if (!len) return null;
+        const ux = (p2[0] - p1[0]) / len;
+        const uy = (p2[1] - p1[1]) / len;
+        const extend = 0.15 * (x_max - x_min) / Math.max(Math.abs(ux), 1e-6);
+        const q1 = [p1[0] - ux * extend, p1[1] - uy * extend];
+        const q2 = [p2[0] + ux * extend, p2[1] + uy * extend];
+        if (!inRange(q1) && !inRange(q2)) return null;
+        const c1 = inRange(q1) ? q1 : q2;
+        const c2 = inRange(q1) ? q2 : q1;
+        return (
+          <g key={`al${i}`}>
+            <line
+              x1={xTo(c1[0])} y1={yTo(c1[1])}
+              x2={xTo(c2[0])} y2={yTo(c2[1])}
+              stroke="#dc2626" strokeWidth={1.3} strokeDasharray="8 4"
+            />
+            {al.label && inX((c1[0] + c2[0]) / 2) && (
+              <text x={xTo((c1[0] + c2[0]) / 2) + 4} y={yTo((c1[1] + c2[1]) / 2) - 6} fontSize={10} fill="#dc2626">
+                {al.label}
+              </text>
+            )}
+          </g>
+        );
+      })}
+
       {/* curve */}
       {graph.curve.map((seg, i) => (
         <path key={`c${i}`} d={pathOf(seg)} fill="none" stroke="#2563eb" strokeWidth={2.2} strokeLinejoin="round" />
       ))}
 
-      {/* tangent */}
-      {graph.tangent && (
+      {/* tangent(s) */}
+      {(graph.tangents?.length ? graph.tangents : graph.tangent ? [graph.tangent] : []).map((tangent, i) => (
         <line
-          x1={xTo(graph.tangent[0][0])}
-          y1={yTo(graph.tangent[0][1])}
-          x2={xTo(graph.tangent[1][0])}
-          y2={yTo(graph.tangent[1][1])}
+          key={`t${i}`}
+          x1={xTo(tangent[0][0])}
+          y1={yTo(tangent[0][1])}
+          x2={xTo(tangent[1][0])}
+          y2={yTo(tangent[1][1])}
           stroke="#16a34a"
           strokeWidth={2}
         />
-      )}
+      ))}
 
       {/* labeled points */}
       {graph.points.filter((p) => inX(p.x) && inY(p.y)).map((p, i) => (

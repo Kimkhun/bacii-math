@@ -1,0 +1,90 @@
+{
+  "id": "function_study_prep_exercise_5",
+  "source": {
+    "year": null,
+    "track": "preparation",
+    "section": "V",
+    "subject_km": "គណិតវិទ្យា",
+    "description": "Preparation exam — function exercise V: f(x) = (x-1)^2/(2(x-2)) — limits, oblique asymptote, position, derivative, tangent, graph.",
+    "extracted_by": "manual transcription from preparation exam (2026-08), answers verified with SymPy"
+  },
+  "difficulty": "hard",
+  "var": "x",
+  "fn_name": "f",
+  "function_expr": "(x - 1)**2/(2*(x - 2))",
+  "pattern": "f(x) = (x - 1)^2/(2(x - 2))",
+  "pattern_latex": "f(x) = \\frac{(x-1)^2}{2(x-2)}",
+  "prompt": "We are given the function f(x) = (x-1)^2 / (2(x-2)), with x ≠ 2, and graph (C).\n1. Compute lim_{x→2} f(x) and lim_{x→±∞} f(x). Determine the equation of the vertical asymptote of (C).\n2. Show that the line (l): y = x/2 is an oblique asymptote of (C). Study the position of (C) relative to (l).\n3. Compute f'(x) and build the variation table of f.\n4. Draw (C) and its asymptotes.",
+  "prompt_latex": "\\text{គេឱ្យអនុគមន៍ } y=f(x)=\\frac{(x-1)^2}{2(x-2)}\\ ;\\ x\\neq 2 \\text{ មានក្រាប } (C) .\\\\ \\text{1. គណនា } \\lim_{x\\to 2} f(x) \\text{ និង } \\lim_{x\\to \\pm\\infty} f(x) \\text{ រួចកំណត់សមីការអាស៊ីមតូតឈរនៃក្រាប } (C) .\\\\ \\text{2. បង្ហាញថាបន្ទាត់ } (l):\\ y=\\frac{1}{2}x \\text{ ជាអាស៊ីមតូតទ្រេតនៃក្រាប } (C) \\text{ រួចសិក្សាទីតាំងធៀបរវាងក្រាប } (C) \\text{ និង } (l) .\\\\ \\text{3. គណនា } f'(x) \\text{ រួចសង់តារាងអថេរភាពនៃ } f .\\\\ \\text{4. សង់ក្រាប } (C) \\text{ និងអាស៊ីមតូតរបស់វា។}",
+  "graph": {
+    "x_min": -3,
+    "x_max": 8,
+    "y_min": -6,
+    "y_max": 7,
+    "samples": 200,
+    "asymptotes": [
+      { "kind": "vertical", "x": 2 },
+      { "kind": "oblique", "line": "x/2", "label": "y = x/2" }
+    ],
+    "tangent": { "x0": 3 },
+    "points": [
+      { "x": 1, "y": 0, "label": "max" },
+      { "x": 3, "y": 2, "label": "min" }
+    ]
+  },
+  "parts": [
+    {
+      "label": "1",
+      "want": "limits",
+      "kind": "infinity",
+      "items": [
+        { "point": "2", "side": "-" },
+        { "point": "2", "side": "+" },
+        { "point": "-oo" },
+        { "point": "oo" }
+      ],
+      "expected": "oo",
+      "display": "lim at 2⁻ = -∞, 2⁺ = +∞, -∞ = -∞, +∞ = +∞",
+      "question_km": "គណនា $\\lim_{x\\to 2} f(x)$ និង $\\lim_{x\\to \\pm\\infty} f(x)$ រួចកំណត់សមីការអាស៊ីមតូតឈរ",
+      "technique": "As x → 2⁻ the numerator (x-1)² → 1 > 0 while 2(x-2) → 0⁻ so f → -∞; as x → 2⁺, f → +∞ (so x = 2 is the vertical asymptote). f(x) = x/2 + 1/(2(x-2)) behaves like x/2, so f → -∞ at -∞ and +∞ at +∞.",
+      "extra_checkpoints": [
+        { "label": "vertical asymptote x=2", "value": "2", "formula": "vertical_asymptote" }
+      ]
+    },
+    {
+      "label": "2",
+      "want": "position",
+      "kind": "interval",
+      "expected": [
+        { "lo": 2, "hi": 10000000000.0, "lo_open": true, "hi_open": true }
+      ],
+      "display": "(2, ∞)",
+      "question_km": "បង្ហាញថាបន្ទាត់ $(l): y = \\frac{1}{2}x$ ជាអាស៊ីមតូតទ្រេត រួចសិក្សាទីតាំងធៀបរវាងក្រាប $(C)$ និង $(l)$",
+      "line_expr": "x/2",
+      "technique": "f(x) - x/2 = ((x-1)² - x(x-2))/(2(x-2)) = 1/(2(x-2)) → 0 as x → ±∞, so (l): y = x/2 is the oblique asymptote. The difference is positive exactly when x > 2, so (C) is above (l) on (2, ∞) and below on (-∞, 2).",
+      "extra_checkpoints": [
+        { "label": "oblique asymptote y=x/2", "value": "x/2", "formula": "oblique_asymptote" }
+      ]
+    },
+    {
+      "label": "3",
+      "want": "derivative",
+      "kind": "expression",
+      "expected": "(x - 3)*(x - 1)/(2*(x - 2)**2)",
+      "display": "f'(x) = (x-1)(x-3)/(2(x-2)²)",
+      "question_km": "គណនា $f'(x)$ រួចសង់តារាងអថេរភាពនៃ $f$",
+      "technique": "f'(x) = 1/2 - 1/(2(x-2)²) = ((x-2)² - 1)/(2(x-2)²) = (x-1)(x-3)/(2(x-2)²). Critical points x = 1 and x = 3: local maximum at x=1 (f=0), local minimum at x=3 (f=2).",
+      "extra_checkpoints": [
+        { "label": "local max f(1)", "value": "0" },
+        { "label": "local min f(3)", "value": "2" }
+      ]
+    },
+    {
+      "label": "4",
+      "want": "draw",
+      "kind": "draw",
+      "question_km": "សង់ក្រាប $(C)$ និងអាស៊ីមតូតរបស់វា",
+      "technique": "Sketch (C) with the vertical asymptote x = 2, the oblique asymptote y = x/2, the horizontal tangent at x = 3, and the labeled extrema."
+    }
+  ]
+}
