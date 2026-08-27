@@ -8,7 +8,7 @@
     "description": "Preparation exam — function exercise I: f(x) = (x^2+3x+6)/(x+2) — decomposition, oblique asymptote, position, derivative, extrema, limits.",
     "extracted_by": "manual transcription from preparation exam (2026-08), answers verified with SymPy"
   },
-  "difficulty": "hard",
+  "difficulty": "medium",
   "var": "x",
   "fn_name": "f",
   "function_expr": "(x**2 + 3*x + 6)/(x + 2)",

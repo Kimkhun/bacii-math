@@ -27,7 +27,7 @@ def _generate_expr_templates(topic, difficulty, seed, question_type, variant=Non
         "limit": ("limit",),
         "integral": ("definite_integral", "indefinite_integral"),
     }[topic]
-    qt = question_type or allowed[0]
+    qt = question_type or (rng.choice(allowed) if len(allowed) > 1 else allowed[0])
     if qt not in allowed:
         raise ValueError(f"question_type {qt} does not match topic {topic}")
     if difficulty not in _VALID_DIFFICULTIES:

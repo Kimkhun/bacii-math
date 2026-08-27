@@ -4,7 +4,7 @@ import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
-import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, FULL_W, LineSnapshot, PEN_WIDTHS } from "@/components/Canvas";
+import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, FULL_W, LineSnapshot, PEN_WIDTHS, StrokeDocument } from "@/components/Canvas";
 import MathText from "@/components/MathText";
 import DisambiguationCard, { DisambiguationCandidate } from "@/components/DisambiguationCard";
 import FunctionGraph from "@/components/FunctionGraph";
@@ -14,6 +14,31 @@ import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/so
 const CURSIVE = "'Caveat', 'Segoe Script', cursive";
 
 const MARK_STAGGER_MS = 1000;
+const SET_SIZE = 5;
+
+interface SetQuestionRecord {
+  id: string;
+  prompt: string;
+  correct: boolean;
+  skipped?: boolean;
+}
+
+interface QuestionSlotState {
+  question: Question;
+  partIndex: number;
+  exerciseDone: boolean;
+  typedByPart: string[];
+  detectedByPart: (string | null)[];
+  workTextByPart: (string | null)[];
+  workLatexByPart: (string[] | null)[];
+  detectResultByPart: (DetectResult | null)[];
+  resultByPart: (GradeResult | null)[];
+  marksByPart: (ReactNode[] | null)[];
+  linePopsByPart: (ReactNode[] | null)[];
+  strokesByPart: (StrokeDocument | null)[];
+  explanation: Explanation | null;
+  graphGrade: GraphGradeResult | null;
+}
 
 // Keyframes for the red-pen marks + line pops (shared by every part's canvas).
 const MARKS_STYLE = `
@@ -65,6 +90,10 @@ const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: "conjugate", label: "Conjugate" },
     { value: "real_part", label: "Real part" },
     { value: "imaginary_part", label: "Imaginary part" },
+    { value: "complex_arithmetic", label: "Arithmetic (+, −, ×, ÷)" },
+    { value: "complex_power", label: "Power (zⁿ)" },
+    { value: "de_moivre_power", label: "De Moivre formula" },
+    { value: "nth_roots", label: "n-th roots" },
   ],
   limit: [
     { value: "limit:direct_substitution", label: "Direct substitution" },
@@ -428,7 +457,13 @@ function PracticeInner() {
   const [mode, setMode] = useState("templates");
   const [topic, setTopic] = useState("complex");
   const [questionType, setQuestionType] = useState("any");
-  const [difficulty, setDifficulty] = useState("medium");
+  const [difficulty, setDifficulty] = useState("easy");
+  // 5-Question Level Practice Set tracking
+  const [setIndex, setSetIndex] = useState(0); // 0..4 (Question 1 to 5)
+  const [setHistory, setSetHistory] = useState<SetQuestionRecord[]>([]);
+  const [setFinished, setSetFinished] = useState(false);
+  const [setSlots, setSetSlots] = useState<(QuestionSlotState | null)[]>(() => Array(SET_SIZE).fill(null));
+  const setSlotsRef = useRef<(QuestionSlotState | null)[]>(Array(SET_SIZE).fill(null));
 
   // Per-part state: every sub-part (A/B/C/...) owns its own canvas, typed
   // answer, OCR result, and red-pen marks. Single-part topics use index 0.
@@ -543,6 +578,10 @@ function PracticeInner() {
 
   useEffect(() => {
     setStreak(getStreak());
+    if (!searchParams.get("attempt") && !searchParams.get("formula")) {
+      startLevelSet("complex", "easy", "any");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Review mode: /practice?attempt=<id> loads a past attempt and re-draws the
@@ -906,36 +945,182 @@ function PracticeInner() {
     );
   };
 
-  const newQuestion = async () => {
+  const saveCurrentSlotToRef = () => {
+    if (!question) return;
+    const currentStrokes = canvasRefs.current.map((c) => c?.getStrokes() ?? null);
+    const slot: QuestionSlotState = {
+      question,
+      partIndex,
+      exerciseDone,
+      typedByPart,
+      detectedByPart,
+      workTextByPart,
+      workLatexByPart,
+      detectResultByPart,
+      resultByPart,
+      marksByPart,
+      linePopsByPart,
+      strokesByPart: currentStrokes,
+      explanation,
+      graphGrade,
+    };
+    setSlotsRef.current[setIndex] = slot;
+    setSetSlots((prev) => {
+      const next = [...prev];
+      next[setIndex] = slot;
+      return next;
+    });
+  };
+
+  const restoreSlotState = (slot: QuestionSlotState, targetIdx: number) => {
+    setQuestion(slot.question);
+    setPartIndex(slot.partIndex);
+    setExerciseDone(slot.exerciseDone);
+    setTypedByPart(slot.typedByPart);
+    setDetectedByPart(slot.detectedByPart);
+    setWorkTextByPart(slot.workTextByPart);
+    setWorkLatexByPart(slot.workLatexByPart);
+    setDetectResultByPart(slot.detectResultByPart);
+    setResultByPart(slot.resultByPart);
+    setMarksByPart(slot.marksByPart);
+    setLinePopsByPart(slot.linePopsByPart);
+    setExplanation(slot.explanation);
+    setGraphGrade(slot.graphGrade);
+    setSetIndex(targetIdx);
     setError("");
+
+    // Restore strokes onto canvases
+    setTimeout(() => {
+      slot.strokesByPart.forEach((strk, i) => {
+        const cv = canvasRefs.current[i];
+        if (cv) {
+          cv.clear();
+          if (strk) cv.loadStrokes(strk);
+        }
+      });
+    }, 20);
+  };
+
+  const goToQuestionInSet = async (targetIdx: number) => {
+    if (targetIdx < 0 || targetIdx >= SET_SIZE || busy) return;
+    if (targetIdx === setIndex) return;
+
+    // 1. Save current question state
+    saveCurrentSlotToRef();
+
+    // 2. Check if target question is already generated & stored
+    const existing = setSlotsRef.current[targetIdx];
+    if (existing) {
+      restoreSlotState(existing, targetIdx);
+      return;
+    }
+
+    // 3. Otherwise, generate for targetIdx
     setBusy(true);
-    setPracticingFormula(null);
+    setError("");
+    setSetIndex(targetIdx);
     try {
       const cfg: SessionConfig = { mode, topic, questionType, difficulty };
       const q = await generateQuestion(cfg);
       loadQuestion(q);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate");
+      setError(err instanceof Error ? err.message : "Failed to load question");
     } finally {
       setBusy(false);
     }
   };
 
-  // Update the config dropdowns — they only take effect when the student
-  // presses "New question" (no auto-regeneration while selecting).
+  const prevQuestionInSet = async () => {
+    if (setIndex > 0) {
+      await goToQuestionInSet(setIndex - 1);
+    }
+  };
+
+  const nextQuestionInSet = async () => {
+    if (setIndex < SET_SIZE - 1) {
+      await goToQuestionInSet(setIndex + 1);
+    } else {
+      saveCurrentSlotToRef();
+      setSetFinished(true);
+    }
+  };
+
+  const skipQuestionInSet = async () => {
+    if (question) {
+      setSetHistory((prev) => {
+        const next = [...prev];
+        if (!next[setIndex]) {
+          next[setIndex] = {
+            id: question.id,
+            prompt: question.prompt_latex || question.prompt,
+            correct: false,
+            skipped: true,
+          };
+        }
+        return next;
+      });
+    }
+    if (setIndex < SET_SIZE - 1) {
+      await goToQuestionInSet(setIndex + 1);
+    } else {
+      saveCurrentSlotToRef();
+      setSetFinished(true);
+    }
+  };
+
+  const startLevelSet = async (newTopic = topic, newDifficulty = difficulty, newQuestionType = questionType) => {
+    setError("");
+    setBusy(true);
+    setSetIndex(0);
+    setSetHistory([]);
+    setSetFinished(false);
+    setPracticingFormula(null);
+    setSlotsRef.current = Array(SET_SIZE).fill(null);
+    setSetSlots(Array(SET_SIZE).fill(null));
+    try {
+      const cfg: SessionConfig = { mode, topic: newTopic, questionType: newQuestionType, difficulty: newDifficulty };
+      const q = await generateQuestion(cfg);
+      loadQuestion(q);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start practice set");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const levelUp = (nextDiff: string) => {
+    setDifficulty(nextDiff);
+    startLevelSet(topic, nextDiff, questionType);
+  };
+
+  const newQuestion = async () => {
+    startLevelSet(topic, difficulty, questionType);
+  };
+
+  // Update the config dropdowns & trigger level sets
   const changeTopic = (nextTopic: string) => {
     if (nextTopic === topic) return;
     setTopic(nextTopic);
     setQuestionType("any");
+    startLevelSet(nextTopic, difficulty, "any");
   };
 
   const changeQuestionType = (nextType: string) => {
     if (nextType === questionType) return;
     setQuestionType(nextType);
+    startLevelSet(topic, difficulty, nextType);
   };
 
-  const changeDifficulty = (next: string) => setDifficulty(next);
-  const changeMode = (next: string) => setMode(next);
+  const changeDifficulty = (next: string) => {
+    if (next === difficulty) return;
+    setDifficulty(next);
+    startLevelSet(topic, next, questionType);
+  };
+
+  const changeMode = (next: string) => {
+    setMode(next);
+    startLevelSet(topic, difficulty, questionType);
+  };
 
   const clearPractice = () => {
     setQuestion(null);
@@ -986,12 +1171,22 @@ function PracticeInner() {
         strokesToSend, strokesThumb,
       );
       setResult(res);
-      const nowDone = res.correct && res.all_complete;
+      const nowDone = res.correct && (res.all_complete || !currentPart || partLabels.length <= 1);
       if (nowDone) {
         setExerciseDone(true);
       } else if (res.correct && currentPart && partLabels.length > 1) {
         setPartIndex((i) => Math.min(i + 1, partLabels.length - 1));
       }
+      setSetHistory((prev) => {
+        const next = [...prev];
+        next[setIndex] = {
+          id: question.id,
+          prompt: question.prompt_latex || question.prompt,
+          correct: res.correct,
+          skipped: false,
+        };
+        return next;
+      });
       if (res.explanation) setExplanation(res.explanation);
       if (question.topic === "functions" && res.graph) {
         const thumb = activeCanvas()?.getInkSnapshot();
@@ -1061,6 +1256,7 @@ function PracticeInner() {
       } else {
         playGradeSound(res.correct);
       }
+      setTimeout(() => saveCurrentSlotToRef(), 50);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Check failed");
     } finally {
@@ -1497,13 +1693,13 @@ function PracticeInner() {
             )}
           </div>
 
-          <div className="flex items-center gap-3.5 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
             {!reviewMode && (
               <>
                 <select
                   value={topic}
                   onChange={(e) => changeTopic(e.target.value)}
-                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                  className="px-2.5 py-1.5 rounded-lg border border-[#dddad1] text-[12.5px] font-semibold text-[#23272e] bg-white shadow-2xs"
                   title="Topic"
                 >
                   <option value="complex">Complex numbers</option>
@@ -1512,10 +1708,94 @@ function PracticeInner() {
                   <option value="probability">Probability</option>
                   <option value="functions">Functions</option>
                 </select>
+
+                {/* Level Selector Segmented Control */}
+                <div className="flex items-center rounded-lg bg-[#f0ede6] p-0.5 border border-[#dddad1]">
+                  <button
+                    type="button"
+                    onClick={() => changeDifficulty("easy")}
+                    className={`px-2.5 py-1 rounded-md text-[12px] font-semibold transition-all ${
+                      difficulty === "easy"
+                        ? "bg-emerald-600 text-white shadow-xs"
+                        : "text-[#6b6558] hover:text-emerald-700 hover:bg-emerald-50/60"
+                    }`}
+                    title="Easy: Foundational exercises"
+                  >
+                    🟢 Easy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => changeDifficulty("medium")}
+                    className={`px-2.5 py-1 rounded-md text-[12px] font-semibold transition-all ${
+                      difficulty === "medium"
+                        ? "bg-amber-600 text-white shadow-xs"
+                        : "text-[#6b6558] hover:text-amber-700 hover:bg-amber-50/60"
+                    }`}
+                    title="Medium: Standard BAC II exam techniques"
+                  >
+                    🟡 Medium
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => changeDifficulty("hard")}
+                    className={`px-2.5 py-1 rounded-md text-[12px] font-semibold transition-all ${
+                      difficulty === "hard"
+                        ? "bg-purple-600 text-white shadow-xs"
+                        : "text-[#6b6558] hover:text-purple-700 hover:bg-purple-50/60"
+                    }`}
+                    title="Hard: Advanced composite & multi-step problems"
+                  >
+                    🔴 Hard
+                  </button>
+                </div>
+
+                {/* 5-Question Set Progress Pills */}
+                <div className="flex items-center gap-1.5 bg-[#fbfaf8] border border-[#e4e2db] rounded-lg px-2.5 py-1 shadow-2xs">
+                  <span className="text-[11.5px] font-bold text-[#6b6558]">
+                    Q{setIndex + 1}/{SET_SIZE}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: SET_SIZE }).map((_, i) => {
+                      const hist = setHistory[i];
+                      const isCurrent = i === setIndex;
+                      let pillColor = "bg-[#e4e2db] text-[#8a857b]";
+                      let content = `${i + 1}`;
+                      if (hist) {
+                        if (hist.correct) {
+                          pillColor = "bg-emerald-600 text-white shadow-2xs";
+                          content = "✓";
+                        } else if (hist.skipped) {
+                          pillColor = "bg-amber-500 text-white shadow-2xs";
+                          content = "−";
+                        } else {
+                          pillColor = "bg-red-500 text-white shadow-2xs";
+                          content = "✗";
+                        }
+                      } else if (isCurrent) {
+                        pillColor = "bg-[#23272e] text-white ring-2 ring-emerald-500/50 font-bold scale-105 shadow-xs";
+                      } else if (setSlots[i]) {
+                        pillColor = "bg-white text-[#23272e] border border-[#dddad1] hover:bg-[#faf9f6]";
+                      }
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => goToQuestionInSet(i)}
+                          disabled={busy}
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold transition-all cursor-pointer disabled:cursor-not-allowed ${pillColor}`}
+                          title={`Go to Question ${i + 1} of ${SET_SIZE}`}
+                        >
+                          {content}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <select
                   value={questionType}
                   onChange={(e) => changeQuestionType(e.target.value)}
-                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12px] text-[#3f3c35] bg-white max-w-[140px] truncate"
                   title="Question type"
                 >
                   <option value="any">Any type</option>
@@ -1525,21 +1805,12 @@ function PracticeInner() {
                     </option>
                   ))}
                 </select>
-                <select
-                  value={difficulty}
-                  onChange={(e) => changeDifficulty(e.target.value)}
-                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
-                  title="Difficulty"
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
+
                 {topic === "complex" && (
                   <select
                     value={mode}
                     onChange={(e) => changeMode(e.target.value)}
-                    className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                    className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12px] text-[#3f3c35] bg-white"
                     title="Generation mode"
                   >
                     <option value="templates">Templates</option>
@@ -1563,7 +1834,7 @@ function PracticeInner() {
             )}
             {sessions && sessions.length > 0 && !reviewMode && (
               <details className="relative">
-                <summary className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+                <summary className="px-[11px] py-1.5 stylus:px-3 stylus:py-2 rounded-[7px] border border-[#dddad1] text-[12px] font-medium text-[#6b6558] hover:bg-[#faf9f6] cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
                   Saved ({sessions.length})
                 </summary>
                 <div className="absolute right-0 top-full mt-1.5 w-72 max-h-64 overflow-y-auto bg-white border border-[#e4e2db] rounded-lg shadow-lg p-2 space-y-1.5 z-40">
@@ -1604,9 +1875,33 @@ function PracticeInner() {
               </details>
             )}
             <button
+              onClick={prevQuestionInSet}
+              disabled={busy || setIndex === 0}
+              className="px-2.5 py-1.5 rounded-[7px] border border-[#dddad1] text-[12px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-35 disabled:cursor-not-allowed flex items-center gap-1"
+              title="Go to previous exercise (←)"
+            >
+              <span>←</span> Prev
+            </button>
+            <button
+              onClick={skipQuestionInSet}
+              disabled={busy || !question}
+              className="px-2.5 py-1.5 rounded-[7px] border border-[#dddad1] text-[12px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-35 disabled:cursor-not-allowed"
+              title="Skip this exercise and proceed"
+            >
+              Skip
+            </button>
+            <button
+              onClick={nextQuestionInSet}
+              disabled={busy || !question}
+              className="px-2.5 py-1.5 rounded-[7px] border border-[#dddad1] text-[12px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-35 disabled:cursor-not-allowed flex items-center gap-1"
+              title={setIndex < SET_SIZE - 1 ? "Go to next exercise (→)" : "Complete 5-question set"}
+            >
+              Next <span>→</span>
+            </button>
+            <button
               onClick={saveProgressNow}
               disabled={busy || !question}
-              className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
+              className="px-2.5 py-1.5 rounded-[7px] border border-[#dddad1] text-[12px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
               title="Save progress for later"
             >
               Save
@@ -1614,10 +1909,10 @@ function PracticeInner() {
             <button
               onClick={newQuestion}
               disabled={busy}
-              className="px-[15px] py-2 stylus:px-5 stylus:py-3 rounded-[7px] bg-[#23272e] text-white text-[12.5px] font-semibold hover:bg-[#31363f] disabled:opacity-50"
-              title="Generate a new question"
+              className="px-3 py-1.5 rounded-[7px] bg-[#23272e] text-white text-[12px] font-semibold hover:bg-[#31363f] disabled:opacity-50 shadow-2xs"
+              title="Restart a 5-question practice set"
             >
-              {busy ? "Working..." : "New question"}
+              {busy ? "Working..." : "New Set"}
             </button>
           </div>
         </div>
@@ -1645,15 +1940,67 @@ function PracticeInner() {
                   ? `Part ${result.part ?? ""} correct`
                   : "Incorrect"}
               </div>
-              {exerciseDone && (
-                <button
-                  onClick={newQuestion}
-                  disabled={busy}
-                  className="mt-2 w-full px-3 py-2 rounded-lg bg-[#23272e] text-white text-xs font-semibold hover:bg-[#31363f] disabled:opacity-50"
-                >
-                  {busy ? "Working..." : "Next question →"}
-                </button>
-              )}
+              {exerciseDone ? (
+                <div className="mt-2 flex items-center gap-1.5">
+                  {setIndex > 0 && (
+                    <button
+                      onClick={prevQuestionInSet}
+                      disabled={busy}
+                      className="px-3 py-2 rounded-lg border border-[#dddad1] bg-white text-xs font-semibold text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
+                      title="Previous Question"
+                    >
+                      ← Prev
+                    </button>
+                  )}
+                  {setIndex < SET_SIZE - 1 ? (
+                    <button
+                      onClick={nextQuestionInSet}
+                      disabled={busy}
+                      className="flex-1 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <span>{busy ? "Loading..." : `Next Question (${setIndex + 2} of ${SET_SIZE}) →`}</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setSetFinished(true)}
+                      disabled={busy}
+                      className="flex-1 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm animate-pulse"
+                    >
+                      <span>Complete Set & View Results (5/5) 🎉</span>
+                    </button>
+                  )}
+                </div>
+              ) : !result.correct ? (
+                <div className="mt-2 flex items-center gap-1.5">
+                  {setIndex > 0 && (
+                    <button
+                      onClick={prevQuestionInSet}
+                      disabled={busy}
+                      className="px-2.5 py-1.5 rounded-md border border-[#dddad1] bg-white text-xs font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
+                      title="Previous Question"
+                    >
+                      ← Prev
+                    </button>
+                  )}
+                  {setIndex < SET_SIZE - 1 ? (
+                    <button
+                      onClick={nextQuestionInSet}
+                      disabled={busy}
+                      className="flex-1 px-2.5 py-1.5 rounded-md border border-[#dddad1] bg-white text-xs font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
+                    >
+                      {busy ? "Loading..." : `Skip to Q${setIndex + 2} →`}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setSetFinished(true)}
+                      disabled={busy}
+                      className="flex-1 px-2.5 py-1.5 rounded-md border border-[#dddad1] bg-white text-xs font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
+                    >
+                      Finish Set &amp; Summary
+                    </button>
+                  )}
+                </div>
+              ) : null}
               {partLabels.length > 0 && (
                 <div className="mt-1 flex items-center gap-1 text-xs">
                   {partLabels.map((lab, i) => (
@@ -2217,6 +2564,120 @@ function PracticeInner() {
               ) : (
                 "no grade yet"
               )}
+            </div>
+          </div>
+        )}
+        {/* Set Completion Modal */}
+        {setFinished && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div className="bg-white rounded-2xl shadow-2xl border border-[#e4e2db] p-6 max-w-md w-full animate-in fade-in zoom-in-95 duration-200">
+              <div className="text-center space-y-3">
+                <div className="w-16 h-16 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center text-3xl mx-auto shadow-inner">
+                  {setHistory.filter((h) => h?.correct).length >= 4 ? "🏆" : setHistory.filter((h) => h?.correct).length >= 3 ? "⭐" : "💪"}
+                </div>
+                <div>
+                  <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#f0ede6] text-[#6b6558] mb-1">
+                    {topic.toUpperCase()} · {difficulty.toUpperCase()} LEVEL SET
+                  </span>
+                  <h2 className="text-xl font-bold text-[#23272e]">5-Question Set Completed!</h2>
+                  <p className="text-sm text-[#8a857b] mt-0.5">
+                    {setHistory.filter((h) => h?.correct).length >= 4
+                      ? "Outstanding performance! You've mastered this level."
+                      : setHistory.filter((h) => h?.correct).length >= 3
+                      ? "Good job! You're making solid progress."
+                      : "Good effort! Practice more to master these techniques."}
+                  </p>
+                </div>
+
+                {/* Score Display */}
+                <div className="bg-[#faf9f6] border border-[#e4e2db] rounded-xl p-4 flex items-center justify-around">
+                  <div>
+                    <div className="text-3xl font-extrabold text-[#23272e]">
+                      {setHistory.filter((h) => h?.correct).length} <span className="text-base font-normal text-[#8a857b]">/ {SET_SIZE}</span>
+                    </div>
+                    <div className="text-xs text-[#8a857b] font-medium">Correct Answers</div>
+                  </div>
+                  <div className="h-10 w-px bg-[#e4e2db]" />
+                  <div>
+                    <div className="text-3xl font-extrabold text-emerald-600">
+                      {Math.round((setHistory.filter((h) => h?.correct).length / SET_SIZE) * 100)}%
+                    </div>
+                    <div className="text-xs text-[#8a857b] font-medium">Accuracy</div>
+                  </div>
+                </div>
+
+                {/* Question-by-question pills */}
+                <div className="flex justify-center items-center gap-2 py-1">
+                  {Array.from({ length: SET_SIZE }).map((_, i) => {
+                    const h = setHistory[i];
+                    const isCorrect = h?.correct;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          setSetFinished(false);
+                          goToQuestionInSet(i);
+                        }}
+                        className={`flex-1 py-1.5 rounded-lg border text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all hover:scale-105 ${
+                          isCorrect
+                            ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                            : h?.skipped
+                            ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+                            : "bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                        }`}
+                        title={`Review Question ${i + 1}`}
+                      >
+                        <span>Q{i + 1}</span>
+                        <span>{isCorrect ? "✓" : h?.skipped ? "−" : "✗"}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Action Buttons & Level-Up */}
+                <div className="space-y-2 pt-2">
+                  {difficulty === "easy" && (
+                    <button
+                      onClick={() => levelUp("medium")}
+                      className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 shadow-md transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <span>Level Up to Medium (5 Questions) 🚀</span>
+                    </button>
+                  )}
+                  {difficulty === "medium" && (
+                    <button
+                      onClick={() => levelUp("hard")}
+                      className="w-full py-2.5 px-4 rounded-xl bg-purple-600 text-white font-bold text-sm hover:bg-purple-700 shadow-md transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <span>Level Up to Hard (5 Questions) 🚀</span>
+                    </button>
+                  )}
+                  {difficulty === "hard" && (
+                    <button
+                      onClick={() => startLevelSet(topic, "hard")}
+                      className="w-full py-2.5 px-4 rounded-xl bg-[#23272e] text-white font-bold text-sm hover:bg-[#31363f] shadow-md transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <span>Practice Another Hard Set 🎯</span>
+                    </button>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => startLevelSet(topic, difficulty)}
+                      className="flex-1 py-2 px-3 rounded-lg border border-[#dddad1] bg-white text-xs font-semibold text-[#6b6558] hover:bg-[#faf9f6]"
+                    >
+                      Retry {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Set 🔄
+                    </button>
+                    <button
+                      onClick={() => setSetFinished(false)}
+                      className="py-2 px-3 rounded-lg border border-[#dddad1] bg-white text-xs font-semibold text-[#6b6558] hover:bg-[#faf9f6]"
+                    >
+                      Review Canvas
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

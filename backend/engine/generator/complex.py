@@ -155,13 +155,20 @@ def _build_nth_root(rho, k0, d0, n, difficulty):
 def _sign(rng, v):
     return v if rng.random() < 0.5 else -v
 
+_COMPLEX_TYPES_BY_DIFFICULTY = {
+    "easy": ["modulus", "argument", "conjugate", "real_part", "imaginary_part", "complex_arithmetic", "complex_power"],
+    "medium": ["modulus", "argument", "conjugate", "complex_arithmetic", "complex_power", "de_moivre_power", "nth_roots"],
+    "hard": ["modulus", "argument", "complex_arithmetic", "complex_power", "de_moivre_power", "nth_roots"],
+}
+
 def _generate_templates(difficulty, seed, question_type):
     rng = random.Random(seed)
-    qt = question_type or rng.choice(QUESTION_TYPES)
-    if qt not in QUESTION_TYPES:
-        raise ValueError(f"unknown question_type: {qt}")
     if difficulty not in _HI_RANGE:
         raise ValueError(f"unknown difficulty: {difficulty}")
+    pool_types = _COMPLEX_TYPES_BY_DIFFICULTY.get(difficulty, QUESTION_TYPES)
+    qt = question_type or rng.choice(pool_types)
+    if qt not in QUESTION_TYPES:
+        raise ValueError(f"unknown question_type: {qt}")
 
     curated_pool = [
         t for t in _COMPLEX_CURATED_TEMPLATES

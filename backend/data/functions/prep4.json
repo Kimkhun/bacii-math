@@ -8,7 +8,7 @@
     "description": "Preparation exam — function exercise IV: f(x) = x^2/(4-x^2) — limits, asymptotes, derivative, variation, parity, graph.",
     "extracted_by": "manual transcription from preparation exam (2026-08), answers verified with SymPy"
   },
-  "difficulty": "hard",
+  "difficulty": "easy",
   "var": "x",
   "fn_name": "f",
   "function_expr": "x**2/(4 - x**2)",
