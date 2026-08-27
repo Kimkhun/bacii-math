@@ -7,9 +7,11 @@ venv/
 
 # Secrets
 backend/credentials/
+backend/math_book/
 
 # Runtime artifacts
 
 # Node
 node_modules/
 .next/
+2022-2023.pdf

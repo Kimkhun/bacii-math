@@ -1,0 +1,68 @@
+{
+  "formula_name": "verify_and_general_particular_solution",
+  "topic": "differential_equations",
+  "description": "Lesson content on verifying that a given function solves a differential equation, the antiderivative link (y' = f(x) implies y = the integral of f(x) dx), and the distinction between the general solution (with an arbitrary constant) and a particular solution (constant fixed by an initial condition y(x0) = y0).",
+  "source": {
+    "files": [
+      "math_book/PXL_20260827_125516371.jpg",
+      "math_book/PXL_20260827_125528079.jpg",
+      "math_book/PXL_20260827_125530237.jpg",
+      "math_book/PXL_20260827_125549825.jpg",
+      "math_book/PXL_20260827_125552733.jpg"
+    ],
+    "description": "Cambodian BAC II grade-12 differential-equations lesson chapter (PHANKIMSIE booklet) — lesson definitions, theorems, and fully worked examples, photographed pages",
+    "extracted_by": "manual OCR/transcription from photographed textbook pages (Claude Code), 2026-08-27"
+  },
+  "count": 4,
+  "lessons": [
+    {
+      "id": "p3_verify_solution_definition",
+      "source_photo": "PXL_20260827_125516371.jpg",
+      "type": "definition",
+      "title": "When a function is a solution of a differential equation",
+      "statement_latex": "y = f(x) \\text{ is a solution of a differential equation if substituting it (and its derivatives) into the equation satisfies it identically.}",
+      "solution_steps": [],
+      "technique": "verify_solution"
+    },
+    {
+      "id": "p3_p4_verify_cosx_example",
+      "source_photo": "PXL_20260827_125528079.jpg",
+      "type": "worked_example",
+      "title": "Verify y = cos x solves y'' + y = 0",
+      "statement_latex": "\\text{Show that } y = \\cos x \\text{ is a solution of } y'' + y = 0.",
+      "solution_steps": [
+        "y = \\cos x \\implies y' = -\\sin x \\implies y'' = -\\cos x",
+        "y'' + y = -\\cos x + \\cos x = 0"
+      ],
+      "answer_latex": "\\text{Yes: } y = \\cos x \\text{ is a solution of } y'' + y = 0.",
+      "technique": "verify_solution"
+    },
+    {
+      "id": "p6_p7_antiderivative_theorem_example",
+      "source_photo": "PXL_20260827_125549825.jpg",
+      "type": "theorem",
+      "title": "y' = f(x) implies y = the antiderivative of f(x), worked on y' = 2x^2",
+      "statement_latex": "\\frac{dy}{dx} = f(x) \\iff dy = f(x)\\,dx \\iff \\int dy = \\int f(x)\\,dx \\iff y = \\int f(x)\\,dx + c",
+      "solution_steps": [
+        "y' = 2x^2 \\implies \\frac{dy}{dx} = 2x^2",
+        "dy = 2x^2\\,dx",
+        "\\int dy = \\int 2x^2\\,dx",
+        "y = 2\\cdot\\frac{x^{2+1}}{2+1} + c"
+      ],
+      "answer_latex": "y = \\frac{2}{3}x^3 + c,\\quad c \\in \\mathbb{R}",
+      "technique": "antiderivative_general_solution"
+    },
+    {
+      "id": "p6_particular_solution_constant",
+      "source_photo": "PXL_20260827_125549825.jpg",
+      "type": "definition",
+      "title": "Fixing the constant with an initial condition (particular solution)",
+      "statement_latex": "y = \\int f(x)\\,dx + c, \\quad \\text{given } y(x_0) = y_0",
+      "solution_steps": [
+        "F(x_0) + c = y_0"
+      ],
+      "answer_latex": "c = y_0 - F(x_0)",
+      "technique": "antiderivative_general_solution"
+    }
+  ]
+}

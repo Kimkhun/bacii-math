@@ -1,0 +1,33 @@
+{
+  "formula_name": "separable_first_order_ode",
+  "topic": "differential_equations",
+  "description": "First-order separable differential equations: g(y) dy/dx = f(x), solved by separating variables and integrating both sides.",
+  "source": {
+    "files": ["math_book/PXL_20260827_125604607.jpg"],
+    "description": "Cambodian BAC II grade-12 differential-equations lesson chapter (PHANKIMSIE booklet) — lesson definitions, theorems, and fully worked examples, photographed pages",
+    "extracted_by": "manual OCR/transcription from photographed textbook pages (Claude Code), 2026-08-27"
+  },
+  "count": 1,
+  "lessons": [
+    {
+      "id": "p8_separable_theorem_example",
+      "source_photo": "PXL_20260827_125604607.jpg",
+      "type": "theorem",
+      "title": "Separable 1st-order ODE, worked on (2-x)y' - 3y = 0",
+      "statement_latex": "g(y)\\frac{dy}{dx} = f(x) \\iff g(y)\\,dy = f(x)\\,dx \\implies \\int g(y)\\,dy = \\int f(x)\\,dx \\implies G(y) = F(x) + c,\\ c \\in \\mathbb{R}",
+      "solution_steps": [
+        "(2-x)\\frac{dy}{dx} - 3y = 0",
+        "(2-x)\\,dy = 3y\\,dx",
+        "\\frac{1}{3y}\\,dy = \\frac{1}{2-x}\\,dx",
+        "\\int \\frac{1}{3y}\\,dy = \\int \\frac{1}{2-x}\\,dx",
+        "\\frac{1}{3}\\int \\frac{1}{y}\\,dy = -\\int \\frac{1}{x-2}\\,dx",
+        "\\frac{1}{3}\\ln|y| = -\\ln|x-2| + c",
+        "\\ln|y| = -3\\ln|x-2| + c",
+        "|y| = e^{-3\\ln|x-2|+c}",
+        "y = \\pm e^c \\cdot e^{-3\\ln|x-2|}"
+      ],
+      "answer_latex": "y = Ae^{-3\\ln|x-2|},\\quad A \\in \\mathbb{R}",
+      "technique": "separable_ode"
+    }
+  ]
+}

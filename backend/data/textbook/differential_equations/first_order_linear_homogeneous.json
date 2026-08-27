@@ -1,0 +1,62 @@
+{
+  "formula_name": "first_order_linear_homogeneous",
+  "topic": "differential_equations",
+  "description": "First-order linear homogeneous ODE with constant coefficient: y' + ay = 0, solved by separation of variables to give the general solution y = Ae^{-ax}. Includes a classification drill (which equations are/aren't of this separable form) and two fully-worked examples.",
+  "source": {
+    "files": [
+      "math_book/PXL_20260827_125607631.jpg",
+      "math_book/PXL_20260827_125615312.jpg"
+    ],
+    "description": "Cambodian BAC II grade-12 differential-equations lesson chapter (PHANKIMSIE booklet) — lesson definitions, theorems, and fully worked examples, photographed pages",
+    "extracted_by": "manual OCR/transcription from photographed textbook pages (Claude Code), 2026-08-27"
+  },
+  "count": 3,
+  "lessons": [
+    {
+      "id": "p9_classification_drill",
+      "source_photo": "PXL_20260827_125607631.jpg",
+      "type": "worked_example",
+      "title": "Recognizing y' + ay = 0 form (not every ODE is directly solvable this way)",
+      "statement_latex": "\\text{ក. } y' = -2 + y \\qquad \\text{ខ. } y' - y = 4 \\qquad \\text{គ. } \\frac{dy}{dx} = \\frac{y-1}{xy} - x",
+      "solution_steps": [
+        "\\text{ក. } y' = -2+y \\iff y' - y = -2 \\text{ is of the form } y' + ay = p(x) \\text{ (homogeneous constant-coefficient form } y'+ay=0 \\text{ does not apply directly since RHS} \\neq 0\\text{).}",
+        "\\text{ខ. } y' - y = 4 \\text{ is likewise non-homogeneous (constant RHS).}",
+        "\\text{គ. } \\frac{dy}{dx} = \\frac{y-1}{xy} - x \\text{ is not of the linear constant-coefficient form at all.}"
+      ],
+      "technique": "first_order_linear_homogeneous_constant"
+    },
+    {
+      "id": "p9_theorem3_example7",
+      "source_photo": "PXL_20260827_125607631.jpg",
+      "type": "theorem",
+      "title": "General solution of y' + ay = 0",
+      "statement_latex": "y' + ay = 0,\\quad a \\in \\mathbb{R}",
+      "solution_steps": [
+        "\\frac{dy}{dx} = -ay",
+        "\\frac{dy}{y} = -a\\,dx",
+        "\\int \\frac{dy}{y} = -a\\int dx",
+        "\\ln|y| = -ax + c",
+        "|y| = e^{-ax+c}",
+        "y = \\pm e^c \\cdot e^{-ax}"
+      ],
+      "answer_latex": "y = Ae^{-ax},\\quad A \\in \\mathbb{R}",
+      "technique": "first_order_linear_homogeneous_constant"
+    },
+    {
+      "id": "p10_example8",
+      "source_photo": "PXL_20260827_125615312.jpg",
+      "type": "worked_example",
+      "title": "Solve 2y' - 5y = 0",
+      "statement_latex": "2y' - 5y = 0",
+      "solution_steps": [
+        "2\\frac{dy}{dx} = 5y",
+        "\\frac{1}{y}\\,dy = \\frac{5}{2}\\,dx",
+        "\\int \\frac{1}{y}\\,dy = \\int \\frac{5}{2}\\,dx",
+        "\\ln|y| = \\frac{5}{2}x + c",
+        "|y| = e^{\\frac{5}{2}x+c}"
+      ],
+      "answer_latex": "y = Ae^{\\frac{5}{2}x},\\quad A \\in \\mathbb{R}",
+      "technique": "first_order_linear_homogeneous_constant"
+    }
+  ]
+}

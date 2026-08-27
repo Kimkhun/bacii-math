@@ -1,0 +1,88 @@
+{
+  "first_order_linear_homogeneous_constant": {
+    "name_en": "First-order linear homogeneous ODE (constant coefficient)",
+    "name_km": "",
+    "latex": "y' + ay = 0 \\implies y = Ae^{-ax}",
+    "weight": 1,
+    "group": "differential_equations",
+    "formulas": [
+      "y' + ay = 0",
+      "\\text{Characteristic equation: } \\lambda + a = 0 \\implies \\lambda = -a",
+      "y = Ae^{-ax}, \\quad A \\in \\mathbb{R}"
+    ]
+  },
+  "first_order_linear_homogeneous_variable": {
+    "name_en": "First-order linear homogeneous ODE (variable coefficient)",
+    "name_km": "",
+    "latex": "y' + p(x)y = 0 \\implies y = Ae^{-\\int p(x)\\,dx}",
+    "weight": 2,
+    "group": "differential_equations",
+    "formulas": [
+      "y' + p(x)y = 0",
+      "\\frac{dy}{y} = -p(x)\\,dx",
+      "\\ln|y| = -\\int p(x)\\,dx + c",
+      "y = Ae^{-\\int p(x)\\,dx}, \\quad A \\in \\mathbb{R}"
+    ]
+  },
+  "first_order_linear_nonhomogeneous": {
+    "name_en": "First-order linear non-homogeneous ODE",
+    "name_km": "",
+    "latex": "y' + ay = f(x) \\implies y = y_c + y_p",
+    "weight": 2,
+    "group": "differential_equations",
+    "formulas": [
+      "y' + ay = f(x)",
+      "y_c: \\text{ general solution of } y' + ay = 0",
+      "y_p: \\text{ particular solution of } y' + ay = f(x)",
+      "y = y_c + y_p"
+    ]
+  },
+  "second_order_linear_homogeneous_constant": {
+    "name_en": "Second-order linear homogeneous ODE (constant coefficients)",
+    "name_km": "",
+    "latex": "ay'' + by' + cy = 0",
+    "weight": 2,
+    "group": "differential_equations",
+    "formulas": [
+      "ay'' + by' + cy = 0, \\quad a \\neq 0",
+      "\\text{Characteristic equation: } a\\lambda^2 + b\\lambda + c = 0, \\quad \\Delta = b^2 - 4ac",
+      "\\Delta > 0,\\ \\lambda_1 \\neq \\lambda_2 \\in \\mathbb{R}: y = Ae^{\\lambda_1 x} + Be^{\\lambda_2 x}",
+      "\\Delta = 0,\\ \\lambda_1 = \\lambda_2 = \\lambda_0: y = (Ax+B)e^{\\lambda_0 x}",
+      "\\Delta < 0,\\ \\lambda = \\alpha \\pm \\beta i: y = (A\\cos\\beta x + B\\sin\\beta x)e^{\\alpha x}"
+    ]
+  },
+  "second_order_linear_nonhomogeneous": {
+    "name_en": "Second-order linear non-homogeneous ODE",
+    "name_km": "",
+    "latex": "ay'' + by' + cy = p(x) \\implies y = y_c + y_p",
+    "weight": 3,
+    "group": "differential_equations",
+    "formulas": [
+      "ay'' + by' + cy = p(x), \\quad p(x) \\neq 0",
+      "y_c: \\text{ general solution of } ay'' + by' + cy = 0",
+      "y_p: \\text{ particular solution of } ay'' + by' + cy = p(x)",
+      "y = y_c + y_p"
+    ]
+  },
+  "undetermined_coefficients_particular_solution": {
+    "name_en": "Method of undetermined coefficients (particular solution table)",
+    "name_km": "",
+    "latex": "p(x) = ke^{\\alpha x} \\implies y_p = Ae^{\\alpha x} \\ (\\lambda \\neq \\alpha)",
+    "weight": 2,
+    "group": "differential_equations",
+    "formulas": [
+      "p(x) = ke^{\\alpha x},\\ \\lambda \\neq \\alpha \\implies y_p = Ae^{\\alpha x}",
+      "p(x) = ke^{\\alpha x},\\ \\lambda = \\alpha \\implies y_p = Axe^{\\alpha x}",
+      "p(x) = ke^{\\alpha x},\\ \\lambda = \\alpha\\ (\\Delta = 0) \\implies y_p = Ax^2e^{\\alpha x}",
+      "p(x) = \\text{degree-1 polynomial} \\implies y_p = ax + b",
+      "p(x) = \\text{degree-2 polynomial} \\implies y_p = ax^2 + bx + c",
+      "p(x) = k\\cos\\beta x \\text{ or } k\\sin\\beta x,\\ \\lambda \\neq i\\beta \\implies y_p = A\\cos\\beta x + B\\sin\\beta x",
+      "p(x) = k\\cos\\beta x \\text{ or } k\\sin\\beta x,\\ \\lambda = i\\beta \\implies y_p = x(A\\cos\\beta x + B\\sin\\beta x)",
+      "p(x) = ke^{\\alpha x}\\cos\\beta x \\text{ or } ke^{\\alpha x}\\sin\\beta x,\\ \\lambda \\neq \\alpha \\pm i\\beta \\implies y_p = e^{\\alpha x}(A\\cos\\beta x + B\\sin\\beta x)",
+      "p(x) = ke^{\\alpha x}\\cos\\beta x \\text{ or } ke^{\\alpha x}\\sin\\beta x,\\ \\lambda = \\alpha \\pm i\\beta \\implies y_p = xe^{\\alpha x}(A\\cos\\beta x + B\\sin\\beta x)",
+      "p(x) = kx^n e^{\\alpha x},\\ \\lambda \\neq \\alpha \\implies y_p = e^{\\lambda x}(A_nx^n + A_{n-1}x^{n-1} + \\dots + A_1x + A_0)",
+      "p(x) = kx^n e^{\\alpha x},\\ \\lambda = \\alpha \\implies y_p = xe^{\\lambda x}(A_nx^n + A_{n-1}x^{n-1} + \\dots + A_1x + A_0)",
+      "p(x) = kx^n e^{\\alpha x},\\ \\lambda = \\alpha\\ (\\Delta = 0) \\implies y_p = x^2e^{\\lambda x}(A_nx^n + A_{n-1}x^{n-1} + \\dots + A_1x + A_0)"
+    ]
+  }
+}

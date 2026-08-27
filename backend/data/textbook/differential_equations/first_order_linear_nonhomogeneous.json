@@ -1,0 +1,81 @@
+{
+  "formula_name": "first_order_linear_nonhomogeneous",
+  "topic": "differential_equations",
+  "description": "First-order linear non-homogeneous ODE y' + ay = p(x), p(x) != 0: general solution = complementary (y_c, from the homogeneous equation) + particular (y_p). Covers undetermined coefficients for a polynomial RHS and the variation-of-parameters / integrating-factor derivation for a general p(x).",
+  "source": {
+    "files": [
+      "math_book/PXL_20260827_125618045.jpg",
+      "math_book/PXL_20260827_125626432.jpg",
+      "math_book/PXL_20260827_125629714.jpg",
+      "math_book/PXL_20260827_125638940.jpg"
+    ],
+    "description": "Cambodian BAC II grade-12 differential-equations lesson chapter (PHANKIMSIE booklet) — lesson definitions, theorems, and fully worked examples, photographed pages",
+    "extracted_by": "manual OCR/transcription from photographed textbook pages (Claude Code), 2026-08-27"
+  },
+  "count": 4,
+  "lessons": [
+    {
+      "id": "p11_theorem4_existence",
+      "source_photo": "PXL_20260827_125618045.jpg",
+      "type": "theorem",
+      "title": "y = y_c + y_p for y' + ay = p(x)",
+      "statement_latex": "y' + ay = p(x), \\quad p(x) \\neq 0",
+      "solution_steps": [
+        "\\text{Find } y_c \\text{, the general solution of the associated homogeneous equation } y' + ay = 0.",
+        "\\text{Find one particular solution } y_p \\text{ of } y' + ay = p(x) \\text{ (its form depends on the form of } p(x)\\text{).}"
+      ],
+      "answer_latex": "y = y_c + y_p",
+      "technique": "first_order_linear_nonhomogeneous"
+    },
+    {
+      "id": "p11_p12_example9",
+      "source_photo": "PXL_20260827_125626432.jpg",
+      "type": "worked_example",
+      "title": "Solve -2y' + 3y = 3x^2 + 5x - 3 (undetermined coefficients, polynomial RHS)",
+      "statement_latex": "-2y' + 3y = 3x^2 + 5x - 3",
+      "solution_steps": [
+        "\\text{Homogeneous: } -2y' + 3y = 0 \\iff y' - \\tfrac{3}{2}y = 0 \\implies y_c = Ae^{\\frac{3}{2}x},\\ A \\in \\mathbb{R}",
+        "\\text{Ansatz: } y_p = ax^2+bx+c \\implies y_p' = 2ax+b",
+        "-2(2ax+b) + 3(ax^2+bx+c) = 3x^2+5x-3",
+        "3ax^2 + (-4a+3b)x + (-2b+3c) = 3x^2+5x-3",
+        "\\begin{cases}3a=3\\\\-4a+3b=5\\\\-2b+3c=-3\\end{cases} \\implies \\begin{cases}a=1\\\\b=3\\\\c=1\\end{cases}",
+        "y_p = x^2+3x+1"
+      ],
+      "answer_latex": "y = Ae^{\\frac{3}{2}x} + x^2 + 3x + 1,\\quad A \\in \\mathbb{R}",
+      "technique": "first_order_linear_nonhomogeneous"
+    },
+    {
+      "id": "p13_theorem5_variation_of_parameters",
+      "source_photo": "PXL_20260827_125629714.jpg",
+      "type": "theorem",
+      "title": "General formula for y' + ay = p(x) via variation of parameters",
+      "statement_latex": "(E):\\ y' + ay = p(x),\\quad p(x) \\neq 0",
+      "solution_steps": [
+        "\\text{Homogeneous solution: } y = Ae^{-ax},\\ a,A \\in \\mathbb{R}",
+        "\\text{Let the constant vary: } y = A(x)e^{-ax}",
+        "y' = -aA(x)e^{-ax} + A'(x)e^{-ax}",
+        "\\text{Substitute into (E): } p(x) = A'(x)e^{-ax} - aA(x)e^{-ax} + aA(x)e^{-ax}",
+        "A'(x)e^{-ax} = p(x) \\implies \\frac{d(A(x))}{dx} = e^{ax}p(x)",
+        "A(x) = \\int e^{ax}p(x)\\,dx + c"
+      ],
+      "answer_latex": "y = e^{-ax}\\left[\\int e^{ax}p(x)\\,dx + c\\right] = ce^{-ax} + e^{-ax}\\int e^{ax}p(x)\\,dx,\\quad y_c = ce^{-ax},\\ y_p = e^{-ax}\\int e^{ax}p(x)\\,dx",
+      "technique": "first_order_linear_nonhomogeneous"
+    },
+    {
+      "id": "p14_example10",
+      "source_photo": "PXL_20260827_125638940.jpg",
+      "type": "worked_example",
+      "title": "Solve 2y' + 3y = e^{-x} (variation of parameters)",
+      "statement_latex": "2y' + 3y = e^{-x}",
+      "solution_steps": [
+        "\\text{Homogeneous: } y' + \\tfrac{3}{2}y = 0 \\implies y_c = Ae^{-\\frac{3}{2}x}",
+        "\\text{Let } y = A(x)e^{-\\frac{3}{2}x}",
+        "2A'(x)e^{-\\frac{3}{2}x} = e^{-x} \\implies A'(x) = \\tfrac{1}{2}e^{-x}e^{\\frac{3}{2}x} = \\tfrac{1}{2}e^{\\frac{1}{2}x}",
+        "A(x) = \\int \\tfrac{1}{2}e^{\\frac{1}{2}x}\\,dx = e^{\\frac{1}{2}x} + c",
+        "y = \\left(e^{\\frac{1}{2}x}+c\\right)e^{-\\frac{3}{2}x} = e^{-x} + ce^{-\\frac{3}{2}x}"
+      ],
+      "answer_latex": "y = e^{-x} + ce^{-\\frac{3}{2}x},\\quad c \\in \\mathbb{R}",
+      "technique": "first_order_linear_nonhomogeneous"
+    }
+  ]
+}
