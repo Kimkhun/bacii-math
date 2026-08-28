@@ -7,6 +7,7 @@ function renderMath(promptLatex: string | null, prompt: string): string {
     return katex.renderToString(promptLatex, {
       throwOnError: false,
       displayMode: true,
+      strict: "ignore",
     });
   } catch {
     return "";

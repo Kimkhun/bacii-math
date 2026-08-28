@@ -14,7 +14,6 @@
   "function_expr": "(x**2 - 4*x)/(x**2 - 4*x + 3)",
   "pattern": "f(x) = (x^2 - 4x)/(x^2 - 4x + 3)",
   "pattern_latex": "f(x) = \\frac{x^2 - 4x}{x^2 - 4x + 3}",
-  "prompt": "We have the function f defined by f(x) = (x^2 - 4x)/(x^2 - 4x + 3), with graph (C).\n1. Find the domain of f, then compute lim_{x→1^-} f(x), lim_{x→1^+} f(x), lim_{x→3^-} f(x), lim_{x→3^+} f(x) and lim_{x→±∞} f(x).\n2. Find the equations of the asymptotes of (C).\n3. Compute f'(x) and build the variation table of f.\n4. Find the equations of the tangents to (C) at x = 0 and x = 4.\n5. Draw (C) together with the tangents.",
   "prompt_latex": "\\text{គេមានអនុគមន៍ } y=f(x)=\\frac{x^2-4x}{x^2-4x+3} \\text{ មានក្រាប } (C) .\\\\ \\text{1. រកដែនកំណត់នៃ } f \\text{ រួចគណនា } \\lim_{x\\to 1^-} f(x)\\ ;\\ \\lim_{x\\to 1^+} f(x)\\ ;\\ \\lim_{x\\to 3^-} f(x)\\ ;\\ \\lim_{x\\to 3^+} f(x) \\text{ និង } \\lim_{x\\to \\pm\\infty} f(x) .\\\\ \\text{2. រកសមីការអាស៊ីមតូតនៃក្រាប } (C) .\\\\ \\text{3. គណនា } f'(x) \\text{ រួចសង់តារាងអថេរភាពនៃ } f .\\\\ \\text{4. កំណត់សមីការបន្ទាត់ប៉ះនៃក្រាប } (C) \\text{ ត្រង់ } x=0 \\text{ និង } x=4 .\\\\ \\text{5. សង់ក្រាប } (C) \\text{ ព្រមទាំងបន្ទាត់ប៉ះទាំងពីរ។}",
   "graph": {
     "x_min": -3,
@@ -47,7 +46,6 @@
       ],
       "display": "(-∞, 1) ∪ (1, 3) ∪ (3, ∞)",
       "question_km": "រកដែនកំណត់នៃ $f$ រួចគណនាលីមីតត្រង់ $1^{\\pm}, 3^{\\pm}$ និង $\\pm\\infty$",
-      "technique": "The denominator x² - 4x + 3 = (x-1)(x-3) vanishes at x = 1 and x = 3, so D = R \\ {1,3}. Limits: at 1⁻ → -∞, 1⁺ → +∞, 3⁻ → +∞, 3⁺ → -∞, and both ±∞ → 1.",
       "extra_checkpoints": [
         { "label": "lim x->1^-", "value": "-oo", "formula": "vertical_asymptote" },
         { "label": "lim x->1^+", "value": "oo", "formula": "vertical_asymptote" },
@@ -64,7 +62,6 @@
       "expected": "1",
       "display": "y = 1",
       "question_km": "រកសមីការអាស៊ីមតូតនៃក្រាប $(C)$",
-      "technique": "The limits at ±∞ are both 1, so the horizontal asymptote is y = 1. The vertical asymptotes x = 1 and x = 3 come from the one-sided limits in part 1.",
       "extra_checkpoints": [
         { "label": "vertical asymptote x=1", "value": "1", "formula": "vertical_asymptote" },
         { "label": "vertical asymptote x=3", "value": "3", "formula": "vertical_asymptote" }
@@ -77,7 +74,6 @@
       "expected": "6*(x - 2)/((x - 3)**2*(x - 1)**2)",
       "display": "f'(x) = 6(x-2)/((x-1)²(x-3)²)",
       "question_km": "គណនា $f'(x)$ រួចសង់តារាងអថេរភាពនៃ $f$",
-      "technique": "By the quotient rule f'(x) = 6(x-2)/((x-1)²(x-3)²). Its sign is the sign of x - 2, so f decreases on (-∞,1) ∪ (1,2) and increases on (2,3) ∪ (3,∞): local minimum at x = 2, f(2) = 4.",
       "extra_checkpoints": [
         { "label": "local min f(2)", "value": "4" }
       ]
@@ -90,7 +86,6 @@
       "expected": "4*x/3 - 16/3",
       "display": "y = 4x/3 - 16/3",
       "question_km": "កំណត់សមីការបន្ទាត់ប៉ះនៃក្រាប $(C)$ ត្រង់ $x=0$ និង $x=4$",
-      "technique": "f(4) = 0 and f'(4) = 4/3, so the tangent at x = 4 is y = (4/3)x - 16/3. (The tangent at x = 0 is y = -(4/3)x, given as a checkpoint.)",
       "extra_checkpoints": [
         { "label": "tangent at x=0", "value": "-4*x/3", "formula": "tangent_equation" }
       ]
@@ -99,8 +94,7 @@
       "label": "5",
       "want": "draw",
       "kind": "draw",
-      "question_km": "សង់ក្រាប $(C)$ ព្រមទាំងបន្ទាត់ប៉ះទាំងពីរ",
-      "technique": "Sketch (C) with the vertical asymptotes x = 1, x = 3, the horizontal asymptote y = 1, and the two tangents at x = 0 and x = 4."
+      "question_km": "សង់ក្រាប $(C)$ ព្រមទាំងបន្ទាត់ប៉ះទាំងពីរ"
     }
   ]
 }

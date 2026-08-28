@@ -14,7 +14,6 @@
   "function_expr": "x**2/(4 - x**2)",
   "pattern": "f(x) = x^2/(4 - x^2)",
   "pattern_latex": "f(x) = \\frac{x^2}{4 - x^2}",
-  "prompt": "We are given f(x) = x^2/(4 - x^2), with x ≠ -2, x ≠ 2, and graph (C).\n1. Compute lim_{x→-2} f(x), lim_{x→2} f(x), lim_{x→±∞} f(x). Find the equations of the vertical and horizontal asymptotes of (C).\n2. Show that for every x ≠ ±2, f'(x) = 8x/(4 - x^2)^2.\n3. Build the variation table of f.\n4. Show that f is an even function. Deduce the axis of symmetry of (C).\n5. Compute f(-3), f(3) and draw (C).",
   "prompt_latex": "\\text{គេឱ្យ } f(x)=\\frac{x^2}{4-x^2} \\text{ ដែល } x\\neq -2,\\ x\\neq 2 \\text{ និងមានក្រាប } (C) .\\\\ \\text{1. គណនា } \\lim_{x\\to -2} f(x)\\ ;\\ \\lim_{x\\to 2} f(x)\\ ;\\ \\lim_{x\\to \\pm\\infty} f(x) \\text{ រួចរកសមីការអាស៊ីមតូតឈរ និងដេកនៃក្រាប } (C) .\\\\ \\text{2. បង្ហាញថា គ្រប់ } x\\neq \\pm 2 \\text{ នោះ } f'(x)=\\frac{8x}{(4-x^2)^2} .\\\\ \\text{3. សង់តារាងអថេរភាពនៃ } f .\\\\ \\text{4. បង្ហាញថា } f \\text{ ជាអនុគមន៍គូ រួចទាញរកអ័ក្សឆ្លុះនៃក្រាប } (C) .\\\\ \\text{5. គណនា } f(-3)\\ ;\\ f(3) \\text{ រួចសង់ក្រាប } (C) .",
   "graph": {
     "x_min": -6,
@@ -47,7 +46,6 @@
       "expected": "-1",
       "display": "lim at -2 = +∞, 2 = -∞, ±∞ = -1",
       "question_km": "គណនា $\\lim_{x\\to -2} f(x)\\ ;\\ \\lim_{x\\to 2} f(x)\\ ;\\ \\lim_{x\\to \\pm\\infty} f(x)$ រួចរកសមីការអាស៊ីមតូតឈរ និងដេក",
-      "technique": "As x → -2 the numerator x² → 4 > 0 and 4-x² → 0⁺ so f → +∞; as x → 2, 4-x² → 0⁻ so f → -∞ (vertical asymptotes x = -2 and x = 2). Dividing by x² gives 1/(4/x² - 1) → -1, so the horizontal asymptote is y = -1.",
       "extra_checkpoints": [
         { "label": "vertical asymptote x=-2", "value": "-2", "formula": "vertical_asymptote" },
         { "label": "vertical asymptote x=2", "value": "2", "formula": "vertical_asymptote" },
@@ -60,8 +58,7 @@
       "kind": "expression",
       "expected": "8*x/(4 - x**2)**2",
       "display": "f'(x) = 8x/(4-x²)²",
-      "question_km": "បង្ហាញថា គ្រប់ $x\\neq \\pm 2$ នោះ $f'(x) = \\frac{8x}{(4-x^2)^2}$",
-      "technique": "By the quotient rule, f'(x) = (2x(4-x²) + 2x·x²)/(4-x²)² = 8x/(4-x²)²."
+      "question_km": "បង្ហាញថា គ្រប់ $x\\neq \\pm 2$ នោះ $f'(x) = \\frac{8x}{(4-x^2)^2}$"
     },
     {
       "label": "3",
@@ -70,8 +67,7 @@
       "idx": 0,
       "expected": "0",
       "display": "variation table: f' = 8x/(4-x²)², local minimum f(0) = 0",
-      "question_km": "សង់តារាងអថេរភាពនៃ $f$",
-      "technique": "f'(x) = 8x/(4-x²)² has the sign of x, so f decreases on (-∞,-2) ∪ (-2,0) and increases on (0,2) ∪ (2,∞): local minimum at x = 0, f(0) = 0."
+      "question_km": "សង់តារាងអថេរភាពនៃ $f$"
     },
     {
       "label": "4",
@@ -80,7 +76,6 @@
       "expected": "even",
       "display": "even",
       "question_km": "បង្ហាញថា $f$ ជាអនុគមន៍គូ រួចទាញរកអ័ក្សឆ្លុះនៃក្រាប $(C)$",
-      "technique": "f(-x) = (-x)²/(4-(-x)²) = x²/(4-x²) = f(x), so f is even. Hence the graph (C) is symmetric about the y-axis (the axis x = 0).",
       "choices": {
         "even": {
           "words": ["even", "even function", "គូ", "អនុគមន៍គូ", "paire", "fonction paire"]
@@ -97,8 +92,7 @@
       "label": "5",
       "want": "draw",
       "kind": "draw",
-      "question_km": "គណនា $f(-3)\\ ;\\ f(3)$ រួចសង់ក្រាប $(C)$",
-      "technique": "f(-3) = f(3) = 9/(4-9) = -9/5 (points A, B on the graph). Sketch (C) with the vertical asymptotes x = ±2, the horizontal asymptote y = -1, and symmetry about the y-axis."
+      "question_km": "គណនា $f(-3)\\ ;\\ f(3)$ រួចសង់ក្រាប $(C)$"
     }
   ]
 }

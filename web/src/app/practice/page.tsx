@@ -1709,6 +1709,15 @@ function PracticeInner() {
                 )
               )}
               <div className="mt-1 text-xs text-[#8a857b]">Reason: {result.reason}</div>
+              {result.teacher_feedback?.content && (
+                <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 shadow-sm">
+                  <div className="flex items-center gap-1.5 font-semibold text-amber-800 mb-1">
+                    <span>👨‍🏫</span>
+                    <span>ការណែនាំពីលោកគ្រូ (Teacher's Exam Rubric Tip)</span>
+                  </div>
+                  <MathText text={result.teacher_feedback.content} className="whitespace-pre-wrap font-sans" />
+                </div>
+              )}
               {!result.correct &&
                 result.step_check?.first_error_line != null &&
                 (() => {
@@ -1845,6 +1854,15 @@ function PracticeInner() {
                   ) : null}
                   {(!hintLevel || hintLevel >= (explanation.steps?.length ?? 0)) && (
                     <MathText text={explanation.content} className="whitespace-pre-wrap" />
+                  )}
+                  {explanation.teacher_feedback?.content && (
+                    <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 shadow-sm">
+                      <div className="flex items-center gap-1.5 font-semibold text-amber-800 mb-1">
+                        <span>👨‍🏫</span>
+                        <span>ការណែនាំពីលោកគ្រូ (Teacher's Exam Rubric Tip)</span>
+                      </div>
+                      <MathText text={explanation.teacher_feedback.content} className="whitespace-pre-wrap font-sans" />
+                    </div>
                   )}
                   {explanation.work_check?.content && (
                     <div className="mt-3 border-t border-[#e4e2db] pt-2">

@@ -81,6 +81,15 @@ async def get_question(
     return await services.get_question(db, question_id)
 
 
+@router.get("/km-solution/{question_id}")
+async def km_solution(
+    question_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await services.km_solution_for_question(db, user, question_id)
+
+
 @me_router.get("/attempts")
 async def attempts(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     return await services.list_attempts(db, user)
@@ -145,3 +154,15 @@ async def template_structures(
 @me_router.get("/templates/summary")
 async def template_summary(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     return await services.get_template_summary()
+
+
+@me_router.post("/templates/structures/regenerate")
+async def regenerate_template_structure(
+    req: dict,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    structure_id = req.get("structure_id")
+    if not structure_id:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "structure_id is required")
+    return await services.regenerate_template_structure(structure_id)

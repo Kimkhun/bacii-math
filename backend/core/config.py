@@ -31,7 +31,7 @@ class Settings(BaseSettings):
 
     # Hard cap on each Gemini (Vertex) call so a slow/hanging request can't
     # stall the Gemini -> Ollama -> deterministic fallback chain (seconds).
-    gemini_timeout_seconds: int = 20
+    gemini_timeout_seconds: int = 45
 
 
 settings = Settings()

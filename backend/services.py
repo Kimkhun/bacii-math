@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import random
 import uuid
@@ -220,9 +221,18 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
     if question.topic == "functions" and work_text:
         resp["graph_check"] = grader.grade_graph_check(question.spec, work_text.split("\n"))
 
+    allowed = await cache.allow_gemini(str(user.id))
+    sol_km = None
+    if question.topic == "functions":
+        try:
+            km_res = await km_solution_for_question(db, user, question.id)
+            if km_res and km_res.get("solution_km"):
+                sol_km = km_res["solution_km"]
+        except Exception:
+            pass
+
     if not result["correct"]:
         steps_text = _steps_text(question)
-        allowed = await cache.allow_gemini(str(user.id))
         context = {
             "question_text": question.prompt,
             "part": result.get("part") if is_multi else None,
@@ -242,6 +252,18 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
             )
             if check:
                 resp["work_check"] = {"content": check, "provider": provider}
+
+    if allowed and sol_km:
+        rubric_tip, provider = await llm.check_rubric_feedback(
+            question_text=question.prompt,
+            user_submission=work_text or user_answer or "",
+            correct_solution_km=sol_km,
+            is_correct=result["correct"],
+            allow_gemini=allowed,
+            step_check=step_check,
+        )
+        if rubric_tip:
+            resp["teacher_feedback"] = {"content": rubric_tip, "provider": provider}
 
     # Auto-save progress: every grade updates the exercise's session so long
     # multi-part exercises can be resumed without an explicit button.
@@ -790,15 +812,65 @@ async def _build_topic_structure_payload(topic: str) -> dict:
     requests (and per-topic admin lazy-loading) never re-solve everything."""
     cached = _STRUCTURE_PAYLOAD_CACHE.get(topic)
     if cached is not None:
-        return cached
+        total_structures = sum(len(qt.get("structures", [])) for qt in cached.get("question_types", []))
+        if total_structures > 0:
+            return cached
     if topic == "integral":
         payload = _build_integral_structure_payload()
     elif topic == "limit":
         payload = _build_limit_structure_payload()
     else:
         payload = await _build_generic_topic_payload(topic)
-    _STRUCTURE_PAYLOAD_CACHE[topic] = payload
+    total_structures = sum(len(qt.get("structures", [])) for qt in payload.get("question_types", []))
+    if total_structures > 0:
+        _STRUCTURE_PAYLOAD_CACHE[topic] = payload
     return payload
+
+
+async def _km_solution_for(
+    key: str,
+    facts: dict | None = None,
+    topic: str | None = None,
+    question_type: str | None = None,
+    variant: str | None = None,
+    difficulty: str | None = None,
+) -> dict | None:
+    """Check cache for a Gemini-generated Khmer solution JSON. If missing and
+    we have facts, generate, cache, and return."""
+    cached = await cache.get_km_solution(key)
+    if cached:
+        return cached
+    if not facts:
+        return None
+    km = await llm.generate_km_function_solution(facts)
+    if km and km.get("parts"):
+        await cache.set_km_solution(key, km)
+        return km
+    return None
+
+
+def _render_km_solution(km: dict | None) -> str | None:
+    """Render structured km JSON into readable text for display in admin."""
+    if not km or not km.get("parts"):
+        return None
+    blocks = []
+    for part in km["parts"]:
+        lines = [f"**{part['label']}**"]
+        for s in part.get("steps", []):
+            km_text = s.get("khmer") or ""
+            latex_expr = s.get("latex") or ""
+            if km_text:
+                has_formula = "$" in km_text or "\\(" in km_text or "=" in km_text
+                if latex_expr and not has_formula:
+                    lines.append(f"{km_text}\n\n$${latex_expr}$$")
+                else:
+                    lines.append(km_text)
+            elif latex_expr:
+                lines.append(f"$${latex_expr}$$")
+        if part.get("answer_khmer"):
+            lines.append(f"ចម្លើយ៖ {part['answer_khmer']}")
+        blocks.append("\n\n".join(lines))
+    return "\n\n".join(blocks)
 
 
 async def _build_generic_topic_payload(topic: str) -> dict:
@@ -808,17 +880,20 @@ async def _build_generic_topic_payload(topic: str) -> dict:
     for qt in solver.QUESTION_TYPES_BY_TOPIC.get(topic, ()):
         entries = []
         if topic == "functions":
-            # One card per curated exercise (not one per difficulty): each
-            # card shows the exercise's own symbolic pattern and its full
-            # MoEYS sample, so the admin view reflects all 6 real studies.
-            for item in _FUNCTION_CURATED_TEMPLATES:
+            # Parallelize all curated function exercises so they generate simultaneously
+            async def _resolve_fn_item(item):
                 try:
                     params = {k: v for k, v in item.items()
                               if k not in ("prompt", "prompt_latex", "pattern", "pattern_latex")}
                     solution = solver.solve(topic, "study", params)
-                except Exception:
-                    continue
-                entries.append({
+                    km_facts = solution.get("km_facts")
+                    km = await _km_solution_for(f"fn_km:study:{item.get('id')}", km_facts)
+                    sol_km_text = _render_km_solution(km) or solution.get("solution_km")
+                except Exception as e:
+                    import logging
+                    logging.getLogger("bacii").exception("Failed to resolve function item %s: %s", item.get("id"), e)
+                    return None
+                return {
                     "id": f"functions:study:{item.get('id')}",
                     "question_type": "study",
                     "difficulty": item.get("difficulty", "hard"),
@@ -845,14 +920,19 @@ async def _build_generic_topic_payload(topic: str) -> dict:
                             "answer_display": p.get("answer_display"),
                             "answer_display_en": p.get("answer_display_en"),
                             "variation_table": p.get("variation_table"),
+                            "sign_table": p.get("sign_table"),
                             "monotonicity": p.get("answer_exact") if p.get("want") == "monotonicity" else None,
                             "sign": p.get("answer_exact") if p.get("want") == "sign" else None,
                         }
                         for p in solution.get("parts", [])
                     ],
-                    "solution_km": solution.get("solution_km"),
+                    "solution_km": sol_km_text,
+                    "solution_km_json": km,
                     "solution_en": solution.get("solution_en"),
-                })
+                }
+
+            results = await asyncio.gather(*[_resolve_fn_item(item) for item in _FUNCTION_CURATED_TEMPLATES])
+            entries = [r for r in results if r is not None]
         else:
             for diff in ("easy", "medium", "hard"):
                 variants = [None]
@@ -906,6 +986,26 @@ async def get_template_structures(topic: str | None = None) -> dict:
     for t in generator.TOPICS:
         topics.append(await _build_topic_structure_payload(t))
     return {"topics": topics}
+
+
+async def regenerate_template_structure(structure_id: str) -> dict:
+    """Flush cache for a specific structure and re-generate with Gemini in real time."""
+    parts = structure_id.split(":")
+    topic = parts[0] if parts else "functions"
+    if topic == "functions" and len(parts) >= 3:
+        item_id = parts[2]
+        await cache.delete(f"fn_km:study:{item_id}")
+    
+    # Invalidate topic cache in memory
+    _STRUCTURE_PAYLOAD_CACHE.pop(topic, None)
+
+    payload = await get_template_structures(topic=topic)
+    for t in payload.get("topics", []):
+        for qt in t.get("question_types", []):
+            for st in qt.get("structures", []):
+                if st.get("id") == structure_id:
+                    return {"structure": st}
+    return {"structure": None}
 
 
 def _topic_structure_summary(topic: str) -> dict:

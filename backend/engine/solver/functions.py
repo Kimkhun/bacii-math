@@ -87,16 +87,14 @@ def _positive_intervals(u, x):
 
 
 def _sign_rows(u, x):
-    """Sign-table rows for the MoEYS method. Columns are the boundary values
-    [-∞, roots..., +∞] (nroots+2); each cell shows the factor's sign in the open
-    region just right of that boundary, with '0' at the factor's own roots and
-    '‖' where the quotient is undefined. Returns {cols, rows}."""
+    """Sign-table rows for the MoEYS method.
+    Alternates: [region 0, root 0, region 1, root 1, ..., region N] (2*N + 1 items).
+    Returns {cols, rows}."""
     num, den = u.as_numer_denom()
     roots = sorted(set(r for r in solve(num, x) if r.is_real) | set(r for r in solve(den, x) if r.is_real))
     num_roots = [r for r in solve(num, x) if r.is_real]
     den_roots = [r for r in solve(den, x) if r.is_real]
 
-    # open regions: (-∞,r0), (r0,r1), ..., (rk,∞)
     def region_sign(factor, i):
         lo = float("-inf") if i == 0 else float(_f(roots[i - 1]))
         hi = float("inf") if i == len(roots) else float(_f(roots[i]))
@@ -108,40 +106,39 @@ def _sign_rows(u, x):
 
     nregions = len(roots) + 1
 
-    def factor_row(factor, own_roots):
-        # base: sign in each open region
-        region_signs = [region_sign(factor, i) for i in range(nregions)]
+    def factor_cells(factor, own_roots):
         cells = []
-        # col 0 = first region; middle cols = boundaries; last col = last region
-        for j in range(nregions + 1):
-            if j == 0:
-                cells.append(region_signs[0])
-            elif j == nregions:
-                cells.append(region_signs[-1])
+        for i in range(len(roots)):
+            cells.append(region_sign(factor, i))
+            r = roots[i]
+            if any(abs(float(oroot) - float(r)) < 1e-9 for oroot in own_roots):
+                cells.append("0")
             else:
-                b = roots[j - 1]
-                if any(abs(float(r) - float(b)) < 1e-9 for r in own_roots):
-                    cells.append("0")
-                else:
-                    cells.append(region_signs[j])
+                cells.append("|")
+        cells.append(region_sign(factor, len(roots)))
         return cells
 
-    row_num = factor_row(num, num_roots)
-    row_den = factor_row(den, den_roots)
-    # quotient: sign(num)*sign(den), 0 at num roots, ‖ at den roots
+    row_num = factor_cells(num, num_roots)
+    row_den = factor_cells(den, den_roots)
+
+    # quotient row: combine signs, 0 at num roots, ‖ at den roots
     qrow = []
-    for j in range(nregions + 1):
-        if j == 0 or j == nregions:
-            nv, dv = row_num[j], row_den[j]
-            qrow.append("+" if nv == dv else "-")
+    for i in range(len(roots)):
+        s_num = row_num[2 * i]
+        s_den = row_den[2 * i]
+        qrow.append("+" if s_num == s_den else "-")
+        r = roots[i]
+        is_den = any(abs(float(oroot) - float(r)) < 1e-9 for oroot in den_roots)
+        is_num = any(abs(float(oroot) - float(r)) < 1e-9 for oroot in num_roots)
+        if is_den:
+            qrow.append("‖")
+        elif is_num:
+            qrow.append("0")
         else:
-            b = roots[j - 1]
-            if any(abs(float(r) - float(b)) < 1e-9 for r in num_roots):
-                qrow.append("0")
-            elif any(abs(float(r) - float(b)) < 1e-9 for r in den_roots):
-                qrow.append("‖")
-            else:
-                qrow.append("+" if row_num[j] == row_den[j] else "-")
+            qrow.append("|")
+    s_num_last = row_num[-1]
+    s_den_last = row_den[-1]
+    qrow.append("+" if s_num_last == s_den_last else "-")
 
     col_labels = ["−∞"] + [_strip_float(_f(r)) for r in roots] + ["+∞"]
     return {
@@ -182,7 +179,7 @@ def _behavior_string(P, Q, point, side, x, pl, ql):
 
 
 def _part_solution(part, answer_exact, answer_latex, answer_display, answer_decimal, steps, checkpoints, ctx=None):
-    return {
+    res = {
         "label": part["label"],
         "want": part.get("want"),
         "answer_kind": part.get("kind", "expression"),
@@ -198,6 +195,9 @@ def _part_solution(part, answer_exact, answer_latex, answer_display, answer_deci
         "exact_only": part.get("exact_only", False),
         "_ctx": ctx or {},
     }
+    if ctx and "sign_rows" in ctx:
+        res["sign_table"] = ctx["sign_rows"]
+    return res
 
 
 def _solve_part_domain(params, x, expr, part):
@@ -284,31 +284,46 @@ def _solve_part_limit(params, x, expr, part):
     result = limit(expr, x, point, dir=side) if side else limit(expr, x, point)
     point_latex = latex(point) + ("^+" if side == "+" else "^-" if side == "-" else "")
     display = part.get("display") or (latex(result) if result in (oo, -oo) else str(result))
-    steps = [
-        {"title": "Set up the one-sided limit",
-         "detail": f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr)}\\).",
-         "formula": "setup_limit"},
-        {"title": "Evaluate the direction", "detail": part.get("technique", ""), "formula": "vertical_asymptote"},
-        {"title": "Result", "detail": f"The limit is {inline_latex(result)}.", "formula": "vertical_asymptote"},
-    ]
-    checkpoints = [{"label": "limit", "value": result, "formula": "vertical_asymptote"}]
-    decimal = None if result in (oo, -oo) else _f(result)
-    behavior = None
+
+    fn_name = params.get("fn_name", "g")
+    res_latex = "+\\infty" if result == oo else ("-\\infty" if result == -oo else latex(result))
+
     if isinstance(expr, log):
         P, Q = _log_split(expr, x)
         pl = limit(P, x, point, dir=side) if side else limit(P, x, point)
         ql = limit(Q, x, point, dir=side) if side else limit(Q, x, point)
-        behavior = _behavior_string(P, Q, point, side, x, pl, ql)
+        bs = _behavior_string(P, Q, point, side, x, pl, ql)
+        behavior = bs
+        chain = f"\\lim_{{{var} \\to {point_latex}}} {fn_name}({var}) = \\lim_{{{var} \\to {point_latex}}} \\ln\\left(\\frac{{{latex(P)}}}{{{latex(Q)}}}\\right) = \\ln\\left({bs}\\right) = {res_latex}"
+    else:
+        num, den = expr.as_numer_denom()
+        pl = limit(num, x, point, dir=side) if side else limit(num, x, point)
+        ql = limit(den, x, point, dir=side) if side else limit(den, x, point)
+        behavior = None
+        if ql == 0:
+            q_sign = "0^{+}" if _near_sign(den, x, point, side) > 0 else "0^{-}"
+            chain = f"\\lim_{{{var} \\to {point_latex}}} {fn_name}({var}) = \\lim_{{{var} \\to {point_latex}}} \\frac{{{latex(num)}}}{{{latex(den)}}} = \\frac{{{latex(pl)}}}{{{q_sign}}} = {res_latex}"
+        else:
+            chain = f"\\lim_{{{var} \\to {point_latex}}} {fn_name}({var}) = \\lim_{{{var} \\to {point_latex}}} \\frac{{{latex(num)}}}{{{latex(den)}}} = {res_latex}"
+
+    steps = [
+        {"title": f"Limit at {point_latex}",
+         "detail": chain,
+         "formula": "vertical_asymptote"},
+    ]
+    checkpoints = [{"label": "limit", "value": result, "formula": "vertical_asymptote"}]
+    decimal = None if result in (oo, -oo) else _f(result)
     ctx = {
         "point": str(point),
         "side": side,
-        "value": result,
-        "value_latex": latex(result),
+        "value": str(result),
+        "value_latex": res_latex,
         "infinite": result in (oo, -oo),
-        "shape": "log",
+        "shape": "log" if isinstance(expr, log) else "rational",
         "arg": latex(expr.args[0]) if isinstance(expr, log) else latex(expr),
-        "fn": params.get("fn_name", "g"),
+        "fn": fn_name,
         "behavior": behavior,
+        "chain": chain,
     }
     return _part_solution(part, result, latex(result), display, decimal, steps, checkpoints, ctx=ctx)
 
@@ -331,13 +346,14 @@ def _solve_part_limits(params, x, expr, part):
     display = part.get("display") or "; ".join(str(r["value"]) for r in results)
     steps = [
         {"title": "Compute the limits",
-         "detail": f"\\(f({var}) = {inline_latex(expr)}\\).",
+         "detail": f"f({var}) = {latex(expr)}",
          "formula": "setup_limit"},
         {"title": "Evaluate each",
-         "detail": part.get("technique", "") or f"\\({summary}\\).",
+         "detail": summary,
          "formula": "vertical_asymptote"},
         {"title": "Conclusion",
-         "detail": f"\\({summary}\\).", "formula": "vertical_asymptote"},
+         "detail": summary,
+         "formula": "vertical_asymptote"},
     ]
     checkpoints = [
         {"label": f"lim {var}->{r['point']}", "value": r["value"], "formula": "vertical_asymptote"}
@@ -454,13 +470,13 @@ def _solve_part_decompose(params, x, expr, part):
     display = part.get("display") or f"f(x) = {latex(dec)}"
     steps = [
         {"title": "Polynomial division",
-         "detail": f"Divide \\({inline_latex(num)}\\) by \\({inline_latex(den)}\\).",
+         "detail": f"\\frac{{{latex(num)}}}{{{latex(den)}}}",
          "formula": "euclidean_division"},
         {"title": "Quotient and remainder",
-         "detail": f"Quotient \\(q(x) = {inline_latex(q)}\\), remainder \\(r = {inline_latex(r)}\\), so \\(f(x) = {inline_latex(dec)}\\).",
+         "detail": f"q(x) = {latex(q)},\\ r = {latex(r)} \\implies f(x) = {latex(dec)}",
          "formula": "euclidean_division"},
         {"title": "Identify a, b, c",
-         "detail": f"\\(a = {inline_latex(a)}\\), \\(b = {inline_latex(b)}\\), \\(c = {inline_latex(c)}\\).",
+         "detail": f"a = {latex(a)},\\ b = {latex(b)},\\ c = {latex(c)}",
          "formula": "euclidean_division"},
     ]
     checkpoints = [
@@ -748,10 +764,16 @@ def _solve_part_variation_table(params, x, expr, part):
             bps.add(iv["hi"])
     bps.update(crit)
     bps = sorted(bps)
+    def _clean_b(b):
+        if isinstance(b, (float, int)):
+            if float(b).is_integer():
+                return str(int(b))
+        return str(b)
+
     cols = []
     if any(iv["lo"] == float("-inf") for iv in dom):
         cols.append("-∞")
-    cols += [str(b) for b in bps]
+    cols += [_clean_b(b) for b in bps]
     if any(iv["hi"] == float("inf") for iv in dom):
         cols.append("+∞")
 
@@ -764,20 +786,20 @@ def _solve_part_variation_table(params, x, expr, part):
 
     def func_at(label):
         if label == "-∞":
-            return str(limit(expr, x, -oo))
+            return latex(limit(expr, x, -oo))
         if label == "+∞":
-            return str(limit(expr, x, oo))
+            return latex(limit(expr, x, oo))
         c = sympify(label, locals=_calc_locals(var))
         if any(abs(float(c) - b) < 1e-9 for b in crit):
             return latex(simplify(expr.subs(x, c)))
         from_left = any(abs(iv["hi"] - float(c)) < 1e-9 for iv in dom)
         from_right = any(abs(iv["lo"] - float(c)) < 1e-9 for iv in dom)
         if from_left and from_right:
-            return f"{str(limit(expr, x, c, dir='-'))} / {str(limit(expr, x, c, dir='+'))}"
+            return f"{latex(limit(expr, x, c, dir='-'))} / {latex(limit(expr, x, c, dir='+'))}"
         if from_right:
-            return str(limit(expr, x, c, dir="+"))
+            return latex(limit(expr, x, c, dir="+"))
         if from_left:
-            return str(limit(expr, x, c, dir="-"))
+            return latex(limit(expr, x, c, dir="-"))
         return latex(simplify(expr.subs(x, c)))
 
     func_cells = [func_at(c) for c in cols]
@@ -917,8 +939,8 @@ def _solve_function_study(params):
     x = Symbol(var)
     expr = sympify(params["function_expr"], locals=_calc_locals(var))
     part_solutions = []
-    km_blocks = []
     en_blocks = []
+    km_facts = {"parts": []}
     for part in params.get("parts", []):
         want = part.get("want")
         if want == "domain":
@@ -966,27 +988,23 @@ def _solve_function_study(params):
 
         ctx = sol.get("_ctx") or {}
         fn_name = params.get("fn_name", "f")
-        km_disp = part.get("display") or render_answer(want, ctx, var, fn_name, lang="km") or sol.get("answer_display")
-        en_disp = part.get("display_en") or render_answer(want, ctx, var, fn_name, lang="en") or km_disp
-        sol["answer_display"] = km_disp
+        # Khmer writing is no longer templated: it is generated by Gemini from
+        # these SymPy-locked facts (see engine/llm.narrate_km_solution). The
+        # displayed answer line falls back to the English/math render so the UI
+        # never shows hard-coded Khmer prose.
+        ans_disp = part.get("display") or render_answer(want, ctx, var, fn_name, lang="en") or sol.get("answer_display")
+        en_disp = part.get("display_en") or render_answer(want, ctx, var, fn_name, lang="en") or ans_disp
+        sol["answer_display"] = ans_disp
         sol["answer_display_en"] = en_disp
 
         q_km = part.get("question_km") or ""
         q_en = part.get("question_en") or render_question(want, ctx, var, fn_name) or ""
-        technique_km = part.get("technique") or "\n".join(render_steps(want, ctx, var, fn_name, lang="km")) or ""
+        technique_km = part.get("technique") or ""
         technique_en = part.get("technique_en") or "\n".join(render_steps(want, ctx, var, fn_name, lang="en")) or ""
         sol["question_km"] = q_km
         sol["question_en"] = q_en
         sol["technique"] = technique_km
         sol["technique_en"] = technique_en
-
-        km_block = ""
-        if q_km:
-            km_block += f"**{sol['label']}** {q_km}\n\n"
-        if technique_km:
-            tech_lines = [t.strip() for t in technique_km.replace("។", "។\n").split("\n") if t.strip()]
-            km_block += "\n".join(tech_lines) + "\n\n"
-        km_block += f"ចម្លើយ៖ {km_disp}"
 
         en_block = ""
         if q_en:
@@ -995,8 +1013,14 @@ def _solve_function_study(params):
             en_block += "\n".join(t.strip() for t in technique_en.split("\n") if t.strip()) + "\n\n"
         en_block += f"Answer: {en_disp}"
 
-        km_blocks.append(km_block)
         en_blocks.append(en_block)
+
+        km_facts["parts"].append({
+            "label": sol["label"],
+            "question_km": q_km,
+            "steps": [{"title": s["title"], "latex": s["detail"]} for s in sol["steps"]],
+            "answer_latex": sol["answer_latex"] or sol.get("answer_display") or "",
+        })
         part_solutions.append(sol)
 
     merged_cps = [cp for sol in part_solutions for cp in sol["checkpoints"]]
@@ -1017,6 +1041,7 @@ def _solve_function_study(params):
         "work_mode": "any_order",
         "given": expr,
         "graph": _build_graph(params, x, expr),
-        "solution_km": "\n\n".join(km_blocks),
+        "solution_km": None,
+        "km_facts": km_facts,
         "solution_en": "\n\n".join(en_blocks),
     }

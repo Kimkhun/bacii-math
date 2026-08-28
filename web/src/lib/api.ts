@@ -187,6 +187,7 @@ export interface Explanation {
   intervened: boolean;
   trigger: string;
   work_check?: { content: string; provider: string } | null;
+  teacher_feedback?: { content: string; provider: string } | null;
   step_check?: StepCheck | null;
   steps?: { step_order: number; title: string; detail: string; formula?: string | null }[];
   graph?: GraphSpec | null;
@@ -260,6 +261,7 @@ export interface GradeResult {
   all_complete?: boolean;
   explanation?: Explanation;
   work_check?: { content: string; provider: string } | null;
+  teacher_feedback?: { content: string; provider: string } | null;
   step_check?: StepCheck | null;
   graph?: GraphSpec | null;
   graph_check?: GraphCheck | null;
@@ -499,5 +501,10 @@ export const api = {
     request<GraphGradeResult>("/problems/grade-graph", {
       method: "POST",
       body: { question_id, strokes_thumb },
+    }),
+  regenerateStructure: (structure_id: string) =>
+    request<{ structure: TemplateStructure }>("/templates/structures/regenerate", {
+      method: "POST",
+      body: { structure_id },
     }),
 };

@@ -59,31 +59,30 @@ export default function AdminPage() {
       ? (summary?.topics ?? []).map((t) => t.topic)
       : [topicFilter];
 
-  // Lazy-load a topic's structure cards only when the Templates tab needs it.
-  // "All topics" loads them one at a time so cards stream in bit by bit
-  // instead of blocking the page on the slowest topic (integrals ~26s first
-  // time). Loaded topics are cached so revisits are instant.
+  // Load topic structure cards in parallel as soon as the Templates tab is active.
   useEffect(() => {
-    if (tab !== "templates") return;
+    if (tab !== "templates" || !summary) return;
     const needed =
       topicFilter === "all"
         ? (summary?.topics ?? []).map((t) => t.topic)
         : [topicFilter];
-    (async () => {
-      for (const tp of needed) {
-        if (structuresByTopic[tp] || loadingTopics[tp]) continue;
-        setLoadingTopics((m) => ({ ...m, [tp]: true }));
-        try {
-          const res = await api.templateStructures(tp);
-          const t = res.topics[0];
+
+    needed.forEach((tp) => {
+      if (structuresByTopic[tp] || loadingTopics[tp]) return;
+      setLoadingTopics((m) => ({ ...m, [tp]: true }));
+      api
+        .templateStructures(tp)
+        .then((res) => {
+          const t = res.topics?.[0];
           if (t) setStructuresByTopic((m) => ({ ...m, [tp]: t }));
-        } catch (err) {
+        })
+        .catch((err) => {
           setError(err instanceof Error ? err.message : "Failed to load");
-        } finally {
+        })
+        .finally(() => {
           setLoadingTopics((m) => ({ ...m, [tp]: false }));
-        }
-      }
-    })();
+        });
+    });
   }, [tab, topicFilter, summary, structuresByTopic, loadingTopics]);
 
   // Per-topic rollup for the Overview dashboard: how many question types and
@@ -324,7 +323,7 @@ export default function AdminPage() {
                                         </code>
                                         <div className="min-w-0 flex-1 text-slate-700">
                                           <MathText text={kmMath(p.question_km ?? p.want ?? "")} />
-                                          {p.technique && (
+                                          {p.technique && !/^[A-Za-z]/.test(p.technique.trim()) && (
                                             <div className="mt-0.5 text-[11px] leading-snug text-slate-500">
                                               <MathText text={kmMath(p.technique)} />
                                             </div>

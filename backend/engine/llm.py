@@ -51,14 +51,28 @@ def _gemini_client():
     return _client
 
 
-async def _gemini_generate(prompt: str, json_mode: bool = False) -> str:
-    config = types.GenerateContentConfig(response_mime_type="application/json") if json_mode else None
+async def _gemini_generate(
+    prompt: str,
+    json_mode: bool = False,
+    response_schema: dict | None = None,
+    tools: list | None = None,
+) -> any:
+    if tools is not None:
+        config = types.GenerateContentConfig(tools=tools, temperature=0.1)
+    elif response_schema is not None:
+        config = types.GenerateContentConfig(
+            response_mime_type="application/json", response_schema=response_schema
+        )
+    else:
+        config = types.GenerateContentConfig(response_mime_type="application/json") if json_mode else None
     resp = await asyncio.wait_for(
         _gemini_client().aio.models.generate_content(
             model=settings.gemini_model, contents=prompt, config=config
         ),
         timeout=settings.gemini_timeout_seconds,
     )
+    if tools is not None:
+        return resp
     return resp.text
 
 
@@ -143,6 +157,118 @@ async def narrate(steps_text: str, allow_gemini: bool = True, context: dict | No
     return await _generate_with_fallback(prompt, allow_gemini)
 
 
+# Structured-output schema for the Khmer reference solution. Every mathematical
+# value is locked: Gemini only fills the `khmer` prose fields, never the `latex`.
+_KM_SOLUTION_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "parts": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "label": {"type": "STRING"},
+                    "steps": {
+                        "type": "ARRAY",
+                        "items": {
+                            "type": "OBJECT",
+                            "properties": {
+                                "khmer": {"type": "STRING"},
+                                "latex": {"type": "STRING"},
+                            },
+                            "required": ["khmer", "latex"],
+                        },
+                    },
+                    "answer_khmer": {"type": "STRING"},
+                    "answer_latex": {"type": "STRING"},
+                },
+                "required": ["label", "steps", "answer_khmer", "answer_latex"],
+            },
+        }
+    },
+    "required": ["parts"],
+}
+
+_KM_PART_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "label": {"type": "STRING"},
+        "steps": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "khmer": {"type": "STRING"},
+                    "latex": {"type": "STRING"},
+                },
+                "required": ["khmer", "latex"],
+            },
+        },
+        "answer_khmer": {"type": "STRING"},
+        "answer_latex": {"type": "STRING"},
+    },
+    "required": ["label", "steps", "answer_khmer", "answer_latex"],
+}
+
+_KM_PART_TOOL_DECL = types.FunctionDeclaration(
+    name="submit_part_solution",
+    description="Submit an authentic Cambodian Bac II exam-style reference solution in Khmer for one part",
+    parameters=_KM_PART_SCHEMA,
+)
+
+
+async def _narrate_single_part(part_fact: dict) -> dict | None:
+    prompt = (
+        "You are an expert Cambodian Bac II mathematics grader and teacher writing the official exam solution key (អត្រាកំណែផ្លូវការ).\n"
+        f"Part Data (verified by SymPy):\n{json.dumps(part_fact, ensure_ascii=False)}\n\n"
+        "RULES:\n"
+        "- Write in the exact concise, elegant style of official Cambodian national exam keys (អត្រាកំណែផ្លូវការ). Do NOT write repetitive filler or wordy paragraphs.\n"
+        "- Each step's `khmer` field MUST embed the mathematical `latex` equation directly inside $...$ (e.g. គេបាន $\\lim_{x\\to 3^-} g(x) = \\lim_{x\\to 3^-} \\ln\\left(\\frac{-x-3}{x-3}\\right) = \\ln\\left(\\frac{-6}{0^-}\\right) = +\\infty$). NEVER write empty phrases like `គេបាន៖` without including the math equation.\n"
+        "- The explanation MUST be 100% in Khmer with NO English words.\n"
+        "- Copy each mathematical `latex` expression EXACTLY without altering numbers, variables, or signs.\n"
+        "- Write `answer_khmer` as a crisp conclusion line wrapping all math in $...$ (e.g. ដូចនេះ $\\lim_{x\\to 3^-} g(x) = +\\infty$ ឬ ដូចនេះ $a = 1, b = 1, c = 4$).\n"
+        "- Use standard Cambodian Bac II connectors: គេមាន, គេបាន, នាំឱ្យ, លុះត្រាតែ, ដូចនេះ, ឯកតាផ្ទៃ.\n"
+        "- If `want` is 'variation_table' or `answer_latex` is 'variation table', do NOT construct raw LaTeX matrix/array tables (\\begin{array}). The UI renders the authentic graphical variation table automatically. Write 1 concise step explaining the derivative sign and limits on the domain, and write `answer_khmer` as 'សម្រាប់តារាងអថេរភាព សូមមើលតារាងខាងលើ'.\n"
+        "- You MUST call the `submit_part_solution` tool with the filled part solution."
+    )
+    try:
+        tool = types.Tool(function_declarations=[_KM_PART_TOOL_DECL])
+        resp = await _gemini_generate(prompt, tools=[tool])
+        if hasattr(resp, "function_calls") and resp.function_calls:
+            for call in resp.function_calls:
+                if call.name == "submit_part_solution":
+                    args = call.args
+                    if isinstance(args, dict) and "steps" in args:
+                        return args
+        if hasattr(resp, "text") and resp.text:
+            text = resp.text.strip()
+            if text.startswith("```json"):
+                text = text[7:]
+            if text.endswith("```"):
+                text = text[:-3]
+            data = json.loads(text.strip())
+            if isinstance(data, dict) and "steps" in data:
+                return data
+        return None
+    except Exception:
+        return None
+
+
+async def narrate_km_solution(facts: dict) -> dict | None:
+    """Generate a school-style Khmer reference solution from SymPy-locked facts using Gemini tool calling.
+
+    Processes sub-parts concurrently so even long 5-10 part function studies return quickly
+    without hitting LLM token or timeout caps."""
+    parts = facts.get("parts", [])
+    if not parts:
+        return None
+    results = await asyncio.gather(*(_narrate_single_part(p) for p in parts))
+    valid_parts = [r for r in results if r is not None]
+    if not valid_parts:
+        return None
+    return {"parts": valid_parts}
+
+
 def subpart_label(part):
     return f" part {part}" if part else ""
 
@@ -217,6 +343,35 @@ async def check_work(
         "restrictions on cancellation — only flag genuine algebra errors.\n"
         "- Mention what the student got right, if anything.\n"
         "Be concise: max 6 lines. No greeting, no closing, no markdown."
+    )
+    return await _generate_with_fallback(prompt, allow_gemini)
+
+
+async def check_rubric_feedback(
+    question_text: str,
+    user_submission: str,
+    correct_solution_km: str,
+    is_correct: bool,
+    allow_gemini: bool = True,
+    step_check: dict | None = None,
+) -> tuple[str | None, str | None]:
+    """Generate authentic Khmer teacher commentary on the student's solution presentation
+    and exam technique according to official Bac II grading rubrics."""
+    status_str = "ត្រឹមត្រូវ (Correct)" if is_correct else "មិនទាន់ត្រឹមត្រូវ (Incorrect)"
+    prompt = (
+        "You are an expert Cambodian Bac II mathematics teacher and national exam grader reviewing a student's answer.\n"
+        f"QUESTION: {question_text}\n\n"
+        f"STUDENT'S SUBMISSION:\n{user_submission}\n\n"
+        f"OFFICIAL EXAM KEY (អត្រាកំណែផ្លូវការ):\n{correct_solution_km}\n\n"
+        f"SYMPY VERDICT: {status_str}\n"
+        f"{_step_check_summary(step_check)}\n\n"
+        "RULES:\n"
+        "- Write your response 100% in authentic Khmer.\n"
+        "- Give 2 to 3 concise, friendly, and constructive sentences offering actionable teacher feedback on their presentation according to the Bac II grading rubric (អត្រាកំណែ).\n"
+        "- If their answer is correct, praise their accuracy and give a quick tip on presentation (e.g. remember to write domain conditions, mention question references like 'តាមសំណួរ...', or include units like ឯកតាផ្ទៃ).\n"
+        "- If their answer is incorrect, pinpoint where they went off track and how to write it properly according to the official key.\n"
+        "- Wrap all mathematical expressions in $...$.\n"
+        "- Do NOT include English words. Keep it concise, helpful, and encouraging."
     )
     return await _generate_with_fallback(prompt, allow_gemini)
 

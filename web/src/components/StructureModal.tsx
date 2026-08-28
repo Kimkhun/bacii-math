@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import React, { Fragment, useState } from "react";
 
 import FunctionGraph from "@/components/FunctionGraph";
 import MathText from "@/components/MathText";
+import { api } from "@/lib/api";
 
 // Backend question_km strings use $...$ math markers; KaTeX only recognises
 // \(...\) / $$...$$ — normalise to \( \).
@@ -30,8 +31,23 @@ type Part = {
     func_values: string[];
     extrema: { x: string; type: string; value: string }[];
   } | null;
+  sign_table?: {
+    cols: string[];
+    rows: {
+      label: string;
+      cols: { val: string }[];
+    }[];
+  } | null;
   sign?: unknown | null;
   monotonicity?: unknown | null;
+};
+
+type KmStep = { khmer: string; latex: string };
+type KmPart = {
+  label: string;
+  steps: KmStep[];
+  answer_khmer: string;
+  answer_latex: string;
 };
 
 type Structure = {
@@ -47,83 +63,295 @@ type Structure = {
   graph?: unknown;
   parts?: Part[];
   solution_km?: string | null;
+  solution_km_json?: { parts: KmPart[] } | null;
   solution_en?: string | null;
 };
 
-function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
-  const cols = vt.columns;
-  const n = cols.length;
+function SignTable({ st }: { st: NonNullable<Part["sign_table"]> }) {
+  const mainRow = st.rows[st.rows.length - 1];
+  const roots = st.cols.slice(1, -1);
+  const firstBound = st.cols[0];
+  const lastBound = st.cols[st.cols.length - 1];
+
   return (
-    <div className="overflow-x-auto">
-      <table className="border-collapse text-xs">
-        <tbody>
-          <tr>
-            <td className="border border-slate-300 px-2 py-1 font-semibold text-slate-500">x</td>
-            {cols.map((c, i) => (
-              <td key={i} className="border border-slate-300 px-2 py-1 text-center">
-                {c}
+    <div className="my-3 overflow-x-auto">
+      <div className="text-[11px] font-semibold text-slate-600 mb-1.5">តារាងសញ្ញា (Sign Table)</div>
+      <div className="inline-block bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+        <table className="border-collapse font-sans text-xs">
+          <tbody>
+            {/* Top row: x, -∞, -3, 3, +∞ */}
+            <tr className="border-b border-slate-900">
+              <td className="border-r border-slate-900 px-4 py-2 font-bold italic font-serif text-slate-800 text-center min-w-[70px]">
+                x
               </td>
-            ))}
-          </tr>
-          <tr>
-            <td className="border border-slate-300 px-2 py-1 font-semibold text-slate-500">g&apos;(x)</td>
-            <td className="border border-slate-300 px-2 py-1" />
-            {vt.derivative_sign.map((s, i) => (
-              <td
-                key={i}
-                className={`border border-slate-300 px-2 py-1 text-center font-bold ${
-                  s === "+" ? "text-emerald-600" : s === "-" ? "text-rose-600" : "text-slate-500"
-                }`}
-              >
-                {s}
+              <td className="px-3 py-2 text-slate-700 text-left font-mono">
+                <MathText text={`\\(${firstBound}\\)`} />
               </td>
-            ))}
-          </tr>
-          <tr>
-            <td className="border border-slate-300 px-2 py-1 font-semibold text-slate-500">g(x)</td>
-            {vt.func_values.map((v, i) => (
-              <td key={i} className="border border-slate-300 px-2 py-1 text-center">
-                <div>{v}</div>
-                {i < n - 1 && vt.arrows[i] && (
-                  <div className="text-[10px] text-slate-400">
-                    {vt.arrows[i] === "↗" ? "↗" : vt.arrows[i] === "↘" ? "↘" : "–"}
-                  </div>
-                )}
+              {roots.map((r, i) => (
+                <Fragment key={i}>
+                  <td className="px-6 py-2" />
+                  <td className="px-4 py-2 text-center font-mono font-semibold text-slate-900">
+                    <MathText text={`\\(${r}\\)`} />
+                  </td>
+                </Fragment>
+              ))}
+              <td className="px-6 py-2" />
+              <td className="px-3 py-2 text-slate-700 text-right font-mono">
+                <MathText text={`\\(${lastBound}\\)`} />
               </td>
-            ))}
-          </tr>
-        </tbody>
-      </table>
+            </tr>
+
+            {/* Bottom row: expression, -, 0 (on line), +, || (on line), - */}
+            <tr>
+              <td className="border-r border-slate-900 px-4 py-3 font-semibold text-slate-900 text-center">
+                <MathText text={`\\(${mainRow.label}\\)`} />
+              </td>
+              <td className="px-1" />
+              {mainRow.cols.map((cell, cIdx) => {
+                const isRoot = cIdx % 2 === 1;
+                const v = cell.val;
+                const isUndef = v === "‖" || v === "||";
+
+                if (isRoot) {
+                  return (
+                    <td key={cIdx} className="relative px-0 py-2 text-center w-8">
+                      {isUndef ? (
+                        /* Double vertical line */
+                        <div className="flex items-center justify-center h-8 gap-[3px]">
+                          <div className="w-[1.5px] h-8 bg-slate-900" />
+                          <div className="w-[1.5px] h-8 bg-slate-900" />
+                        </div>
+                      ) : (
+                        /* Single line with centered 0 */
+                        <div className="relative flex items-center justify-center h-8">
+                          <div className="absolute inset-y-0 w-[1.5px] bg-slate-900 -top-2 bottom-0" />
+                          <span className="relative z-10 bg-white px-1 font-mono text-xs font-bold text-slate-900">
+                            0
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                  );
+                }
+
+                /* Open interval sign */
+                return (
+                  <td key={cIdx} className="px-8 py-3 text-center text-sm font-bold text-slate-800">
+                    {v}
+                  </td>
+                );
+              })}
+              <td className="px-1" />
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-function PartBlock({ part, lang }: { part: Part; lang: "km" | "en" }) {
-  const section = part.label.split(".")[0];
-  const question = lang === "km" ? part.question_km : part.question_en ?? part.question_km;
-  const technique = lang === "km" ? part.technique : part.technique_en ?? part.technique;
-  const answer = lang === "km"
-    ? part.answer_display ?? part.answer_latex ?? part.answer
-    : part.answer_display_en ?? part.answer_display ?? part.answer_latex ?? part.answer;
+function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
+  const cols = vt.columns;
+  const n = cols.length;
+
+  const normVal = (v: string | undefined) => {
+    if (!v) return "";
+    if (v === "oo" || v === "+oo") return "+\\infty";
+    if (v === "-oo") return "-\\infty";
+    return v;
+  };
+
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <div className="flex items-baseline gap-2">
-        <code className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
-          {part.label}
-        </code>
-        <span className="text-[10px] uppercase tracking-wide text-slate-400">{part.want}</span>
+    <div className="my-3 overflow-x-auto">
+      <div className="text-[11px] font-semibold text-slate-600 mb-1.5">តារាងអថេរភាព (Variation Table)</div>
+      <div className="inline-block bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+        <table className="border-collapse font-sans text-xs min-w-[280px]">
+          <tbody>
+            {/* Row 1: x */}
+            <tr className="border-b border-slate-900">
+              <td className="border-r border-slate-900 px-4 py-2 font-bold italic font-serif text-slate-800 text-center min-w-[80px]">
+                x
+              </td>
+              <td className="px-3 py-2 text-left font-mono font-semibold text-slate-900">
+                <MathText text={`\\(${normVal(cols[0])}\\)`} />
+              </td>
+              {cols.slice(1, -1).map((c, i) => (
+                <Fragment key={i}>
+                  <td className="px-4 py-2 text-center font-mono font-semibold text-slate-900">
+                    <MathText text={`\\(${normVal(c)}\\)`} />
+                  </td>
+                </Fragment>
+              ))}
+              <td className="px-3 py-2 text-right font-mono font-semibold text-slate-900">
+                <MathText text={`\\(${normVal(cols[n - 1])}\\)`} />
+              </td>
+            </tr>
+
+            {/* Row 2: g'(x) */}
+            <tr className="border-b border-slate-900">
+              <td className="border-r border-slate-900 px-4 py-2 font-semibold text-slate-900 text-center">
+                g&apos;(x)
+              </td>
+              <td colSpan={Math.max(2, n)} className="px-4 py-2 text-center font-bold text-sm text-slate-800">
+                <div className="flex items-center justify-around w-full">
+                  {vt.derivative_sign.map((s, i) => (
+                    <span key={i} className="text-emerald-700 font-bold">{s || "+"}</span>
+                  ))}
+                </div>
+              </td>
+            </tr>
+
+            {/* Row 3: y = g(x) */}
+            <tr>
+              <td className="border-r border-slate-900 px-4 py-5 font-semibold text-slate-900 text-center whitespace-nowrap">
+                y = g(x)
+              </td>
+              <td colSpan={Math.max(2, n)} className="px-3 py-3">
+                <div className="flex items-center justify-between w-full h-16 relative">
+                  {/* Left limit / value at bottom */}
+                  <span className="self-end pb-1 font-mono font-semibold text-slate-900 text-xs">
+                    <MathText text={`\\(${normVal(vt.func_values[0])}\\)`} />
+                  </span>
+
+                  {/* Arrow in middle */}
+                  <div className="flex-1 flex items-center justify-center px-4">
+                    <svg className="w-full h-12" preserveAspectRatio="none" viewBox="0 0 100 40">
+                      <defs>
+                        <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                          <polygon points="0 0, 6 3, 0 6" fill="#1e293b" />
+                        </marker>
+                      </defs>
+                      <line
+                        x1="10"
+                        y1="34"
+                        x2="90"
+                        y2="6"
+                        stroke="#1e293b"
+                        strokeWidth="1.5"
+                        markerEnd="url(#arrowhead)"
+                      />
+                    </svg>
+                  </div>
+
+                  {/* Right limit / value at top */}
+                  <span className="self-start pt-1 font-mono font-semibold text-slate-900 text-xs">
+                    <MathText text={`\\(${normVal(vt.func_values[n - 1])}\\)`} />
+                  </span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+    </div>
+  );
+}
+
+const KM_DIGITS: Record<string, string> = {
+  "1": "១",
+  "2": "២",
+  "3": "៣",
+  "4": "៤",
+  "5": "៥",
+  "6": "៦",
+  "7": "៧",
+  "8": "៨",
+  "9": "៩",
+};
+
+function getSectionPrompt(sec: string, promptText: string | null | undefined, parts: Part[]): string {
+  const kmSec = KM_DIGITS[sec] ?? sec;
+  if (promptText) {
+    const lines = promptText.split("\n").map((l) => l.trim()).filter(Boolean);
+    const regex = new RegExp(`^(?:${sec}|${kmSec})[.\\s]`, "i");
+    const match = lines.find((l) => regex.test(l));
+    if (match) return match;
+  }
+  const questions = parts.map((p) => p.question_km?.trim()).filter(Boolean);
+  if (questions.length) {
+    return `${kmSec}. ${questions.join(" ")}`;
+  }
+  return `សំណួរទី ${kmSec}`;
+}
+
+function PartBlock({
+  part,
+  kmPart,
+  mode,
+  graph,
+}: {
+  part: Part;
+  kmPart?: KmPart | null;
+  mode: "ai" | "override";
+  graph?: unknown;
+}) {
+  const question = part.question_km;
+  const rawTech = part.technique;
+  const kmSteps = mode === "ai" ? kmPart?.steps : null;
+  const showRawTech = mode === "override" && !!rawTech;
+  const signTable = part.sign_table;
+  const variationTable = part.variation_table;
+  const isDrawPart = part.want === "draw" || part.answer_kind === "draw";
+
+  const answer = mode === "ai" && kmPart?.answer_khmer
+    ? kmPart.answer_khmer
+    : part.answer_display ?? part.answer_latex ?? part.answer;
+
+  return (
+    <div className="space-y-3 py-2 border-b border-slate-100 last:border-0">
       {question && (
-        <div className="mt-1 text-sm text-slate-700">
-          <MathText text={kmMath(question)} />
+        <div className="flex items-baseline gap-2 text-base font-semibold text-slate-800">
+          <span className="text-sky-600 font-bold text-lg">+</span>
+          <MathText text={kmMath(question.endsWith("៖") || question.endsWith(":") ? question : `${question} ៖`)} />
         </div>
       )}
-      {technique && (
-        <div className="mt-1 space-y-1 text-xs leading-relaxed text-slate-600">
-          {technique
+
+      {kmSteps && (
+        <div className="pl-4 space-y-2.5 text-[15px] sm:text-base leading-relaxed text-slate-800">
+          {kmSteps.map((s, i) => {
+            const hasEquation = s.khmer.includes("=") || (!!s.latex && s.khmer.includes(s.latex));
+            return (
+              <div key={i} className="space-y-1.5">
+                <MathText text={kmMath(s.khmer)} />
+                {s.latex && !hasEquation && (
+                  <div className="py-1 text-slate-900 overflow-x-auto font-medium text-base">
+                    <MathText text={`\\[${s.latex}\\]`} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Embed Sign Table right inside Domain part */}
+      {signTable && (
+        <div className="pl-4 my-2">
+          <SignTable st={signTable} />
+        </div>
+      )}
+
+      {/* Embed Variation Table right inside Variation Table part */}
+      {variationTable && (
+        <div className="pl-4 my-2">
+          <VariationTable vt={variationTable} />
+        </div>
+      )}
+
+      {/* Embed Graph right inside Draw Graph part */}
+      {isDrawPart && graph != null && (
+        <div className="pl-4 my-3 max-w-lg">
+          <div className="text-xs font-semibold text-slate-600 mb-1.5">ក្រាប C និងបន្ទាត់ប៉ះ T ៖</div>
+          <FunctionGraph graph={graph as never} />
+        </div>
+      )}
+
+      {showRawTech && (
+        <div className="pl-4 space-y-1.5 text-[15px] sm:text-base leading-relaxed text-slate-700">
+          {rawTech
             .replace("។", "។\n")
             .split("\n")
-            .map((ln, i) => ln.trim())
+            .map((ln) => ln.trim())
             .filter(Boolean)
             .map((ln, i) => (
               <div key={i}>
@@ -132,45 +360,45 @@ function PartBlock({ part, lang }: { part: Part; lang: "km" | "en" }) {
             ))}
         </div>
       )}
-      <div className="mt-1 text-sm font-medium text-slate-900">{answer}</div>
-      {part.variation_table && (
-        <div className="mt-2">
-          <VariationTable vt={part.variation_table} />
+
+      {answer && !isDrawPart && (
+        <div className="pl-4 pt-1 text-base font-semibold text-slate-900">
+          {!answer.startsWith("ដូចនេះ") && !answer.startsWith("ចម្លើយ") ? (
+            <span>ចម្លើយ៖ <MathText text={kmMath(answer)} /></span>
+          ) : (
+            <MathText text={kmMath(answer)} />
+          )}
         </div>
       )}
-      {part.sign != null && typeof part.answer_display === "string" && (
-        <div className="mt-1 text-xs text-slate-500">sign study as above</div>
-      )}
-    </div>
-  );
-}
-
-function SolutionNarrative({ text }: { text: string }) {
-  return (
-    <div className="space-y-2 whitespace-pre-line text-sm leading-relaxed text-slate-800">
-      {text.split("\n").map((line, i) => {
-        const clean = line.replace(/\*\*/g, "");
-        if (clean.includes("$")) {
-          return (
-            <div key={i}>
-              <MathText text={kmMath(clean)} />
-            </div>
-          );
-        }
-        return <div key={i}>{clean}</div>;
-      })}
     </div>
   );
 }
 
 export default function StructureModal({
-  structure,
+  structure: initialStructure,
   onClose,
 }: {
   structure: Structure;
   onClose: () => void;
 }) {
-  const [lang, setLang] = useState<"km" | "en">("km");
+  const [structure, setStructure] = useState<Structure>(initialStructure);
+  const [mode, setMode] = useState<"ai" | "override">("ai");
+  const [regenerating, setRegenerating] = useState(false);
+
+  const handleRegenerate = async () => {
+    try {
+      setRegenerating(true);
+      const res = await api.regenerateStructure(structure.id);
+      if (res?.structure) {
+        setStructure(res.structure as unknown as Structure);
+      }
+    } catch (err) {
+      console.error("Failed to regenerate:", err);
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   // Group parts by the exam section (label prefix before the first '.').
   const sections = new Map<string, Part[]>();
   for (const p of structure.parts ?? []) {
@@ -179,15 +407,8 @@ export default function StructureModal({
     sections.get(sec)!.push(p);
   }
 
-  const prompt = lang === "km"
-    ? structure.sample_prompt_latex ?? structure.sample_prompt
-    : structure.sample_prompt ?? structure.sample_prompt_latex;
-  const promptIsLatex = lang === "km"
-    ? !!structure.sample_prompt_latex
-    : !!structure.sample_prompt;
-  const solution = lang === "km"
-    ? structure.solution_km
-    : structure.solution_en ?? structure.solution_km;
+  const prompt = structure.sample_prompt_latex ?? structure.sample_prompt;
+  const promptIsLatex = !!structure.sample_prompt_latex;
 
   return (
     <div
@@ -195,33 +416,47 @@ export default function StructureModal({
       onClick={onClose}
     >
       <div
-        className="my-6 w-full max-w-3xl rounded-xl bg-slate-50 shadow-xl"
+        className="my-6 w-full max-w-4xl rounded-2xl bg-white shadow-2xl border border-slate-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+        {/* Modal Topbar */}
+        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50/80 rounded-t-2xl">
           <div>
-            <code className="text-xs text-slate-500">{structure.id}</code>
-            {structure.source_labels?.length ? (
-              <div className="text-[11px] text-slate-400">{structure.source_labels.join(", ")}</div>
-            ) : null}
+            <div className="flex items-center gap-2">
+              <code className="text-xs font-semibold text-slate-700 bg-slate-200 px-2 py-0.5 rounded">
+                {structure.id}
+              </code>
+              {structure.source_labels?.length ? (
+                <span className="text-xs text-slate-500 font-medium">{structure.source_labels.join(", ")}</span>
+              ) : null}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center rounded-md border border-slate-200 bg-white text-xs">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleRegenerate}
+              disabled={regenerating}
+              className="flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50 transition shadow-sm"
+              title="Re-run SymPy verification + live Gemini AI narration"
+            >
+              <span className={regenerating ? "animate-spin" : ""}>🔄</span>
+              <span>{regenerating ? "Generating..." : "Generate"}</span>
+            </button>
+            <div className="flex items-center rounded-lg border border-slate-300 bg-white p-0.5 text-xs shadow-sm">
               <button
-                className={`rounded-l-md px-2.5 py-1 ${lang === "km" ? "bg-slate-800 text-white" : "text-slate-500 hover:bg-slate-100"}`}
-                onClick={() => setLang("km")}
+                className={`rounded-md px-3 py-1.5 transition ${mode === "ai" ? "bg-slate-800 text-white font-semibold" : "text-slate-600 hover:bg-slate-100"}`}
+                onClick={() => setMode("ai")}
               >
-                ខ្មែរ
+                ខ្មែរ (AI)
               </button>
               <button
-                className={`rounded-r-md px-2.5 py-1 ${lang === "en" ? "bg-slate-800 text-white" : "text-slate-500 hover:bg-slate-100"}`}
-                onClick={() => setLang("en")}
+                className={`rounded-md px-3 py-1.5 transition ${mode === "override" ? "bg-slate-800 text-white font-semibold" : "text-slate-600 hover:bg-slate-100"}`}
+                onClick={() => setMode("override")}
               >
-                EN
+                ខ្មែរ (Override)
               </button>
             </div>
             <button
-              className="rounded-md px-3 py-1 text-sm text-slate-500 hover:bg-slate-200"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-200 transition"
               onClick={onClose}
             >
               Close
@@ -229,73 +464,70 @@ export default function StructureModal({
           </div>
         </div>
 
-        <div className="max-h-[80vh] overflow-y-auto px-4 py-4 space-y-4">
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              Function
+        {/* Modal Scroll Content */}
+        <div className="max-h-[82vh] overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-6 space-y-6">
+          {/* Exam Header: Function Pattern & Main Statement */}
+          <div className="rounded-xl border border-sky-200 bg-sky-50/50 p-5 shadow-sm">
+            <div className="text-xs font-bold uppercase tracking-wider text-sky-700 mb-1">
+              ប្រធានវិញ្ញាសា (Exam Problem)
             </div>
-            <div className="mt-1 text-lg text-slate-900">
+            <div className="text-xl sm:text-2xl font-bold text-slate-900 py-1">
               {structure.pattern_latex ? (
                 <MathText text={`\\(${structure.pattern_latex}\\)`} />
               ) : (
                 <p>{structure.pattern}</p>
               )}
             </div>
+            {prompt && (
+              <div className="mt-2 text-base text-slate-800 leading-relaxed">
+                {promptIsLatex ? (
+                  <MathText text={`\\(${prompt}\\)`} />
+                ) : (
+                  <p className="whitespace-pre-line">{prompt}</p>
+                )}
+              </div>
+            )}
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              Exam prompt
+          {/* Unified Step-by-Step Solution Flow */}
+          <div className="space-y-6">
+            <div className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-2">
+              {mode === "ai" ? "ដំណោះស្រាយលម្អិតផ្លូវការ (Official Step-by-Step Solution)" : "ដំណោះស្រាយឯកសារ (File Override Solution)"}
             </div>
-            <div className="mt-1 text-sm text-slate-800">
-              {promptIsLatex && prompt ? (
-                <MathText text={`\\(${prompt}\\)`} />
-              ) : (
-                <p className="whitespace-pre-line">{prompt}</p>
-              )}
-            </div>
+
+            {[...sections.entries()].map(([sec, parts]) => {
+              const secHeader = getSectionPrompt(sec, prompt, parts);
+              return (
+                <div key={sec} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                  {/* Main Question Heading */}
+                  <div className="border-b border-slate-200 pb-3">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+                      <MathText text={kmMath(secHeader)} />
+                    </h3>
+                  </div>
+
+                  {/* Sub-steps and calculations */}
+                  <div className="space-y-3">
+                    {parts.map((p) => (
+                      <PartBlock
+                        key={p.label}
+                        part={p}
+                        kmPart={structure.solution_km_json?.parts?.find((kp) => kp.label === p.label)}
+                        mode={mode}
+                        graph={structure.graph}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-
-          {structure.graph != null && (
-            <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                Reference graph
-              </div>
-              <div className="mt-2">
-                <FunctionGraph graph={structure.graph as never} />
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-3">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              Sub-questions &amp; answers ({structure.parts?.length ?? 0})
-            </div>
-            {[...sections.entries()].map(([sec, parts]) => (
-              <div key={sec} className="space-y-2">
-                <div className="text-sm font-semibold text-slate-600">Question {sec}</div>
-                {parts.map((p) => (
-                  <PartBlock key={p.label} part={p} lang={lang} />
-                ))}
-              </div>
-            ))}
-          </div>
-
-          {solution ? (
-            <div className="space-y-2">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                {lang === "km" ? "ដំណោះស្រាយ (Full solution)" : "Full solution"}
-              </div>
-              <div className="rounded-lg border border-slate-200 bg-white p-4">
-                <SolutionNarrative text={solution} />
-              </div>
-            </div>
-          ) : null}
 
           {structure.formula_tags?.length ? (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100">
+              <span className="text-xs text-slate-400 font-medium">Formula tags:</span>
               {structure.formula_tags.map((t) => (
-                <code key={t} className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
+                <code key={t} className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-mono">
                   {t}
                 </code>
               ))}
