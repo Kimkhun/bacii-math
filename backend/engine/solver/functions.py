@@ -6,6 +6,11 @@ mirrors solver/probability.py's multi-part pattern (work_mode "any_order",
 part-labeled steps and checkpoints, target = last part)."""
 from sympy import N, Symbol, diff, div, integrate, latex, limit, log, logcombine, oo, simplify, solve, sympify
 
+from .functions_display import (
+    render_answer,
+    render_question,
+    render_steps,
+)
 from .shared import _calc_locals, _formula_tags, inline_latex
 
 
@@ -16,6 +21,24 @@ def _f(v):
     if v == -oo:
         return float("-inf")
     return float(N(v, 8))
+
+
+def _shape_of(expr):
+    """Function shape for step-narrative selection: 'log' (contains ln of a
+    quotient), 'exp' (contains an exponential), else 'rational'."""
+    if expr.has(log):
+        return "log"
+    if expr.has(log, Symbol("exp")) or any(str(a.func) in ("exp", "ExpBase") for a in expr.atoms()):
+        return "exp"
+    return "rational"
+
+
+def _log_split(expr, x):
+    """For g(x)=ln(P/Q), return (P, Q): numerator and denominator of the log
+    argument (so the split form is ln(P) - ln(Q))."""
+    arg = expr.args[0] if isinstance(expr, log) else expr
+    P, Q = arg.as_numer_denom()
+    return simplify(P), simplify(Q)
 
 
 def _strip_float(v):
@@ -63,7 +86,102 @@ def _positive_intervals(u, x):
     return out
 
 
-def _part_solution(part, answer_exact, answer_latex, answer_display, answer_decimal, steps, checkpoints):
+def _sign_rows(u, x):
+    """Sign-table rows for the MoEYS method. Columns are the boundary values
+    [-∞, roots..., +∞] (nroots+2); each cell shows the factor's sign in the open
+    region just right of that boundary, with '0' at the factor's own roots and
+    '‖' where the quotient is undefined. Returns {cols, rows}."""
+    num, den = u.as_numer_denom()
+    roots = sorted(set(r for r in solve(num, x) if r.is_real) | set(r for r in solve(den, x) if r.is_real))
+    num_roots = [r for r in solve(num, x) if r.is_real]
+    den_roots = [r for r in solve(den, x) if r.is_real]
+
+    # open regions: (-∞,r0), (r0,r1), ..., (rk,∞)
+    def region_sign(factor, i):
+        lo = float("-inf") if i == 0 else float(_f(roots[i - 1]))
+        hi = float("inf") if i == len(roots) else float(_f(roots[i]))
+        mid = 0 if (lo == float("-inf") and hi == float("inf")) else (
+            lo + 1 if hi == float("inf") else (
+                hi - 1 if lo == float("-inf") else (lo + hi) / 2))
+        v = simplify(factor.subs(x, mid))
+        return "+" if (v.is_positive or (v.is_positive is None and float(N(v)) > 0)) else "-"
+
+    nregions = len(roots) + 1
+
+    def factor_row(factor, own_roots):
+        # base: sign in each open region
+        region_signs = [region_sign(factor, i) for i in range(nregions)]
+        cells = []
+        # col 0 = first region; middle cols = boundaries; last col = last region
+        for j in range(nregions + 1):
+            if j == 0:
+                cells.append(region_signs[0])
+            elif j == nregions:
+                cells.append(region_signs[-1])
+            else:
+                b = roots[j - 1]
+                if any(abs(float(r) - float(b)) < 1e-9 for r in own_roots):
+                    cells.append("0")
+                else:
+                    cells.append(region_signs[j])
+        return cells
+
+    row_num = factor_row(num, num_roots)
+    row_den = factor_row(den, den_roots)
+    # quotient: sign(num)*sign(den), 0 at num roots, ‖ at den roots
+    qrow = []
+    for j in range(nregions + 1):
+        if j == 0 or j == nregions:
+            nv, dv = row_num[j], row_den[j]
+            qrow.append("+" if nv == dv else "-")
+        else:
+            b = roots[j - 1]
+            if any(abs(float(r) - float(b)) < 1e-9 for r in num_roots):
+                qrow.append("0")
+            elif any(abs(float(r) - float(b)) < 1e-9 for r in den_roots):
+                qrow.append("‖")
+            else:
+                qrow.append("+" if row_num[j] == row_den[j] else "-")
+
+    col_labels = ["−∞"] + [_strip_float(_f(r)) for r in roots] + ["+∞"]
+    return {
+        "cols": col_labels,
+        "rows": [
+            {"label": latex(num), "cols": [{"val": v} for v in row_num]},
+            {"label": latex(den), "cols": [{"val": v} for v in row_den]},
+            {"label": latex(num / den), "cols": [{"val": v} for v in qrow]},
+        ],
+    }
+
+
+def _near_sign(expr, x, point, side):
+    """Sign (+1/-1) of the one-sided limit value at a finite point, inferred by
+    evaluating just to that side (used to write 0^+ / 0^-)."""
+    eps = 1e-6
+    xp = point - eps if side == "-" else point + eps
+    try:
+        val = float(N(limit(expr, x, point, dir=side), 4))
+    except Exception:
+        val = float(N(expr.subs(x, xp), 4))
+    if abs(val) < 1e-9:
+        # both sides tiny: pick sign from the expression's sign just off point
+        val = float(N(expr.subs(x, xp), 4))
+    return 1 if val > 0 else -1
+
+
+def _behavior_string(P, Q, point, side, x, pl, ql):
+    """LaTeX string for the argument's behavior at a one-sided limit, e.g.
+    '\\frac{0^{+}}{-6}' for ln(P/Q) near a boundary."""
+    def part_str(val, expr):
+        if val == 0:
+            return f"0^{{+}}" if _near_sign(expr, x, point, side) > 0 else f"0^{{-}}"
+        if val in (oo, -oo):
+            return "+\\infty" if val == oo else "-\\infty"
+        return latex(val)
+    return f"\\frac{{{part_str(pl, P)}}}{{{part_str(ql, Q)}}}"
+
+
+def _part_solution(part, answer_exact, answer_latex, answer_display, answer_decimal, steps, checkpoints, ctx=None):
     return {
         "label": part["label"],
         "want": part.get("want"),
@@ -76,7 +194,9 @@ def _part_solution(part, answer_exact, answer_latex, answer_display, answer_deci
         "checkpoints": checkpoints,
         "formula_tags": _formula_tags(steps),
         "choices": part.get("choices"),
+        "technique": part.get("technique", ""),
         "exact_only": part.get("exact_only", False),
+        "_ctx": ctx or {},
     }
 
 
@@ -99,7 +219,18 @@ def _solve_part_domain(params, x, expr, part):
         ]
         checkpoints = [{"label": "domain", "value": ivs, "formula": "sign_table"}]
         checkpoints += [{"label": f"boundary {b}", "value": b, "formula": "sign_table"} for b in boundaries]
-        return _part_solution(part, ivs, display, display, None, steps, checkpoints)
+        P, Q = _log_split(expr, x)
+        num, den = u.as_numer_denom()
+        roots = sorted(set(_f(r) for r in (solve(num, x) + solve(den, x)) if r.is_real))
+        col_labels = ["−∞"] + [_strip_float(r) for r in roots] + ["+∞"]
+        return _part_solution(part, ivs, display, display, None, steps, checkpoints,
+                              ctx={"interval": _interval_display(ivs), "boundaries": boundaries,
+                                   "shape": "log", "num": latex(num), "den": latex(den),
+                                   "col_labels": col_labels,
+                                   "P": latex(P), "Q": latex(Q),
+                                   "P_eq_zero": [latex(r) for r in solve(num, x) if r.is_real],
+                                   "Q_eq_zero": [latex(r) for r in solve(den, x) if r.is_real],
+                                   "sign_rows": _sign_rows(u, x)})
 
     num, den = expr.as_numer_denom()
     poles = sorted(set(_f(r) for r in solve(den, x) if r.is_real))
@@ -121,7 +252,8 @@ def _solve_part_domain(params, x, expr, part):
     ]
     checkpoints = [{"label": "domain", "value": ivs, "formula": "rational_domain"}]
     checkpoints += [{"label": f"pole {b}", "value": b, "formula": "rational_domain"} for b in poles]
-    return _part_solution(part, ivs, display, display, None, steps, checkpoints)
+    return _part_solution(part, ivs, display, display, None, steps, checkpoints,
+                          ctx={"interval": display, "boundaries": poles})
 
 
 def _solve_part_parity(params, x, expr, part):
@@ -139,7 +271,10 @@ def _solve_part_parity(params, x, expr, part):
          "formula": "parity_definition"},
     ]
     checkpoints = [{"label": "g(-x) + g(x)", "value": 0, "formula": "parity_definition"}]
-    return _part_solution(part, verdict, display, display, None, steps, checkpoints)
+    P, Q = _log_split(expr, x)
+    ctx = {"verdict": verdict, "shape": "log", "split": f"{latex(expr)} = {latex(log(P))} - {latex(log(Q))}",
+           "P": latex(P), "Q": latex(Q), "gminusx": latex(gm)}
+    return _part_solution(part, verdict, display, display, None, steps, checkpoints, ctx=ctx)
 
 
 def _solve_part_limit(params, x, expr, part):
@@ -158,7 +293,24 @@ def _solve_part_limit(params, x, expr, part):
     ]
     checkpoints = [{"label": "limit", "value": result, "formula": "vertical_asymptote"}]
     decimal = None if result in (oo, -oo) else _f(result)
-    return _part_solution(part, result, latex(result), display, decimal, steps, checkpoints)
+    behavior = None
+    if isinstance(expr, log):
+        P, Q = _log_split(expr, x)
+        pl = limit(P, x, point, dir=side) if side else limit(P, x, point)
+        ql = limit(Q, x, point, dir=side) if side else limit(Q, x, point)
+        behavior = _behavior_string(P, Q, point, side, x, pl, ql)
+    ctx = {
+        "point": str(point),
+        "side": side,
+        "value": result,
+        "value_latex": latex(result),
+        "infinite": result in (oo, -oo),
+        "shape": "log",
+        "arg": latex(expr.args[0]) if isinstance(expr, log) else latex(expr),
+        "fn": params.get("fn_name", "g"),
+        "behavior": behavior,
+    }
+    return _part_solution(part, result, latex(result), display, decimal, steps, checkpoints, ctx=ctx)
 
 
 def _solve_part_limits(params, x, expr, part):
@@ -192,7 +344,8 @@ def _solve_part_limits(params, x, expr, part):
         for r in results
     ]
     decimal = None if answer in (oo, -oo) else _f(answer)
-    return _part_solution(part, answer, latex(answer), display, decimal, steps, checkpoints)
+    ctx = {"results": [{"point": r["point"], "value": latex(r["value"])} for r in results]}
+    return _part_solution(part, answer, latex(answer), display, decimal, steps, checkpoints, ctx=ctx)
 
 
 def _solve_part_draw(params, x, expr, part):
@@ -239,7 +392,8 @@ def _solve_part_variation(params, x, expr, part):
          "detail": f"The extremum values are \\({'; '.join(f'f({latex(c)}) = {latex(simplify(expr.subs(x, c)))}' for c in crit) or 'none'}\\).",
          "formula": "monotonicity_sign"},
     ]
-    return _part_solution(part, answer, latex(answer), display, None, steps, checkpoints)
+    return _part_solution(part, answer, latex(answer), display, None, steps, checkpoints,
+                          ctx={"der": latex(der)})
 
 
 def _solve_part_derivative(params, x, expr, part):
@@ -256,7 +410,12 @@ def _solve_part_derivative(params, x, expr, part):
         {"title": "Result", "detail": f"\\(f'(x) = {inline_latex(der)}\\).", "formula": "quotient_rule"},
     ]
     checkpoints = [{"label": "f'(x)", "value": der, "formula": "quotient_rule"}]
-    return _part_solution(part, der, latex(der), display, None, steps, checkpoints)
+    P, Q = _log_split(expr, x)
+    ctx = {"expr": latex(der), "shape": "log",
+           "split": f"{latex(expr)} = {latex(log(P))} - {latex(log(Q))}",
+           "P": latex(P), "Q": latex(Q),
+           "dP": latex(diff(P, x)), "dQ": latex(diff(Q, x))}
+    return _part_solution(part, der, latex(der), display, None, steps, checkpoints, ctx=ctx)
 
 
 def _solve_part_asymptote(params, x, expr, part):
@@ -280,7 +439,8 @@ def _solve_part_asymptote(params, x, expr, part):
          "detail": f"The {kind} asymptote is \\(y = {inline_latex(line)}\\).", "formula": "oblique_asymptote"},
     ]
     checkpoints = [{"label": "asymptote", "value": line, "formula": "oblique_asymptote"}]
-    return _part_solution(part, line, latex(line), display, None, steps, checkpoints)
+    ctx = {"line": latex(line), "kind": kind}
+    return _part_solution(part, line, latex(line), display, None, steps, checkpoints, ctx=ctx)
 
 
 def _solve_part_decompose(params, x, expr, part):
@@ -309,7 +469,8 @@ def _solve_part_decompose(params, x, expr, part):
         {"label": "b", "value": b, "formula": "euclidean_division"},
         {"label": "c", "value": c, "formula": "euclidean_division"},
     ]
-    return _part_solution(part, dec, latex(dec), display, None, steps, checkpoints)
+    ctx = {"dec": latex(dec), "a": latex(a), "b": latex(b), "c": latex(c)}
+    return _part_solution(part, dec, latex(dec), display, None, steps, checkpoints, ctx=ctx)
 
 
 def _solve_part_position(params, x, expr, part):
@@ -329,7 +490,9 @@ def _solve_part_position(params, x, expr, part):
          "formula": "position_asymptote"},
     ]
     checkpoints = [{"label": "above line", "value": ivs, "formula": "position_asymptote"}]
-    return _part_solution(part, ivs, display, display, None, steps, checkpoints)
+    below = _positive_intervals(simplify(-diff_expr), x)
+    ctx = {"above": _interval_display(ivs), "below": _interval_display(below)}
+    return _part_solution(part, ivs, display, display, None, steps, checkpoints, ctx=ctx)
 
 
 def _solve_part_symmetry(params, x, expr, part):
@@ -354,7 +517,8 @@ def _solve_part_symmetry(params, x, expr, part):
          "formula": "center_symmetry"},
     ]
     checkpoints = [{"label": "f(a+t)+f(a-t)", "value": target, "formula": "center_symmetry"}]
-    return _part_solution(part, target, latex(target), display, None, steps, checkpoints)
+    ctx = {"center": center, "a0": latex(a0), "b0": latex(b0)}
+    return _part_solution(part, target, latex(target), display, None, steps, checkpoints, ctx=ctx)
 
 
 def _solve_part_tangent(params, x, expr, part):
@@ -378,7 +542,10 @@ def _solve_part_tangent(params, x, expr, part):
         {"label": f"g'({latex(x0)})", "value": m, "formula": "derivative_ln"},
         {"label": "tangent line", "value": line, "formula": "tangent_equation"},
     ]
-    return _part_solution(part, line, latex(line), display, None, steps, checkpoints)
+    ctx = {"x0": latex(x0), "y0": latex(y0), "m": latex(m), "line": latex(line),
+           "shape": "log", "x0_num": str(x0), "y0_num": str(y0), "m_num": str(m),
+           "x0_plain": latex(x0)}
+    return _part_solution(part, line, latex(line), display, None, steps, checkpoints, ctx=ctx)
 
 
 def _solve_part_derivative_product(params, x, expr, part):
@@ -394,7 +561,12 @@ def _solve_part_derivative_product(params, x, expr, part):
         {"title": "Result", "detail": f"\\(h'(x) = {inline_latex(der)}\\).", "formula": "product_rule"},
     ]
     checkpoints = [{"label": "h'(x)", "value": der, "formula": "product_rule"}]
-    return _part_solution(part, der, latex(der), display, None, steps, checkpoints)
+    P, Q = _log_split(expr, x)
+    gprime = simplify(diff(expr, x))
+    ctx = {"h_fn": part.get("h_fn", "h"), "expr": latex(der), "shape": "log",
+           "split": f"{latex(expr)} = {latex(log(P))} - {latex(log(Q))}",
+           "P": latex(P), "Q": latex(Q), "g": latex(expr), "gprime": latex(gprime)}
+    return _part_solution(part, der, latex(der), display, None, steps, checkpoints, ctx=ctx)
 
 
 def _solve_part_integral(params, x, expr, part):
@@ -427,7 +599,242 @@ def _solve_part_integral(params, x, expr, part):
         decimal = float(N(result, 8))
     except Exception:
         decimal = None
-    return _part_solution(part, result, latex(result), display, decimal, steps, checkpoints)
+    P, Q = _log_split(expr, x)
+    gprime = simplify(diff(expr, x))
+    ctx = {"lower": latex(lower), "upper": latex(upper), "value": latex(result),
+           "value_plain": str(result), "shape": "log",
+           "g": latex(expr), "gprime": latex(gprime), "split": f"{latex(log(P))} - {latex(log(Q))}",
+           "P": latex(P), "Q": latex(Q), "h": latex(h), "h_upper": latex(h_upper), "h_lower": latex(h_lower),
+           "fn": params.get("fn_name", "g"), "h_fn": part.get("h_fn", "h")}
+    return _part_solution(part, result, latex(result), display, decimal, steps, checkpoints, ctx=ctx)
+
+
+def _domain_intervals(expr, x):
+    """Open intervals of the real domain of ``expr`` (log argument > 0, or
+    rationals excluding denominator roots)."""
+    if isinstance(expr, log):
+        u = expr.args[0]
+        return _positive_intervals(u, x)
+    num, den = expr.as_numer_denom()
+    poles = sorted(set(_f(r) for r in solve(den, x) if r.is_real))
+    if not poles:
+        return [{"lo": float("-inf"), "hi": float("inf"), "lo_open": True, "hi_open": True}]
+    bounds = [float("-inf")] + poles + [float("inf")]
+    return [{"lo": bounds[i], "hi": bounds[i + 1], "lo_open": True, "hi_open": True}
+            for i in range(len(bounds) - 1)]
+
+
+def _solve_part_monotonicity(params, x, expr, part):
+    """BAC II 'study the variation of g': sign of g'(x) per domain interval and
+    the resulting monotonicity verdict. The domain is split at critical points
+    and vertical asymptotes first, so each reported segment is genuinely
+    monotonic. Answer is the list of (interval, direction) pieces; checkpoints
+    carry g'(x) and the critical points."""
+    var = params["var"]
+    der = simplify(diff(expr, x))
+    crit = sorted(set(float(r) for r in solve(der, x) if r.is_real))
+    dom = _domain_intervals(expr, x)
+    bps = set()
+    for iv in dom:
+        if iv["lo"] != float("-inf"):
+            bps.add(iv["lo"])
+        if iv["hi"] != float("inf"):
+            bps.add(iv["hi"])
+    bps.update(crit)
+    bps = sorted(bps)
+    all_bp = []
+    if any(iv["lo"] == float("-inf") for iv in dom):
+        all_bp.append(float("-inf"))
+    all_bp += bps
+    if any(iv["hi"] == float("inf") for iv in dom):
+        all_bp.append(float("inf"))
+    pieces = []
+    for i in range(len(all_bp) - 1):
+        a, b = all_bp[i], all_bp[i + 1]
+        if a == float("-inf"):
+            mid = b - 1
+        elif b == float("inf"):
+            mid = a + 1
+        else:
+            mid = (a + b) / 2
+        inside = any((iv["lo"] == float("-inf") or iv["lo"] < mid) and
+                     (iv["hi"] == float("inf") or mid < iv["hi"]) for iv in dom)
+        if not inside:
+            continue
+        s = simplify(der.subs(x, mid))
+        if s.is_positive or (s.is_positive is None and float(N(s)) > 0):
+            direction = "inc"
+        elif s.is_negative or (s.is_negative is None and float(N(s)) < 0):
+            direction = "dec"
+        else:
+            direction = "inc"
+        seg = [{"lo": a, "hi": b, "lo_open": True, "hi_open": True}]
+        pieces.append({"interval": _interval_display(seg), "direction": direction})
+    disp_parts = []
+    for p in pieces:
+        word = "កើន" if p["direction"] == "inc" else "ចុះ"
+        disp_parts.append(f"{word} លើ {p['interval']}")
+    display = "; ".join(disp_parts) or "ថេរ"
+    steps = [
+        {"title": "Derivative", "detail": f"\\(g'({var}) = {inline_latex(der)}\\) .",
+         "formula": "quotient_rule"},
+        {"title": "Sign of the derivative",
+         "detail": part.get("technique", "") or f"\\(g'({var})\\) keeps a constant sign on each interval between critical points / asymptotes.",
+         "formula": "monotonicity_sign"},
+        {"title": "Conclusion", "detail": f"\\(g\\) {display}.", "formula": "monotonicity_sign"},
+    ]
+    checkpoints = [{"label": f"g'({var})", "value": der, "formula": "quotient_rule"}]
+    checkpoints += [{"label": f"critical {c}", "value": c, "formula": "monotonicity_sign"} for c in crit]
+    ctx = {"pieces": [{"interval": p["interval"], "direction": p["direction"]} for p in pieces],
+           "shape": "log", "der": latex(der)}
+    return _part_solution(part, pieces, display, display, None, steps, checkpoints, ctx=ctx)
+
+
+def _intersect_intervals(a, b):
+    """Intersection of two lists of open intervals (all open)."""
+    out = []
+    for iv in a:
+        for jv in b:
+            lo = max(iv["lo"], jv["lo"])
+            hi = min(iv["hi"], jv["hi"])
+            if lo < hi:
+                out.append({"lo": lo, "hi": hi, "lo_open": True, "hi_open": True})
+    out.sort(key=lambda d: d["lo"])
+    return out
+
+
+def _solve_part_sign(params, x, expr, part):
+    """Sign of g(x): intervals where g > 0 and where g < 0 (MoEYS asks 'study the
+    sign of g(x) according to x'). Restricted to the real domain of g."""
+    var = params["var"]
+    dom = _domain_intervals(expr, x)
+    if isinstance(expr, log):
+        u = expr.args[0]
+        # g>0 <=> u>1 ; g<0 <=> 0<u<1 (automatically inside the domain u>0)
+        pos = _positive_intervals(u - 1, x)
+        neg = _intersect_intervals(_positive_intervals(1 - u, x), dom)
+    else:
+        pos = _positive_intervals(expr, x)
+        neg = _intersect_intervals(_positive_intervals(-expr, x), dom)
+    pos_disp = _interval_display(pos) or "\\varnothing"
+    neg_disp = _interval_display(neg) or "\\varnothing"
+    display = f"g({var}) < 0 លើ {neg_disp} ; g({var}) > 0 លើ {pos_disp}"
+    steps = [
+        {"title": "Sign of g(x)",
+         "detail": part.get("technique", "") or f"Study the sign of \\(g({var}) = {inline_latex(expr)}\\) on its domain.",
+         "formula": "sign_table"},
+        {"title": "Conclusion", "detail": display, "formula": "sign_table"},
+    ]
+    roots = sorted(set(_f(r) for r in solve(expr, x) if r.is_real))
+    checkpoints = [{"label": f"root {r}", "value": r, "formula": "sign_table"} for r in roots]
+    ctx = {"pos": pos_disp, "neg": neg_disp}
+    return _part_solution(part, pos, display, display, None, steps, checkpoints, ctx=ctx)
+
+
+def _solve_part_variation_table(params, x, expr, part):
+    """The BAC II variation table: breakpoints (domain ends + critical points +
+    vertical asymptotes), the sign of g'(x) on each segment, the limits/values
+    of g at each breakpoint, and the monotonicity arrows. Returned as a JSON
+    structure (``variation_table``) the frontend renders as a real table."""
+    var = params["var"]
+    der = simplify(diff(expr, x))
+    dom = _domain_intervals(expr, x)
+    crit = sorted(set(float(r) for r in solve(der, x) if r.is_real))
+    bps = set()
+    for iv in dom:
+        if iv["lo"] != float("-inf"):
+            bps.add(iv["lo"])
+        if iv["hi"] != float("inf"):
+            bps.add(iv["hi"])
+    bps.update(crit)
+    bps = sorted(bps)
+    cols = []
+    if any(iv["lo"] == float("-inf") for iv in dom):
+        cols.append("-∞")
+    cols += [str(b) for b in bps]
+    if any(iv["hi"] == float("inf") for iv in dom):
+        cols.append("+∞")
+
+    def col_val(label):
+        if label == "-∞":
+            return float("-inf")
+        if label == "+∞":
+            return float("inf")
+        return float(sympify(label, locals=_calc_locals(var)))
+
+    def func_at(label):
+        if label == "-∞":
+            return str(limit(expr, x, -oo))
+        if label == "+∞":
+            return str(limit(expr, x, oo))
+        c = sympify(label, locals=_calc_locals(var))
+        if any(abs(float(c) - b) < 1e-9 for b in crit):
+            return latex(simplify(expr.subs(x, c)))
+        from_left = any(abs(iv["hi"] - float(c)) < 1e-9 for iv in dom)
+        from_right = any(abs(iv["lo"] - float(c)) < 1e-9 for iv in dom)
+        if from_left and from_right:
+            return f"{str(limit(expr, x, c, dir='-'))} / {str(limit(expr, x, c, dir='+'))}"
+        if from_right:
+            return str(limit(expr, x, c, dir="+"))
+        if from_left:
+            return str(limit(expr, x, c, dir="-"))
+        return latex(simplify(expr.subs(x, c)))
+
+    func_cells = [func_at(c) for c in cols]
+    deriv_cells, arrows = [], []
+    for i in range(len(cols) - 1):
+        a, b = col_val(cols[i]), col_val(cols[i + 1])
+        if a == float("-inf"):
+            mid = (b - 1) if b != float("inf") else 0
+        elif b == float("inf"):
+            mid = a + 1
+        else:
+            mid = (a + b) / 2
+        s = simplify(der.subs(x, mid))
+        if s.is_positive or (s.is_positive is None and float(N(s)) > 0):
+            sign = "+"
+        elif s.is_negative or (s.is_negative is None and float(N(s)) < 0):
+            sign = "-"
+        else:
+            sign = "0"
+        deriv_cells.append(sign)
+        arrows.append("↗" if sign == "+" else ("↘" if sign == "-" else "–"))
+
+    extrema = []
+    for c in crit:
+        ci = col_val(str(c))
+        left = next((d for i, d in enumerate(deriv_cells) if cols[i + 1] == str(c)), None)
+        right = next((d for i, d in enumerate(deriv_cells) if cols[i] == str(c)), None)
+        if left and right and left != right:
+            etype = "min" if left == "-" and right == "+" else "max"
+            extrema.append({"x": str(c), "type": etype, "value": latex(simplify(expr.subs(x, c)))})
+
+    table = {
+        "columns": cols,
+        "derivative_sign": deriv_cells,
+        "arrows": arrows,
+        "func_values": func_cells,
+        "extrema": extrema,
+    }
+    display = "variation table"
+    steps = [
+        {"title": "Variation table",
+         "detail": part.get("technique", "") or "Compile the sign of \\(g'(x)\\) and the limits into the variation table.",
+         "formula": "monotonicity_sign"},
+    ]
+    checkpoints = [{"label": f"g'({var})", "value": der, "formula": "quotient_rule"}]
+    for c in crit:
+        checkpoints.append({"label": f"f({c})", "value": simplify(expr.subs(x, c)), "formula": "monotonicity_sign"})
+    for iv in dom:
+        for bd in (iv["lo"], iv["hi"]):
+            if bd not in (float("-inf"), float("inf")):
+                checkpoints.append({"label": f"lim {var}->{bd}",
+                                    "value": limit(expr, x, sympify(bd, locals=_calc_locals(var))),
+                                    "formula": "vertical_asymptote"})
+    sol = _part_solution(part, table, display, display, None, steps, checkpoints)
+    sol["variation_table"] = table
+    sol["_ctx"] = {"table": table}
+    return sol
 
 
 def _build_graph(params, x, expr):
@@ -510,6 +917,8 @@ def _solve_function_study(params):
     x = Symbol(var)
     expr = sympify(params["function_expr"], locals=_calc_locals(var))
     part_solutions = []
+    km_blocks = []
+    en_blocks = []
     for part in params.get("parts", []):
         want = part.get("want")
         if want == "domain":
@@ -540,6 +949,12 @@ def _solve_function_study(params):
             sol = _solve_part_derivative_product(params, x, expr, part)
         elif want == "integral":
             sol = _solve_part_integral(params, x, expr, part)
+        elif want == "monotonicity":
+            sol = _solve_part_monotonicity(params, x, expr, part)
+        elif want == "variation_table":
+            sol = _solve_part_variation_table(params, x, expr, part)
+        elif want == "sign":
+            sol = _solve_part_sign(params, x, expr, part)
         else:
             raise ValueError(f"unknown function-study want: {want}")
         for cp in part.get("extra_checkpoints") or []:
@@ -548,6 +963,40 @@ def _solve_function_study(params):
                                        "formula": cp.get("formula", "monotonicity_sign")})
         sol["checkpoints"] = [{**cp, "label": f"{sol['label']}: {cp['label']}"} for cp in sol["checkpoints"]]
         sol["steps"] = [{**s, "title": f"Part {sol['label']}: {s['title']}"} for s in sol["steps"]]
+
+        ctx = sol.get("_ctx") or {}
+        fn_name = params.get("fn_name", "f")
+        km_disp = part.get("display") or render_answer(want, ctx, var, fn_name, lang="km") or sol.get("answer_display")
+        en_disp = part.get("display_en") or render_answer(want, ctx, var, fn_name, lang="en") or km_disp
+        sol["answer_display"] = km_disp
+        sol["answer_display_en"] = en_disp
+
+        q_km = part.get("question_km") or ""
+        q_en = part.get("question_en") or render_question(want, ctx, var, fn_name) or ""
+        technique_km = part.get("technique") or "\n".join(render_steps(want, ctx, var, fn_name, lang="km")) or ""
+        technique_en = part.get("technique_en") or "\n".join(render_steps(want, ctx, var, fn_name, lang="en")) or ""
+        sol["question_km"] = q_km
+        sol["question_en"] = q_en
+        sol["technique"] = technique_km
+        sol["technique_en"] = technique_en
+
+        km_block = ""
+        if q_km:
+            km_block += f"**{sol['label']}** {q_km}\n\n"
+        if technique_km:
+            tech_lines = [t.strip() for t in technique_km.replace("។", "។\n").split("\n") if t.strip()]
+            km_block += "\n".join(tech_lines) + "\n\n"
+        km_block += f"ចម្លើយ៖ {km_disp}"
+
+        en_block = ""
+        if q_en:
+            en_block += f"**{sol['label']}** {q_en}\n\n"
+        if technique_en:
+            en_block += "\n".join(t.strip() for t in technique_en.split("\n") if t.strip()) + "\n\n"
+        en_block += f"Answer: {en_disp}"
+
+        km_blocks.append(km_block)
+        en_blocks.append(en_block)
         part_solutions.append(sol)
 
     merged_cps = [cp for sol in part_solutions for cp in sol["checkpoints"]]
@@ -558,6 +1007,8 @@ def _solve_function_study(params):
         "answer_exact": target["answer_exact"],
         "answer_decimal": target["answer_decimal"],
         "answer_latex": target["answer_latex"],
+        "answer_display": target.get("answer_display"),
+        "answer_display_en": target.get("answer_display_en"),
         "steps": merged_steps,
         "formula_tags": tags,
         "checkpoints": merged_cps,
@@ -566,4 +1017,6 @@ def _solve_function_study(params):
         "work_mode": "any_order",
         "given": expr,
         "graph": _build_graph(params, x, expr),
+        "solution_km": "\n\n".join(km_blocks),
+        "solution_en": "\n\n".join(en_blocks),
     }

@@ -754,6 +754,8 @@ function PracticeInner() {
         selectTool("curve");
       } else if (k === "o") {
         selectTool("ellipse");
+      } else if (k === "v") {
+        selectTool("select");
       } else if (k === "[") {
         if (tool === "eraser") selectEraserWidth(Math.max(10, eraserWidth - 1));
         else selectPenWidth(Math.max(1, penWidth - 1));
@@ -1445,6 +1447,7 @@ function PracticeInner() {
                 zoom={zoom}
                 onChange={markDirty}
                 onZoomChange={onCanvasZoomChange}
+                onToolAutoSwitch={selectTool}
                 overlay={
                   marksByPart[i]?.length || linePopsByPart[i]?.length || (i === partIndex && ambiguityQueue?.length) ? (
                     <>
@@ -1466,6 +1469,7 @@ function PracticeInner() {
             zoom={zoom}
             onChange={markDirty}
             onZoomChange={onCanvasZoomChange}
+            onToolAutoSwitch={selectTool}
             overlay={
               marks?.length || linePops?.length || ambiguityQueue?.length ? (
                 <>
@@ -1959,6 +1963,17 @@ function PracticeInner() {
                 }`}
               >
                 Ellipse
+              </button>
+              <button
+                onClick={() => selectTool("select")}
+                title="Select / move — click a shape to grab its points, drag to reshape (V)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "select"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Select
               </button>
             </div>
             <button

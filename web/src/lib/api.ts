@@ -404,11 +404,13 @@ export interface TemplateStructure {
   formula_tags: string[];
   source_labels: string[];
   graph?: GraphSpec | null;
+  solution_km?: string | null;
   parts?: {
     label: string;
     want?: string;
     answer_kind?: string;
     question_km?: string;
+    technique?: string;
     answer: string;
     answer_latex?: string;
     answer_display?: string;

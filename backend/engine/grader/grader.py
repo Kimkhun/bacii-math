@@ -292,9 +292,67 @@ def _judge_expression(expected, user_answer, tol, exact_only=False):
         return True, "numeric", None
     return False, "mismatch", None
 
-def _judge_by_kind(kind, expected, user_answer, tol=_DEFAULT_TOL, choices=None, exact_only=False):
+def _judge_sign(expected, user_answer, tol):
+    """Sign-of-g answer: expected is the list of positive interval dicts; the
+    student's interval list is judged structurally (order/union tolerant)."""
+    return _judge_interval(expected, user_answer, tol)
+
+
+def _judge_monotonicity(expected, user_answer, tol):
+    """Monotonicity answer: expected is a list of {interval, direction}. Correct
+    when the student's text names each interval with the right direction word
+    (កើន/croît/increasing vs ចុះ/décroît/decreasing)."""
+    text = user_answer.lower()
+    inc_kw = ["កើន", "cro", "incr", "increas", "ឡើង", "↗"]
+    dec_kw = ["ចុះ", "décro", "decro", "decreas", "ធ្លាក់", "↘"]
+    ok = True
+    for piece in expected:
+        iv = piece.get("interval", "")
+        nums = _re.findall(r"-?\d+(?:\.\d+)?", iv)
+        has_bounds = all(n in text.replace(" ", "") for n in nums) if nums else True
+        kw = inc_kw if piece.get("direction") == "inc" else dec_kw
+        has_kw = any(k in text for k in kw)
+        if not (has_bounds and has_kw):
+            ok = False
+    return ok, "exact" if ok else "mismatch", None
+
+
+def _judge_variation_table(expected, user_answer, checkpoints, tol):
+    """Variation-table answer: judged by whether the student's written lines
+    contain every checkpoint value (g'(x) and the limits/extrema). Tolerant —
+    the authoritative check is the any_order work analysis."""
+    if not checkpoints:
+        return False, "mismatch", None
+    text = user_answer.replace(" ", "")
+    ok = True
+    for cp in checkpoints:
+        v = cp["value"]
+        if v in (oo, -oo):
+            token = "∞" if v == oo else "-∞"
+            if token not in user_answer and "infty" not in user_answer.lower() and "inf" not in user_answer.lower():
+                ok = False
+        else:
+            vs = str(v)
+            try:
+                vsn = str(N(v, 6))
+            except Exception:
+                vsn = vs
+            if vs not in text and vsn not in text:
+                ok = False
+    return ok, "exact" if ok else "mismatch", None
+
+
+def _judge_study(kind, expected, user_answer, tol, checkpoints):
+    if kind == "sign":
+        return _judge_sign(expected, user_answer, tol)
+    if kind == "monotonicity":
+        return _judge_monotonicity(expected, user_answer, tol)
+    return _judge_variation_table(expected, user_answer, checkpoints, tol)
+
+
+def _judge_by_kind(kind, expected, user_answer, tol=_DEFAULT_TOL, choices=None, exact_only=False, checkpoints=None):
     """Dispatch an answer to the right shape judge (interval/choice/infinity/
-    line/expression). Returns (correct, reason, note)."""
+    line/expression/study-tables). Returns (correct, reason, note)."""
     if kind == "interval":
         return _judge_interval(expected, user_answer, tol)
     if kind == "choice":
@@ -303,6 +361,8 @@ def _judge_by_kind(kind, expected, user_answer, tol=_DEFAULT_TOL, choices=None, 
         return _judge_infinity(expected, user_answer)
     if kind == "line":
         return _judge_line(expected, user_answer, tol)
+    if kind in ("sign", "monotonicity", "variation_table"):
+        return _judge_study(kind, expected, user_answer, tol, checkpoints)
     return _judge_expression(expected, user_answer, tol, exact_only)
 
 def _match_checkpoint(value, cp, tol, var_sym):
@@ -547,7 +607,7 @@ def grade_part(topic, question_type, params, label, user_answer, tolerance=None)
             expected, user_answer,
             tolerance if tolerance is not None else _DEFAULT_TOL,
             kind=part.get("answer_kind"), choices=part.get("choices"),
-            exact_only=part.get("exact_only"),
+            exact_only=part.get("exact_only"), checkpoints=part.get("checkpoints"),
         )
     except Exception as exc:
         correct, reason, note = False, f"could not parse answer: {exc}", None

@@ -50,7 +50,7 @@ def build_text(topic, question_type, params, solution):
 
 async def explain(topic, question_type, params, use_ai=False):
     solution = solve(topic, question_type, params)
-    steps_text = build_text(topic, question_type, params, solution)
+    steps_text = solution.get("solution_km") or build_text(topic, question_type, params, solution)
     ai = None
     if use_ai:
         ai, _ = await llm.narrate(steps_text)

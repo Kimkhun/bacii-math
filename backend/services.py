@@ -826,7 +826,7 @@ async def _build_generic_topic_payload(topic: str) -> dict:
                     "pattern_latex": item.get("pattern_latex"),
                     "sample_prompt": item.get("prompt") or "",
                     "sample_prompt_latex": item.get("prompt_latex"),
-                    "sample_answer": str(solution["answer_exact"]),
+                    "sample_answer": solution.get("answer_display") or str(solution["answer_exact"]),
                     "sample_answer_latex": solution.get("answer_latex"),
                     "formula_tags": solution.get("formula_tags", []),
                     "source_labels": [f"BAC II study: {item.get('id')}"],
@@ -837,12 +837,21 @@ async def _build_generic_topic_payload(topic: str) -> dict:
                             "want": p.get("want"),
                             "answer_kind": p.get("answer_kind"),
                             "question_km": p.get("question_km"),
+                            "question_en": p.get("question_en"),
+                            "technique": p.get("technique"),
+                            "technique_en": p.get("technique_en"),
                             "answer": str(p["answer_exact"]),
                             "answer_latex": p.get("answer_latex"),
                             "answer_display": p.get("answer_display"),
+                            "answer_display_en": p.get("answer_display_en"),
+                            "variation_table": p.get("variation_table"),
+                            "monotonicity": p.get("answer_exact") if p.get("want") == "monotonicity" else None,
+                            "sign": p.get("answer_exact") if p.get("want") == "sign" else None,
                         }
                         for p in solution.get("parts", [])
                     ],
+                    "solution_km": solution.get("solution_km"),
+                    "solution_en": solution.get("solution_en"),
                 })
         else:
             for diff in ("easy", "medium", "hard"):

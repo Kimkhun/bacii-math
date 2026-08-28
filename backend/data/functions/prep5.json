@@ -5,7 +5,7 @@
     "track": "preparation",
     "section": "V",
     "subject_km": "គណិតវិទ្យា",
-    "description": "Preparation exam — function exercise V: f(x) = (x-1)^2/(2(x-2)) — limits, oblique asymptote, position, derivative, tangent, graph.",
+    "description": "Preparation exam — function exercise V: f(x) = (x-1)^2/(2(x-2)) — limits, vertical asymptote, oblique asymptote, position, derivative, variation table, graph. Restructured to the canonical BAC II sub-question layout.",
     "extracted_by": "manual transcription from preparation exam (2026-08), answers verified with SymPy"
   },
   "difficulty": "hard",
@@ -34,57 +34,97 @@
   },
   "parts": [
     {
-      "label": "1",
+      "label": "1.a",
+      "want": "limit",
+      "kind": "infinity",
+      "point": "2",
+      "side": "-",
+      "expected": "-oo",
+      "display": "lim x→2⁻ f(x) = −∞",
+      "question_km": "គណនាលីមីតនៃ $f$ ត្រង់ $2$ ពីឆ្វេង",
+      "technique": "នៅពេល $x \\to 2^-$ គេបាន $(x-1)^2 \\to 1 > 0$ ខណៈ $2(x-2) \\to 0^-$ ដូច្នេះ $f(x) \\to -\\infty$ ។"
+    },
+    {
+      "label": "1.b",
+      "want": "limit",
+      "kind": "infinity",
+      "point": "2",
+      "side": "+",
+      "expected": "oo",
+      "display": "lim x→2⁺ f(x) = +∞",
+      "question_km": "គណនាលីមីតនៃ $f$ ត្រង់ $2$ ពីស្តាំ",
+      "technique": "នៅពេល $x \\to 2^+$ គេបាន $2(x-2) \\to 0^+$ ដូច្នេះ $f(x) \\to +\\infty$ ។ ដូច្នេះ $x = 2$ ជាអាស៊ីមតូតឈរ ។"
+    },
+    {
+      "label": "1.c",
       "want": "limits",
       "kind": "infinity",
       "items": [
-        { "point": "2", "side": "-" },
-        { "point": "2", "side": "+" },
         { "point": "-oo" },
         { "point": "oo" }
       ],
       "expected": "oo",
-      "display": "lim at 2⁻ = -∞, 2⁺ = +∞, -∞ = -∞, +∞ = +∞",
-      "question_km": "គណនា $\\lim_{x\\to 2} f(x)$ និង $\\lim_{x\\to \\pm\\infty} f(x)$ រួចកំណត់សមីការអាស៊ីមតូតឈរ",
-      "technique": "As x → 2⁻ the numerator (x-1)² → 1 > 0 while 2(x-2) → 0⁻ so f → -∞; as x → 2⁺, f → +∞ (so x = 2 is the vertical asymptote). f(x) = x/2 + 1/(2(x-2)) behaves like x/2, so f → -∞ at -∞ and +∞ at +∞.",
+      "display": "lim x→−∞ f(x) = −∞ ; lim x→+∞ f(x) = +∞",
+      "question_km": "គណនាលីមីតនៃ $f$ ត្រង់ $\\pm\\infty$",
+      "technique": "$f(x) = \\frac{x}{2} + \\frac{1}{2(x-2)}$ មានឥរិយាបទដូច $\\frac{x}{2}$ ដូច្នេះ $f(x) \\to -\\infty$ ពេល $x \\to -\\infty$ និង $f(x) \\to +\\infty$ ពេល $x \\to +\\infty$ ។",
       "extra_checkpoints": [
         { "label": "vertical asymptote x=2", "value": "2", "formula": "vertical_asymptote" }
       ]
     },
     {
-      "label": "2",
+      "label": "2.a",
+      "want": "asymptote",
+      "kind": "line",
+      "expected": "x/2",
+      "display": "អាស៊ីមតូតទ្រេត y = x/2",
+      "question_km": "បង្ហាញថាបន្ទាត់ $(l): y = x/2$ ជាអាស៊ីមតូតទ្រេតនៃ $(C)$",
+      "technique": "$m = \\lim_{x\\to\\infty} \\frac{f(x)}{x} = \\frac{1}{2}$ និង $b = \\lim_{x\\to\\infty}\\left(f(x) - \\frac{x}{2}\\right) = 0$ ដូច្នេះ $(l): y = \\frac{x}{2}$ ជាអាស៊ីមតូតទ្រេត ។"
+    },
+    {
+      "label": "2.b",
       "want": "position",
       "kind": "interval",
+      "line_expr": "x/2",
       "expected": [
         { "lo": 2, "hi": 10000000000.0, "lo_open": true, "hi_open": true }
       ],
-      "display": "(2, ∞)",
-      "question_km": "បង្ហាញថាបន្ទាត់ $(l): y = \\frac{1}{2}x$ ជាអាស៊ីមតូតទ្រេត រួចសិក្សាទីតាំងធៀបរវាងក្រាប $(C)$ និង $(l)$",
-      "line_expr": "x/2",
-      "technique": "f(x) - x/2 = ((x-1)² - x(x-2))/(2(x-2)) = 1/(2(x-2)) → 0 as x → ±∞, so (l): y = x/2 is the oblique asymptote. The difference is positive exactly when x > 2, so (C) is above (l) on (2, ∞) and below on (-∞, 2).",
+      "display": "ក្រាប (C) នៅខាងលើ (l) លើ (2, ∞) និងនៅខាងក្រោម លើ (−∞, 2)",
+      "question_km": "សិក្សាទីតាំងធៀបរវាងក្រាប $(C)$ និង $(l)$",
+      "technique": "$f(x) - \\frac{x}{2} = \\frac{1}{2(x-2)} \\to 0$ ពេល $x \\to \\pm\\infty$ ដូច្នេះ $(C)$ ស្ថិតនៅខាងលើ $(l)$ លើ $(2, \\infty)$ និងនៅខាងក្រោមលើ $(-\\infty, 2)$ ។",
       "extra_checkpoints": [
         { "label": "oblique asymptote y=x/2", "value": "x/2", "formula": "oblique_asymptote" }
       ]
     },
     {
-      "label": "3",
+      "label": "3.a",
       "want": "derivative",
       "kind": "expression",
       "expected": "(x - 3)*(x - 1)/(2*(x - 2)**2)",
       "display": "f'(x) = (x-1)(x-3)/(2(x-2)²)",
-      "question_km": "គណនា $f'(x)$ រួចសង់តារាងអថេរភាពនៃ $f$",
-      "technique": "f'(x) = 1/2 - 1/(2(x-2)²) = ((x-2)² - 1)/(2(x-2)²) = (x-1)(x-3)/(2(x-2)²). Critical points x = 1 and x = 3: local maximum at x=1 (f=0), local minimum at x=3 (f=2).",
-      "extra_checkpoints": [
-        { "label": "local max f(1)", "value": "0" },
-        { "label": "local min f(3)", "value": "2" }
-      ]
+      "question_km": "គណនា $f'(x)$",
+      "technique": "$f'(x) = \\frac{1}{2} - \\frac{1}{2(x-2)^2} = \\frac{(x-2)^2 - 1}{2(x-2)^2} = \\frac{(x-1)(x-3)}{2(x-2)^2}$ ។ ចំណុចស្នប់ $x = 1$ និង $x = 3$ ៖ ចំណុចអតិបរមាត្រង់ $x = 1$ ($f=0$) និងចំណុចអប្បបរមាត្រង់ $x = 3$ ($f=2$) ។"
+    },
+    {
+      "label": "3.b",
+      "want": "monotonicity",
+      "kind": "monotonicity",
+      "question_km": "សិក្សាអថេរភាពនៃ $f$",
+      "technique": "$f'(x) = \\frac{(x-1)(x-3)}{2(x-2)^2}$ ។ លើ $(-\\infty,1)$ និង $(3,\\infty)$ ៖ $f' > 0$ (កើន) ; លើ $(1,2)$ និង $(2,3)$ ៖ $f' < 0$ (ចុះ) ។"
+    },
+    {
+      "label": "3.c",
+      "want": "variation_table",
+      "kind": "variation_table",
+      "question_km": "សង់តារាងអថេរភាពនៃ $f$",
+      "technique": "រួមផ្គុំសញ្ញានៃ $f'(x)$ និងលីមីត (អាស៊ីមតូតឈរ $x=2$, $\\pm\\infty$) ចូលជាតារាងអថេរភាព ។"
     },
     {
       "label": "4",
       "want": "draw",
       "kind": "draw",
+      "display": "សង់ក្រាប (C) និងអាស៊ីមតូតរបស់វា",
       "question_km": "សង់ក្រាប $(C)$ និងអាស៊ីមតូតរបស់វា",
-      "technique": "Sketch (C) with the vertical asymptote x = 2, the oblique asymptote y = x/2, the horizontal tangent at x = 3, and the labeled extrema."
+      "technique": "សង់ក្រាប $(C)$ រួមជាមួយអាស៊ីមតូតឈរ $x = 2$ អាស៊ីមតូតទ្រេត $y = x/2$ បន្ទាត់កាត់ដេរីវេត្រង់ $x = 3$ និងចំណុចរួមអតិបរមា/អប្បបរមាដែលបានសរសេរស្លាក ។"
     }
   ]
 }

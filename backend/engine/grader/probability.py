@@ -81,12 +81,12 @@ def parse_multi_answers(text, labels):
                 break
     return result
 
-def _judge_value(expected, user_answer, tol=_DEFAULT_TOL, kind=None, choices=None, exact_only=False):
+def _judge_value(expected, user_answer, tol=_DEFAULT_TOL, kind=None, choices=None, exact_only=False, checkpoints=None):
     """Judge one answer value against an expected expression (probability), or
     dispatch to the right answer-shape judge for study-style topics (functions):
-    interval / choice / infinity / line / expression."""
+    interval / choice / infinity / line / expression / study-tables."""
     if kind:
-        return _judge_by_kind(kind, expected, user_answer, tol, choices=choices, exact_only=exact_only)
+        return _judge_by_kind(kind, expected, user_answer, tol, choices=choices, exact_only=exact_only, checkpoints=checkpoints)
     user = parse_answer(user_answer)
     x = Symbol("x")
     if _equivalent_exact(user, expected, x):
@@ -122,6 +122,7 @@ def grade_multi(topic, question_type, params, submissions):
             correct, reason, note = _judge_value(
                 part["answer_exact"], value, kind=part.get("answer_kind"),
                 choices=part.get("choices"), exact_only=part.get("exact_only"),
+                checkpoints=part.get("checkpoints"),
             )
         except Exception as exc:
             verdicts.append({

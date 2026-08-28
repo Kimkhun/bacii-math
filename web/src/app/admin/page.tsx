@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import FunctionGraph from "@/components/FunctionGraph";
 import MathText from "@/components/MathText";
-import { api, FormulaCatalog, TemplateStructures, TemplateSummary } from "@/lib/api";
+import StructureModal from "@/components/StructureModal";
+import { api, FormulaCatalog, TemplateStructure, TemplateStructures, TemplateSummary } from "@/lib/api";
 
 type Tab = "overview" | "formulas" | "templates";
 type TopicStructures = NonNullable<TemplateStructures["topics"]>[number];
@@ -24,6 +25,7 @@ export default function AdminPage() {
   const [loadingTopics, setLoadingTopics] = useState<Record<string, boolean>>({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(true);
+  const [selected, setSelected] = useState<TemplateStructure | null>(null);
 
   // Overview + topic pills need only the cheap summary; full structure cards
   // are fetched lazily per topic (see the effect below) so the first paint
@@ -274,7 +276,11 @@ export default function AdminPage() {
                           </h3>
                           <div className="grid gap-3 md:grid-cols-2">
                             {qt.structures.map((st) => (
-                              <div key={st.id} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+                              <div
+                                key={st.id}
+                                onClick={() => setSelected(st)}
+                                className="cursor-pointer bg-white border border-slate-200 rounded-lg p-4 shadow-sm transition-shadow hover:shadow-md"
+                              >
                                 <div className="flex items-start justify-between gap-2 mb-2">
                                   <code className="px-1.5 py-0.5 rounded bg-slate-100 text-[11px] text-slate-600">
                                     {st.id}
@@ -318,7 +324,12 @@ export default function AdminPage() {
                                         </code>
                                         <div className="min-w-0 flex-1 text-slate-700">
                                           <MathText text={kmMath(p.question_km ?? p.want ?? "")} />
-                                          <div className="text-slate-500">
+                                          {p.technique && (
+                                            <div className="mt-0.5 text-[11px] leading-snug text-slate-500">
+                                              <MathText text={kmMath(p.technique)} />
+                                            </div>
+                                          )}
+                                          <div className="mt-0.5 text-slate-900">
                                             → <span>{p.answer_display ?? p.answer}</span>
                                           </div>
                                         </div>
@@ -357,6 +368,9 @@ export default function AdminPage() {
           </>
         )}
       </div>
+      {selected && (
+        <StructureModal structure={selected} onClose={() => setSelected(null)} />
+      )}
     </AuthGuard>
   );
 }

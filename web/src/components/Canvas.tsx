@@ -2,7 +2,7 @@
 
 import { forwardRef, ReactNode, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 
-export type CanvasTool = "pen" | "eraser" | "ruler" | "axes" | "curve" | "ellipse";
+export type CanvasTool = "pen" | "eraser" | "ruler" | "axes" | "curve" | "ellipse" | "select";
 
 // A spawned coordinate system on the paper (background layer, not ink): axes
 // crossing at (ox, oy) with integer gridlines every stepX/stepY units (each
@@ -93,18 +93,23 @@ interface LineStroke {
   width: number;
 }
 
-// A smooth bendable curve drawn with the curve tool: a quadratic bézier from
-// the start point through a control point to the end point (drag to place the
-// control / bend). Undoable, erasable, serializable like any stroke.
+// A smooth, freely-editable curve: an open path through any number of anchor
+// points joined by cubic béziers. Each anchor carries an in/out control handle
+// (absolute coords); when synthesized from a drag we derive smooth handles from
+// the neighbours (Catmull-Rom), so a drag comes out smooth and then stays
+// editable point-by-point afterwards (Photoshop/Illustrator-style). Undoable,
+// erasable, serializable like any stroke.
+interface Anchor {
+  x: number;
+  y: number;
+  hIn: { x: number; y: number };
+  hOut: { x: number; y: number };
+}
+
 interface CurveStroke {
   kind: "curve";
-  x0: number;
-  y0: number;
-  cx: number;
-  cy: number;
-  x1: number;
-  y1: number;
   tool: "curve";
+  anchors: Anchor[];
   width: number;
 }
 
@@ -142,21 +147,37 @@ interface RasterStroke {
 
 type Stroke = PathStroke | RectStroke | RasterStroke | LineStroke | CurveStroke | EllipseStroke;
 
+// What part of a selected shape an edit-drag is manipulating.
+type EditState = { mode: "anchor" | "hIn" | "hOut" | "move" | "corner"; index: number; px: number; py: number };
+
 // The serializable subset of a stroke document. Raster strokes are excluded —
 // they hold an HTMLImageElement (from loadBackgroundInk) that can't be
 // JSON-serialized, so only vector pen/eraser ink survives in history/resume.
 type SerializableStroke = Exclude<Stroke, RasterStroke>;
 
+// Deep-copy a single stroke (incl. curve anchor handles) so exports / undo
+// snapshots never alias the live refs (a pointer still writing would otherwise
+// mutate the saved snapshot later).
+function cloneStrokeDeep(s: Stroke): Stroke {
+  if (s.kind === "curve") {
+    return {
+      ...s,
+      anchors: s.anchors.map((a) => ({ x: a.x, y: a.y, hIn: { ...a.hIn }, hOut: { ...a.hOut } })),
+    };
+  }
+  if (s.kind === "rect") return { ...s, rect: { ...s.rect } };
+  if (s.kind === "path") return { ...s, points: s.points.map((p) => ({ ...p })) };
+  if (s.kind === "raster") return s;
+  return { ...s };
+}
+
 // Deep-copy strokes so the exported document never aliases the live refs (a
 // pointer still writing would otherwise mutate the saved snapshot later).
-const cloneStrokes = (arr: Stroke[]): SerializableStroke[] =>
-  arr
+function cloneStrokes(arr: Stroke[]): SerializableStroke[] {
+  return arr
     .filter((s): s is SerializableStroke => s.kind !== "raster")
-    .map((s) =>
-      s.kind === "path"
-        ? { ...s, points: s.points.map((p) => ({ ...p })) }
-        : { ...s }
-    );
+    .map((s) => cloneStrokeDeep(s) as SerializableStroke);
+}
 
 // Serializable stroke document — the full state Canvas.getStrokes() exports and
 // loadStrokes() restores. width/height capture the canvas size at save time
@@ -271,8 +292,9 @@ const Canvas = forwardRef<
     zoom?: number;
     onZoomChange?: (zoom: number) => void;
     overlay?: ReactNode;
+    onToolAutoSwitch?: (tool: CanvasTool) => void;
   }
->(({ width = 640, height = 820, fullscreen = false, onChange, zoom = 1, onZoomChange, overlay }, ref) => {
+>(({ width = 640, height = 820, fullscreen = false, onChange, zoom = 1, onZoomChange, overlay, onToolAutoSwitch }, ref) => {
     const initialW = fullscreen ? FULL_W : width;
     const initialH = fullscreen ? FULL_H : height;
     const [canvasWidth, setCanvasWidth] = useState(initialW);
@@ -334,10 +356,51 @@ const Canvas = forwardRef<
     const curveSamplesRef = useRef<Point[]>([]);
     // Ellipse tool: the corner where the drag started.
     const ellipseStartRef = useRef<Point | null>(null);
+    // Editable-shape selection state (Select tool / auto-select after drawing).
+    const curvePathRef = useRef<Point[]>([]);
+    const selectedRef = useRef<number | null>(null);
+    const hoverIndexRef = useRef<number | null>(null);
+    const hoverPointRef = useRef<Point | null>(null);
+    const editingRef = useRef<EditState | null>(null);
+    const editSnapshotRef = useRef<Stroke | null>(null);
+    const lastTapRef = useRef<{ t: number; x: number; y: number }>({ t: 0, x: 0, y: 0 });
+    const onToolAutoSwitchRef = useRef<((t: CanvasTool) => void) | undefined>(undefined);
+    onToolAutoSwitchRef.current = onToolAutoSwitch;
 
     const updateCursor = (clientX: number, clientY: number) => {
       const el = cursorElRef.current;
       if (!el) return;
+      // Select tool: show a real cursor that reflects move / resize / anchor
+      // state instead of the pen-size ring.
+      if (toolRef.current === "select") {
+        el.style.display = "none";
+        const cv = canvasRef.current;
+        if (!cv) return;
+        let cursor = "default";
+        const p = getPos(clientX, clientY, undefined);
+        const sel = selectedRef.current;
+        if (editingRef.current) {
+          const m = editingRef.current.mode;
+          cursor =
+            m === "move" || m === "anchor"
+              ? "move"
+              : m === "corner"
+              ? cornerCursor(editingRef.current.index)
+              : "crosshair";
+        } else if (sel != null) {
+          const s = strokesRef.current[sel];
+          const h = hitTestHandle(s, p);
+          if (h) cursor = h.mode === "corner" ? cornerCursor(h.index) : h.mode === "anchor" ? "move" : "crosshair";
+          else if (shapeHit(s, p)) cursor = "move";
+          else if (hitTestShape(p) != null) cursor = "move";
+        } else if (hitTestShape(p) != null) {
+          cursor = "move";
+        }
+        cv.style.cursor = cursor;
+        return;
+      }
+      // Non-select tools: clear any leftover select-mode inline cursor.
+      if (canvasRef.current) canvasRef.current.style.cursor = "";
       if (toolRef.current === "axes") {
         el.style.width = "18px";
         el.style.height = "18px";
@@ -578,9 +641,21 @@ const Canvas = forwardRef<
       }
       if (stroke.kind === "curve") {
         strokeStyleFor(ctx, stroke.tool, stroke.width);
+        const a = stroke.anchors;
+        if (a.length === 1) {
+          ctx.beginPath();
+          ctx.arc(a[0].x, a[0].y, ctx.lineWidth / 2, 0, Math.PI * 2);
+          ctx.fillStyle = ctx.strokeStyle as string;
+          ctx.fill();
+          return;
+        }
         ctx.beginPath();
-        ctx.moveTo(stroke.x0, stroke.y0);
-        ctx.quadraticCurveTo(stroke.cx, stroke.cy, stroke.x1, stroke.y1);
+        ctx.moveTo(a[0].x, a[0].y);
+        for (let i = 0; i < a.length - 1; i++) {
+          const p0 = a[i];
+          const p1 = a[i + 1];
+          ctx.bezierCurveTo(p0.hOut.x, p0.hOut.y, p1.hIn.x, p1.hIn.y, p1.x, p1.y);
+        }
         ctx.stroke();
         return;
       }
@@ -635,6 +710,7 @@ const Canvas = forwardRef<
       }
       replayStrokesToInk();
       ctx.drawImage(getInkCanvas(), 0, 0, W, H);
+      drawHandles(ctx);
     };
 
     // Per-move repaint: replay only the in-progress stroke onto the persistent
@@ -757,9 +833,11 @@ const Canvas = forwardRef<
           s.x1 += dx;
           s.x2 += dx;
         } else if (s.kind === "curve") {
-          s.x0 += dx;
-          s.cx += dx;
-          s.x1 += dx;
+          for (const a of s.anchors) {
+            a.x += dx;
+            a.hIn.x += dx;
+            a.hOut.x += dx;
+          }
         } else if (s.kind === "ellipse") {
           s.cx += dx;
         }
@@ -777,9 +855,11 @@ const Canvas = forwardRef<
           s.x1 += dx;
           s.x2 += dx;
         } else if (s.kind === "curve") {
-          s.x0 += dx;
-          s.cx += dx;
-          s.x1 += dx;
+          for (const a of s.anchors) {
+            a.x += dx;
+            a.hIn.x += dx;
+            a.hOut.x += dx;
+          }
         } else if (s.kind === "ellipse") {
           s.cx += dx;
         }
@@ -903,6 +983,469 @@ const Canvas = forwardRef<
       return best;
     };
 
+    // ---- Editable-shape helpers (Select tool + post-draw manipulation) ----
+
+    const HANDLE_HIT = 10;
+    const ANCHOR_HIT = 9;
+    const HANDLE_COLOR = "#0ea5e9";
+    const HOVER_COLOR = "#94a3b8";
+
+    // Smooth (Catmull-Rom) control handles for anchor i of a point list.
+    const autoHandles = (pts: { x: number; y: number }[], i: number) => {
+      const n = pts.length;
+      const p = pts[i];
+      if (n === 1) return { hIn: { ...p }, hOut: { ...p } };
+      if (i === 0) {
+        const d = { x: (pts[1].x - pts[0].x) / 3, y: (pts[1].y - pts[0].y) / 3 };
+        return { hIn: { x: p.x, y: p.y }, hOut: { x: p.x + d.x, y: p.y + d.y } };
+      }
+      if (i === n - 1) {
+        const d = { x: (pts[n - 1].x - pts[n - 2].x) / 3, y: (pts[n - 1].y - pts[n - 2].y) / 3 };
+        return { hIn: { x: p.x - d.x, y: p.y - d.y }, hOut: { x: p.x, y: p.y } };
+      }
+      const a = pts[i - 1];
+      const b = pts[i + 1];
+      const m = { x: (b.x - a.x) / 6, y: (b.y - a.y) / 6 };
+      return { hIn: { x: p.x - m.x, y: p.y - m.y }, hOut: { x: p.x + m.x, y: p.y + m.y } };
+    };
+
+    // Downsample a freehand drag into a smooth editable anchor path.
+    const buildAnchorsFromPath = (points: Point[]): Anchor[] => {
+      if (points.length === 0) return [];
+      const minDist = 14;
+      const kept: Point[] = [points[0]];
+      for (let i = 1; i < points.length; i++) {
+        const l = kept[kept.length - 1];
+        if (Math.hypot(points[i].x - l.x, points[i].y - l.y) >= minDist) kept.push(points[i]);
+      }
+      if (kept.length === 1) {
+        const last = points[points.length - 1];
+        if (Math.hypot(last.x - kept[0].x, last.y - kept[0].y) > 1) kept.push(last);
+      }
+      let pts = kept;
+      const MAX = 80;
+      if (pts.length > MAX) {
+        const step = (pts.length - 1) / (MAX - 1);
+        const out = [pts[0]];
+        for (let i = 1; i < MAX - 1; i++) out.push(pts[Math.round(i * step)]);
+        out.push(pts[pts.length - 1]);
+        pts = out;
+      }
+      return pts.map((p, i) => {
+        const h = autoHandles(pts, i);
+        return { x: p.x, y: p.y, hIn: h.hIn, hOut: h.hOut };
+      });
+    };
+
+    const distToSeg = (px: number, py: number, ax: number, ay: number, bx: number, by: number) => {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const len2 = dx * dx + dy * dy;
+      const t = len2 < 1e-9 ? 0 : Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
+      return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+    };
+
+    const bezierPoint = (p0: Point, p1: Point, p2: Point, p3: Point, t: number) => {
+      const u = 1 - t;
+      const a = u * u * u;
+      const b = 3 * u * u * t;
+      const c = 3 * u * t * t;
+      const d = t * t * t;
+      return { x: a * p0.x + b * p1.x + c * p2.x + d * p3.x, y: a * p0.y + b * p1.y + c * p2.y + d * p3.y };
+    };
+
+    // Sampled polyline of a curve stroke (for hit-testing / insertion).
+    const curvePolyline = (stroke: CurveStroke, steps = 14): Point[] => {
+      const a = stroke.anchors;
+      const pts: Point[] = [{ x: a[0].x, y: a[0].y }];
+      for (let i = 0; i < a.length - 1; i++) {
+        const p0 = a[i];
+        const p1 = a[i + 1];
+        for (let s = 1; s <= steps; s++) {
+          const t = s / steps;
+          pts.push(bezierPoint(p0, p0.hOut, p1.hIn, p1, t));
+        }
+      }
+      return pts;
+    };
+
+    const distanceToCurve = (stroke: CurveStroke, p: Point) => {
+      const poly = curvePolyline(stroke, 12);
+      let best = Infinity;
+      for (let i = 0; i < poly.length - 1; i++) {
+        best = Math.min(best, distToSeg(p.x, p.y, poly[i].x, poly[i].y, poly[i + 1].x, poly[i + 1].y));
+      }
+      return best;
+    };
+
+    // Projection parameter of p onto segment a→b (clamped 0..1).
+    const projT = (a: Point, b: Point, p: Point) => {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const len2 = dx * dx + dy * dy;
+      if (len2 < 1e-9) return 0;
+      return Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+    };
+
+    // Nearest point on the curve to p (used to preview where a double-click
+    // would spawn a new anchor).
+    const nearestPointOnCurve = (stroke: CurveStroke, p: Point): Point => {
+      const poly = curvePolyline(stroke, 16);
+      let best: Point = { x: p.x, y: p.y };
+      let bestD = Infinity;
+      for (let i = 0; i < poly.length - 1; i++) {
+        const t = projT(poly[i], poly[i + 1], p);
+        const qx = poly[i].x + t * (poly[i + 1].x - poly[i].x);
+        const qy = poly[i].y + t * (poly[i + 1].y - poly[i].y);
+        const d = Math.hypot(p.x - qx, p.y - qy);
+        if (d < bestD) {
+          bestD = d;
+          best = { x: qx, y: qy };
+        }
+      }
+      return best;
+    };
+
+    const pointInEllipse = (stroke: EllipseStroke, p: Point) => {
+      const rx = Math.abs(stroke.rx);
+      const ry = Math.abs(stroke.ry);
+      if (rx < 1 || ry < 1) return Math.hypot(p.x - stroke.cx, p.y - stroke.cy) <= HANDLE_HIT;
+      const nx = (p.x - stroke.cx) / rx;
+      const ny = (p.y - stroke.cy) / ry;
+      return nx * nx + ny * ny <= 1;
+    };
+
+    const distanceToEllipse = (stroke: EllipseStroke, p: Point) => {
+      const rx = Math.abs(stroke.rx);
+      const ry = Math.abs(stroke.ry);
+      if (rx < 1 || ry < 1) return Math.hypot(p.x - stroke.cx, p.y - stroke.cy);
+      const ang = Math.atan2(p.y - stroke.cy, p.x - stroke.cx);
+      const ex = stroke.cx + rx * Math.cos(ang);
+      const ey = stroke.cy + ry * Math.sin(ang);
+      return Math.hypot(p.x - ex, p.y - ey);
+    };
+
+    const shapeHit = (stroke: Stroke, p: Point) => {
+      if (stroke.kind === "ellipse") {
+        return pointInEllipse(stroke, p) || distanceToEllipse(stroke, p) <= Math.max(stroke.width / 2, 2) + HANDLE_HIT;
+      }
+      if (stroke.kind === "curve") {
+        return distanceToCurve(stroke, p) <= Math.max(stroke.width / 2, 2) + HANDLE_HIT;
+      }
+      return false;
+    };
+
+    // Topmost shape under a point (only curves / ellipses are selectable).
+    const hitTestShape = (p: Point): number | null => {
+      for (let i = strokesRef.current.length - 1; i >= 0; i--) {
+        const s = strokesRef.current[i];
+        if ((s.kind === "curve" || s.kind === "ellipse") && shapeHit(s, p)) return i;
+      }
+      return null;
+    };
+
+    const ellipseCorners = (s: EllipseStroke) => {
+      const rx = s.rx;
+      const ry = s.ry;
+      return [
+        [s.cx - rx, s.cy - ry],
+        [s.cx + rx, s.cy - ry],
+        [s.cx + rx, s.cy + ry],
+        [s.cx - rx, s.cy + ry],
+      ] as [number, number][];
+    };
+
+    // Diagonal resize cursor for an ellipse bounding-box corner (0=TL,1=TR,2=BR,3=BL).
+    const cornerCursor = (index: number) => (index % 2 === 0 ? "nwse-resize" : "nesw-resize");
+
+    // Which handle (if any) of the selected shape is under p.
+    const hitTestHandle = (stroke: Stroke, p: Point): EditState | null => {
+      if (stroke.kind === "curve") {
+        for (let i = 0; i < stroke.anchors.length; i++) {
+          const a = stroke.anchors[i];
+          if (Math.hypot(a.hIn.x - a.x, a.hIn.y - a.y) > 0.5 && Math.hypot(p.x - a.hIn.x, p.y - a.hIn.y) <= HANDLE_HIT)
+            return { mode: "hIn", index: i, px: p.x, py: p.y };
+          if (Math.hypot(a.hOut.x - a.x, a.hOut.y - a.y) > 0.5 && Math.hypot(p.x - a.hOut.x, p.y - a.hOut.y) <= HANDLE_HIT)
+            return { mode: "hOut", index: i, px: p.x, py: p.y };
+        }
+        for (let i = 0; i < stroke.anchors.length; i++) {
+          const a = stroke.anchors[i];
+          if (Math.hypot(p.x - a.x, p.y - a.y) <= ANCHOR_HIT) return { mode: "anchor", index: i, px: p.x, py: p.y };
+        }
+      } else if (stroke.kind === "ellipse") {
+        const c = ellipseCorners(stroke);
+        for (let i = 0; i < 4; i++) {
+          if (Math.hypot(p.x - c[i][0], p.y - c[i][1]) <= HANDLE_HIT) return { mode: "corner", index: i, px: p.x, py: p.y };
+        }
+      }
+      return null;
+    };
+
+    // Apply an edit delta (current pointer minus start) to a cloned stroke.
+    const applyEditDelta = (ns: Stroke, ed: EditState, dx: number, dy: number) => {
+      if (ns.kind === "curve") {
+        if (ed.mode === "move") {
+          for (const a of ns.anchors) {
+            a.x += dx; a.y += dy; a.hIn.x += dx; a.hIn.y += dy; a.hOut.x += dx; a.hOut.y += dy;
+          }
+        } else if (ed.mode === "anchor") {
+          const a = ns.anchors[ed.index];
+          a.x += dx; a.y += dy; a.hIn.x += dx; a.hIn.y += dy; a.hOut.x += dx; a.hOut.y += dy;
+        } else if (ed.mode === "hIn") {
+          const a = ns.anchors[ed.index];
+          a.hIn.x += dx; a.hIn.y += dy;
+        } else if (ed.mode === "hOut") {
+          const a = ns.anchors[ed.index];
+          a.hOut.x += dx; a.hOut.y += dy;
+        }
+      } else if (ns.kind === "ellipse") {
+        if (ed.mode === "move") {
+          ns.cx += dx; ns.cy += dy;
+        } else if (ed.mode === "corner") {
+          const c = ellipseCorners(ns);
+          const f = c[(ed.index + 2) % 4];
+          const draggedX = c[ed.index][0] + dx;
+          const draggedY = c[ed.index][1] + dy;
+          ns.cx = (f[0] + draggedX) / 2;
+          ns.cy = (f[1] + draggedY) / 2;
+          ns.rx = (draggedX - f[0]) / 2;
+          ns.ry = (draggedY - f[1]) / 2;
+        }
+      }
+    };
+
+    // Insert a new anchor on the curve nearest to p, keeping it smooth.
+    const insertAnchorAt = (stroke: CurveStroke, p: Point) => {
+      const a = stroke.anchors;
+      if (a.length < 2) return false;
+      const steps = 16;
+      const poly = curvePolyline(stroke, steps);
+      let bestI = 0;
+      let bestT = 0;
+      let bestD = Infinity;
+      for (let i = 0; i < poly.length - 1; i++) {
+        const dx = poly[i + 1].x - poly[i].x;
+        const dy = poly[i + 1].y - poly[i].y;
+        const len2 = dx * dx + dy * dy;
+        let t = len2 < 1e-9 ? 0 : ((p.x - poly[i].x) * dx + (p.y - poly[i].y) * dy) / len2;
+        t = Math.max(0, Math.min(1, t));
+        const qx = poly[i].x + t * dx;
+        const qy = poly[i].y + t * dy;
+        const d = Math.hypot(p.x - qx, p.y - qy);
+        if (d < bestD) { bestD = d; bestI = i; bestT = t; }
+      }
+      const seg = Math.floor(bestI / steps);
+      const localT = (bestI - seg * steps) / steps + bestT / steps;
+      const A = a[seg];
+      const B = a[seg + 1];
+      const np = bezierPoint(A, A.hOut, B.hIn, B, localT);
+      const newAnchors = a.slice(0, seg + 1).concat([{ x: np.x, y: np.y, hIn: { x: np.x, y: np.y }, hOut: { x: np.x, y: np.y } }], a.slice(seg + 1));
+      stroke.anchors = newAnchors.map((an, i) => {
+        const h = autoHandles(newAnchors, i);
+        return { x: an.x, y: an.y, hIn: h.hIn, hOut: h.hOut };
+      });
+      return true;
+    };
+
+    const strokeGeomEqual = (a: Stroke | null, b: Stroke | null) => {
+      if (!a || !b) return false;
+      if (a.kind !== b.kind) return false;
+      return JSON.stringify(a) === JSON.stringify(b);
+    };
+
+    const drawHandleDot = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string) => {
+      ctx.fillStyle = color;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    };
+
+    // Render the hover (light) or selected (full) control points for a shape.
+    const drawShapePoints = (ctx: CanvasRenderingContext2D, stroke: Stroke, selected: boolean) => {
+      ctx.save();
+      if (stroke.kind === "ellipse") {
+        const rx = stroke.rx;
+        const ry = stroke.ry;
+        if (selected) {
+          ctx.strokeStyle = "rgba(14,165,233,0.5)";
+          ctx.setLineDash([5, 4]);
+          ctx.lineWidth = 1;
+          ctx.strokeRect(stroke.cx - rx, stroke.cy - ry, rx * 2, ry * 2);
+          ctx.setLineDash([]);
+        }
+        const c = ellipseCorners(stroke);
+        for (const corner of c) drawHandleDot(ctx, corner[0], corner[1], selected ? HANDLE_COLOR : HOVER_COLOR);
+        if (selected) drawHandleDot(ctx, stroke.cx, stroke.cy, HANDLE_COLOR);
+      } else if (stroke.kind === "curve") {
+        const a = stroke.anchors;
+        if (selected) {
+          ctx.strokeStyle = "rgba(14,165,233,0.6)";
+          ctx.lineWidth = 1;
+          for (const an of a) {
+            if (Math.hypot(an.hIn.x - an.x, an.hIn.y - an.y) > 0.5) {
+              ctx.beginPath();
+              ctx.moveTo(an.x, an.y);
+              ctx.lineTo(an.hIn.x, an.hIn.y);
+              ctx.stroke();
+            }
+            if (Math.hypot(an.hOut.x - an.x, an.hOut.y - an.y) > 0.5) {
+              ctx.beginPath();
+              ctx.moveTo(an.x, an.y);
+              ctx.lineTo(an.hOut.x, an.hOut.y);
+              ctx.stroke();
+            }
+          }
+        }
+        for (const an of a) {
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = selected ? HANDLE_COLOR : HOVER_COLOR;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.rect(an.x - 4, an.y - 4, 8, 8);
+          ctx.fill();
+          ctx.stroke();
+        }
+        if (selected) {
+          for (const an of a) {
+            if (Math.hypot(an.hIn.x - an.x, an.hIn.y - an.y) > 0.5) drawHandleDot(ctx, an.hIn.x, an.hIn.y, HANDLE_COLOR);
+            if (Math.hypot(an.hOut.x - an.x, an.hOut.y - an.y) > 0.5) drawHandleDot(ctx, an.hOut.x, an.hOut.y, HANDLE_COLOR);
+          }
+        }
+      }
+      ctx.restore();
+    };
+
+    const drawHandles = (ctx: CanvasRenderingContext2D) => {
+      const hover = hoverIndexRef.current;
+      const sel = selectedRef.current;
+      if (hover != null && hover !== sel) {
+        const s = strokesRef.current[hover];
+        if (s) drawShapePoints(ctx, s, false);
+      }
+      if (sel != null) {
+        const s = strokesRef.current[sel];
+        if (s) drawShapePoints(ctx, s, true);
+      }
+      // Ghost insertion point: while hovering a curve in Select mode (and not
+      // actively dragging a handle), preview where a double-click would spawn a
+      // new anchor.
+      if (toolRef.current === "select" && !editingRef.current && hoverPointRef.current) {
+        const hp = hoverPointRef.current;
+        const targetIdx = sel != null ? sel : hover;
+        if (targetIdx != null) {
+          const s = strokesRef.current[targetIdx];
+          if (s && s.kind === "curve" && s.anchors.length >= 2) {
+            const near = distanceToCurve(s, hp) <= Math.max(s.width / 2, 2) + HANDLE_HIT;
+            if (near) {
+              const q = nearestPointOnCurve(s, hp);
+              const onAnchor = s.anchors.some((a) => Math.hypot(a.x - q.x, a.y - q.y) <= ANCHOR_HIT);
+              if (!onAnchor) {
+                ctx.save();
+                ctx.fillStyle = "rgba(14,165,233,0.18)";
+                ctx.strokeStyle = "rgba(14,165,233,0.85)";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(q.x, q.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const beginEdit = (state: EditState, e: React.PointerEvent) => {
+      editingRef.current = state;
+      hoverPointRef.current = null;
+      editSnapshotRef.current = selectedRef.current != null ? cloneStrokeDeep(strokesRef.current[selectedRef.current]) : null;
+      redoStackRef.current = [];
+      (e.target as Element).setPointerCapture?.(e.pointerId);
+    };
+
+    const handleEditMove = (e: React.PointerEvent) => {
+      const ed = editingRef.current;
+      if (!ed) return;
+      const p = getPos(e.clientX, e.clientY, e.pressure);
+      const dx = p.x - ed.px;
+      const dy = p.y - ed.py;
+      const snap = editSnapshotRef.current;
+      const sel = selectedRef.current;
+      if (snap && sel != null) {
+        const ns = cloneStrokeDeep(snap);
+        applyEditDelta(ns, ed, dx, dy);
+        strokesRef.current[sel] = ns;
+      }
+      redraw();
+      e.preventDefault();
+    };
+
+    const handleSelectDown = (e: React.PointerEvent) => {
+      const p = getPos(e.clientX, e.clientY, e.pressure);
+      const target = e.target as Element;
+      target.setPointerCapture?.(e.pointerId);
+
+      // Double-tap / double-click: edit anchors on a curve.
+      const now = performance.now();
+      const dbl = now - lastTapRef.current.t < 350 && Math.hypot(p.x - lastTapRef.current.x, p.y - lastTapRef.current.y) < 8;
+      lastTapRef.current = { t: now, x: p.x, y: p.y };
+      if (dbl) {
+        const idx = hitTestShape(p);
+        if (idx != null) {
+          const s = strokesRef.current[idx];
+          if (s.kind === "curve") {
+            const ai = s.anchors.findIndex((a) => Math.hypot(p.x - a.x, p.y - a.y) <= ANCHOR_HIT);
+            if (ai >= 0 && s.anchors.length > 2) {
+              s.anchors.splice(ai, 1);
+              selectedRef.current = idx;
+              onChange?.();
+              redraw();
+              return;
+            }
+            if (insertAnchorAt(s, p)) {
+              selectedRef.current = idx;
+              onChange?.();
+              redraw();
+              return;
+            }
+          }
+        }
+      }
+
+      // 1) A control handle of the currently selected shape.
+      if (selectedRef.current != null) {
+        const s = strokesRef.current[selectedRef.current];
+        const h = hitTestHandle(s, p);
+        if (h) {
+          beginEdit(h, e);
+          return;
+        }
+      }
+      // 2) Any shape under the cursor → select it (and maybe grab it).
+      const idx = hitTestShape(p);
+      if (idx != null) {
+        selectedRef.current = idx;
+        const s = strokesRef.current[idx];
+        const h = hitTestHandle(s, p);
+        if (h) {
+          beginEdit(h, e);
+        } else if (shapeHit(s, p)) {
+          beginEdit({ mode: "move", index: 0, px: p.x, py: p.y }, e);
+        }
+        redraw();
+        return;
+      }
+      // 3) Empty space → deselect.
+      if (selectedRef.current != null) {
+        selectedRef.current = null;
+        redraw();
+      }
+    };
+
     const start = (e: React.PointerEvent) => {
       updateCursor(e.clientX, e.clientY);
 
@@ -928,7 +1471,14 @@ const Canvas = forwardRef<
         return;
       }
 
-      if (e.pointerType === "touch") {
+      if (toolRef.current === "select") {
+        e.preventDefault();
+        if (e.pointerType === "pen" || e.pointerType === "mouse") activePenPointerRef.current = e.pointerId;
+        handleSelectDown(e);
+        return;
+      }
+
+      if (e.pointerType === "touch" && (toolRef.current as CanvasTool) !== "select") {
         (e.target as Element).setPointerCapture?.(e.pointerId);
         touchPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
         if (touchPointersRef.current.size === 2) {
@@ -971,6 +1521,8 @@ const Canvas = forwardRef<
       if (e.pointerType === "pen") activePenPointerRef.current = e.pointerId;
       drawing.current = true;
       drawingPointerIdRef.current = e.pointerId;
+      selectedRef.current = null;
+      hoverIndexRef.current = null;
       const p = getPos(e.clientX, e.clientY, e.pressure);
       const width = toolRef.current === "eraser" ? eraserWidthRef.current : penWidthRef.current;
       redoStackRef.current = [];
@@ -986,16 +1538,18 @@ const Canvas = forwardRef<
           width: penWidthRef.current,
         });
       } else if (toolRef.current === "curve") {
-        curveSamplesRef.current = [p];
+        // Start as a simple 2-point segment; more anchors are added afterwards
+        // (double-click a segment) once it's selected.
+        curvePathRef.current = [p];
+        const h0 = autoHandles([p, p], 0);
+        const h1 = autoHandles([p, p], 1);
         strokesRef.current.push({
           kind: "curve",
-          x0: p.x,
-          y0: p.y,
-          cx: p.x,
-          cy: p.y,
-          x1: p.x,
-          y1: p.y,
           tool: "curve",
+          anchors: [
+            { x: p.x, y: p.y, hIn: h0.hIn, hOut: h0.hOut },
+            { x: p.x, y: p.y, hIn: h1.hIn, hOut: h1.hOut },
+          ],
           width: penWidthRef.current,
         });
       } else if (toolRef.current === "ellipse") {
@@ -1026,6 +1580,11 @@ const Canvas = forwardRef<
       updateCursor(e.clientX, e.clientY);
       if (e.pointerType === "touch" && touchPointersRef.current.has(e.pointerId)) {
         touchPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      }
+
+      if (editingRef.current) {
+        handleEditMove(e);
+        return;
       }
 
       // Axes mode: pinch zooms the grid scale, drag pans the origin.
@@ -1075,6 +1634,20 @@ const Canvas = forwardRef<
         return;
       }
       // Only the pointer that actually started this stroke may extend it —
+      // Select-tool hover: reveal a shape's points as the cursor passes over it.
+      if (toolRef.current === "select" && !editingRef.current) {
+        const hp = getPos(e.clientX, e.clientY, e.pressure);
+        const idx = hitTestShape(hp);
+        const prev = hoverPointRef.current;
+        const moved = !prev || prev.x !== hp.x || prev.y !== hp.y;
+        hoverPointRef.current = hp;
+        if (idx !== hoverIndexRef.current || moved) {
+          hoverIndexRef.current = idx;
+          redraw();
+        }
+        return;
+      }
+
       // otherwise an unrelated second pointer (a resting palm generating its
       // own move events) would splice its coordinates into someone else's ink.
       if (!drawing.current || e.pointerId !== drawingPointerIdRef.current) return;
@@ -1094,12 +1667,13 @@ const Canvas = forwardRef<
         stroke.y2 = sp.y;
       } else if (stroke.kind === "curve") {
         p = getPos(e.clientX, e.clientY, e.pressure);
-        curveSamplesRef.current.push(p);
-        const bend = farthestFromSegment(curveSamplesRef.current, { x: stroke.x0, y: stroke.y0 }, p);
-        stroke.cx = bend.x;
-        stroke.cy = bend.y;
-        stroke.x1 = p.x;
-        stroke.y1 = p.y;
+        const s = curvePathRef.current[0];
+        const a0 = autoHandles([s, p], 0);
+        const a1 = autoHandles([s, p], 1);
+        stroke.anchors = [
+          { x: s.x, y: s.y, hIn: a0.hIn, hOut: a0.hOut },
+          { x: p.x, y: p.y, hIn: a1.hIn, hOut: a1.hOut },
+        ];
       } else if (stroke.kind === "ellipse") {
         p = getPos(e.clientX, e.clientY, e.pressure);
         const s = ellipseStartRef.current ?? p;
@@ -1118,6 +1692,22 @@ const Canvas = forwardRef<
     };
 
     const end = (e: React.PointerEvent) => {
+      // Finishing a shape-handle / move edit: commit one undo step.
+      if (editingRef.current) {
+        const ed = editingRef.current;
+        editingRef.current = null;
+        const sel = selectedRef.current;
+        const snap = editSnapshotRef.current;
+        if (snap && sel != null) {
+          const cur = strokesRef.current[sel];
+          if (!strokeGeomEqual(snap, cur)) redoStackRef.current.push(snap);
+        }
+        editSnapshotRef.current = null;
+        onChange?.();
+        redraw();
+        return;
+      }
+
       gridPanRef.current = null;
       curveSamplesRef.current = [];
       ellipseStartRef.current = null;
@@ -1137,6 +1727,16 @@ const Canvas = forwardRef<
       drawing.current = false;
       drawingPointerIdRef.current = null;
       onChange?.();
+
+      // A freshly-drawn curve/ellipse stays selected with handles showing, and
+      // the toolbar switches to the Select tool (Photoshop-style) so the shape
+      // can be tweaked immediately.
+      const lastStroke = strokesRef.current[strokesRef.current.length - 1];
+      if (lastStroke && (lastStroke.kind === "curve" || lastStroke.kind === "ellipse")) {
+        selectedRef.current = strokesRef.current.length - 1;
+        onToolAutoSwitchRef.current?.("select");
+        redraw();
+      }
 
       // Now that no stroke is in progress, it's safe to apply any left-growth
       // that got deferred while this one was being drawn (see maybeGrow).
@@ -1255,6 +1855,9 @@ const Canvas = forwardRef<
           imageDataRef.current = dataUrl;
           strokesRef.current = [];
           redoStackRef.current = [];
+          selectedRef.current = null;
+          hoverIndexRef.current = null;
+          editingRef.current = null;
           redraw();
           onChange?.();
         };
@@ -1264,8 +1867,11 @@ const Canvas = forwardRef<
         if (!data || !Array.isArray(data.strokes)) return;
         imageRef.current = null;
         imageDataRef.current = null;
-        strokesRef.current = data.strokes;
-        redoStackRef.current = Array.isArray(data.redoStack) ? data.redoStack : [];
+        strokesRef.current = data.strokes.map((s) => cloneStrokeDeep(s));
+        redoStackRef.current = Array.isArray(data.redoStack) ? data.redoStack.map((s) => cloneStrokeDeep(s)) : [];
+        selectedRef.current = null;
+        hoverIndexRef.current = null;
+        editingRef.current = null;
         gridRef.current = data.grid ? { ...data.grid } : null;
         bgCanvasRef.current = null;
         if (typeof data.width === "number" && data.width > 0) setCanvasWidth(Math.min(MAX_WIDTH, data.width));
@@ -1296,6 +1902,9 @@ const Canvas = forwardRef<
         imageDataRef.current = null;
         strokesRef.current = [];
         redoStackRef.current = [];
+        selectedRef.current = null;
+        hoverIndexRef.current = null;
+        editingRef.current = null;
         gridRef.current = null;
         bgCanvasRef.current = null;
         setCanvasWidth(initialW);
@@ -1306,6 +1915,14 @@ const Canvas = forwardRef<
       },
       setTool: (tool: CanvasTool) => {
         toolRef.current = tool;
+        hoverIndexRef.current = null;
+        hoverPointRef.current = null;
+        editingRef.current = null;
+        if (tool !== "select") {
+          selectedRef.current = null;
+          if (canvasRef.current) canvasRef.current.style.cursor = "";
+          redraw();
+        }
       },
       setPenWidth: (width: number) => {
         penWidthRef.current = width;
