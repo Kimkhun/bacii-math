@@ -4,6 +4,8 @@ recompute the result at solve time."""
 import json
 import os
 
+from sympy import Symbol, latex, sympify
+
 _CATALOG_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "vectors_space_curated")
 
 _OP_LABEL = {
@@ -33,6 +35,43 @@ def _load():
 _VECTORS_CURATED = _load()
 
 
+def _coords(vals, unknown=None):
+    locals_ = {unknown: Symbol(unknown)} if unknown else {}
+    parts = [latex(sympify(v, locals=locals_)) if isinstance(v, str) else str(v) for v in vals]
+    return ", ".join(parts)
+
+
+def _point(name, vals):
+    return rf"{name}({_coords(vals)})"
+
+
+def _build_prompt_latex(item):
+    op = item["op"]
+    if op in ("magnitude", "distance"):
+        target = r"|\overrightarrow{AB}|" if op == "magnitude" else "AB"
+        return rf"{_point('A', item['A'])},\ {_point('B', item['B'])}. \\[4pt] \text{{Find }} {target}."
+    if op == "dot":
+        return (rf"{_point('A', item['A'])},\ {_point('B', item['B'])},\ {_point('C', item['C'])}. "
+                rf"\\[4pt] \text{{Find }} \overrightarrow{{AB}}\cdot\overrightarrow{{AC}}.")
+    if op == "cross_magnitude":
+        return (rf"{_point('A', item['A'])},\ {_point('B', item['B'])},\ {_point('C', item['C'])}. "
+                rf"\\[4pt] \text{{Find }} |\overrightarrow{{AB}}\times\overrightarrow{{AC}}|.")
+    if op == "triangle_area":
+        return (rf"{_point('A', item['A'])},\ {_point('B', item['B'])},\ {_point('C', item['C'])}. "
+                rf"\\[4pt] \text{{Find the area of triangle }} ABC.")
+    if op == "scalar_triple_product":
+        u, v, w = _coords(item["u"]), _coords(item["v"]), _coords(item["w"])
+        return (rf"\vec u({u}),\ \vec v({v}),\ \vec w({w}). "
+                rf"\\[4pt] \text{{Find }} \vec u\cdot(\vec v\times\vec w).")
+    if op == "find_m_orthogonal":
+        unknown = item["unknown"]
+        u = _coords(item["u"], unknown)
+        v = _coords(item["v"], unknown)
+        return (rf"\vec u({u}),\ \vec v({v}). "
+                rf"\\[4pt] \text{{Find }} {unknown} \text{{ such that }} \vec u\cdot\vec v = 0.")
+    return None
+
+
 def _build_curated_vector(item):
     params = dict(item)
     label = _OP_LABEL.get(item["op"], item["op"])
@@ -45,7 +84,7 @@ def _build_curated_vector(item):
         "z_display": display,
         "z_latex": display,
         "prompt": f"Compute {label} for the given points/vectors.",
-        "prompt_latex": None,
+        "prompt_latex": _build_prompt_latex(item),
         "source": "curated",
     }
 

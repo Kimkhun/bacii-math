@@ -102,8 +102,14 @@ const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: "probability:exercise_banknotes", label: "Banknotes" },
     { value: "probability:exercise_pens", label: "Pens" },
     { value: "probability:exercise_students", label: "Students" },
+    { value: "counting", label: "Counting (combinations & permutations)" },
   ],
   functions: [{ value: "study", label: "Curve study & area" }],
+  continuity: [{ value: "check_continuity", label: "Check continuity / find parameter" }],
+  derivatives: [{ value: "compute_derivative", label: "Compute derivative" }],
+  differential_equations: [{ value: "solve_ode", label: "Solve differential equation" }],
+  vectors_space: [{ value: "vector_ops", label: "Vector operations" }],
+  conics: [{ value: "classify_conic", label: "Classify conic / find feature" }],
 };
 
 // Splits a TYPE_OPTIONS value into the {question_type, variant} pair the
@@ -1515,6 +1521,11 @@ function PracticeInner() {
                   <option value="integral">Integrals</option>
                   <option value="probability">Probability</option>
                   <option value="functions">Functions</option>
+                  <option value="continuity">Continuity</option>
+                  <option value="derivatives">Derivatives</option>
+                  <option value="differential_equations">Differential equations</option>
+                  <option value="vectors_space">Vectors in space</option>
+                  <option value="conics">Conics</option>
                 </select>
                 <select
                   value={questionType}

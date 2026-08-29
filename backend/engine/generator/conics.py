@@ -4,7 +4,18 @@ reclassifies the conic at solve time."""
 import json
 import os
 
+from sympy import Symbol, expand, latex, sympify
+
 _CATALOG_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "conics_curated")
+
+_ASK_PHRASE = {
+    "vertex_x": r"x\text{-coordinate of the vertex}", "vertex_y": r"y\text{-coordinate of the vertex}",
+    "p": r"\text{focal parameter } p", "focus_x": r"x\text{-coordinate of the focus}",
+    "focus_y": r"y\text{-coordinate of the focus}", "directrix": r"\text{directrix constant}",
+    "center_x": r"x\text{-coordinate of the center}", "center_y": r"y\text{-coordinate of the center}",
+    "a": r"a \text{ (semi-major/transverse axis length)}", "b": r"b \text{ (semi-minor/conjugate axis length)}",
+    "c": r"c \text{ (focal distance)}",
+}
 
 
 def _load():
@@ -30,6 +41,9 @@ _CONICS_CURATED = _load()
 def _build_curated_conic(item):
     params = dict(item)
     display = f"conic {item['expr']} = 0, find {item['ask']} ({item.get('id')})"
+    expr_l = latex(expand(sympify(item["expr"], locals={"x": Symbol("x"), "y": Symbol("y")})))
+    ask_l = _ASK_PHRASE.get(item["ask"], item["ask"])
+    prompt_latex = rf"\text{{Given the conic }} {expr_l} = 0, \\[4pt] \text{{find its }} {ask_l}."
     return {
         "topic": "conics",
         "question_type": "classify_conic",
@@ -38,7 +52,7 @@ def _build_curated_conic(item):
         "z_display": display,
         "z_latex": display,
         "prompt": f"Given the conic {item['expr']} = 0, find its {item['ask'].replace('_', ' ')}.",
-        "prompt_latex": None,
+        "prompt_latex": prompt_latex,
         "source": "curated",
     }
 

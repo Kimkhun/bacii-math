@@ -4,6 +4,8 @@ at solve time."""
 import json
 import os
 
+from sympy import Symbol, latex, sympify
+
 _CATALOG_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "derivatives_curated")
 
 
@@ -31,6 +33,8 @@ def _build_curated_derivative(item):
     params = dict(item)
     order = item.get("order", 1)
     label = "second derivative" if order == 2 else "derivative"
+    prime = "y''" if order == 2 else "y'"
+    expr_l = latex(sympify(item["expr"], locals={item["var"]: Symbol(item["var"])}))
     display = f"{label} of y = {item['expr']} ({item.get('id')})"
     return {
         "topic": "derivatives",
@@ -40,7 +44,7 @@ def _build_curated_derivative(item):
         "z_display": display,
         "z_latex": display,
         "prompt": f"Compute the {label} of y = {item['expr']}.",
-        "prompt_latex": None,
+        "prompt_latex": rf"\text{{Compute }} {prime} \text{{ for }} y = {expr_l}.",
         "source": "curated",
     }
 

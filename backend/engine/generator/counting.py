@@ -5,8 +5,23 @@ generator (engine/generator/probability.py), which handles draw/event
 scenarios rather than raw combination/permutation evaluation."""
 import json
 import os
+import re
 
 _CATALOG_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "probability_counting")
+
+_COMB_NOTATION = re.compile(r"\bC\(\s*(\d+)\s*,\s*(\d+)\s*\)")
+_PERM_NOTATION = re.compile(r"\bP\(\s*(\d+)\s*,\s*(\d+)\s*\)")
+
+
+def _display_latex(expr):
+    """Render the C(n,r)/P(n,r) expression as LaTeX binomial/permutation
+    notation WITHOUT evaluating it — sympy's binomial()/factorial() eagerly
+    compute on concrete integers, which would leak the answer into the
+    question text, so this is pure string substitution instead."""
+    text = _COMB_NOTATION.sub(r"\\binom{\1}{\2}", expr)
+    text = _PERM_NOTATION.sub(r"A_{\1}^{\2}", text)
+    text = text.replace("*", r" \times ")
+    return text
 
 
 def _load():
@@ -40,7 +55,7 @@ def _build_curated_counting(item):
         "z_display": display,
         "z_latex": display,
         "prompt": f"Evaluate: {item['expr']}",
-        "prompt_latex": None,
+        "prompt_latex": rf"\text{{Evaluate: }} {_display_latex(item['expr'])}",
         "source": "curated",
     }
 
