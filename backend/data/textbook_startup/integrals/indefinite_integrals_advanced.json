@@ -1,0 +1,49 @@
+{
+  "formula_name": "indefinite_integrals_advanced",
+  "topic": "integrals",
+  "description": "Indefinite-integral advanced technique drills: further u-substitution (exp/log/trig composites), linear-argument trig/exp antiderivatives, trig-power reduction (sin^n, cos^n, product-to-sum), integration by parts (x*e^x, x*trig, x^2*e^x, x^n*ln x), and improper/proper rational-fraction split via partial fractions (including with an unknown-coefficient decomposition step before integrating).",
+  "source": {
+    "file": "book/Part 3.pdf (physical book pages 65-68)",
+    "description": "Cambodian BAC II grade-12 math exercise compendium (Start Up Community), Lesson 8: អាំងតេក្រាលមិនកំណត់ (Indefinite Integrals), Sections 8-11: u-substitution, linear-argument, trig products, by-parts, partial fractions — exercises only, no worked solutions",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-29"
+  },
+  "count": 6,
+  "exercises": [
+    {
+      "id": "p65_usub_and_linear_argument_18items",
+      "source_page": 65,
+      "prompt_latex": "\\int2e^x/(e^x+1)\\,dx;\\ \\int(e^x+1)/(1-2x-2e^x)^2\\,dx;\\ \\int(e^x+x)/\\sqrt{2e^x+x^2}\\,dx;\\ \\int\\cos x/(1-\\sin x)\\,dx;\\ \\int\\sin x/\\cos^2x\\,dx;\\ \\int\\cos x/(3-2\\sin x)^2\\,dx;\\ \\int(x^2-2x)/(x^3-3x^2+2)\\,dx;\\ \\int20x^4/(1-2x^5)^2\\,dx;\\ \\int(\\cos x-\\sin x)/\\sqrt{\\sin x+\\cos x}\\,dx;\\ \\int(1-2/(3-4x))\\,dx;\\ \\int[x+1/(2(x+1)^2)]\\,dx;\\ \\int[2/(x+3)-3/(1-x)^2]\\,dx",
+      "technique": "u_substitution: recognize u'/u, u'/u^2, u'/\\sqrt u forms for exponential, trig, and rational composites"
+    },
+    {
+      "id": "p65_p66_exp_and_trig_linear_argument_38items",
+      "source_page": 65,
+      "prompt_latex": "\\int(2x-e^{2x})\\,dx;\\ \\int(2e^{3x}-e^{-x})\\,dx;\\ \\int(2e^x-1)^2\\,dx;\\ \\int4xe^{x^2}\\,dx;\\ \\int(x+1)e^{x^2+2x-1}\\,dx;\\ \\int(2x-1-3e^{1-2x})\\,dx;\\ \\int(2e^{2x}-e^x+1)/e^x\\,dx;\\ \\int\\sin(3x+1)\\,dx;\\ \\int2\\cos(3+4x)\\,dx;\\ \\int\\cos[(2x-1)/3]\\,dx;\\ \\int x\\sin(x^2-1)\\,dx;\\ \\int(1/x^2)\\sin(2/x)\\,dx;\\ \\int(2-\\cos2x)/3\\,dx;\\ \\int(3-4\\cos3x)/2\\,dx;\\ \\int[x-\\cos(x+\\pi)]\\,dx;\\ \\int[\\sin3x-6\\cos(3x+\\pi/3)]\\,dx;\\ \\int(\\cos2x-\\sin3x+\\cos5x)\\,dx;\\ \\int2\\sin(2x+\\pi/2)\\,dx;\\ \\int\\sin^2x\\,dx;\\ \\int(3/2-\\cos^2x)\\,dx;\\ \\int1/\\cos^22x\\,dx;\\ \\int x/\\sin^2(x^2)\\,dx;\\ \\int\\cot^2(2x-1)\\,dx;\\ \\int[1+\\tan^2(x-\\pi/3)]\\,dx;\\ \\int2/\\sin^2(2x+\\pi/4)\\,dx;\\ \\int6/\\cos^2(2\\pi-3x)\\,dx;\\ \\int x\\tan^2(x^2)\\,dx;\\ \\int(x-2)/\\cos^2(4x-x^2)\\,dx",
+      "technique": "linear_argument_rule and u_substitution: \\int f(ax+b)dx=F(ax+b)/a, tan^2/\\cot^2 identity rewriting"
+    },
+    {
+      "id": "p66_trig_power_reduction_16items",
+      "source_page": 66,
+      "prompt_latex": "\\int\\cos^2x\\,dx;\\ \\int\\tan x\\,dx;\\ \\int\\cot x\\,dx;\\ \\int\\tan^3x\\,dx;\\ \\int\\cot^3x\\,dx;\\ \\int\\sin^3x\\,dx;\\ \\int\\cos^3x\\,dx;\\ \\int\\cos^4x\\,dx;\\ \\int\\sin^2x\\cos^2x\\,dx;\\ \\int\\sin^3x\\cos^2x\\,dx;\\ \\int\\sin^4x\\cos^3x\\,dx;\\ \\int\\sin^3x\\cos^5x\\,dx;\\ \\int\\sin x\\sin2x\\,dx;\\ \\int\\sin3x\\sin2x\\,dx;\\ \\int\\sin2x\\cos4x\\,dx;\\ \\int\\cos2x\\cos6x\\,dx",
+      "technique": "Trig power-reduction: split odd powers via Pythagorean identity + u-sub, or use product-to-sum formulas for sin(mx)sin(nx)/cos(mx)cos(nx) products"
+    },
+    {
+      "id": "p66_integration_by_parts_16items",
+      "source_page": 66,
+      "prompt_latex": "\\int(x-1)e^x\\,dx;\\ \\int(2x-3)e^{-x}\\,dx;\\ \\int(3x+4)e^{2x}\\,dx;\\ \\int(x-1)\\sin x\\,dx;\\ \\int(2x+3)\\cos x\\,dx;\\ \\int2x\\cos3x\\,dx;\\ \\int(2-3x)\\sin2x\\,dx;\\ \\int x\\sin(2x-1)\\,dx;\\ \\int(2x-1)\\cos(1-x)\\,dx;\\ \\int3\\ln x\\,dx;\\ \\int2x\\ln x\\,dx;\\ \\int(2-3x)\\ln x\\,dx;\\ \\int x^2\\ln x\\,dx;\\ \\int x^2e^x\\,dx;\\ \\int x^2\\sin x\\,dx;\\ \\int x^2\\cos2x\\,dx",
+      "technique": "integration_by_parts: \\int u\\,dv=uv-\\int v\\,du, with u=x/x^2/\\ln x and dv=e^x, trig, or polynomial"
+    },
+    {
+      "id": "p66_p67_rational_domain_and_indefinite_integral_family_5items",
+      "source_page": 66,
+      "prompt_latex": "f(x)=(2x-5)/(x-1),\\ \\forall x\\ne1,\\ \\text{find}\\ a,b\\ \\text{s.t.}\\ f(x)=a+b/(x-1),\\ \\text{then}\\ I(x)=\\int f(x)dx\\ \\text{with}\\ I(-2)=0;\\ f(x)=(4x-3)/(2x-3)^2,\\ x\\ne3/2,\\ f(x)=A/(2x-3)+B/(2x-3)^2,\\ I(x)=\\int f(x)dx;\\ f(x)=3x/(4-x)^2,\\ x\\ne4,\\ f(x)=m/(4-x)+n/(4-x)^2,\\ K(x)=\\int f(x)dx,\\ K(0)=2\\ln4;\\ f(x)=(2x^2+2x+1)/(x^3+x^2),\\ x\\ne-1,0,\\ f(x)=a/x+b/x^2+c/(x+1),\\ I=\\int f(x)dx;\\ f(x)=(4x^2-9x+4)/(x^2-3x+2),\\ x\\ne1,2,\\ f(x)=A+B/(x-1)+C/(x-2),\\ J=\\int f(x)dx",
+      "technique": "Partial fraction decomposition: find unknown coefficients (matching numerators) then integrate each term, often with an initial-condition constant"
+    },
+    {
+      "id": "p67_p68_rational_integral_bank_and_domain_28items",
+      "source_page": 67,
+      "prompt_latex": "\\int x/(x+2)\\,dx;\\ \\int(3x-1)/(x+1)\\,dx;\\ \\int(4x-3)/(x+2)\\,dx;\\ \\int(2x-3)/(2x+1)\\,dx;\\ \\int x^2/(x-1)\\,dx;\\ \\int(x^2+2x+2)/(x+1)\\,dx;\\ \\int(2x^2+1)/(x-2)\\,dx;\\ \\int(2x-1)^2/(2x+1)\\,dx;\\ \\int2/[x(x-3)]\\,dx;\\ \\int(2x-1)/(x^2+x)\\,dx;\\ \\int(x+3)/[(x-1)(x+1)]\\,dx;\\ \\int(2x+3)/(x^2-4)\\,dx;\\ \\int4/(x^2-1)\\,dx;\\ \\int(2x+3)/[(x-1)(x-2)]\\,dx;\\ \\int(3x+2)/(x^2+2x-3)\\,dx;\\ \\int2x/(x^2+4x+3)\\,dx;\\ \\int(x^2+1)/(x^2-x)\\,dx;\\ \\int(x^2-2)/(x^2-1)\\,dx;\\ \\int(x^2-2x)/[(x-1)(x+2)]\\,dx;\\ \\int(x^2+x+1)/(x^2+3x+2)\\,dx;\\ \\int2x/(x-1)^2\\,dx;\\ \\int(x+2)/(x^2+2x+1)\\,dx;\\ \\int x^2/(x^2-4x+4)\\,dx;\\ \\int(x^2-4x+5)/(x^2+6x+9)\\,dx;\\ g(x)=(5x^2-14x+13)/[(x+1)(x-3)^2],\\ \\text{find}\\ m,n,p:\\ g(x)=m/(x+1)+n/(x-3)+p/(x-3)^2,\\ K=\\int g(x)dx;\\ f(x)=(e^{2x}+e^x+1)/(e^x+1)^2,\\ \\text{find}\\ A,B:\\ f(x)=A+Be^x/(e^x+1)^2,\\ g(x)=\\int f(x)dx;\\ g(x)=\\sin x/(\\sin x+\\cos x),\\ \\text{find}\\ A,B:\\ g(x)=A+B(\\sin x-\\cos x)/(\\sin x+\\cos x),\\ I=\\int g(x)dx;\\ I=\\int\\cos x/(\\sin x+\\cos x)\\,dx,\\ J=\\int\\sin x/(\\sin x+\\cos x)\\,dx,\\ \\text{find}\\ I+J,\\ I-J,\\ \\text{then}\\ I,J\\ \\text{individually}",
+      "technique": "Improper/proper rational-function integral bank: polynomial division (if degree num >= degree denom) then partial fractions; includes a paired-integral trick (solve I+J and I-J simultaneously)"
+    }
+  ]
+}

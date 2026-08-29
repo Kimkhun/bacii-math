@@ -1,0 +1,109 @@
+{
+  "formula_name": "vectors_space_full_book",
+  "topic": "vectors_space",
+  "description": "Full 3D vector/analytic-geometry drill set: building vectors AB/AC/BC/OA from point coordinates, vector magnitude, dot product (from coordinates and from magnitude+angle), finding a parameter m for orthogonality, cross product (component form and magnitude), scalar triple product identities, collinearity/coplanarity checks for 3-4 points, triangle area via cross product, parametric/symmetric line equations through two points or point+direction, plane equations (point+normal, point+direction-pair, through 3 points), sphere equations (center+point, diameter endpoints, general-form center/radius), point-to-plane distance, and a large curated bank of real BAC II exam problems (2002-2023) combining all of the above into multi-part questions.",
+  "source": {
+    "file": "book/Part 5.pdf (physical book pages 93-104)",
+    "description": "Cambodian BAC II grade-12 math exercise compendium (Start Up Community), Lesson 12: វិចទ័រក្នុងលំហ (Vectors in Space) — exercises only, no worked solutions",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-29"
+  },
+  "count": 15,
+  "exercises": [
+    {
+      "id": "p93_build_vectors_from_points_8items",
+      "source_page": 93,
+      "prompt_latex": "\\text{Find }\\overrightarrow{AB},\\overrightarrow{AC},\\overrightarrow{BC},\\overrightarrow{OA}\\text{ for: }A(2,0,3),B(-1,2,3),C(0,1,2);\\ A(1,2,3),B(-1,2,4),C(-1,2,3);\\ A(-1,-2,0),B(-2,3,1),C(2,1,3);\\ A(-2,1,3),B(1,-2,3),C(1,2,-3);\\ A(-2,1,2),B(0,2,3),C(5,1,2);\\ A(-1,0,3),B(-4,1,0),C(-1,5,1);\\ A(1,5,3),B(10,4,-8),C(20,4,12);\\ A(0,-1,-3),B(1,1,2),C(2,4,6)",
+      "technique": "Build vector components from point coordinates: \\overrightarrow{AB}=(x_B-x_A,y_B-y_A,z_B-z_A)"
+    },
+    {
+      "id": "p93_p94_vector_magnitude_8items",
+      "source_page": 93,
+      "prompt_latex": "\\text{Compute }|\\overrightarrow{AB}|,|\\overrightarrow{AC}|,|\\overrightarrow{BC}|\\text{ for: }A(1,2,4),B(1,2,3),C(1,4,4);\\ A(5,4,-2),B(-5,1,2),C(-1,2,4);\\ A(-1,0,2),B(0,5,3),C(1,2,5);\\ A(1,3,4),B(1,10,5),C(7,8,4);\\ A(-3,4,10),B(8,7,10),C(1,1,3);\\ A(3,4,5),B(5,7,2),C(1,2,1);\\ A(10,7,3),C(4,2,7),C(10,3,5);\\ A(-2,5,20),B(10,2,3),C(-1,1,1)",
+      "technique": "Vector magnitude formula |\\vec v|=\\sqrt{x^2+y^2+z^2}"
+    },
+    {
+      "id": "p94_dot_product_from_coords_9items",
+      "source_page": 94,
+      "prompt_latex": "\\text{Compute }\\overrightarrow{AB}\\cdot\\overrightarrow{AC}\\text{ for: }A(1,-2,3),B(2,4,3),C(2,3,5);\\ A(2,3,5),B(-5,2,4),C(-1,-3,3);\\ A(1,2,4),B(10,2,10),C(5,-1,4);\\ \\overrightarrow{AB}=\\vec\\imath+3\\vec\\jmath-\\vec k,\\ \\overrightarrow{AC}=5\\vec\\imath-5\\vec\\jmath+3\\vec k;\\ \\overrightarrow{AB}=2\\vec\\imath-3\\vec\\jmath+2\\vec k,\\ \\overrightarrow{AC}(3,5,2);\\ \\overrightarrow{AB}=2\\vec\\imath-2\\vec\\jmath+\\vec k,\\ \\overrightarrow{AC}(5,4,2);\\ \\overrightarrow{AB}=-\\vec\\imath+\\vec\\jmath+\\vec k,\\ \\overrightarrow{CA}=-5\\vec\\imath+\\vec\\jmath-\\vec k;\\ \\overrightarrow{BA}=\\vec\\imath+2\\vec\\jmath-3\\vec k,\\ \\overrightarrow{CA}=10\\vec\\imath+3\\vec k;\\ \\overrightarrow{BA}=-5\\vec\\imath-3\\vec\\jmath,\\ \\overrightarrow{CA}=3\\vec\\jmath+\\vec k",
+      "technique": "Dot product from coordinates \\vec u\\cdot\\vec v=u_1v_1+u_2v_2+u_3v_3"
+    },
+    {
+      "id": "p94_dot_product_from_magnitude_angle_8items",
+      "source_page": 94,
+      "prompt_latex": "\\text{Compute }\\vec u\\cdot\\vec v\\text{ given }|\\vec u|,|\\vec v|,\\theta: |\\vec u|=2,|\\vec v|=1,\\theta=30^\\circ;\\ |\\vec u|=1,|\\vec v|=2,\\theta=45^\\circ;\\ |\\vec u|=2,|\\vec v|=4,\\theta=30^\\circ;\\ |\\vec u|=2,|\\vec v|=2,\\theta=30^\\circ;\\ |\\vec u|=1,|\\vec v|=2,\\theta=45^\\circ;\\ |\\vec u|=5,|\\vec v|=3,\\theta=45^\\circ;\\ |\\vec u|=5,|\\vec v|=10,\\theta=60^\\circ;\\ |\\vec u|=10,|\\vec v|=2,\\theta=60^\\circ",
+      "technique": "Dot product formula \\vec u\\cdot\\vec v=|\\vec u||\\vec v|\\cos\\theta"
+    },
+    {
+      "id": "p94_find_m_for_orthogonality_8items",
+      "source_page": 94,
+      "prompt_latex": "\\text{Find }m\\text{ s.t. }\\vec u\\cdot\\vec v=0: \\vec u=(m,-1,2),\\vec v=(1,3,2);\\ \\vec u=(2,m,1),\\vec v=(3,2,m);\\ \\vec u=(5m,4,3),\\vec v=(m,4,-3);\\ \\vec u=(10,5,-m),\\vec v=(1,2,m);\\ \\vec u=(3,6,m),\\vec v=(5,3,5);\\ \\vec u=(m,3m,10),\\vec v=(4,2,-10);\\ \\vec u=3\\vec\\imath+m\\vec\\jmath-\\vec k,\\vec v=3m\\vec\\imath-3\\vec\\jmath+3\\vec k;\\ \\vec u=20m\\vec\\imath-3\\vec\\jmath+\\vec k,\\vec v=10m\\vec\\imath+20\\vec k",
+      "technique": "Solve \\vec u\\cdot\\vec v=0 as a linear or quadratic equation in the unknown parameter m"
+    },
+    {
+      "id": "p94_p95_cross_product_computations_18items",
+      "source_page": 94,
+      "prompt_latex": "\\text{Compute }\\overrightarrow{AB}\\times\\overrightarrow{AC}\\text{ and }\\overrightarrow{AB}\\times\\overrightarrow{BC}\\text{ for 6 point-triples }A,B,C;\\ \\text{compute }\\vec u\\times\\vec v\\text{ and }|\\vec u\\times\\vec v|\\text{ for 8 vector pairs (coordinate or }\\vec\\imath,\\vec\\jmath,\\vec k\\text{ form)}",
+      "technique": "Cross product component formula \\vec u\\times\\vec v=(u_2v_3-u_3v_2,\\,u_3v_1-u_1v_3,\\,u_1v_2-u_2v_1) and its magnitude"
+    },
+    {
+      "id": "p95_triple_vector_identities_and_properties",
+      "source_page": 95,
+      "prompt_latex": "\\text{Given }\\vec u=(1,2,3),\\vec v=(3,1,2),\\vec w=(3,4,5): \\text{compute }|\\vec u|,|\\vec v|,|\\vec w|;\\ \\vec u\\cdot\\vec v,\\vec u\\cdot\\vec w,\\vec v\\cdot\\vec w;\\ \\vec u\\times\\vec v,\\vec v\\times\\vec w,\\vec u\\times\\vec w;\\ \\vec u\\cdot(\\vec v\\times\\vec w),\\vec v\\cdot(\\vec u\\times\\vec w),\\vec w\\cdot(\\vec u\\times\\vec v);\\ \\text{Given }\\vec u=(1,2,4),\\vec v=(1,0,4),\\vec w=(-2,3,5): \\text{prove }\\vec u\\times\\vec v=-(\\vec v\\times\\vec u);\\ \\vec u\\times(\\vec v+\\vec w)=\\vec u\\times\\vec v+\\vec u\\times\\vec w;\\ \\vec u\\cdot(\\vec v\\times\\vec w)=(\\vec u\\times\\vec v)\\cdot\\vec w;\\ \\vec u\\times\\vec u=\\vec0",
+      "technique": "Verify general vector-algebra identities (anticommutativity, distributivity, scalar triple product cyclic property) using specific numeric vectors"
+    },
+    {
+      "id": "p95_triangle_from_points_and_vectors",
+      "source_page": 95,
+      "prompt_latex": "\\text{Given }A(1,2,3),B(3,4,5),C(2,4,5): \\text{compute }|\\overrightarrow{AB}|,|\\overrightarrow{AC}|,|\\overrightarrow{BC}|;\\ \\overrightarrow{AB}\\cdot\\overrightarrow{AC},\\overrightarrow{AB}\\cdot\\overrightarrow{BC};\\ \\overrightarrow{AB}\\times\\overrightarrow{AC},\\overrightarrow{AB}\\times\\overrightarrow{BC},|\\overrightarrow{AB}\\times\\overrightarrow{AC}|,|\\overrightarrow{AB}\\times\\overrightarrow{BC}|;\\ \\text{prove }\\overrightarrow{AB}\\times\\overrightarrow{AB}=0\\text{ and }\\overrightarrow{AB}\\times(\\overrightarrow{AC}+\\overrightarrow{BC})=\\overrightarrow{AB}\\times\\overrightarrow{AC}+\\overrightarrow{AB}\\times\\overrightarrow{BC}",
+      "technique": "Combine magnitude, dot product, and cross product computations for one triangle's vertices"
+    },
+    {
+      "id": "p95_scalar_triple_product_area_5items",
+      "source_page": 95,
+      "prompt_latex": "\\text{Find scalar triple product }k\\text{ of }\\overrightarrow{AB},\\overrightarrow{AC}\\text{ for 3 point-triples}A,B,C;\\ \\text{check collinearity of }A,B,C\\text{ (not on same line, unbiased test) for 4 point-triples}",
+      "technique": "Scalar triple product for collinearity/coplanarity testing"
+    },
+    {
+      "id": "p96_triangle_area_and_collinearity_16items",
+      "source_page": 96,
+      "prompt_latex": "\\text{Find area of triangle }ABC\\text{ using cross product for 6 point-triples;}\\ \\text{find perimeter/type of triangle }ABC\\text{ for 6 point-triples (incl. one given as }\\overrightarrow{AB},\\overrightarrow{AC}\\text{ directly);}\\ \\text{check coplanarity for 6 vector-triples }\\vec u,\\vec v,\\vec w;\\ \\text{verify 4 given points }A,B,C,D\\text{ form a parallelogram for 3 point-quadruples}",
+      "technique": "Triangle area via \\tfrac12|\\overrightarrow{AB}\\times\\overrightarrow{AC}|, coplanarity via scalar triple product =0, parallelogram check via \\overrightarrow{AB}=\\overrightarrow{DC}"
+    },
+    {
+      "id": "p96_p97_line_and_plane_equations_20items",
+      "source_page": 96,
+      "prompt_latex": "\\text{Find parametric/symmetric line }(D)\\text{ equations: through 2 points (4 items), through a point with a given direction vector (3 items);}\\ \\text{find line }(L)\\text{ equations through a point parallel to another given line, in various forms (symmetric, offset-symmetric, parametric) (9 items);}\\ \\text{find plane equations through a point with a given normal vector }\\vec n\\text{ (5 items)}",
+      "technique": "Standard 3D line forms: two-point form, point+direction (parametric x=x_0+at, y=y_0+bt, z=z_0+ct, or symmetric (x-x_0)/a=(y-y_0)/b=(z-z_0)/c); plane point-normal form a(x-x_0)+b(y-y_0)+c(z-z_0)=0"
+    },
+    {
+      "id": "p97_plane_from_3_points_and_projections",
+      "source_page": 97,
+      "prompt_latex": "\\text{Find plane through 3 non-collinear points for 6 point-triples;}\\ \\text{find plane through a point and the projection plane }yoz\\text{ (1 item), }xoz\\text{ (1 item)}",
+      "technique": "Plane equation via normal \\vec n=\\overrightarrow{AB}\\times\\overrightarrow{AC}, or coordinate-plane-parallel plane equations"
+    },
+    {
+      "id": "p97_p98_line_through_point_parallel_to_plane_normal",
+      "source_page": 97,
+      "prompt_latex": "\\text{Find symmetric line equation through a point parallel to the plane's normal, for 6 point+plane pairs;}\\ \\text{find sphere }(S)\\text{ equation: with center }I\\text{ through a point (2 items), with diameter endpoints }[AB]\\text{ (3 items)}",
+      "technique": "Line parallel to a plane's normal vector; sphere equation (x-a)^2+(y-b)^2+(z-c)^2=r^2 from center+point or from diameter endpoints (center = midpoint, r = half the distance)"
+    },
+    {
+      "id": "p98_sphere_center_radius_and_tangent_plane",
+      "source_page": 98,
+      "prompt_latex": "\\text{Find center }I\\text{ and radius }R\\text{ of sphere }(S)\\text{ given general-form equation, for 6 equations like }x^2+y^2+z^2-4x+4y-4z+4=0;\\ \\text{find distance from 6 named points to given planes }(\\alpha)\\text{ (e.g. }A(1,5,-4)\\text{ to }3x-y+2z=6\\text{)};\\ \\text{find symmetric line equation through a point parallel to a given parametric line }(D)\\text{, for 5 point+line pairs}",
+      "technique": "Complete the square to extract center/radius from general sphere equation x^2+y^2+z^2+Dx+Ey+Fz+G=0; point-to-plane distance formula d=|ax_0+by_0+cz_0-d|/\\sqrt{a^2+b^2+c^2}"
+    },
+    {
+      "id": "p99_p104_bac_exam_bank_2002_2023",
+      "source_page": 99,
+      "prompt_latex": "\\text{Curated BAC II exam problems by year (2002-2023), one multi-part problem per year, each combining several of: building vectors from 3-4 given points, checking non-collinearity, computing }\\overrightarrow{AB}\\times\\overrightarrow{AC}\\text{ as a plane normal, finding a plane/line equation, computing triangle area via cross product, verifying a tetrahedron OABC or parallelogram, sphere equations tangent to a plane, point-to-plane distance and projection, checking a right/isosceles triangle via dot product, and finding intersection points between a line and a plane or sphere.}",
+      "technique": "Real exam-style multi-part space-geometry problems requiring 4-6 chained sub-computations per year (2002 through 2023, ~22 problems total)"
+    },
+    {
+      "id": "p136_p140_semester2_review_bank_21plus13items",
+      "source_page": 136,
+      "prompt_latex": "\\text{Compute}\\ \\overrightarrow{AB},\\overrightarrow{AC},\\overrightarrow{BC}\\ \\text{for 2 point-triples};\\ \\text{compute}\\ \\overrightarrow{MN},\\overrightarrow{NP},\\overrightarrow{MO}\\ \\text{for 2 point-triples};\\ \\text{compute}\\ |\\overrightarrow{AB}|,|\\overrightarrow{AC}|,|\\overrightarrow{BC}|\\ \\text{for 2 point-triples};\\ \\text{compute}\\ AB,AC,BC\\ \\text{(distance) for 2 point-triples};\\ \\text{compute}\\ \\overrightarrow{AB}\\cdot\\overrightarrow{AC},\\overrightarrow{BC}\\cdot\\overrightarrow{BD},\\overrightarrow{AB}\\cdot\\overrightarrow{AD}\\ \\text{for 2 point-quadruples};\\ \\text{compute}\\ \\overrightarrow{AB}\\times\\overrightarrow{AC},\\overrightarrow{BC}\\times\\overrightarrow{BA}\\ \\text{for 2 point-triples};\\ \\text{compute area of triangle}\\ ABC\\ \\text{for 2 point-triples};\\ \\text{prove}\\ A,B,C\\ \\text{not collinear for 2 point-triples};\\ \\text{prove}\\ M,N,P\\ \\text{coplanar with a given line for 1 setup};\\ \\text{find symmetric-form equation of line}\\ (D)\\ \\text{through a point with given direction vector, for 3 point+vector pairs};\\ \\text{find equation of plane}\\ (P)\\ \\text{through a point with given normal vector, for 2 point+normal pairs};\\ \\text{prove 4 points form a trapezoid/parallelogram, for 2 point-quadruples};\\ \\text{prove 4 points form a rectangle/right-angle figure, for 2 point-quadruples};\\ \\text{prove triangle right-angled at a vertex for 4 point-triples};\\ \\text{(BacII2018) given}\\ A(1,2,3),B(3,0,1),C(-1,0,1),D(2,1,2):\\ \\text{compute}\\ \\overrightarrow{AB},\\overrightarrow{AC},\\overrightarrow{AD},\\overrightarrow{BC};\\ \\text{prove}\\ A,B,C\\ \\text{not collinear};\\ \\text{prove}\\ \\vec n=(0,1,-1)\\ \\text{normal to plane}(ABC);\\ \\text{(BacII2019) given}\\ A(1,-1,4),B(7,-1,-2),C(1,5,-2):\\ \\text{compute}\\ \\overrightarrow{AB},\\overrightarrow{AC},\\overrightarrow{BC};\\ \\text{prove}\\ A,B,C\\ \\text{not collinear};\\ \\text{prove}\\ \\vec n=(1,1,1)\\ \\text{normal to plane}\\ ABC;\\ \\text{find plane equation}\\ ABC;\\ \\text{prove triangle}\\ ABC\\ \\text{right-angled}",
+      "technique": "Semester-2 review bank (section V): comprehensive vector-in-space review covering all techniques above, plus 2 curated real BAC II exam problems (2018, 2019)"
+    }
+  ]
+}

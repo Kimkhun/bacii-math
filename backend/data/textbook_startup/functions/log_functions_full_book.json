@@ -1,0 +1,67 @@
+{
+  "formula_name": "log_functions_full_book",
+  "topic": "functions",
+  "description": "Natural-log-function (អនុគមន៍លោការីតនេពែ) drills: solving simple ln equations, checking symmetry, limits at 0+ and infinity, derivative computation, concavity study, and full multi-part log curve studies (domain, limits, derivative + sign, variation, tangent line, inflection, sketch), several via an auxiliary function g(x) whose sign determines f'(x)'s sign.",
+  "source": {
+    "file": "book/Part 3.pdf (physical book pages 51-58)",
+    "description": "Cambodian BAC II grade-12 math exercise compendium (Start Up Community), Lesson 7: អនុគមន៍លោការីតនេពែ (Natural Logarithm Functions) — exercises only, no worked solutions",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-28"
+  },
+  "count": 8,
+  "exercises": [
+    {
+      "id": "p51_solve_ln_equations_15items",
+      "source_page": 51,
+      "prompt_latex": "\\ln x=0;\\ 2\\ln x=0;\\ \\ln x-1=0;\\ 2\\ln x-4=0;\\ 1+\\ln x=0;\\ 2\\ln x+1=0;\\ (\\ln x+2)/x=0;\\ (-\\ln x-1)/x^2=0;\\ 2-\\tfrac12\\ln x=0;\\ \\ln^2x-\\ln x=0;\\ \\ln(x-1)=0;\\ 2\\ln(x+2)=0;\\ \\ln(x+e)=1;\\ 1-\\ln(x-e)=0;\\ [\\ln(x+1)+1]/(x+1)^2=0",
+      "technique": "Solve ln f(x)=k equations by exponentiating, or factor to reduce to a simpler ln equation"
+    },
+    {
+      "id": "p51_symmetry_check_8items",
+      "source_page": 51,
+      "prompt_latex": "f(x)=2\\ln x;\\ f(x)=-\\ln x;\\ f(x)=\\ln x-1;\\ f(x)=2-\\ln x;\\ f(x)=2-2\\ln x;\\ f(x)=-\\ln x-1;\\ f(x)=(\\ln x-1)/x;\\ f(x)=(2-2\\ln x)/x^2",
+      "technique": "Check symmetry / basic monotone shape of a ln x based expression"
+    },
+    {
+      "id": "p51_limits_at_0_and_infinity_9items",
+      "source_page": 51,
+      "prompt_latex": "\\lim(x-\\ln x);\\ \\lim(2-x^2+\\ln x);\\ \\lim(x^2-x\\ln x+1);\\ \\lim(\\ln^2x-\\ln x);\\ \\lim\\frac{2\\ln x}x;\\ \\lim\\frac{\\ln x-x}x;\\ \\lim\\frac{2x-\\ln x}x;\\ \\lim\\frac{3x-2\\ln x}{x^2};\\ \\lim\\frac{x^2-\\ln x+1}{x^2+2}\\ \\text{(each at }x\\to0^+\\text{ and }x\\to+\\infty\\text{)}",
+      "technique": "Compute limits at 0+ and +infinity, comparing growth rates of x^n vs ln x"
+    },
+    {
+      "id": "p51_p52_prove_asymptote_4items",
+      "source_page": 51,
+      "prompt_latex": "f(x)=x-1+\\ln x/x,\\ \\text{prove}\\ (d):y=x-1\\ \\text{asymptote};\\ f(x)=x+(\\ln x-1)/x,\\ (d):y=x;\\ f(x)=x+1-2\\ln x/x^2,\\ (d):y=x+1;\\ f(x)=-2x+(\\ln x+1)/x^2,\\ (d):y=-2x;\\ f(x)=x+2+(1-\\ln x)/x,\\ (d):y=x+2",
+      "technique": "Prove a given asymptote by showing lim[f(x)-line]=0, using lim x^{-k}\\ln x=0"
+    },
+    {
+      "id": "p52_derivative_and_concavity_28items",
+      "source_page": 52,
+      "prompt_latex": "f(x)=\\ln x-2;\\ x-\\ln x;\\ x^2-2\\ln x+1;\\ \\ln(x+1);\\ 2\\ln(1-2x);\\ 1-\\ln(x^2+1);\\ \\ln^2x;\\ x\\ln x-x;\\ x^2-x^2\\ln x;\\ \\ln x/x;\\ \\ln x/x^2;\\ (1-\\ln x)/x;\\ (2-\\ln x)/x^2;\\ (\\ln x+x)/x^2;\\ (2\\ln x+1)/x^2;\\ x-\\ln(x+1);\\ \\ln x-\\ln(x-1);\\ \\ln[(x+1)/(x-1)];\\ \\ln(x+1)/(x+1);\\ 1-\\ln(x^2+1)/(x^2+1);\\ 2\\ln[(3-x)/(3+x)];\\ x+\\ln[(x-2)/x];\\ x-\\ln[(x-1)/(x+2)]+1;\\ x\\ln x-1;\\ 2x-x\\ln x+1;\\ x^2\\ln x+1;\\ (\\ln x)/x+1;\\ (\\ln x-1)/x",
+      "technique": "Compute the derivative of ln-based functions using (\\ln u)'=u'/u, product/quotient rule, or study concavity via f''(x)"
+    },
+    {
+      "id": "p52_p53_more_derivative_and_extrema_16items",
+      "source_page": 52,
+      "prompt_latex": "f(x)=(\\ln x)/x^2+2;\\ f(x)=1+x-\\ln x;\\ f(x)=4x-\\tfrac12x^2-2;\\ f(x)=2x^2-4\\ln x+3;\\ f(x)=2\\ln x+4/x-5;\\ \\text{prove even/odd for}\\ f(x)=x+\\ln x-1,x^2+2\\ln x-3,2-\\ln x-x,1+1/x-\\ln x,2\\ln x-2/x+1,2\\ln x+\\tfrac23x^3-1,x-x^2+2\\ln x,1/x+\\ln x-2x,x^2/2-2/x-\\ln x,x+\\ln(x+1),2x-\\ln(x-1),2\\ln x-(x^2-2)/x",
+      "technique": "Compute derivative and classify monotone behavior of combined polynomial/log expressions"
+    },
+    {
+      "id": "p53_p57_full_curve_studies_multipart_18items",
+      "source_page": 53,
+      "prompt_latex": "f(x)=x-\\ln x\\ \\text{on}\\ (0,+\\infty);\\ f(x)=(\\ln x+1)^2\\ \\text{on}\\ (0,+\\infty);\\ f(x)=(\\ln x)^2+\\ln x\\ \\text{on}\\ (0,+\\infty)\\ (\\text{use}\\ f=(\\ln x)(\\ln x+1));\\ f(x)=2\\ln x+4/x-5;\\ f(x)=2+\\ln x/x^2\\ (e=2.72,e^{0.5}=1.65);\\ f(x)=2x-x\\ln x;\\ f(x)=(x+\\ln x)/x;\\ f(x)=2\\ln x-x+1/x;\\ g(x)=x-\\ln x+1,\\ f(x)\\ \\text{related};\\ g(x)=x^2-1-2\\ln x,\\ f(x)=(x-1)/x\\cdot\\ln x;\\ h(x)=-x+1-2\\ln x,\\ f(x)=(x-1)/x\\ln x;\\ g(x)=x^2-2\\ln x,\\ f(x)=x-3+(2+2\\ln x)/x;\\ f(x)=1-x+\\ln x/x;\\ g(x)=-x^2-\\ln x,\\ f(x)=1-x+\\ln x/x\\ (I=(0,+\\infty));\\ g(x)=2x^2-\\ln x,\\ f(x)=(1+\\ln x)/x+2x;\\ f(x)=\\ln(1+e^{-x})+x/3\\ (\\ln2=0.7,\\ln3=1.1,\\ln(e+1)=1.3)",
+      "technique": "Full log-function study (BAC-II style, ~4-6 parts each): domain, limits at 0+/infinity (using lim x^{-k}\\ln x=0), asymptote proof, derivative via an auxiliary function g(x) whose sign is studied first (since f'(x)=g(x)/x^2 pattern is common), variation table, tangent line, inflection point, sketch of curve C"
+    },
+    {
+      "id": "p59_domain_and_limit_10items",
+      "source_page": 59,
+      "prompt_latex": "f(x)=\\ln(x-1);\\ f(x)=x-3\\ln(x+2);\\ f(x)=\\ln(x+1)/(x+1);\\ f(x)=\\ln[x/(x-1)];\\ f(x)=\\ln[(x-1)/(x+1)];\\ f(x)=x+\\ln[(x+2)/(x-2)];\\ f(x)=x-2\\ln[(x-1)/(x+2)];\\ f(x)=2-x+\\ln[(1-x)/(1+x)];\\ f(x)=2x-1-\\ln[(3+x)/(3-x)];\\ f(x)=1-x-\\ln[(1-2x)/(2x+1)]",
+      "technique": "Find domain and classify shape of log-of-rational-function expressions ln[(ax+b)/(cx+d)]"
+    },
+    {
+      "id": "p59_p61_pastexam_and_more_full_studies_10items",
+      "source_page": 59,
+      "prompt_latex": "f(x)=\\ln[(5-x)/(5+x)];\\ f(x)=-x+4+\\ln[(x+1)/(x-1)]\\ (\\text{BAC}\\ 2018);\\ f(x)=(x^2-2)/x-\\ln x\\ (\\text{BAC}\\ 2019);\\ f(x)=x+2\\ln(x+1)/(x+1);\\ f(x)=x-\\ln(1+x)\\ \\text{vs parabola}\\ y=x^2/2\\ (\\text{BAC}\\ 2022);\\ f(x)=x^2+4-4\\ln(x+1)\\ \\text{vs parabola}\\ y=2(x^2+2)",
+      "technique": "Past BAC II exam log-function problems and full studies comparing curve C to an auxiliary parabola P via g(x)=f(x)-P(x)"
+    }
+  ]
+}

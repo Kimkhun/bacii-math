@@ -1,0 +1,49 @@
+{
+  "formula_name": "rational_functions_full_book",
+  "topic": "functions",
+  "description": "Rational-function (អនុគមន៍សនិទាន) full curve-study drills: domain + oblique/vertical asymptote finding, algebraic decomposition f(x)=ax+b+c/(x-k), sign of f'(x) from a given derivative expression, and full multi-part function studies (domain, limits, asymptotes, derivative, variation table, tangent lines, sketching the curve C, and a parametrized-family variant f_m).",
+  "source": {
+    "file": "book/Start Up Part 1.pdf + book/Part 2.pdf (physical book pages 29-37)",
+    "description": "Cambodian BAC II grade-12 math exercise compendium (Start Up Community), Lesson 5: អនុគមន៍សនិទាន (Rational Functions) — exercises only, no worked solutions",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-28"
+  },
+  "count": 6,
+  "exercises": [
+    {
+      "id": "p29_domain_and_local_extrema_14items",
+      "source_page": 29,
+      "prompt_latex": "f(x)=2x^2/(x+1);\\ (x^2+3x-2)/(2-x);\\ (2-x^2)/(2x+1);\\ (2x^2-x+1)/(2x-4);\\ (x^2+2)/(x^2-1);\\ (x^2-3x+3)/(x^2+2x);\\ (-x^2+x+1)/(x^2-3x+2);\\ (x^2+4x)/(x^2-2x+1);\\ (x^2-4x+7)/(x^2-x+1);\\ (3x-2x^2)/(x^2+x-6);\\ (2x+3)/(2x-1)^2;\\ (x^2+2x-3)/x;\\ 2x+1-3/(x-1);\\ (x^2-5)/(x^2+2)",
+      "technique": "Find domain of definition and identify function shape (all quadratic-over-linear or quadratic-over-quadratic rational forms)"
+    },
+    {
+      "id": "p29_p30_match_expansion_to_point_and_derivative_sign",
+      "source_page": 29,
+      "prompt_latex": "\\text{Match }I(1,2):y=x+1-2/(x-1);\\ I(-1,-3):y=(x^2-x+2)/(x+1);\\ I(2,0):y=(-x^2+4x+7)/(x-2);\\ I(0,-2):y=(2x-1)^2/(2x)\\ \\text{to given points}\\ \\|\\ \\text{Determine sign of }f'\\ \\text{from}\\ f'(x)=(x^2+2x-3)/(x+1)^2,\\ (x^2-2x)/(x-1)^2,\\ (x^2-2x+3)/(x+2)^2,\\ (x^2-1)/x^2,\\ (-x^2+x)/(2x+1)^2,\\ (-x^2+3x-4)/(3-x)^2,\\ (x^2+4x+4)/(2x-1)^4,\\ (-3x)/(x^2-x+1)^2,\\ (2x-4)/(x^2+1)^2,\\ (x^2-3x+2)/(x^2-2x)^2,\\ (2-x)/(x^2-1)^2",
+      "technique": "Sign-of-derivative analysis (determine numerator sign / roots to build a variation table) without differentiating, from an already-given f'(x)"
+    },
+    {
+      "id": "p30_variation_type_classification_6items",
+      "source_page": 30,
+      "prompt_latex": "f(x)=(x^2+2x-3)/(2x);\\ (x^2-9)/(x+1);\\ x+2+4/(x-1);\\ (x^2-4x)/(x^2-4x+3);\\ (x+1)^2/(x^2+3x);\\ (2x^2-2x-1)/(x-1)^2",
+      "technique": "Classify the variation shape / determine local extrema type from the rational-function form"
+    },
+    {
+      "id": "p30_inflection_point_from_cubic_or_rational_6items",
+      "source_page": 30,
+      "prompt_latex": "f(x)=x^3-6x^2+9x+2,\\ \\text{point at}\\ x=0;\\ f(x)=x-6x^2+2x^3,\\ x=0;\\ f(x)=8-27x+9x^2-x^3,\\ x=0;\\ f(x)=x^3-6x^2+18x+4,\\ x=1;\\ f(x)=2/(x^2+1),\\ x=1",
+      "technique": "Verify a given point is the curve's inflection point using f''(point)=0"
+    },
+    {
+      "id": "p30_to_p37_full_curve_study_multipart_22items",
+      "source_page": 30,
+      "prompt_latex": "h(x)=x^2/(x-1)=ax+b+c/(x-1);\\ g(x)=(x^2-3x-4)/(x-2)=ax+b+c/(x-2)\\ (\\text{find sign, asymptotes, tangent at }I(2,1));\\ f(x)=(x^2+3x+6)/(x+2);\\ f(x)=(2x+2)/(x^2+2x-3);\\ f(x)=x^3+ax^2+bx+c\\ (\\text{tangent at }x=-1,\\ f(-2)=1);\\ (x^2+mx+1)/(x+m)\\ \\text{local extremum at}\\ x_0=2;\\ (m+1)/[(x+m)\\ln x]\\ \\text{extremum at}\\ x=1/e;\\ f(x)=e^x/(ax+b);\\ f(x)=(x^2+bx+c)/(x^2+dx-2)\\ \\text{origin-symmetric with asymptote}\\ x=1;\\ f(x)=(ax^2+bx)/(x^2-4x+3);\\ f(x)=(ax^2+bx+c)/(x-2)^2;\\ f_m(x)=(mx^2-6x)/(x^2+x-2);\\ f(x)=(2x^2-2x)/(x^2+2x+1)=A+B/(x+1)+C/(x+1)^2;\\ f(x)=(2x+2)/(x^2+2x-3)\\ \\text{(full study incl. tangent line at inflection, asymptote at infinity)};\\ f(x)=x^2-1)/(2x)\\ \\text{(f=ax+b/(2x), symmetry about O)};\\ f(x)=(x^2+3x+3)/(x+2);\\ f(x)=(x^2-1)/(x+2)^2;\\ f(x)=(x^2-4x)/(x^2-4x+3);\\ f(x)=(x^2-9)/(4-x^2);\\ f(x)=(x^2+4x-2)/(x^2+1);\\ f(x)=(2x^2+4x+5)/(x^2+1);\\ f(x)=(-2x^2+4x+1)/(x-1)^2",
+      "technique": "Full rational-function study (BAC-II style, ~4-6 parts each): domain, limits at infinity/poles, asymptotes (vertical + oblique + curvilinear), derivative & sign, variation table, tangent line, intersection with asymptote/axes, sketch curve C; several ask for an unknown coefficient (a,b,c,m) satisfying a symmetry, extremum, or asymptote condition first"
+    },
+    {
+      "id": "p35_p37_more_full_studies_11items",
+      "source_page": 35,
+      "prompt_latex": "f(x)=(2x^2-2x)/(x^2+2x+1)=A+B/(x+1)+C/(x+1)^2\\ (x\\ne-1);\\ f(x)=(2x+2)/(x^2+2x-3);\\ f(x)=x^3+ax^2+bx+c;\\ (x^2+mx+1)/(x+m)\\ x_0=2;\\ (m+1)/[(x+m)\\ln x];\\ f(x)=e^x/(ax+b);\\ f(x)=(x^2+bx+c)/(x^2+dx-2);\\ f(x)=(ax^2+bx)/(x^2-4x+3);\\ f(x)=(ax^2+bx+c)/(x-2)^2;\\ f_m(x)=(mx^2-6x)/(x^2+x-2)\\ \\text{(study for all }m,\\ \\text{then find }m\\ \\text{so asymptote }y=3)",
+      "technique": "Full rational-function study with a parametrized family f_m(x), studying variation for all m then solving for a specific m satisfying a geometric condition"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "formula_name": "probability_full_book",
+  "topic": "probability",
+  "description": "Full probability drill set: raw permutation/combination numeric evaluation, counting-technique word problems (committee selection, arrangements, group formation), classic urn/card/die/box scenarios building event descriptions and asking for the number of favorable outcomes, and conditional-probability P(B|A) evaluation.",
+  "source": {
+    "file": "book/Part 4.pdf (physical book pages 85-92)",
+    "description": "Cambodian BAC II grade-12 math exercise compendium (Start Up Community), Lesson 11: ប្រូបាប (Probability) — exercises only, no worked solutions",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-29"
+  },
+  "count": 12,
+  "exercises": [
+    {
+      "id": "p85_1_raw_combinatorics_16items",
+      "source_page": 85,
+      "prompt_latex": "C(4,2);\\ C(7,3);\\ C(8,1);\\ C(10,9);\\ C(10,10);\\ C(5,3);\\ P(3,2);\\ P(6,4);\\ P(7,1);\\ P(10,9);\\ P(9,9);\\ C(12,11);\\ C(7,1)\\times C(4,2);\\ C(5,2)\\times C(6,3);\\ C(4,4)+C(7,2);\\ C(5,2)\\times C(3,1)+C(8,3)",
+      "technique": "Direct numeric evaluation of combination C(n,r) and permutation P(n,r) formulas"
+    },
+    {
+      "id": "p85_p86_word_counting_8items",
+      "source_page": 85,
+      "prompt_latex": "\\text{Class of 10 students, choose a 4-student delegation randomly: how many ways?};\\ \\text{Box of 10 balls, pick 7 balls together: how many ways?};\\ \\text{Box of 7 balls, pick 4 balls in order: how many ways?};\\ \\text{5 people sit around a round table: how many arrangements?};\\ \\text{Class of 12 students split into groups, how many groups of exactly 3?};\\ \\text{Choose 3 class representatives from 5 boys and 3 girls, randomly: count ways for (a) all boys (b) all girls (c) 2 boys 1 girl (d) at most 2 girls};\\ \\text{Group has 5 male and 4 female teachers, choose 4 to attend a meeting: count ways for (a) all 4 male (b) all 4 female (c) 2M+1F (d) exactly 1 male};\\ \\text{Envelope has 3 red and 4 yellow tickets, draw 4 to win a prize: count ways for (a) all 4 tickets (b) 2 red+1 yellow (c) 1 red only (d) 2 red arbitrary (e) no red ticket}",
+      "technique": "Counting-technique word problems (combinations/permutations, unordered committee selection vs. ordered arrangement, with sub-case breakdowns by category)"
+    },
+    {
+      "id": "p86_p87_word_counting_9items",
+      "source_page": 86,
+      "prompt_latex": "\\text{Vase has 10 flowers (6 white counted 1-6, 4 red), draw 3: count outcomes};\\ \\text{Class of 12 students, choose committee of 6: count ways to have (a) chosen list starts smallest number (b) list contains even numbers only (c) list contains remaining numbers};\\ \\text{7 math books + 5 physics books, choose 4: count ways (a) all math (b) at least 1 physics};\\ \\text{7 black chess pieces + 5 white, choose 4 to place: count ways (a) all 4 pieces (b) 3 black+1 white (c) at least 1 black};\\ \\text{Choose 3 numbers from digits 1-9 with no repeat: count ways (a) all possible (b) multiples of 5 (c) even numbers only (d) odd numbers only};\\ \\text{10 math + 5 English books, choose 4: count ways (a) all math (b) at least 1 English};\\ \\text{7 straight + 5 curved lines, choose 4: count ways (a) all straight (b) 3 curved+1 straight (c) at least 1 curved};\\ \\text{Bag of 7 black+5 white balls, draw 5: count ways (a) all black (b) 3 black+2 white}",
+      "technique": "Counting-technique word problems continued, with 'at least one' complement-counting cases"
+    },
+    {
+      "id": "p87_p88_more_word_counting_5items",
+      "source_page": 87,
+      "prompt_latex": "\\text{500-riel bills (7) and 1000-riel bills (5), draw 4 arbitrary: count outcomes (a) 4 of 500-riel (b) at least one 1000-riel (c) exactly 3 of 500-riel};\\ \\text{7 math competitors + 5 English competitors, choose 4 to represent school: count outcomes (a) all math (b) at least 1 English};\\ \\text{3 distinct-digit numbers formed from digits 1-9 without repeat: count outcomes (a) total (b) multiples of 5 (c) even (d) odd};\\ \\text{Room has 7 math test papers + 5 English test papers, choose 4 papers to grade: count outcomes (a) all math (b) exactly 1 English};\\ \\text{Group of 3 students chosen randomly from a class with 20 boys and 15 girls: count outcomes (a) all boys (b) all girls (c) 4 boys + 2 girls}",
+      "technique": "Continued word-based counting exercises across similarly-structured urn/ticket/committee scenarios"
+    },
+    {
+      "id": "p88_p89_event_description_scenarios_5items",
+      "source_page": 88,
+      "prompt_latex": "\\text{Card group has 10 people (4 women, 6 men), choose 4 to form a team: count outcomes total and describe/count events: (1) team has an even number of women (2) team has more women than men (3) team has exactly one woman};\\ \\text{Box has 4 red+5 black+6 white balls, draw 3 by lot: count outcomes for drawn balls all of same color};\\ \\text{Destination trip: 3 men + 5 women choose seats randomly for a group photo: count arrangements, and events: (1) women all in front row (2) all men adjacent to each other}",
+      "technique": "Combined counting + event-description problems (defining an event in words, then counting its favorable outcomes)"
+    },
+    {
+      "id": "p89_p90_more_events_5items",
+      "source_page": 89,
+      "prompt_latex": "\\text{Box of 10 balls numbered 1-10, draw 6: events (a) drawn balls all even (b) drawn balls have exactly one odd remaining (c) drawn balls form consecutive run};\\ \\text{Box of 4 red + 6 blue balls, draw 3 arbitrary: count outcomes for the event};\\ \\text{Committee of 12 sons numbered 1-12, choose 2 sons whose numbers sum to a value: events A (sum is a remainder), B (product is a sum of remainders), C (product is a perfect square)}",
+      "technique": "Event-description probability setups continuing the box/committee framing, with algebraic conditions on the drawn labels (sum, product, parity)"
+    },
+    {
+      "id": "p90_p91_two_urn_and_deck_scenarios_9items",
+      "source_page": 90,
+      "prompt_latex": "\\text{Group has 10 balls: 3 yellow, 5 white, 2 red; draw 3 balls together: count outcomes for events (a) 3 balls same color (b) 3 balls different colors (c) 2 balls same color};\\ \\text{Standard 52-card deck, draw 2 cards together without replacement: count outcomes (a) both spades (b) one spade + one red};\\ \\text{Room 1 has 3 red+4 blue chips, Room 2 has 5 red+3 blue chips; take 2 chips from Room1 and 2 chips from Room2, put together into Room2's pool: events A ('all chosen chips red'), B ('chosen chips same color'), C ('chosen chips 50% blue')};\\ \\text{Box A has 4 black+3 red pens, Box B has 5 black+2 red pens; take one pen at random from one box then put into Box C: events A ('Box C has only red pen'), B ('Box C has approximately one specific color'), C ('Box C has a certain color proportion')};\\ \\text{3 students chosen from students ranked in grade 12A(5), 12B(4), 12C(3) for a school competition: events A ('all 3 from 12A'), B ('exactly 2 from same class'), C ('all 3 from different classes')};\\ \\text{Group has 3 red+2 white chips; chips drawn one at a time without replacement, count outcomes for events (a) draw ends immediately (b) draw does not end immediately}",
+      "technique": "Two-source combined-draw scenarios (drawing from multiple boxes/rooms and combining), building compound events across sources"
+    },
+    {
+      "id": "p91_9items_lottery_deck_dice",
+      "source_page": 91,
+      "prompt_latex": "\\text{Box has 7 red+5 blue chips, draw 3 chips one at a time without replacement (chip returned each time): compute probability the first chip is red and second is blue, in the given order};\\ \\text{Given }P(A)=0.4,\\ P(B)=0.66,\\ P(A/B)=0.25:\\ \\text{find }P(B/A);\\ \\text{given }P(A)=3/5,\\ P(B)=2/5,\\ P(A/B)=1/5:\\ \\text{find }P(B/A)",
+      "technique": "Conditional probability formula P(B|A)=P(A\\cap B)/P(A), computed from given marginal and conditional probabilities"
+    },
+    {
+      "id": "p132_p135_semester2_review_event_description_multiple_choice_18items",
+      "source_page": 132,
+      "prompt_latex": "\\text{(BacII2021) box has 2 red+3 blue+4 yellow balls; draw 3 balls by lot: compute probability of event A ('all 3 balls same color') and event B ('all 3 balls different colors')};\\ \\text{(BacII2014) box has 2 yellow+4 red+4 blue balls; draw 3 by lot: compute probability of A ('all 3 red') and B ('exactly 2 blue')};\\ \\text{(BacII2013) group of 6 people (1 woman+5 men); choose committee of 4 randomly grouped by region: compute probability of A ('committee has all men') and B ('committee has 50\\% women')};\\ \\text{(BacII2017) class of 10 (6 male+4 female); choose 4 students by lot: compute probability of event 'chosen students are all female'};\\ \\text{(BacII2015) room has 3 white+3 red balls; draw 3 balls together randomly: compute probability event has at least one white ball, and event 'all 3 same color'};\\ \\text{box has 6 blue+4 red balls; choose 2 by lot: identify/count outcomes for events (a) both blue (b) both red (c) one blue one red (d) at least one blue (e) exactly one red};\\ \\text{box has 3 white+6 red balls; choose 2 by lot: identify events (a) all white (b) all red (c) exactly one white (d) at least two red};\\ \\text{box has 12 red+5 blue balls; choose 3 by lot: identify events (a) no blue ball (b) exactly one blue (c) 2 blue arbitrary};\\ \\text{box has 2 red+4 green+6 blue balls; choose 2: identify events (a) both green (b) both blue (c) one red one blue (d) one green one blue (e) both red (f) no green};\\ \\text{box has 4 blue+1 red balls; choose 3: identify events (a) 'at least 2 blue' (b) 'all 3 blue'};\\ \\text{(BacII2016) box has 15 tickets numbered 1-15; draw a group of 7 tickets by lot (5 tickets from the first 7-numbered subset, remaining from the rest); count outcomes matching a described condition among (a) all consecutive tickets (b) tickets have a remainder pattern (c) mixed};\\ \\text{(BacII2015) box has 16 balls numbered 1-16; draw 3 by lot: compute probability of events A ('all 3 numbers divisible by 4') B ('exactly one divisible by 5, cannot be divided by...') C ('none divisible by 4')};\\ \\text{box has 4 tickets numbered 1-4 (or similar) plus 5 more with distinct labels; draw 3 by lot: identify events based on the number pattern};\\ \\text{group has cards numbered 6 blue+4 red; choose 4 by lot: identify events};\\ \\text{(similar events question about 3 tickets chosen with a divisibility/parity pattern)};\\ \\text{sports team has 9 boys+5 girls; coach forms a lineup: compute probability of specific team compositions};\\ \\text{(3 related sub-questions about picking marbles from a bag one at a time without/with replacement conditions)}",
+      "technique": "Semester-2 review bank (section IV): a mix of curated real BAC II probability exam problems (2013-2021) and event-description multiple-choice-style items requiring identification of the correct verbal description matching a computed favorable-outcome count"
+    }
+  ]
+}

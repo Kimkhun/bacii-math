@@ -1,0 +1,103 @@
+{
+  "formula_name": "differential_equations_full_book",
+  "topic": "differential_equations",
+  "description": "Full ODE drill set: verifying a proposed solution against a given equation, converting Leibniz-notation derivative equations to explicit y'=f(x), separable variables (Part II drills), first-order linear homogeneous y'+ay=0 (general solution + IVP), first-order linear nonhomogeneous y'+ay=g(x) (general + IVP + particular-solution-guessing), second-order homogeneous constant-coefficient y''+by'+cy=0 by characteristic-root case (real distinct / repeated / complex), second-order with IVP, verifying a specific function is a solution, and second-order nonhomogeneous via undetermined coefficients (polynomial/exponential RHS).",
+  "source": {
+    "file": "book/Part 4.pdf (physical book pages 76-82)",
+    "description": "Cambodian BAC II grade-12 math exercise compendium (Start Up Community), Lesson 10: សមីការឌីផេរ៉ង់ស្យែល (Differential Equations) — exercises only, no worked solutions",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-29"
+  },
+  "count": 11,
+  "exercises": [
+    {
+      "id": "p76_verify_solution_5items",
+      "source_page": 76,
+      "prompt_latex": "f(x)=x^2+x-1;\\ y'+y=x^2+3x\\ [\\text{verify }f\\text{ solves it}];\\ f(x)=e^{3x}-x-1;\\ y'-3y=3x+2;\\ f(x)=e^{3x}-e^{2x};\\ y''-5y'+6y=0;\\ f(x)=\\cos2x+\\sin2x;\\ y''+4y=0;\\ f(x)=e^{-2x}\\ln(1+2e^x);\\ y'+2y=\\frac{2e^{-x}}{1+2e^x}",
+      "technique": "Verify a given closed-form f(x) satisfies the stated ODE by direct substitution"
+    },
+    {
+      "id": "p76_leibniz_to_explicit_12items",
+      "source_page": 76,
+      "prompt_latex": "y'=3x+1;\\ y'=x^2-2x+3;\\ y'=\\sin2x;\\ y'=2x^2-x+1;\\ y'=6x^2+4x+5;\\ y'=\\frac{2x}{x^2+1};\\ \\frac{dy}{dx}=e^{-5x};\\ \\frac{dy}{dx}=3\\sin3x-\\tan x;\\ \\frac{dy}{dx}=\\sin5x;\\ (x+1)dy-y\\,dx=0;\\ dx+e^{3x}dy=0;\\ (x+1)y'-x-6=0",
+      "technique": "Find the general/particular antiderivative given dy/dx expressed in Leibniz notation, including separable-variable rewriting"
+    },
+    {
+      "id": "p76_p77_separable_with_ic_8items",
+      "source_page": 76,
+      "prompt_latex": "x^2\\frac{dy}{dx}=2x^2-3x+1,\\ y(1)=2;\\ \\frac{dy}{dx}=\\frac xy,\\ y(4)=3;\\ \\frac{dy}{dx}=xy,\\ y(0)=1;\\ \\frac{y'}y=\\cos x,\\ y(\\pi/3)=e;\\ y'=e^{2x},\\ y(0)=5;\\ (3x^2-2)y'=6x,\\ y(1)=4;\\ \\frac{y'}{\\tan x}=1,\\ y(0)=0;\\ (3x-5)\\frac{dy}{dx}=x+1,\\ y(2)=-3",
+      "technique": "Solve separable ODEs with an initial condition to determine the constant"
+    },
+    {
+      "id": "p77_first_order_homogeneous_general_12items",
+      "source_page": 77,
+      "prompt_latex": "y'+2y=0;\\ y'-2\\sqrt2y=0;\\ 2y'-3y=0;\\ 3\\frac{dy}{dx}+y=0;\\ y'+\\tfrac12y=0;\\ \\tfrac23y'+y=0;\\ -3y'-5y=0;\\ y'+y=0;\\ \\tfrac23y'-3y=0;\\ 2y'-y\\ln2=0;\\ 4y^2=(y')^2;\\ (y')^2+yy'-2y^2=0",
+      "technique": "first_order_linear_homogeneous: y'+ay=0 \\Rightarrow y=Ce^{-ax} (last two items reduce to this form after factoring)"
+    },
+    {
+      "id": "p77_first_order_nonhomogeneous_15items",
+      "source_page": 77,
+      "prompt_latex": "y'-3y=9;\\ y'+\\tfrac12y=-1012;\\ y'-2y=4x;\\ -y'+y=3x-2;\\ y'+y=x^2-2x+3;\\ y'-2y=-2x^2+3;\\ 3y'-4y=4x^2+8x;\\ y'+2y=4e^x;\\ -2y'-3y=2xe^{-x};\\ y'-3y=(x-1)e^{2x};\\ 2y'+y=(3-2x)e^{-x};\\ y'-y=\\cos2x;\\ y'+3y=-6\\sin x;\\ y'+y=\\sin x+\\cos x;\\ y'+3y=5\\sin x+5\\cos x",
+      "technique": "first_order_linear_nonhomogeneous: y'+ay=g(x), solve via homogeneous + particular solution (undetermined coefficients matching g(x)'s form: constant, polynomial, exponential, or trig)"
+    },
+    {
+      "id": "p78_second_order_real_distinct_roots_12items",
+      "source_page": 78,
+      "prompt_latex": "y''+2y'-8y=0;\\ y''-5y'+6y=0;\\ 2y''-y'-3y=0;\\ y''-3y'+2y=0;\\ y''-y'=0;\\ 2y''+3y'=0;\\ y''-4y=0;\\ -4y''+9y=0;\\ -y''+3y'+10y=0;\\ 2y''-4y=0;\\ y''-y'-y=0;\\ y''+\\sqrt6y'+y=0",
+      "technique": "second_order_homogeneous_constant_coeff with two distinct real characteristic roots r_1,r_2: y=C_1e^{r_1x}+C_2e^{r_2x}"
+    },
+    {
+      "id": "p78_second_order_repeated_root_9items",
+      "source_page": 78,
+      "prompt_latex": "y''-2y'+y=0;\\ y''+4y'+4y=0;\\ y''-y'+\\tfrac14y=0;\\ y''-6y'+9y=0;\\ -y''+8y'-16y=0;\\ 4y''-4y'+y=0;\\ 4y''-12y'+9y=0;\\ y''-2\\sqrt2y'+2y=0;\\ 2y''+2\\sqrt6y'+3y=0",
+      "technique": "second_order_homogeneous_constant_coeff with a repeated (double) characteristic root r: y=(C_1+C_2x)e^{rx}"
+    },
+    {
+      "id": "p78_second_order_complex_roots_9items",
+      "source_page": 78,
+      "prompt_latex": "y''-2y'+2y=0;\\ y''+2y'+5y=0;\\ y''-4y'+8y=0;\\ -y''+4y'-13y=0;\\ 2y''+2y'+y=0;\\ y''+y=0;\\ y''+4y=0;\\ -9y''-y=0;\\ \\tfrac49y''+y=0",
+      "technique": "second_order_homogeneous_constant_coeff with complex-conjugate characteristic roots \\alpha\\pm i\\beta: y=e^{\\alpha x}(C_1\\cos\\beta x+C_2\\sin\\beta x)"
+    },
+    {
+      "id": "p79_second_order_ivp_10items",
+      "source_page": 79,
+      "prompt_latex": "y''-4y'+3y=0,\\ y(0)=3,y'(0)=5;\\ y''+y'-2y=0,\\ y(0)=1,y'(0)=-8;\\ y''+16y=0,\\ y(0)=2,y'(0)=-2;\\ y''-2y'+y=0,\\ y(0)=5,y'(0)=10;\\ y''-10y'+25y=0,\\ y(0)=1,y'(1)=0;\\ y''-3y'-4y=0,\\ y(0)=3,y'(0)=-8;\\ y''+y=0,\\ y(\\pi/2)=3,y'(\\pi/2)=2;\\ y''-2y'+2y=0,\\ y(0)=1,y'(\\pi)=-1;\\ 4y''-4y'-3y=0,\\ y(0)=0,y'(0)=1;\\ y''-9y=0,\\ y(\\ln2)=1,y'(\\ln2)=-3",
+      "technique": "second_order_homogeneous with two initial conditions y(x_0), y'(x_0) to solve for both constants C_1,C_2"
+    },
+    {
+      "id": "p79_second_order_nonhomogeneous_12items",
+      "source_page": 79,
+      "prompt_latex": "2y''-3y'+y=-3;\\ y''-3y=6;\\ y''+2y=6x;\\ y''-3y'+4y=x+1;\\ 2y''-y'-y=x^2-3;\\ y''-2y'+y=2x^2+1;\\ y''+y=\\sin2x;\\ y''+4y'=5\\sin x-3\\cos x;\\ y''+4y'+12y=2\\sin x;\\ y''+2y'-3y=e^{2x};\\ y''-4y'-12y=-5e^x;\\ y''-3y'-10y=2xe^{-3x}",
+      "technique": "second_order_nonhomogeneous_undetermined_coefficients with constant/polynomial, trig, or exponential right-hand side"
+    },
+    {
+      "id": "p79_p82_word_and_verify_particular_solution_multipart",
+      "source_page": 79,
+      "prompt_latex": "-y'+2y=0,\\ y(3)=-2;\\ 3y'+6y=0,\\ \\text{curve through}(-4,2);\\ y''-2y'-3y=0,\\ y(0)=-1,y'(1)=1/e;\\ 4y''-4y'+y=0,\\ y(0)=-3,y'(0)=2;\\ y''+4y'+8y=0,\\ y(0)=1,y'(0)=2;\\ (E):y''+5y'+6y=0,\\ \\text{find particular solution with tangent}\\ D:y=x-1\\ \\text{at}\\ x=0;\\ (E):2y''-3y'+y=0,\\ \\text{find particular solution }g\\ \\text{tangent to}\\ d:y=-\\tfrac12x\\ \\text{at}\\ O(0,0);\\ (E):y''+2y'+2y=0,\\ \\text{find particular solution tangent to}\\ L:y=2x+1\\ \\text{at}\\ A(0,1);\\ (E):y''-y'+\\tfrac14y=0,\\ \\text{find particular solution whose graph passes through}\\ M(0,4)\\ \\text{and has a horizontal tangent at}\\ x=2;\\ (E):y''+9y=0,\\ \\text{find particular solution }g\\ \\text{tangent to}\\ (d):y+1=x-\\pi\\ \\text{at}\\ M(\\pi,-1);\\ (E):y''-3y'+2y=0,\\ \\text{find the solution with a maximum of value}\\ 1\\ \\text{at}\\ x=1;\\ (E):y''+6y'+13y=0,\\ \\text{find the solution }f\\ \\text{with an inflection value equal to}\\ 1\\ \\text{at}\\ x=0;\\ (E):y''-6y=y',\\ \\text{show}\\ y=e^{-2x}-e^{3x}\\ \\text{is a particular solution};\\ (E):y'+2y=y'',\\ \\text{show}\\ y=3e^{2x}-2e^{-x}\\ \\text{is a particular solution};\\ (E):y''-2y'=2y'-4y,\\ \\text{show}\\ y=(2x-1)e^{2x}\\ \\text{is a particular solution};\\ y''+3y'+y=y'-y\\ (E),\\ \\text{show}\\ y=(7\\cos x-4\\sin x)e^{-x}\\ \\text{is a particular solution}",
+      "technique": "Word-style problems specifying an IVP via a geometric condition (point on curve, tangent line, extremum, inflection value) instead of raw y(x_0)/y'(x_0), plus verify-a-guessed-particular-solution items"
+    },
+    {
+      "id": "p80_p82_hard_undetermined_coeff_and_setup_20items",
+      "source_page": 80,
+      "prompt_latex": "(E):y''-4y'+2y=4,\\ \\text{find constant }k\\ \\text{particular solution, solve general, find particular with}\\ y(0)=2\\sqrt2,y'(0)=0;\\ (E):y''+4y'+4y=-4x,\\ \\text{find particular solution, solve}\\ (E)\\ \\text{with}\\ y(0)=2,y'(0)=-2;\\ (E):y'-3y=3x^2+4x+1,\\ \\text{find}\\ y_c\\ \\text{of}\\ y'-3y=0,\\ \\text{find}\\ a,b,c\\ \\text{s.t.}\\ y_p=ax^2+bx+c,\\ \\text{find general}\\ y;\\ (E_1):-y''-y'+6y=6x^2-2x+4,\\ \\text{solve}\\ (E_2):-y''-y'+6y=0,\\ \\text{find polynomial}\\ P(x)=ax^2+bx+c\\ \\text{particular solution, general solution of}\\ (E_1)$;\\ (E):y'+2y=2e^{-x}/(1+2e^x);\\ \\text{solve}\\ (x^2-1)dy=2x\\,dx,\\ e^{x^2}dy-2x\\,dx=0,\\ dy/dx=e^{x+y},\\ dy/dx=(y^2-1)/x,\\ dy/dx=(x-2)/(x-4),\\ dy/dx=e^{x-y}+x^2e^{-y};\\ \\text{solve}\\ y'+2y=x^2,\\ y'-4y=xe^{4x},\\ y'+3y=(3x^2+6x+2)e^{-3x},\\ y'-2y=3\\cos2x,\\ y'-3y=7\\sin3x-6\\cos3x,\\ y''-4y'-12y=-5e^{-2x},\\ y''-2y'+y=4\\cos2x+3\\sin2x,\\ y''-5y'+6y=(2x^2+3)e^{4x},\\ y''-5y'+4y=(6x+1)e^x,\\ y''-4y'+4y=(2x+1)e^{2x};\\ y''-6y'+8y=0\\ (\\alpha),\\ \\text{find}\\ g\\ \\text{solution of}\\ (\\alpha)\\ \\text{whose graph}\\ G\\ \\text{passes through}\\ E(0,-1);\\ 2y''-3y'+y=0\\ (E),\\ \\text{find}\\ g(x)\\ \\text{tangent to}\\ d:y=-\\tfrac12x\\ \\text{at}\\ O(0,0)\\ (\\text{BAC 2013});\\ 9y''+y=0\\ (E),\\ \\text{find}\\ g\\ \\text{s.t.}\\ \\int_0^{\\pi/2}g(x)dx=0\\ \\text{and}\\ \\int_0^\\pi g(x)dx=3\\ (\\text{BAC 2010})",
+      "technique": "Hard section: general+particular solution IVPs, symbolic-coefficient undetermined-coefficient setups for a family of nonhomogeneous RHS types, verify-guessed-general-solution, and BAC-exam problems requiring an integral condition instead of a point condition"
+    },
+    {
+      "id": "p83_p84_final_multipart_word_problems",
+      "source_page": 83,
+      "prompt_latex": "f(x)=e^{-2x}\\ln(1+2e^x)\\ \\text{solution of}\\ (E):y'+2y=2e^{-x}/(1+2e^x);\\ \\text{find}\\ \\varphi\\ \\text{solution of}\\ (E)\\ \\text{s.t.}\\ (\\varphi-f)\\ \\text{solves}\\ (E'):y'+2y=0\\ (\\text{BacII 2015});\\ (E):y''+3y'=5,\\ \\text{find particular}\\ g(x)=Ax,\\ \\text{solve}\\ y''+3y'=5,\\ \\text{find solution with}\\ y(0)=e^3,y'(1)=2/3;\\ (E):-y''+2y'+4y=-2\\cos2x,\\ \\text{solve}\\ (E'):-y''+2y'+4y=0,\\ \\text{find}\\ a,b\\ \\text{s.t.}\\ g(x)=a\\cos2x+b\\sin2x\\ \\text{particular},\\ \\text{show}\\ h=f+g\\ \\text{solves}\\ (E)\\ \\text{if}\\ f\\ \\text{solves}\\ (E'),\\ \\text{find}\\ h\\ \\text{with}\\ h(0)=0,h'(0)=0;\\ (E):y''+4y=x^2+2x-1,\\ \\text{solve}\\ (E_1):y''+4y=0,\\ \\text{find}\\ f_1(x)=ax^2+bx+c\\ \\text{particular},\\ \\text{show}\\ g=f-f_1\\ \\text{solves}\\ (E_1)\\ \\text{if}\\ f\\ \\text{solves}\\ (E),\\ \\text{find general}\\ f;\\ (E):y''-3y'+2y=2x^2-5x+3,\\ \\text{find quadratic particular}\\ P(x),\\ \\text{show}\\ f\\ \\text{solves}\\ (E)\\ \\text{iff}\\ h=f-P\\ \\text{solves}\\ (E'):y''-3y'+2y=0,\\ \\text{solve}\\ (E')\\ \\text{and deduce general}\\ f\\ \\text{of}\\ (E),\\ \\text{find}\\ f\\ \\text{with a described tangent-line-slope initial condition}",
+      "technique": "Multi-part word problems: split a nonhomogeneous ODE into complementary+particular via an auxiliary function g or h introduced by the problem, then solve for constants from geometric/IVP conditions"
+    },
+    {
+      "id": "p84_hard_multipart_12to14",
+      "source_page": 84,
+      "prompt_latex": "(E):y''+9y=2\\cos x,\\ \\text{given}\\ y=Z+k\\cos x,\\ Z\\ \\text{function of}\\ x,\\ k\\ \\text{constant}:\\ \\text{find}\\ k\\ \\text{s.t.}\\ Z\\ \\text{solves}\\ Z'+9Z=0\\ \\text{when}\\ y=Z+k\\cos x\\ \\text{solves}\\ (E),\\ \\text{solve}\\ Z''+9Z=0\\ \\text{and deduce general solution of}\\ (E),\\ \\text{find the solution with}\\ y(0)=0,y'(\\pi)=3;\\ (E):y''+y=\\sin x,\\ \\text{find}\\ \\alpha\\ \\text{s.t.}\\ \\varphi(x)=\\alpha x\\cos x\\ \\text{solves}\\ (E),\\ \\text{let}\\ f\\ \\text{solve}\\ (E),\\ \\text{show}\\ (f-\\varphi)''+(f-\\varphi)=0,\\ \\text{solve}\\ y''+y=0\\ \\text{and deduce general}\\ f\\ \\text{of}\\ (E);\\ f''+2f'=0,\\ \\text{let}\\ g=f',\\ \\text{show}\\ g\\ \\text{solves}\\ g'+2g=0,\\ \\text{solve}\\ g'+2g=0,\\ \\text{deduce general solution of}\\ f''+2f'=0\\ \\text{by a second integration}",
+      "technique": "Reduction-of-order technique: introduce a substitution (y=Z+k\\cos x, or g=f') that turns a harder ODE into a first-order one already covered, solve that, then integrate/recombine for the original equation's general solution"
+    },
+    {
+      "id": "p130_p131_semester2_review_bank_ivp_25items",
+      "source_page": 130,
+      "prompt_latex": "(\\text{BacII2017})\\ y''-3y'+2y=0,\\ y(0)=1,y'(1)=2e^2;\\ (\\text{BacII2016})\\ y''+2y'-3y=0,\\ y(0)=1,y'(1)=e;\\ (\\text{BacII2023})\\ 3y''=9y-6y',\\ y(0)=1,y'(1)=e;\\ y''+3y'-4y=6y',\\ y(0)=1,y'(0)=1;\\ y''+y'=-\\tfrac14y,\\ y(0)=0,y'(0)=1;\\ 2y'+2y=-y'',\\ y(0)=0,y'(0)=1;\\ y''=-16y,\\ y(\\pi/4)=\\sqrt3,y'(\\pi/4)=4;\\ y''+6y'+13y=0,\\ y(0)=1,y'(0)=0;\\ (\\text{BacII2021})\\ y''=-4y,\\ \\text{verify}\\ y=\\lambda\\cos2x+\\mu\\sin2x\\ \\text{general solution},\\ \\text{find particular with}\\ y''(0)=1,y'(0)=0;\\ y''=-9y,\\ \\text{verify}\\ y=M\\sin3x-N\\cos3x,\\ \\text{find particular with}\\ y''(0)=-9,y'(0)=6;\\ y''=4y,\\ \\text{verify}\\ y=\\alpha e^{2x}+\\beta e^{-2x},\\ \\text{find particular with}\\ y'(0)=4,y''(0)=-6;\\ y''=-2y',\\ \\text{verify}\\ y=P+Qe^{-2x},\\ \\text{find particular with}\\ y(0)=1,y''(0)=8;\\ (\\text{BacII2018})\\ y''+4y'=5y,\\ \\text{find particular whose graph is tangent to line through}(0,3)\\ \\text{with slope}\\ -3;\\ y''+4y'+4=0,\\ \\text{find particular }f\\ \\text{tangent to line through}(0,2)\\ \\text{with slope}\\ 1;\\ y''-2y'+10y=0,\\ \\text{find particular }f\\ \\text{tangent to}\\ y=4x+1\\ \\text{at}(0,2);\\ y''-3y'+2y=0,\\ \\text{find}\\ f\\ \\text{tangent to}\\ y=x+2\\ \\text{at}\\ A(0,2);\\ 9y''+y=0,\\ \\text{find}\\ f\\ \\text{tangent to}\\ y+1=x+\\pi\\ \\text{at}\\ M(\\pi,-1);\\ y''-y'-6y=0,\\ \\text{find}\\ f\\ \\text{whose curve tangent at}\\ A(1,1)\\ \\text{to}\\ y=3x-2;\\ 2y''-3y'+y=0,\\ \\text{find}\\ g\\ \\text{tangent to}\\ y=-x/2\\ \\text{at}\\ O(0,0);\\ y''-3y'+2y=0,\\ \\text{find solution with maximum value}1\\ \\text{at}\\ x=1;\\ y''+y=2x^2e^x,\\ \\text{solve}\\ y''+y=0,\\ \\text{verify}\\ g(x)=(x-1)^2e^x\\ \\text{particular},\\ \\text{find general solution};\\ y''-2y'+5y=mx^2+px+q,\\ \\text{solve homogeneous, find}\\ m,p,q\\ \\text{s.t.}\\ y=2x^2+3x+1\\ \\text{is particular, find general};\\ y''-3y'+2y=2x+1,\\ \\text{solve homogeneous}\\ y''-3y'+2y=0,\\ \\text{find}\\ f\\ \\text{with}\\ f(0)=3,f'(0)=4,\\ \\text{find}\\ a,b\\ \\text{s.t.}\\ g(x)=ax+b\\ \\text{particular of nonhomog., verify}\\ h=f+g\\ \\text{solution, compute}\\ h(x)$",
+      "technique": "Semester-2 review bank (section III): curated real BAC II exam ODE problems (2016-2023) plus review IVPs combining verify-general-solution, geometric tangent conditions, and split-into-particular-plus-homogeneous techniques"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "formula_name": "conics_full_book",
+  "topic": "conics",
+  "description": "Full conic-sections drill set across three sub-lessons: parabola (identify vertex/focus/directrix from standard or shifted form, convert general-form equation to standard form, build equation from vertex+focus or focus+directrix, find point on parabola at given distance from focus/directrix, tangent-line slope property, BAC-exam bank), ellipse (identify a,b,c/vertices/foci from standard or shifted form, convert general form to standard, build equation from given vertices/foci/eccentricity/point-on-ellipse conditions), and hyperbola (identify a,b,c/vertices/foci/asymptotes from standard or shifted form, convert general form to standard, build equation from vertices/foci/asymptote-slope/point conditions).",
+  "source": {
+    "file": "book/Part 5.pdf (physical book pages 105-116)",
+    "description": "Cambodian BAC II grade-12 math exercise compendium (Start Up Community), Lesson 13: កោនិក (Conics) — Parabola/Ellipse/Hyperbola sub-lessons — exercises only, no worked solutions",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-29"
+  },
+  "count": 10,
+  "exercises": [
+    {
+      "id": "p105_parabola_identify_vertex_focus_directrix_12items",
+      "source_page": 105,
+      "prompt_latex": "\\text{Identify vertex, focus, directrix of: }(y-1)^2=4x;\\ y^2=8(x-1);\\ (x-2)^2=4y;\\ y^2=-4(x-1);\\ x^2=4(y-1);\\ (y-1)^2=-2(x+3);\\ (x-3)^2=2(y+2);\\ (x-1)^2-8(y+2)=0;\\ 4(x+3)+(y-2)^2=0;\\ x^2=4y;\\ y^2=4x;\\ x^2=-8y",
+      "technique": "Read (h,k) vertex and p from the standard shifted-parabola form (y-k)^2=4p(x-h) or (x-h)^2=4p(y-k); focus is p away from vertex along the axis, directrix is the line p on the other side"
+    },
+    {
+      "id": "p105_general_form_to_standard_18items",
+      "source_page": 105,
+      "prompt_latex": "\\text{Convert general-form equation to standard parabola form: }x^2-2x-4y-3=0;\\ y^2-2y+4x-3=0;\\ y^2-4y-4x=0;\\ x^2+4x+4y-4=0;\\ y^2-6y-8x+1=0;\\ y^2-4x+4y+8=0;\\ x^2+4x+4=4y;\\ x^2+6x+9-2y=0;\\ y^2-8y+12=2x;\\ y^2+6y+9-4x=0;\\ x^2+4x-8y=4;\\ x^2-2x-4y+7=0;\\ y^2-6y-2x+9=0;\\ y^2-2x=2;\\ 12y-3x^2=0;\\ 8y-2x^2=0;\\ 3y^2-9x=0;\\ x^2-6x+3y=0",
+      "technique": "Complete the square to reduce the general conic equation to standard vertex form"
+    },
+    {
+      "id": "p106_build_equation_from_vertex_focus_18items",
+      "source_page": 106,
+      "prompt_latex": "\\text{Build parabola equation given vertex and focus/directrix, for 18 vertex-parameter pairs: }V(0,0),F(2,0);\\ V(3,2),F(1,2);\\ V(-2,3),F(-2,4);\\ V(-3,1),F(0,1);\\ V(0,3),F(-1,3);\\ V(0,0),F(0,2);\\ V(0,-4),\\text{directrix}\\ y=2;\\ V(-2,1),\\text{directrix}\\ x=1;\\ V(2,2),\\text{directrix}\\ y=-3;\\ V(-3,1),\\text{directrix}\\ x=1;\\ V(0,1),\\text{directrix}\\ x+1=0;\\ V(-2,2),\\text{directrix}\\ 4-x=0;\\ V(3,4),\\text{directrix}\\ 2y-4=0;\\ V(1,3),\\text{directrix}\\ 2+2y=0;\\ \\text{focus}\\ F(2,1),\\text{directrix}\\ x=-2;\\ \\text{focus}\\ F(-3,4),\\text{directrix}\\ y=2;\\ \\text{focus}\\ F(-3,-2),\\text{directrix}\\ x-1=0;\\ \\text{focus}\\ F(-2,0),\\text{directrix}\\ 2+y=0;\\ \\text{focus}\\ F(-1,2),\\text{directrix}\\ \\tfrac12x=1;\\ \\text{focus}\\ F(-4,2),\\text{directrix}\\ 2y+2=0",
+      "technique": "Build a parabola's equation from vertex+focus (finds axis direction and p directly), or focus+directrix (vertex is the midpoint, p is half the distance)"
+    },
+    {
+      "id": "p107_build_from_point_and_ic_and_bac_exam",
+      "source_page": 107,
+      "prompt_latex": "\\text{Build parabola through given points with described symmetry (5 items), e.g. symmetric about }(x'ox)\\text{ passing through }(3,2)\\text{ with vertex }(1,1);\\ \\text{decide if}\\ x^2+x-4y+49/4=0\\ \\text{is a parabola;}\\ \\text{(BAC 2019) }y^2+4y-8x-12=0\\text{: prove parabola, find vertex/focus/directrix;}\\ \\text{(BAC 2004) find }S,F\\text{ for }x^2-4x-12y+16=0",
+      "technique": "Word-style parabola construction from geometric description, plus verifying general-form equations are indeed parabolas and extracting their features (curated BAC exam problems)"
+    },
+    {
+      "id": "p108_parabola_hard_multipart_8items",
+      "source_page": 108,
+      "prompt_latex": "(P):2y^2+8y+3x-4=0:\\ \\text{find vertex/focus/directrix; find intersection with}\\ x=-2;\\ \\text{sketch};\\ (P):y^2-4y-8x+12=0:\\ \\text{find vertex, general eq., directrix; intersection with}\\ x=3;\\ (P)\\ \\text{with vertex}\\ V(3,-5),\\ \\text{axis through}\\ A(5,3):\\ \\text{find standard equation};\\ (P):x^2-2x-2y+4=0:\\ \\text{find }V,F,\\text{directrix; intersection with}\\ (xoy);\\ (P):\\tfrac14y^2-y+x+1=0:\\ \\text{check standard form, find}\\ V,F,\\text{directrix, sketch};\\ (P)\\ \\text{with vertex}\\ (0,0),\\ \\text{focus on}\\ (x'ox):\\ \\text{find eq. through}\\ A_1(-2,4);\\ \\text{find}\\ y_2\\ \\text{for}\\ A_2(-3,y_2)\\ \\text{on}\\ (P);\\ \\text{find directrix}\\ (\\Delta)$",
+      "technique": "Multi-part parabola full-analysis problems combining conversion, feature extraction, intersection-with-line, and sketching"
+    },
+    {
+      "id": "p108_p110_parabola_geometric_word_problems",
+      "source_page": 108,
+      "prompt_latex": "(P):(x-a)^2=4(y-b),\\ F(2,1)\\ \\text{given: find}\\ a,b;\\ \\text{curve}\\ (C):y^2-6x^2+4y+19=0\\ \\text{(hyperbola sanity-check)}:\\ \\text{verify}\\ A(2,1)\\text{ on }(C),\\ \\text{find}\\ y'\\ \\text{as function of}\\ x,y,\\ \\text{tangent line at}\\ A;\\ (P):y^2=16x:\\ \\text{tangent line parallel to}\\ 3x-2y+6=0;\\ \\text{tangent through}\\ M(-1,0);\\ (P):y^2=8x:\\ \\text{tangent perpendicular to}\\ 2x+2y-3=0;\\ (P):y^2=64x:\\ \\text{find point}\\ M\\ \\text{with tangent parallel to}\\ 4x+3y=-48;\\ \\text{focus}\\ F(3,0)\\text{, directrix}\\ 3x-4y+16=0:\\ \\text{find distance from}\\ F\\ \\text{to directrix; find parabola eq. with vertex at }O;\\ (P):y^2=4x:\\ \\text{find focus, directrix, sketch; line through}\\ A(4,4)\\ \\text{perpendicular to axis; area of triangle formed}",
+      "technique": "Geometric word problems requiring the tangent-slope property of a parabola (slope at (x_1,y_1) is 2p/y_1) and focus-directrix distance relationships"
+    },
+    {
+      "id": "p110_parabola_final_word_problems_6items",
+      "source_page": 110,
+      "prompt_latex": "\\text{Line through }A(2,5),B(-2,-3),C(1,6)\\text{: find parabola with these on it (curve-fit-like)};\\ \\text{similarly for}\\ A(-1,1),B(11,-2),C(5,-1);\\ \\text{find equation of parabola}\\ y^2=2x\\text{'s tangent line at point}\\ (-4,1);\\ \\text{point}\\ P\\ \\text{equidistant from}\\ F(-1,2)\\ \\text{and line}\\ y=6\\text{: find locus};\\ \\text{find}\\ m,b\\ \\text{s.t. line}\\ y=mx+b\\ \\text{tangent to}\\ y^2=4px\\ \\text{at a point implies}\\ p=mb;\\ \\text{prove tangent line to}\\ y^2=4px\\ \\text{at}\\ P(x_1,y_1)\\ \\text{has slope}\\ y_1/(2x_1)\\ [\\text{sic, printed as }2p/y_1];\\ \\text{find locus of}\\ M(x,y)\\ \\text{equidistant from}\\ A(3,1)\\ \\text{and line}\\ x=1;\\ \\text{given}\\ A,B\\in(P):y=x^2\\ \\text{with}\\ AB=2,\\ \\text{find midpoint locus as A,B slide}",
+      "technique": "Locus/definition-based parabola problems (equidistant from focus and directrix), tangent-line general-form proofs, and midpoint-locus problems"
+    },
+    {
+      "id": "p111_ellipse_identify_and_convert_34items",
+      "source_page": 111,
+      "prompt_latex": "\\text{Identify a,b,c, vertices, and foci of: }\\tfrac{x^2}{25}+\\tfrac{y^2}{16}=1;\\ \\tfrac{x^2}{16}+\\tfrac{y^2}{25}=1;\\ \\tfrac{x^2}9+\\tfrac{y^2}4=1;\\ \\tfrac{x^2}{25}+\\tfrac{y^2}4=1;\\ \\tfrac{x^2}9+\\tfrac{y^2}{16}=1;\\ \\tfrac{x^2}4+\\tfrac{y^2}{36}=1;\\ \\tfrac{x^2}9+\\tfrac{y^2}{25}=1;\\ x^2+4y^2=4;\\ 9(x-1)^2+y^2=9;\\ (x-2)^2+16y^2=16;\\ 16x^2+25(y-2)^2=400;\\ (x-3)^2+4(y+2)^2=4;\\ 25(x-1)^2+4(y-1)^2=100;\\ 9(x+2)^2+(y-2)^2=9;\\ \\tfrac{(x-1)^2}9+\\tfrac{(y-5)^2}{25}=1;\\ \\tfrac{(x-4)^2}9+\\tfrac{(y+2)^2}4=1;\\ \\tfrac{(x-3)^2}4+\\tfrac{(y+4)^2}{16}=1;\\ \\tfrac{(x-2)^2}4+(y-1)^2=4;\\ \\text{convert to standard form and identify: }4x^2+y^2-4y=0;\\ x^2+y^2-4x=0;\\ x^2+4y^2-2x=3;\\ 9x^2+y^2-4y=5;\\ 4x^2+y^2-2y=3;\\ x^2+4x+4y^2-8y+4=0;\\ x^2+9y^2+6x-18y+9=0;\\ 16x^2+9y^2-54y=63;\\ x^2+4y^2-2x-16y+13=0;\\ 4x^2+3y^2-8x-6y=5;\\ 9x^2+4y^2+36x-24y+36=0;\\ x^2+4x+4y^2-8y+4=0;\\ (2x-y)^2+4xy=4;\\ (2x+3y)^2=12(xy+3);\\ (5y-2x)(2x+5y)=225-13x^2",
+      "technique": "Read a,b,c (with c^2=a^2-b^2 for a>b) directly from standard/shifted ellipse form, or complete the square / expand a disguised product-form equation first"
+    },
+    {
+      "id": "p112_ellipse_build_equation_from_conditions_22items",
+      "source_page": 112,
+      "prompt_latex": "\\text{Build ellipse standard equation given: foci }(5,0),(-5,0),c=2;\\ \\text{center}(0,0),\\text{vertex}(0,4),b=1;\\ I(0,0),\\text{focus}(-1,0),\\text{vertex}(3,0);\\ (0,0),\\text{focus}(2,0),\\text{vertex}(3,0);\\ I(0,0),\\text{focus}(0,1),\\text{vertex}(0,-2);\\ \\text{foci}(0,-4)\\&\\text{vertices}(0,\\pm8);\\ \\text{foci}(0,3)\\&(0,-3),\\ (x'x)\\text{ crosses at}\\pm2;\\ \\text{foci}(1,1)\\&(1,9),\\text{major axis length}10;\\ \\text{center}(0,2),\\text{focus}(0,0),\\text{minor axis length}4;\\ \\text{center}(4,2),\\text{focus}(1,2),\\text{major axis length}10;\\ \\text{center}(0,0),\\text{focus}(2,0),\\text{minor axis length}6;\\ \\text{foci}(0,-2)\\&(0,2),\\text{major axis length}8;\\ \\text{through given points}(1,1)(5,1)\\text{with foci}(3,0)(3,2)};\\ \\text{focus}(2,0)\\&(-2,0),\\ e=3/5;\\ \\text{focus}(0,0)\\&\\text{minor-axis-vertices}(3,1)(4,0);\\ \\text{focus}(0,0)\\&\\text{vertices}(0,\\pm6)\\text{through}(3,2);\\ \\text{focus}(0,0)\\&\\text{through}(2,3)(6,1);\\ \\text{focus}(0,0)\\&\\text{minor-axis-vertices, focal chord}=8\\text{through}(3,0);\\ \\text{minor-axis-vertices}(3,0)(-3,0)\\&\\text{focal chord}(-2,0)(2,0);\\ \\text{minor-axis vertex}(0,-1)\\&\\text{focal chord}(0,-3)(0,3);\\ \\text{focal chord}(0,-2)(0,2)\\&\\text{focal-chord-length}8\\text{through}(3,0);\\ \\text{major-axis-vertices}(4,0)(-4,0)\\&\\text{through}(3,0)",
+      "technique": "Build ellipse standard equation from various geometric parameter combinations (foci+vertex, center+eccentricity, focal chord, semi-latus-rectum, or a point lying on the ellipse)"
+    },
+    {
+      "id": "p113_ellipse_hard_multipart_10items",
+      "source_page": 113,
+      "prompt_latex": "9x^2+5y^2-45=0:\\ \\text{find semi-axes, vertices, foci};\\ (E):4x^2+9y^2-8x+36y+4=0:\\ \\text{find center/vertices/foci; find intersection with axis; sketch, given}\\ 4\\sqrt2/3=1.9;\\ (E)\\ \\text{with}\\ A(1,-2),\\ F_1(1-\\sqrt5,-2),F_2(1+\\sqrt5,-2),\\ \\text{major axis}=6:\\ \\text{find standard eq., vertices};\\ (E):25x^2+9y^2-18y=216:\\ \\text{find standard eq., features};\\ (E):12x^2+20y^2-12x+40y-37=0:\\ \\text{find asymptote-axis center/vertex/focus; intersections with axes; sketch};\\ (E):x^2+4y^2-2x+16y+13=0:\\ \\text{find center, focus, vertex; intersection with}\\ (y'oy);\\ (E):25x^2+12y^2=300:\\ \\text{find center, focus, vertex; intersections; sketch};\\ \\text{find ellipse eq. with vertices}(0,0)(4,0)\\text{and points on ellipse summing distance }10\\text{ to foci};\\ \\text{tangent line to}\\ 4x^2+y^2=4\\ \\text{through}(3,0);\\ \\text{find ellipse eq. with center}(0,0),\\ \\text{minor-axis vertices}(\\pm2,0),\\ \\text{foci}(0,\\pm1/3)$",
+      "technique": "Full ellipse-feature multi-part problems: general-to-standard conversion, extract center/vertices/foci, find axis intersections, and sketch"
+    },
+    {
+      "id": "p114_hyperbola_identify_and_convert_32items",
+      "source_page": 114,
+      "prompt_latex": "\\text{Identify a,b,c, vertices, foci, and asymptotes of: }y^2-\\tfrac{x^2}4=1;\\ \\tfrac{x^2}9-\\tfrac{y^2}{16}=1;\\ \\tfrac{y^2}9-\\tfrac{x^2}{16}=1;\\ \\tfrac{y^2}{16}-\\tfrac{x^2}4=1;\\ \\tfrac{(y+2)^2}9-\\tfrac{(x+2)^2}4=1;\\ \\tfrac{(y+3)^2}4-\\tfrac{(x-2)^2}9=1;\\ \\tfrac{(x-3)^2}{25}-\\tfrac{(y-1)^2}4=1;\\ \\tfrac{(y-1)^2}4-\\tfrac{9(x-2)^2}4=1;\\ \\tfrac{(x-1)^2}4-\\tfrac{(y+2)^2}1=1;\\ y^2-4x^2=16;\\ 4x^2-25y^2=100;\\ x^2-4y^2=4;\\ y^2-25x^2=25;\\ 5y^2=20x^2+20;\\ 25(y+2)^2-4(x+1)^2=100;\\ 4(x-2)^2-9(y+2)^2=36;\\ y^2-4(x-2)^2=16;\\ 16(x+1)^2-25y^2=16;\\ 16(y-1)^2-(x+1)^2=4;\\ 4(x+1)^2-4(y+2)^2=9;\\ \\text{convert to standard form and identify: }4x^2-y^2+2y-5=0;\\ 4y^2-x^2+4x-8=0;\\ 9y^2-x^2+2x-10=0;\\ x^2-4y^2-2x+8y-7=0;\\ y^2-4x^2-16x-2y-19=0;\\ x^2-9y^2+36y-72=0;\\ 9x^2-y^2-36x-6y+18=0;\\ 4x^2-y^2+8x+2y-1=0;\\ 9y^2-x^2+2x+54y+62=0;\\ 16y^2-x^2+2x+64y+60=0;\\ x^2-9y^2+2x+54y-81=0;\\ 9x^2-y^2+54x+10y+55=0",
+      "technique": "Read a,b,c (with c^2=a^2+b^2) and asymptote slopes \\pm b/a (or \\pm a/b depending on orientation) from standard/shifted hyperbola form, or complete the square first"
+    },
+    {
+      "id": "p115_hyperbola_disguised_and_build_16items",
+      "source_page": 115,
+      "prompt_latex": "\\text{Identify hyperbola from disguised product form: }(3x-2y)(3x+2y)=1\\cdot36\\ [\\tfrac{(3x-2y)}6\\cdot\\tfrac{(3x+2y)}6=1];\\ \\left(\\tfrac{4x-5y}{20}\\right)\\left(\\tfrac{4x+5y}{20}\\right)+1=0;\\ (4x+3y)(4x-3y)=144;\\ (2x+y)^2=4(xy+1)+2y^2;\\ \\text{build hyperbola standard equation given: center}(0,0),\\text{vertex}(3,0),\\text{through}(1,0);\\ \\text{center}(0,0),\\text{focus}(0,5),\\text{through}(0,3);\\ \\text{center}(0,0),\\text{focus}(-3,0),\\text{through}(2,0);\\ \\text{vertices}(0,\\pm3)\\&\\text{foci}(0,\\pm5);\\ \\text{vertices}(\\pm3,0)\\&\\text{foci}(\\pm5,0);\\ \\text{foci}(-5,0)(5,0)\\&\\text{vertices}(3,0)\\text{(implied pair)};\\ \\text{foci}(0,6)\\&\\text{vertices}(0,\\pm2);\\ \\text{foci}(-4,0)(4,0),\\text{asymptote}\\ y=2x;\\ \\text{vertices}(\\pm1,0),\\text{asymptotes}\\ y=\\pm3x;\\ \\text{vertices}(0,\\pm3),\\text{asymptotes}\\ y=\\pm3x;\\ \\text{vertices}(2,\\pm3)\\&\\text{a focal chord through}(0,5);\\ \\text{foci}(6,1)(-2,1),\\text{asymptotes}\\ y=\\tfrac34x-\\tfrac12,y=-\\tfrac34x+\\tfrac52",
+      "technique": "Recognize a hyperbola disguised as a difference-of-squares product, and build standard equations from vertex/focus/asymptote-slope combinations"
+    },
+    {
+      "id": "p116_hyperbola_build_and_hard_multipart_5items",
+      "source_page": 116,
+      "prompt_latex": "\\text{Build hyperbola from foci}(-3,0)(3,0),\\text{asymptotes}\\ y=\\pm\\tfrac34x;\\ \\text{focus}(-2,0)(2,0),\\ y=-x;\\ \\text{foci}(0,0)\\&(8,0),\\ \\text{a focal-radius pair through}(3,0);\\ \\text{center}(0,-1),\\text{focus}(0,-3)(0,3);\\ \\text{given equation}\\ 9y^2-16x^2=144,\\ \\text{prove hyperbola, find vertices/foci, find asymptote equations}",
+      "technique": "Continued build-from-conditions problems and a final hard-level verify-and-extract-features item"
+    },
+    {
+      "id": "p140_p143_semester2_review_conics_matching_and_build",
+      "source_page": 140,
+      "prompt_latex": "\\text{Identify vertex, focus, directrix for 8 parabola equations (mix of standard and disguised forms like}\\ (x+2)(x-2)-4y=0,(x+y)^2=x(2y-4+x));\\ \\text{find standard eq. and directrix given vertex+focus, for 10 vertex-focus/directrix pairs};\\ (P):y^2-4y-8x+12=0:\\ \\text{find vertex, focus, directrix, sketch, intersection with}\\ x=3;\\ (P):x^2-2x-2y+4=0:\\ \\text{find}\\ V,F,(D);\\ \\text{match 8 ellipse equations to their vertices/foci (semi-axes given as }a=5,b=4\\text{ etc.)};\\ \\text{identify vertex/focus pairs and standard equation from 8 disguised general-form ellipse equations (incl. }(2x-y)^2+4xy=4\\text{-style)};\\ \\text{5 word-built ellipse equations from vertex+focus / focus+focal-chord conditions};\\ \\text{match 8 hyperbola equations (mix of standard and disguised product-form) to vertices/foci/asymptotes};\\ \\text{5 word-built hyperbola equations from vertex+focus / vertex+eccentricity conditions}",
+      "technique": "Semester-2 review bank (section VI, final): matching-style review across all three conics — given a general or disguised equation, identify type and features; given features, build the equation — closing out the book"
+    }
+  ]
+}
