@@ -134,10 +134,9 @@ interface RectStroke {
 }
 
 // A previously-drawn page restored as a single flattened layer (used when
-// returning to a question navigated away from mid-answer). Unlike
-// loadImage()/imageRef (the "uploaded photo" path, which is read-only and
-// blocks further drawing), this is just another stroke — the student can keep
-// writing on top of it, erase parts of it, and undo it as one step.
+// returning to a question navigated away from mid-answer). This is just
+// another stroke — the student can keep writing on top of it, erase parts of
+// it, and undo it as one step.
 interface RasterStroke {
   kind: "raster";
   img: HTMLImageElement;
@@ -145,7 +144,21 @@ interface RasterStroke {
   h: number;
 }
 
-type Stroke = PathStroke | RectStroke | RasterStroke | LineStroke | CurveStroke | EllipseStroke;
+// An uploaded photo placed on the canvas as a freely movable/resizable
+// object (x/y = top-left, w/h = current size) — unlike RasterStroke, `src`
+// is a plain data URL so it survives JSON serialization (save/resume).
+// Multiple of these can coexist with each other and with drawn ink, and the
+// student can keep writing on/around them like any other stroke.
+interface ImageStroke {
+  kind: "image";
+  src: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+type Stroke = PathStroke | RectStroke | RasterStroke | LineStroke | CurveStroke | EllipseStroke | ImageStroke;
 
 // What part of a selected shape an edit-drag is manipulating.
 type EditState = { mode: "anchor" | "hIn" | "hOut" | "move" | "corner"; index: number; px: number; py: number };
@@ -336,8 +349,10 @@ const Canvas = forwardRef<
     const rafRef = useRef<number | null>(null);
     const strokesRef = useRef<Stroke[]>([]);
     const redoStackRef = useRef<Stroke[]>([]);
-    const imageRef = useRef<HTMLImageElement | null>(null);
-    const imageDataRef = useRef<string | null>(null);
+    // Decoded-image cache for ImageStroke rendering, keyed by data URL — a
+    // stroke only stores the (serializable) src string, so drawing it needs a
+    // real HTMLImageElement looked up/lazily decoded here.
+    const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
     const drawing = useRef(false);
     // Which pointer is actually drawing the in-progress stroke. `drawing` alone
     // isn't enough — it's a single shared flag, so without this a second,
@@ -618,7 +633,28 @@ const Canvas = forwardRef<
       return bgCanvasRef.current;
     };
 
+    // Looks up (or kicks off decoding of) the HTMLImageElement for an
+    // ImageStroke's data URL. Returns null while still decoding — the caller
+    // just skips drawing this frame; onload triggers a redraw once ready.
+    const getCachedImage = (src: string): HTMLImageElement | null => {
+      const cached = imageCacheRef.current.get(src);
+      if (cached) return cached.complete && cached.naturalWidth > 0 ? cached : null;
+      const img = new Image();
+      img.onload = () => redraw();
+      img.src = src;
+      imageCacheRef.current.set(src, img);
+      return null;
+    };
+
     const drawStroke = (ctx: CanvasRenderingContext2D, stroke: Stroke) => {
+      if (stroke.kind === "image") {
+        const img = getCachedImage(stroke.src);
+        if (img) {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.drawImage(img, stroke.x, stroke.y, stroke.w, stroke.h);
+        }
+        return;
+      }
       if (stroke.kind === "rect") {
         ctx.globalCompositeOperation = "destination-out";
         const { x1, y1, x2, y2 } = stroke.rect;
@@ -700,14 +736,6 @@ const Canvas = forwardRef<
       // destination size (rather than their natural size) is what keeps this
       // a straight crisp copy instead of scaling by dpr twice.
       ctx.drawImage(getBgCanvas(), 0, 0, W, H);
-      if (imageRef.current) {
-        const img = imageRef.current;
-        const scale = Math.min((W - 32) / img.width, (H - 32) / img.height);
-        const w = img.width * scale;
-        const h = img.height * scale;
-        ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
-        return;
-      }
       replayStrokesToInk();
       ctx.drawImage(getInkCanvas(), 0, 0, W, H);
       drawHandles(ctx);
@@ -722,7 +750,6 @@ const Canvas = forwardRef<
       const ctx = canvasRef.current.getContext("2d")!;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.drawImage(getBgCanvas(), 0, 0, W, H);
-      if (imageRef.current) return;
       const stroke = strokesRef.current[strokesRef.current.length - 1];
       if (stroke) {
         const ictx = getInkCanvas().getContext("2d")!;
@@ -938,7 +965,7 @@ const Canvas = forwardRef<
     };
 
     const moveGridTo = (ox: number, oy: number) => {
-      if (!gridRef.current || imageRef.current) return;
+      if (!gridRef.current) return;
       gridRef.current.ox = ox;
       gridRef.current.oy = oy;
       bgCanvasRef.current = null;
@@ -1132,14 +1159,17 @@ const Canvas = forwardRef<
       if (stroke.kind === "curve") {
         return distanceToCurve(stroke, p) <= Math.max(stroke.width / 2, 2) + HANDLE_HIT;
       }
+      if (stroke.kind === "image") {
+        return p.x >= stroke.x && p.x <= stroke.x + stroke.w && p.y >= stroke.y && p.y <= stroke.y + stroke.h;
+      }
       return false;
     };
 
-    // Topmost shape under a point (only curves / ellipses are selectable).
+    // Topmost shape under a point (curves / ellipses / uploaded images are selectable).
     const hitTestShape = (p: Point): number | null => {
       for (let i = strokesRef.current.length - 1; i >= 0; i--) {
         const s = strokesRef.current[i];
-        if ((s.kind === "curve" || s.kind === "ellipse") && shapeHit(s, p)) return i;
+        if ((s.kind === "curve" || s.kind === "ellipse" || s.kind === "image") && shapeHit(s, p)) return i;
       }
       return null;
     };
@@ -1154,6 +1184,18 @@ const Canvas = forwardRef<
         [s.cx - rx, s.cy + ry],
       ] as [number, number][];
     };
+
+    const imageCorners = (s: ImageStroke) =>
+      [
+        [s.x, s.y],
+        [s.x + s.w, s.y],
+        [s.x + s.w, s.y + s.h],
+        [s.x, s.y + s.h],
+      ] as [number, number][];
+
+    // Smallest size a resize drag can shrink an image to (keeps it grabbable
+    // and prevents w/h from flipping negative).
+    const MIN_IMAGE_SIZE = 24;
 
     // Diagonal resize cursor for an ellipse bounding-box corner (0=TL,1=TR,2=BR,3=BL).
     const cornerCursor = (index: number) => (index % 2 === 0 ? "nwse-resize" : "nesw-resize");
@@ -1174,6 +1216,11 @@ const Canvas = forwardRef<
         }
       } else if (stroke.kind === "ellipse") {
         const c = ellipseCorners(stroke);
+        for (let i = 0; i < 4; i++) {
+          if (Math.hypot(p.x - c[i][0], p.y - c[i][1]) <= HANDLE_HIT) return { mode: "corner", index: i, px: p.x, py: p.y };
+        }
+      } else if (stroke.kind === "image") {
+        const c = imageCorners(stroke);
         for (let i = 0; i < 4; i++) {
           if (Math.hypot(p.x - c[i][0], p.y - c[i][1]) <= HANDLE_HIT) return { mode: "corner", index: i, px: p.x, py: p.y };
         }
@@ -1210,6 +1257,25 @@ const Canvas = forwardRef<
           ns.cy = (f[1] + draggedY) / 2;
           ns.rx = (draggedX - f[0]) / 2;
           ns.ry = (draggedY - f[1]) / 2;
+        }
+      } else if (ns.kind === "image") {
+        if (ed.mode === "move") {
+          ns.x += dx; ns.y += dy;
+        } else if (ed.mode === "corner") {
+          // Opposite corner stays fixed; the dragged corner defines the new
+          // rect. Clamp to a minimum size so the rect can't invert/vanish.
+          const c = imageCorners(ns);
+          const f = c[(ed.index + 2) % 4];
+          const draggedX = c[ed.index][0] + dx;
+          const draggedY = c[ed.index][1] + dy;
+          const x1 = Math.min(f[0], draggedX);
+          const x2 = Math.max(f[0], draggedX);
+          const y1 = Math.min(f[1], draggedY);
+          const y2 = Math.max(f[1], draggedY);
+          ns.x = x1;
+          ns.y = y1;
+          ns.w = Math.max(MIN_IMAGE_SIZE, x2 - x1);
+          ns.h = Math.max(MIN_IMAGE_SIZE, y2 - y1);
         }
       }
     };
@@ -1279,6 +1345,16 @@ const Canvas = forwardRef<
         const c = ellipseCorners(stroke);
         for (const corner of c) drawHandleDot(ctx, corner[0], corner[1], selected ? HANDLE_COLOR : HOVER_COLOR);
         if (selected) drawHandleDot(ctx, stroke.cx, stroke.cy, HANDLE_COLOR);
+      } else if (stroke.kind === "image") {
+        if (selected) {
+          ctx.strokeStyle = "rgba(14,165,233,0.5)";
+          ctx.setLineDash([5, 4]);
+          ctx.lineWidth = 1;
+          ctx.strokeRect(stroke.x, stroke.y, stroke.w, stroke.h);
+          ctx.setLineDash([]);
+        }
+        const c = imageCorners(stroke);
+        for (const corner of c) drawHandleDot(ctx, corner[0], corner[1], selected ? HANDLE_COLOR : HOVER_COLOR);
       } else if (stroke.kind === "curve") {
         const a = stroke.anchors;
         if (selected) {
@@ -1515,7 +1591,6 @@ const Canvas = forwardRef<
         beginPan(e);
         return;
       }
-      if (imageRef.current) return;
       if (pinchRef.current) return;
       e.preventDefault();
       if (e.pointerType === "pen") activePenPointerRef.current = e.pointerId;
@@ -1749,7 +1824,6 @@ const Canvas = forwardRef<
 
     useImperativeHandle(ref, () => ({
       getImageBase64: () => {
-        if (imageDataRef.current) return imageDataRef.current.split(",")[1];
         if (!strokesRef.current.length) return null;
         replayStrokesToInk();
         // Exported at the original logical W×H (not W*dpr) — the OCR backend
@@ -1770,7 +1844,7 @@ const Canvas = forwardRef<
         // background instead of getImageBase64()'s opaque white fill (which
         // is right for OCR, but would blot out the ruled paper lines if
         // drawn back as a restore layer via loadBackgroundInk()).
-        if (imageDataRef.current || !strokesRef.current.length) return null;
+        if (!strokesRef.current.length) return null;
         replayStrokesToInk();
         const off = document.createElement("canvas");
         off.width = W;
@@ -1779,7 +1853,7 @@ const Canvas = forwardRef<
         return off.toDataURL("image/png");
       },
       getStrokes: () => {
-        if (imageRef.current || !strokesRef.current.length) return null;
+        if (!strokesRef.current.length) return null;
         return {
           width: W,
           height: H,
@@ -1789,9 +1863,8 @@ const Canvas = forwardRef<
         };
       },
       getStrokesThumb: (maxWidth = 320) => {
-        // Small PNG data URL of the ink (white paper) for history cards. Only
-        // meaningful for drawn strokes — uploaded images have no ink layer.
-        if (imageRef.current || !strokesRef.current.length) return null;
+        // Small PNG data URL of the ink (white paper) for history cards.
+        if (!strokesRef.current.length) return null;
         replayStrokesToInk();
         const tw = Math.min(maxWidth, W);
         const th = Math.max(1, Math.round((H * tw) / W));
@@ -1806,25 +1879,12 @@ const Canvas = forwardRef<
       },
       getExportMap: () => {
         // Maps exported-image pixel coords (what the OCR boxes are in) to canvas
-        // internal coords. For strokes the export IS the canvas, so scale 1.
-        // For loaded images the export is the image, drawn centered + scaled.
-        if (imageRef.current) {
-          const img = imageRef.current;
-          const scale = Math.min((W - 32) / img.width, (H - 32) / img.height);
-          return {
-            canvasW: W,
-            canvasH: H,
-            scale,
-            offsetX: (W - img.width * scale) / 2,
-            offsetY: (H - img.height * scale) / 2,
-          };
-        }
+        // internal coords. The export IS the canvas (uploaded images are just
+        // strokes on it now, drawn at their own x/y/w/h), so scale is always 1.
         return { canvasW: W, canvasH: H, scale: 1, offsetX: 0, offsetY: 0 };
       },
       getLineSnapshots: (boxes) => {
-        // Per-line ink snapshots for the line-pop animation. Only meaningful for
-        // drawn strokes (loaded images have no ink layer of their own).
-        if (imageDataRef.current) return boxes.map(() => null);
+        // Per-line ink snapshots for the line-pop animation.
         replayStrokesToInk();
         const ink = getInkCanvas();
         const pad = 6;
@@ -1847,15 +1907,37 @@ const Canvas = forwardRef<
           return { x: sx, y: sy, w: sw, h: sh, href: c.toDataURL("image/png") };
         });
       },
-      hasInk: () => strokesRef.current.length > 0 || !!imageDataRef.current,
+      hasInk: () => strokesRef.current.length > 0,
       loadImage: (dataUrl: string) => {
+        // Places the upload as a movable/resizable ImageStroke instead of
+        // replacing the whole canvas — multiple uploads can coexist with each
+        // other and with drawn ink. Fit it within the visible canvas (capped
+        // at its natural size so a small image isn't blown up), centered, and
+        // select it immediately so the student can drag/resize right away.
         const img = new Image();
         img.onload = () => {
-          imageRef.current = img;
-          imageDataRef.current = dataUrl;
-          strokesRef.current = [];
+          const maxW = W - 64;
+          const maxH = H - 64;
+          const scale = Math.min(1, maxW / img.naturalWidth, maxH / img.naturalHeight);
+          const w = img.naturalWidth * scale;
+          const h = img.naturalHeight * scale;
+          // Cascade successive uploads (e.g. several photos picked in one
+          // dialog) diagonally so they don't land exactly stacked on top of
+          // each other; wraps around so it stays on-canvas either way.
+          const priorImages = strokesRef.current.filter((s) => s.kind === "image").length;
+          const cascade = (priorImages % 6) * 28;
+          const stroke: ImageStroke = {
+            kind: "image",
+            src: dataUrl,
+            x: (W - w) / 2 + cascade,
+            y: (H - h) / 2 + cascade,
+            w,
+            h,
+          };
+          imageCacheRef.current.set(dataUrl, img);
+          strokesRef.current.push(stroke);
           redoStackRef.current = [];
-          selectedRef.current = null;
+          selectedRef.current = strokesRef.current.length - 1;
           hoverIndexRef.current = null;
           editingRef.current = null;
           redraw();
@@ -1865,8 +1947,6 @@ const Canvas = forwardRef<
       },
       loadStrokes: (data) => {
         if (!data || !Array.isArray(data.strokes)) return;
-        imageRef.current = null;
-        imageDataRef.current = null;
         strokesRef.current = data.strokes.map((s) => cloneStrokeDeep(s));
         redoStackRef.current = Array.isArray(data.redoStack) ? data.redoStack.map((s) => cloneStrokeDeep(s)) : [];
         selectedRef.current = null;
@@ -1898,8 +1978,6 @@ const Canvas = forwardRef<
         img.src = dataUrl;
       },
       clear: () => {
-        imageRef.current = null;
-        imageDataRef.current = null;
         strokesRef.current = [];
         redoStackRef.current = [];
         selectedRef.current = null;
@@ -1931,19 +2009,12 @@ const Canvas = forwardRef<
         eraserWidthRef.current = width;
       },
       undo: () => {
-        if (imageRef.current) {
-          imageRef.current = null;
-          imageDataRef.current = null;
-          redraw();
-          onChange?.();
-          return;
-        }
         const popped = strokesRef.current.pop();
         if (popped) redoStackRef.current.push(popped);
         redraw();
         onChange?.();
       },
-      canUndo: () => strokesRef.current.length > 0 || !!imageRef.current,
+      canUndo: () => strokesRef.current.length > 0,
       redo: () => {
         const restored = redoStackRef.current.pop();
         if (!restored) return;
@@ -1953,7 +2024,7 @@ const Canvas = forwardRef<
       },
       canRedo: () => redoStackRef.current.length > 0,
       eraseRegion: (box: number[]) => {
-        if (box.length !== 4 || imageRef.current) return;
+        if (box.length !== 4) return;
         const [x1, y1, x2, y2] = box;
         redoStackRef.current = [];
         strokesRef.current.push({ kind: "rect", rect: { x1, y1, x2, y2 } });
@@ -1962,7 +2033,6 @@ const Canvas = forwardRef<
       },
       spawnGrid: (stepX, stepY, origin, scale) => {
         if (!stepX || !stepY || stepX <= 0 || stepY <= 0) return;
-        if (imageRef.current) return;
         gridRef.current = {
           ox: origin?.x ?? W / 2,
           oy: origin?.y ?? H / 2,
@@ -2000,7 +2070,6 @@ const Canvas = forwardRef<
         onChange?.();
       },
       fitGridToWindow: (xMin, xMax, yMin, yMax) => {
-        if (imageRef.current) return;
         const ww = xMax - xMin;
         const wh = yMax - yMin;
         if (ww <= 0 || wh <= 0) return;

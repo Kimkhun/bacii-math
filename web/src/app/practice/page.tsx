@@ -962,14 +962,60 @@ function PracticeInner() {
     router.replace("/practice");
   };
 
-  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      activeCanvas()?.loadImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+  // Uploaded photos (e.g. a phone camera shot) can be several thousand px on
+  // a side; loadImage() stores the data URL verbatim and getImageBase64()
+  // sends it to the vision API as-is, unlike canvas exports which are capped
+  // to the logical canvas size. Downscale here so large uploads don't bloat
+  // the payload/latency — OCR doesn't benefit from resolution past this.
+  const MAX_UPLOAD_DIM = 1600;
+
+  const resizeImage = (dataUrl: string): Promise<string> =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, MAX_UPLOAD_DIM / Math.max(img.width, img.height));
+        if (scale === 1) {
+          resolve(dataUrl);
+          return;
+        }
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const off = document.createElement("canvas");
+        off.width = w;
+        off.height = h;
+        const ctx = off.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(off.toDataURL("image/jpeg", 0.92));
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+
+  const readAsDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    // Reset so picking the same file(s) again still fires this handler —
+    // browsers otherwise skip onChange when the selection is unchanged.
+    e.target.value = "";
+    if (!files.length) return;
+    for (const file of files) {
+      const dataUrl = await readAsDataUrl(file);
+      const resized = await resizeImage(dataUrl);
+      // Each upload lands as its own movable/resizable image on the canvas
+      // (loadImage appends rather than replacing), so multiple photos can
+      // coexist — sequential awaits keep cascade placement predictable.
+      activeCanvas()?.loadImage(resized);
+    }
+    // Switch to Select so the just-uploaded image (Canvas already selected it
+    // internally) can be dragged/resized right away instead of drawn over.
+    selectTool("select");
   };
 
   // Runs the actual grade call + marks/sounds, given the FINAL resolved lines
@@ -2178,7 +2224,7 @@ function PracticeInner() {
           </button>
         </div>
 
-        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+        <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={onFile} />
 
         {debug && (
           <div className="fixed left-20 bottom-3 z-10 w-[calc(100vw-6rem)] sm:w-[26rem] max-h-[45vh] overflow-y-auto pointer-events-auto bg-slate-900/95 backdrop-blur text-slate-100 rounded-lg p-3 text-xs space-y-2 shadow-lg">
