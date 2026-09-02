@@ -56,7 +56,20 @@ def parse_answer(text):
     text = text.replace("√", "sqrt")
     text = _COMB_NOTATION.sub(r"binomial(\1, \2)", text)
     text = _re.sub(r"\binf(?:inity)?\b", "oo", text)
-    return parse_expr(text, local_dict=_LOCAL, transformations=_TRANS)
+    try:
+        return parse_expr(text, local_dict=_LOCAL, transformations=_TRANS)
+    except Exception:
+        # The OCR "raw_text" final answer is meant to be the bare value (e.g.
+        # "36"), but the model sometimes echoes the whole equation instead
+        # (e.g. "AB.AC=36"), which isn't parseable as-is (dot-product notation
+        # reads as a Python attribute access). Retry with just the RHS of the
+        # last "=" before giving up — this only fires on a parse failure, so a
+        # deliberately equation-shaped answer that parses fine is untouched.
+        if "=" in text:
+            rhs = text.rsplit("=", 1)[1].strip()
+            if rhs:
+                return parse_expr(rhs, local_dict=_LOCAL, transformations=_TRANS)
+        raise
 
 def _numeric_close(user, expected, tol):
     try:
@@ -425,7 +438,8 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
         if not text:
             continue
 
-        if "=" in text:
+        had_equals = "=" in text
+        if had_equals:
             lhs, _, value_str = text.rpartition("=")
             if _is_given_restatement(lhs):
                 line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
@@ -442,6 +456,19 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
         if given_expr is not None and value == given_expr:
             line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
             continue
+
+        # A bare line with no "=" that parses to a free-standing symbolic
+        # expression (e.g. "AB x AC" as a section header announcing the next
+        # computation) isn't an asserted value — skip it rather than flagging
+        # it wrong against whatever checkpoint comes next. Lines that DO use
+        # "=" still get checked normally even if symbolic (e.g. "f'(x) = ...").
+        if not had_equals:
+            try:
+                if bool(value.free_symbols):
+                    line_results.append({"line": i, "text": raw, "checked": False, "reason": "label"})
+                    continue
+            except AttributeError:
+                pass
 
         matched_idx = None
         var_sym = Symbol(params.get("var", "x"))
@@ -463,6 +490,20 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
                 "expected": str(checkpoints[matched_idx]["value"]),
             })
             pointer = matched_idx + 1
+        elif pointer > 0 and _match_checkpoint(value, checkpoints[pointer - 1], tol, var_sym):
+            # Restates a value already reached (e.g. an unevaluated expression
+            # line immediately followed by its evaluated form) — not a new
+            # checkpoint, but not an error either.
+            line_results.append({
+                "line": i,
+                "text": raw,
+                "checked": True,
+                "correct": True,
+                "matches": checkpoints[pointer - 1]["label"],
+                "formula": checkpoints[pointer - 1].get("formula"),
+                "expected": str(checkpoints[pointer - 1]["value"]),
+                "restated": True,
+            })
         else:
             target = checkpoints[pointer] if pointer < len(checkpoints) else None
             line_results.append({

@@ -26,6 +26,11 @@ def _magnitude(v):
 def _solve_vector_ops(params):
     op = params["op"]
     steps = [_step("Apply the technique", params.get("curated_technique", ""))]
+    # Intermediate checkpoints (e.g. each cross-product component) so
+    # analyze_work can verify a student's step-by-step work, not just the
+    # final answer — without these, correct intermediate lines have nothing
+    # to match against and get flagged wrong by the sequential checker.
+    extra_checkpoints = []
 
     if op == "magnitude":
         A, B = _vec(params["A"]), _vec(params["B"])
@@ -54,6 +59,11 @@ def _solve_vector_ops(params):
         steps.append(_step("Build the vectors", f"\\(\\overrightarrow{{AB}} = {latex(ab.T)},\\ \\overrightarrow{{AC}} = {latex(ac.T)}\\)."))
         steps.append(_step("Compute the cross product", f"\\(\\overrightarrow{{AB}}\\times\\overrightarrow{{AC}} = {latex(cross.T)}\\)."))
         steps.append(_step("Compute its magnitude", f"\\(|\\overrightarrow{{AB}}\\times\\overrightarrow{{AC}}| = {latex(result)}\\)."))
+        extra_checkpoints = [
+            {"label": "i-component", "value": cross[0], "formula": "vector_ops"},
+            {"label": "j-component", "value": cross[1], "formula": "vector_ops"},
+            {"label": "k-component", "value": cross[2], "formula": "vector_ops"},
+        ]
 
     elif op == "triangle_area":
         A, B, C = _vec(params["A"]), _vec(params["B"]), _vec(params["C"])
@@ -62,12 +72,24 @@ def _solve_vector_ops(params):
         result = _magnitude(cross) / 2
         steps.append(_step("Compute the cross product", f"\\(\\overrightarrow{{AB}}\\times\\overrightarrow{{AC}} = {latex(cross.T)}\\)."))
         steps.append(_step("Halve its magnitude", f"Area \\(= \\tfrac12|\\overrightarrow{{AB}}\\times\\overrightarrow{{AC}}| = {latex(result)}\\)."))
+        extra_checkpoints = [
+            {"label": "i-component", "value": cross[0], "formula": "vector_ops"},
+            {"label": "j-component", "value": cross[1], "formula": "vector_ops"},
+            {"label": "k-component", "value": cross[2], "formula": "vector_ops"},
+            {"label": "cross magnitude", "value": _magnitude(cross), "formula": "vector_ops"},
+        ]
 
     elif op == "scalar_triple_product":
         u, v, w = _vec(params["u"]), _vec(params["v"]), _vec(params["w"])
-        result = (u.T * v.cross(w))[0]
-        steps.append(_step("Compute v x w", f"\\(\\vec v\\times\\vec w = {latex(v.cross(w).T)}\\)."))
+        vw = v.cross(w)
+        result = (u.T * vw)[0]
+        steps.append(_step("Compute v x w", f"\\(\\vec v\\times\\vec w = {latex(vw.T)}\\)."))
         steps.append(_step("Dot with u", f"\\(\\vec u\\cdot(\\vec v\\times\\vec w) = {latex(result)}\\)."))
+        extra_checkpoints = [
+            {"label": "i-component", "value": vw[0], "formula": "vector_ops"},
+            {"label": "j-component", "value": vw[1], "formula": "vector_ops"},
+            {"label": "k-component", "value": vw[2], "formula": "vector_ops"},
+        ]
 
     elif op == "find_m_orthogonal":
         m = Symbol(params["unknown"])
@@ -82,7 +104,7 @@ def _solve_vector_ops(params):
     else:
         raise ValueError(f"unknown vector op: {op}")
 
-    checkpoints = [{"label": op, "value": result, "formula": "vector_ops"}]
+    checkpoints = extra_checkpoints + [{"label": op, "value": result, "formula": "vector_ops"}]
     return {
         "answer_exact": result,
         "answer_decimal": _safe_float(result),
