@@ -32,7 +32,13 @@ def _solve_derivative(params):
     else:
         steps.append(_step("Result", f"\\(y' = {latex(result)}\\)."))
 
-    checkpoints = [{"label": "derivative", "value": result, "formula": "compute_derivative"}]
+    if order == 2:
+        checkpoints = [
+            {"label": "first derivative", "value": first, "formula": "compute_derivative"},
+            {"label": "second derivative", "value": result, "formula": "compute_derivative"},
+        ]
+    else:
+        checkpoints = [{"label": "derivative", "value": result, "formula": "compute_derivative"}]
     return {
         "answer_exact": result,
         "answer_decimal": None,

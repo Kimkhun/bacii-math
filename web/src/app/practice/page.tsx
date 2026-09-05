@@ -1011,7 +1011,7 @@ function PracticeInner() {
       // Each upload lands as its own movable/resizable image on the canvas
       // (loadImage appends rather than replacing), so multiple photos can
       // coexist — sequential awaits keep cascade placement predictable.
-      activeCanvas()?.loadImage(resized);
+      await activeCanvas()?.loadImage(resized);
     }
     // Switch to Select so the just-uploaded image (Canvas already selected it
     // internally) can be dragged/resized right away instead of drawn over.

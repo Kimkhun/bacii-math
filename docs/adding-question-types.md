@@ -55,6 +55,23 @@ Gotchas learned:
   `not simplify(user - expected).has(var)`).
 - `analyze_work` checkpoint matching: honor new checkpoint flags (see
   `constant_ok`).
+- **Word-heavy / non-numeric answers** (a domain, an odd/even/sign
+  classification, monotonicity, a variation table, a tangent line, a one-sided
+  infinity) never need an LLM to grade — set `"answer_kind"` on the solve()
+  output (plus `"choices"` for a word/phrase kind, or `"exact_only"`) and
+  `grade()`/`grade_part()` dispatch to the matching deterministic judge in
+  `grader/grader.py` (`_judge_interval`, `_judge_choice`, `_judge_infinity`,
+  `_judge_line`, `_judge_sign`/`_judge_monotonicity`/`_judge_variation_table`,
+  `_judge_continuity`). `_judge_choice` requires the answer to equal one of a
+  fixed word/phrase list exactly (after stripping punctuation) — right for
+  short answers like "even"/"odd". When the real answer is a full sentence
+  (e.g. continuity's "...so f is discontinuous at x=1"), write a keyword-scan
+  judge like `_judge_continuity`/`_judge_monotonicity` instead, and watch for
+  substring collisions between the keywords (e.g. "discontinuous" contains
+  "continuous" — check the negated/longer form first).
+  Add a new judge only if none of these shapes fit; never grade free text by
+  asking an LLM whether it's correct — SymPy/deterministic matching is the only
+  grading authority in this codebase.
 
 ## 4. Add the generator template (`backend/engine/generator.py`)
 

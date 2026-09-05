@@ -63,7 +63,11 @@ line — and report it again on its own as a clean math expression in "raw_text"
 "tokens", the same way you would if it were the only thing written. If the answer was written
 with Khmer digits, keep them in "raw_text" exactly as written. If the student wrote a sub-part
 letter with their answer (A:, B:, C:, D:, P(A), P(B), or the Khmer letters ក. ខ. គ. ឃ.), keep it
-in "raw_text" too, e.g. "B: 3/49" or "ខ: 3/49", so the app knows which part they answered.
+in "raw_text" too, e.g. "B: 3/49" or "ខ: 3/49", so the app knows which part they answered. If the
+final line is instead a written CONCLUSION (e.g. "so f is discontinuous at x=1", "the function is
+continuous", "donc f est continue"), transcribe that conclusion sentence verbatim into "raw_text"
+— do not force it into a bare number or drop words to make it look like an equation; "latex" and
+"tokens" can be left as a plain rendering of the same sentence in that case.
 
 Respond with ONLY a JSON object, no markdown, no extra text, in this exact shape:
 {"lines": ["<line 1 plain ASCII>", "<line 2 plain ASCII>", ...],
@@ -145,6 +149,10 @@ def normalize_line(line: str) -> str:
         den, g2_end = _extract_braced(text, g2)
         text = text[:idx] + f"({normalize_line(num)})/({normalize_line(den)})" + text[g2_end:]
     text = re.sub(r"\\sqrt\s*\{([^{}]*)\}", r"sqrt(\1)", text)
+    # A leaked LaTeX exponent group ("e^{2x}") must become parenthesized
+    # ("e^(2x)"); left bare ("e^2x"), "^" would bind to only the next
+    # character and silently change the meaning of the whole exponent.
+    text = re.sub(r"\^\s*\{([^{}]*)\}", r"^(\1)", text)
     return re.sub(r"\s+", " ", text).strip()
 
 

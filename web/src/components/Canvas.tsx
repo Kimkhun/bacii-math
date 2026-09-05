@@ -34,7 +34,7 @@ export interface CanvasHandle {
   getStrokes: () => StrokeDocument | null;
   getStrokesThumb: (maxWidth?: number) => string | null;
   hasInk: () => boolean;
-  loadImage: (dataUrl: string) => void;
+  loadImage: (dataUrl: string) => Promise<void>;
   loadStrokes: (data: StrokeDocument) => void;
   loadBackgroundInk: (dataUrl: string) => void;
   clear: () => void;
@@ -1914,36 +1914,44 @@ const Canvas = forwardRef<
         // other and with drawn ink. Fit it within the visible canvas (capped
         // at its natural size so a small image isn't blown up), centered, and
         // select it immediately so the student can drag/resize right away.
-        const img = new Image();
-        img.onload = () => {
-          const maxW = W - 64;
-          const maxH = H - 64;
-          const scale = Math.min(1, maxW / img.naturalWidth, maxH / img.naturalHeight);
-          const w = img.naturalWidth * scale;
-          const h = img.naturalHeight * scale;
-          // Cascade successive uploads (e.g. several photos picked in one
-          // dialog) diagonally so they don't land exactly stacked on top of
-          // each other; wraps around so it stays on-canvas either way.
-          const priorImages = strokesRef.current.filter((s) => s.kind === "image").length;
-          const cascade = (priorImages % 6) * 28;
-          const stroke: ImageStroke = {
-            kind: "image",
-            src: dataUrl,
-            x: (W - w) / 2 + cascade,
-            y: (H - h) / 2 + cascade,
-            w,
-            h,
+        // Returns a promise that resolves once the stroke is actually pushed
+        // (image decoded) — callers that upload several images in a row and
+        // then immediately snapshot the canvas (e.g. "Check my work") must
+        // await this, or the last-loaded image's stroke won't exist yet and
+        // will silently be missing from the OCR snapshot.
+        return new Promise<void>((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const maxW = W - 64;
+            const maxH = H - 64;
+            const scale = Math.min(1, maxW / img.naturalWidth, maxH / img.naturalHeight);
+            const w = img.naturalWidth * scale;
+            const h = img.naturalHeight * scale;
+            // Cascade successive uploads (e.g. several photos picked in one
+            // dialog) diagonally so they don't land exactly stacked on top of
+            // each other; wraps around so it stays on-canvas either way.
+            const priorImages = strokesRef.current.filter((s) => s.kind === "image").length;
+            const cascade = (priorImages % 6) * 28;
+            const stroke: ImageStroke = {
+              kind: "image",
+              src: dataUrl,
+              x: (W - w) / 2 + cascade,
+              y: (H - h) / 2 + cascade,
+              w,
+              h,
+            };
+            imageCacheRef.current.set(dataUrl, img);
+            strokesRef.current.push(stroke);
+            redoStackRef.current = [];
+            selectedRef.current = strokesRef.current.length - 1;
+            hoverIndexRef.current = null;
+            editingRef.current = null;
+            redraw();
+            onChange?.();
+            resolve();
           };
-          imageCacheRef.current.set(dataUrl, img);
-          strokesRef.current.push(stroke);
-          redoStackRef.current = [];
-          selectedRef.current = strokesRef.current.length - 1;
-          hoverIndexRef.current = null;
-          editingRef.current = null;
-          redraw();
-          onChange?.();
-        };
-        img.src = dataUrl;
+          img.src = dataUrl;
+        });
       },
       loadStrokes: (data) => {
         if (!data || !Array.isArray(data.strokes)) return;

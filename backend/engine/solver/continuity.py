@@ -61,6 +61,7 @@ def _solve_continuity(params):
         left_lim = limit(left_expr, x, point, dir="-")
         right_lim = limit(right_expr, x, point, dir="+")
         agree = simplify(left_lim - right_lim) == 0
+        verdict = "continuous" if agree else "discontinuous"
         steps.append(_step("Apply the technique", params.get("curated_technique", "")))
         steps.append(_step(
             "Compare the one-sided limits",
@@ -68,8 +69,32 @@ def _solve_continuity(params):
             + ("They agree, so the function is continuous at this point."
                if agree else "They differ, so the function is discontinuous at this point."),
         ))
-        checkpoints = [{"label": "limit value", "value": left_lim, "formula": "continuity_at_point"}]
-        answer = left_lim
+        checkpoints = [
+            {"label": "left-hand limit", "value": left_lim, "formula": "continuity_at_point"},
+            {"label": "right-hand limit", "value": right_lim, "formula": "continuity_at_point"},
+        ]
+        # The graded answer is the continuity verdict itself (what BAC II
+        # actually asks for), not the raw limit value — students conclude in a
+        # full sentence ("...so f is discontinuous at x=1"), so this is a
+        # "continuity"-kind answer scanned for the verdict word rather than
+        # parsed as an expression (see grader._judge_continuity). The limit
+        # values above remain SymPy checkpoints so the numeric work leading up
+        # to the conclusion is still line-checked.
+        return {
+            "answer_exact": verdict,
+            "answer_kind": "continuity",
+            # Restating a piecewise branch symbolically (e.g. writing out
+            # "log(3x+1)/x" again before evaluating its limit) is the given
+            # setup, not a new computed fact — analyze_work skips a line that
+            # matches one of these rather than flagging it wrong.
+            "given_expressions": [left_expr, right_expr],
+            "answer_decimal": None,
+            "answer_latex": verdict,
+            "answer_display": verdict,
+            "steps": steps,
+            "formula_tags": _formula_tags(steps),
+            "checkpoints": checkpoints,
+        }
 
     return {
         "answer_exact": answer,
