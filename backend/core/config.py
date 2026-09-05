@@ -29,5 +29,9 @@ class Settings(BaseSettings):
     gemini_rate_limit_per_minute: int = 10
     explanation_cache_ttl_seconds: int = 86400
 
+    # Hard cap on each Gemini (Vertex) call so a slow/hanging request can't
+    # stall the Gemini -> Ollama -> deterministic fallback chain (seconds).
+    gemini_timeout_seconds: int = 45
+
 
 settings = Settings()

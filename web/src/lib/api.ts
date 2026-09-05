@@ -1,5 +1,9 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8016";
 
+import type { StrokeDocument } from "@/components/Canvas";
+
+export type StrokeDoc = StrokeDocument;
+
 const ACCESS_KEY = "bacii_access";
 const REFRESH_KEY = "bacii_refresh";
 
@@ -118,6 +122,27 @@ export interface Question {
   formula_difficulty?: string;
 }
 
+export interface QuestionStep {
+  step_order: number;
+  title: string;
+  detail: string;
+  formula?: string | null;
+}
+
+export interface QuestionDetail {
+  id: string;
+  question_type: string;
+  difficulty: string;
+  prompt: string;
+  prompt_latex: string | null;
+  z_display: string;
+  source: string;
+  formula_tags: string[];
+  formula_difficulty?: string | null;
+  steps: QuestionStep[];
+  graph?: GraphSpec | null;
+}
+
 export interface DetectResult {
   lines: string[];
   lines_latex: string[];
@@ -162,8 +187,11 @@ export interface Explanation {
   intervened: boolean;
   trigger: string;
   work_check?: { content: string; provider: string } | null;
+  teacher_feedback?: { content: string; provider: string } | null;
   step_check?: StepCheck | null;
   steps?: { step_order: number; title: string; detail: string; formula?: string | null }[];
+  graph?: GraphSpec | null;
+  graph_check?: GraphCheck | null;
 }
 
 export interface PartVerdict {
@@ -172,6 +200,54 @@ export interface PartVerdict {
   reason?: string;
   given?: string | null;
   expected?: string;
+  note?: string;
+}
+
+export interface GraphPoint {
+  x: number;
+  y: number;
+  label?: string;
+}
+
+export interface GraphSpec {
+  x_min: number;
+  x_max: number;
+  y_min: number;
+  y_max: number;
+  curve: number[][][];
+  vertical_asymptotes: number[];
+  tangent?: number[][];
+  tangents?: number[][][];
+  asymptote_lines?: {
+    kind: string;
+    points: number[][];
+    line: string;
+    label?: string;
+  }[];
+  points: GraphPoint[];
+}
+
+export interface GraphCheckItem {
+  label: string;
+  found: boolean;
+}
+
+export interface GraphCheck {
+  items: GraphCheckItem[];
+  found: number;
+  total: number;
+}
+
+export interface GraphGradeResult {
+  score?: number;
+  curve_correct?: boolean;
+  asymptotes_correct?: boolean;
+  tangent_correct?: boolean | null;
+  points_correct?: boolean;
+  feedback?: string;
+  suggestions?: string[];
+  error?: string;
+  message?: string;
 }
 
 export interface GradeResult {
@@ -185,7 +261,10 @@ export interface GradeResult {
   all_complete?: boolean;
   explanation?: Explanation;
   work_check?: { content: string; provider: string } | null;
+  teacher_feedback?: { content: string; provider: string } | null;
   step_check?: StepCheck | null;
+  graph?: GraphSpec | null;
+  graph_check?: GraphCheck | null;
 }
 
 export interface Attempt {
@@ -203,7 +282,43 @@ export interface Attempt {
   formula_breakdown?: FormulaResult[] | null;
   work_text?: string | null;
   step_check?: StepCheck | null;
+  hints_used?: number;
+  strokes_thumb?: string | null;
   created_at: string;
+}
+
+export interface SavedPartState {
+  typed?: string;
+  work_text?: string | null;
+  lines_boxes?: (number[] | null)[] | null;
+  strokes?: StrokeDoc | null;
+  strokes_thumb?: string | null;
+  correct?: boolean;
+}
+
+export interface SessionSummary {
+  id: string;
+  question_id: string;
+  status: string;
+  parts_done: number;
+  parts_total: number;
+  updated_at: string;
+  question?: {
+    id: string;
+    topic: string;
+    question_type: string;
+    difficulty: string;
+    prompt: string;
+    prompt_latex: string | null;
+  };
+}
+
+export interface SessionDetail {
+  id: string;
+  status: string;
+  updated_at: string;
+  question: Question;
+  parts: Record<string, SavedPartState>;
 }
 
 export interface AttemptDetail {
@@ -216,6 +331,9 @@ export interface AttemptDetail {
   step_check?: StepCheck | null;
   lines_boxes?: (number[] | null)[] | null;
   formula_breakdown?: FormulaResult[] | null;
+  hints_used?: number;
+  strokes?: StrokeDoc | null;
+  strokes_thumb?: string | null;
   created_at: string;
   question: {
     id: string;
@@ -239,6 +357,13 @@ export interface FormulaStat {
   missed: number;
 }
 
+export interface FormulaVariant {
+  topic: string;
+  question_type: string;
+  variant: string | null;
+  difficulty: string;
+}
+
 export interface FormulaEntry {
   id: string;
   name_en: string | null;
@@ -246,6 +371,7 @@ export interface FormulaEntry {
   latex: string | null;
   weight: number;
   formulas: string[];
+  variants: FormulaVariant[];
 }
 
 export interface FormulaCatalog {
@@ -279,10 +405,32 @@ export interface TemplateStructure {
   sample_answer_latex?: string | null;
   formula_tags: string[];
   source_labels: string[];
+  graph?: GraphSpec | null;
+  solution_km?: string | null;
+  parts?: {
+    label: string;
+    want?: string;
+    answer_kind?: string;
+    question_km?: string;
+    technique?: string;
+    answer: string;
+    answer_latex?: string;
+    answer_display?: string;
+  }[];
 }
 
 export interface TemplateStructures {
   topics: { topic: string; question_types: { question_type: string; structures: TemplateStructure[] }[] }[];
+}
+
+export interface TemplateSummary {
+  topics: {
+    topic: string;
+    question_types: { question_type: string; count: number }[];
+    structure_count: number;
+    difficulties: string[];
+    curated: number;
+  }[];
 }
 
 export interface Stats {
@@ -299,26 +447,64 @@ export const api = {
   login: (email: string, password: string) =>
     request<AuthResponse>("/auth/login", { method: "POST", body: { email, password }, auth: "none" }),
   me: () => request<User>("/auth/me"),
-  generate: (generation_mode: string, difficulty: string, topic: string = "complex", question_type?: string) =>
+  generate: (generation_mode: string, difficulty: string, topic: string = "complex", question_type?: string, variant?: string) =>
     request<Question>("/problems/generate", {
       method: "POST",
-      body: { generation_mode, difficulty, topic, question_type },
+      body: { generation_mode, difficulty, topic, question_type, variant },
     }),
   replay: (question_id: string) =>
     request<Question>("/problems/replay", { method: "POST", body: { question_id } }),
+  question: (question_id: string) => request<QuestionDetail>(`/problems/${question_id}`),
   detect: (image_base64: string) =>
     request<DetectResult>("/vision/detect", { method: "POST", body: { image_base64 } }),
-  grade: (question_id: string, user_answer: string, work_text?: string, lines_boxes?: (number[] | null)[], part?: string) =>
+  grade: (
+    question_id: string,
+    user_answer: string,
+    work_text?: string,
+    lines_boxes?: (number[] | null)[],
+    part?: string,
+    hints_used?: number,
+    strokes?: StrokeDoc | null,
+    strokes_thumb?: string | null
+  ) =>
     request<GradeResult>("/problems/grade", {
       method: "POST",
-      body: { question_id, user_answer, work_text, lines_boxes, part },
+      body: { question_id, user_answer, work_text, lines_boxes, part, hints_used, strokes, strokes_thumb },
     }),
   explain: (question_id: string, user_answer?: string, work_text?: string) =>
     request<Explanation>("/problems/explain", { method: "POST", body: { question_id, user_answer, work_text } }),
+  saveProgress: (
+    question_id: string,
+    part?: string,
+    typed?: string,
+    work_text?: string,
+    lines_boxes?: (number[] | null)[],
+    strokes?: StrokeDoc | null,
+    strokes_thumb?: string | null
+  ) =>
+    request<SessionSummary>("/problems/progress/save", {
+      method: "POST",
+      body: { question_id, part, typed, work_text, lines_boxes, strokes, strokes_thumb },
+    }),
+  myProgress: () => request<SessionSummary[]>("/progress"),
+  progress: (id: string) => request<SessionDetail>(`/progress/${id}`),
+  deleteProgress: (id: string) => request<{ deleted: boolean }>(`/progress/${id}`, { method: "DELETE" }),
   attempts: () => request<Attempt[]>("/attempts"),
   attempt: (id: string) => request<AttemptDetail>(`/attempts/${id}`),
   stats: () => request<Stats>("/stats"),
   formulas: () => request<FormulaCatalog>("/formulas"),
   templates: () => request<TemplateInventory>("/templates"),
-  templateStructures: () => request<TemplateStructures>("/templates/structures"),
+  templateStructures: (topic?: string) =>
+    request<TemplateStructures>(`/templates/structures${topic ? `?topic=${topic}` : ""}`),
+  templateSummary: () => request<TemplateSummary>("/templates/summary"),
+  gradeGraph: (question_id: string, strokes_thumb: string) =>
+    request<GraphGradeResult>("/problems/grade-graph", {
+      method: "POST",
+      body: { question_id, strokes_thumb },
+    }),
+  regenerateStructure: (structure_id: string) =>
+    request<{ structure: TemplateStructure }>("/templates/structures/regenerate", {
+      method: "POST",
+      body: { structure_id },
+    }),
 };

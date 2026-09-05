@@ -1,0 +1,64 @@
+{
+  "formula_name": "ode_classification_and_order",
+  "topic": "differential_equations",
+  "description": "Introductory lesson content: what a differential equation is (ODE vs PDE), the order of a differential equation, and higher-order derivative notation (dy/dx = y', d^2y/dx^2 = y'', ..., d^ny/dx^n = y^(n)).",
+  "source": {
+    "files": [
+      "math_book/PXL_20260827_125459877.jpg",
+      "math_book/PXL_20260827_125513722.jpg",
+      "math_book/PXL_20260827_125516371.jpg"
+    ],
+    "description": "Cambodian BAC II grade-12 differential-equations lesson chapter (PHANKIMSIE booklet) — lesson definitions, theorems, and fully worked examples, photographed pages",
+    "extracted_by": "manual OCR/transcription from photographed textbook pages (Claude Code), 2026-08-27"
+  },
+  "count": 4,
+  "lessons": [
+    {
+      "id": "p3_order_example",
+      "source_photo": "PXL_20260827_125516371.jpg",
+      "type": "worked_example",
+      "title": "Order classification drill",
+      "statement_latex": "\\text{ក. } y' + 2y = 1 \\qquad \\text{ខ. } y'' - 3y' + 2y = x+1 \\qquad \\text{គ. } \\frac{d^4y}{dx^4} + 5\\frac{d^3y}{dx^3} + 2\\frac{dy}{dx} = \\cos x",
+      "solution_steps": [
+        "\\text{ក. } y' + 2y = 1 \\text{ is a 1st-order differential equation.}",
+        "\\text{ខ. } y'' - 3y' + 2y = x+1 \\text{ is a 2nd-order differential equation.}",
+        "\\text{គ. } \\frac{d^4y}{dx^4} + 5\\frac{d^3y}{dx^3} + 2\\frac{dy}{dx} = \\cos x \\text{ is a 4th-order differential equation.}"
+      ],
+      "technique": "ode_order_definition"
+    },
+    {
+      "id": "p1_classification",
+      "source_photo": "PXL_20260827_125459877.jpg",
+      "type": "definition",
+      "title": "ODE vs PDE classification",
+      "statement_latex": "\\frac{dy}{dx} = f(x) \\quad \\frac{dy}{dx} = f(x,y) \\quad x\\frac{\\partial u}{\\partial x} + y\\frac{\\partial u}{\\partial y} = u",
+      "solution_steps": [
+        "\\text{The first two involve an ordinary derivative of a function of one variable: ordinary differential equations (ODE).}",
+        "\\text{The third involves partial derivatives of a function of several variables: a partial differential equation (PDE).}"
+      ],
+      "technique": "ode_classification"
+    },
+    {
+      "id": "p2_order_definition",
+      "source_photo": "PXL_20260827_125513722.jpg",
+      "type": "definition",
+      "title": "Order of a differential equation",
+      "statement_latex": "y' + 2y = 4 \\quad y'' + 3y' + 1 = 0 \\quad 2y'' + 5y' + y = 2 \\quad x\\frac{dy}{dx} + 2y = e^{2x}+1 \\quad \\frac{d^2y}{dx^2} + \\frac{dy}{dx} - 2y = \\sin x",
+      "solution_steps": [
+        "\\text{The order of a differential equation is the order of the highest derivative of the unknown function that appears in it.}",
+        "y' + 2y = 4 \\text{ is order 1 (highest derivative is } y').",
+        "y'' + 3y' + 1 = 0,\\ 2y'' + 5y' + y = 2,\\ x\\frac{dy}{dx} + 2y = e^{2x}+1,\\ \\frac{d^2y}{dx^2} + \\frac{dy}{dx} - 2y = \\sin x \\text{ are all order 2 (highest derivative is } y'')."
+      ],
+      "technique": "ode_order_definition"
+    },
+    {
+      "id": "p2_derivative_notation_table",
+      "source_photo": "PXL_20260827_125513722.jpg",
+      "type": "definition",
+      "title": "Higher-order derivative notation",
+      "statement_latex": "\\frac{dy}{dx} = y' \\quad \\frac{d^2y}{dx^2} = y'' \\quad \\frac{d^3y}{dx^3} = y''' \\quad \\dots \\quad \\frac{d^ny}{dx^n} = y^{(n)}",
+      "solution_steps": [],
+      "technique": "ode_order_definition"
+    }
+  ]
+}

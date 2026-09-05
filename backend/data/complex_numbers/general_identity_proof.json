@@ -1,0 +1,43 @@
+{
+  "formula_name": "general_identity_proof",
+  "topic": "complex_numbers",
+  "description": "Proving general trigonometric/complex-number identities that hold for an arbitrary parameter (\\theta, \\alpha \\in \\mathbb{R} and n \\in \\mathbb{Z}), using the trigonometric form z=\\cos\\theta+i\\sin\\theta and De Moivre's formula, rather than computing a single numeric power.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.17.19 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook, Chapter 2 (complex numbers, trigonometric form / powers / roots) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 5,
+  "exercises": [
+    {
+      "id": "p48_8",
+      "source_page": 48,
+      "prompt_latex": "\\text{For } \\theta\\in\\mathbb{R} \\text{ and } n\\in\\mathbb{Z}, \\text{ prove that: } \\left(\\frac{1+\\sin\\theta+i\\cos\\theta}{1+\\sin\\theta-i\\cos\\theta}\\right)^n = \\cos\\left[n\\left(\\frac{\\pi}{2}-\\theta\\right)\\right] + i\\sin\\left[n\\left(\\frac{\\pi}{2}-\\theta\\right)\\right]",
+      "technique": "Recognize numerator/denominator as conjugates of equal modulus; rewrite 1+\\sin\\theta \\pm i\\cos\\theta in trig form using complementary-angle identities, form the quotient (a unit-modulus complex number), then apply De Moivre's formula."
+    },
+    {
+      "id": "p48_11",
+      "source_page": 48,
+      "prompt_latex": "\\text{Let } z=\\cos\\alpha+i\\sin\\alpha \\text{ and } w=\\frac{2z^5}{1+z^4}, \\text{ where } \\alpha\\in\\left(-\\frac{\\pi}{4},\\frac{\\pi}{4}\\right). \\text{ Prove that } w = \\frac{1}{\\cos 2\\alpha}(\\cos 3\\alpha + i\\sin 3\\alpha).",
+      "technique": "Factor z^{5/2} out of numerator and denominator (dividing top and bottom by z^2), express 1+z^4 in terms of z^2 = \\cos2\\alpha+i\\sin2\\alpha using the identity z^{-2}+z^2 = 2\\cos2\\alpha, and simplify using De Moivre's formula."
+    },
+    {
+      "id": "p49_12",
+      "source_page": 49,
+      "prompt_latex": "\\text{Let } Z = \\cos\\alpha + i\\sin\\alpha, \\text{ where } \\alpha\\in\\mathbb{R}. \\text{ For } n\\in\\mathbb{Z}, \\text{ prove that } z^n + \\frac{1}{z^n} = 2\\cos(n\\alpha).",
+      "technique": "Apply De Moivre's formula to z^n and to 1/z^n = z^{-n} (using \\cos(-n\\alpha)=\\cos(n\\alpha), \\sin(-n\\alpha)=-\\sin(n\\alpha)), then add — the imaginary parts cancel."
+    },
+    {
+      "id": "p49_15a",
+      "source_page": 49,
+      "prompt_latex": "\\text{Let } z=a+ib \\text{ and } A=i(1+z). \\text{ Calculate } A \\text{ as a function of } a \\text{ and } b, \\text{ writing the result in algebraic form.}",
+      "technique": "Direct expansion: A = i(1+a+ib) = -b + i(1+a)."
+    },
+    {
+      "id": "p49_15b",
+      "source_page": 49,
+      "prompt_latex": "\\text{Determine } a \\text{ and } b \\text{ such that } A = z, \\text{ where } A=i(1+z), z=a+ib.",
+      "technique": "Set the algebraic form of A equal to a+ib and equate real and imaginary parts to obtain a system in a, b."
+    }
+  ]
+}

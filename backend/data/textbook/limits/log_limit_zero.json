@@ -1,0 +1,73 @@
+{
+  "formula_name": "log_limit_zero",
+  "topic": "limits",
+  "description": "0/0 indeterminate limits at x→0 involving ln(1±kx) type expressions, solved using the standard limit lim_{x→0} ln(1+x)/x = 1.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.21.14 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 10,
+  "exercises": [
+    {
+      "id": "p98_1a",
+      "source_page": 98,
+      "prompt_latex": "A = \\lim_{x\\to 0} \\frac{\\ln(1+x) - 2\\ln(1-x)}{x}",
+      "technique": "Split into ln(1+x)/x and ln(1-x)/(-x), use lim_{u→0} ln(1+u)/u = 1"
+    },
+    {
+      "id": "p98_1b",
+      "source_page": 98,
+      "prompt_latex": "B = \\lim_{x\\to 0} \\frac{2\\ln(1-2x) + 3\\ln(1+4x)}{x}",
+      "technique": "Split and rescale each term to match the standard limit ln(1+u)/u → 1 as u→0"
+    },
+    {
+      "id": "p98_1c",
+      "source_page": 98,
+      "prompt_latex": "C = \\lim_{x\\to 0} \\frac{x\\ln(1+2x) + 4\\ln(1+x^2)}{x^2}",
+      "technique": "Split into two fractions, each rescaled to the standard ln(1+u)/u limit"
+    },
+    {
+      "id": "p98_1d",
+      "source_page": 98,
+      "prompt_latex": "D = \\lim_{x\\to 0} \\frac{\\ln(1+4x^2) - x\\ln(1-2x)}{3x^2}",
+      "technique": "Split numerator, rescale each term to the standard ln(1+u)/u limit"
+    },
+    {
+      "id": "p98_1e",
+      "source_page": 98,
+      "prompt_latex": "E = \\lim_{x\\to 0} \\frac{\\ln(1+2\\sin x) - 2\\ln(1-\\sin 2x)}{x}",
+      "technique": "Use sinc limit sin(x)/x → 1 combined with ln(1+u)/u → 1"
+    },
+    {
+      "id": "p98_1f",
+      "source_page": 98,
+      "prompt_latex": "F = \\lim_{x\\to 0} \\frac{\\ln(2+x^2-\\cos 2x)}{x^2}",
+      "technique": "Rewrite as ln(1+(x^2+2\\sin^2 x)) using 1-cos2x = 2sin^2x, then apply ln(1+u)/u → 1"
+    },
+    {
+      "id": "p98_1g",
+      "source_page": 98,
+      "prompt_latex": "G = \\lim_{x\\to 0} \\frac{\\ln(2+x\\sin 3x-\\cos 2x)}{x^2}",
+      "technique": "Rewrite as ln(1+(x sin3x + 2sin^2 x)) then apply ln(1+u)/u → 1 with sinc limits"
+    },
+    {
+      "id": "p98_1h",
+      "source_page": 98,
+      "prompt_latex": "H = \\lim_{x\\to 0} \\frac{\\ln(2e^{x^2}-\\cos 4x)}{x^2}",
+      "technique": "Rewrite as ln(1+2(e^{x^2}-1+\\sin^2 2x)) then apply ln(1+u)/u → 1 with exponential and sinc limits"
+    },
+    {
+      "id": "p98_1i",
+      "source_page": 98,
+      "prompt_latex": "I = \\lim_{x\\to 0} \\frac{\\ln(2-e^{-x^2}\\cos 2x)}{x^2}",
+      "technique": "Rewrite as ln(1+(1-e^{-x^2}\\cos 2x)) then expand using exponential and sinc standard limits"
+    },
+    {
+      "id": "p98_1j",
+      "source_page": 98,
+      "prompt_latex": "J = \\lim_{x\\to 0} \\frac{\\ln(2-\\cos 2x\\cos 4x)}{x^2}",
+      "technique": "Rewrite as ln(1+(1-\\cos 2x\\cos 4x)) then split using 1-cos2x=2sin^2x identities and sinc limits"
+    }
+  ]
+}

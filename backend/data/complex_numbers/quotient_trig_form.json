@@ -1,0 +1,103 @@
+{
+  "formula_name": "quotient_trig_form",
+  "topic": "complex_numbers",
+  "description": "Writing quotients and products of two given complex numbers u, v (or z, w) in trigonometric form, then using De Moivre's formula to compute large powers of the quotient, and determining the smallest exponent for which such a power becomes real.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.17.19 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook, Chapter 2 (complex numbers, trigonometric form / powers / roots) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 15,
+  "exercises": [
+    {
+      "id": "p50_22a",
+      "source_page": 50,
+      "prompt_latex": "\\text{Let } u=-\\frac{3}{\\sqrt{2}}+i\\sqrt{\\frac{3}{2}} \\text{ and } v=-\\sqrt{2}-i\\sqrt{2}. \\text{ Write } u \\text{ and } v \\text{ in trigonometric form.}",
+      "technique": "Compute modulus and argument of each given complex number."
+    },
+    {
+      "id": "p51_22b",
+      "source_page": 51,
+      "prompt_latex": "\\text{Write } z = \\frac{u^8}{v^5} \\text{ in trigonometric form, where } u=-\\frac{3}{\\sqrt{2}}+i\\sqrt{\\frac{3}{2}}, v=-\\sqrt{2}-i\\sqrt{2}.",
+      "technique": "Apply De Moivre's formula to u^8 and v^5 separately (using their trig forms), then divide moduli and subtract arguments."
+    },
+    {
+      "id": "p51_22c",
+      "source_page": 51,
+      "prompt_latex": "\\text{Determine the smallest positive integer } n \\text{ such that the quotient having numerator } u^n \\text{ raised appropriately makes } z^n \\text{ a real number.}",
+      "technique": "z^n is real when n times \\arg(z) is a multiple of \\pi; find the smallest positive integer n satisfying this."
+    },
+    {
+      "id": "p51_23a",
+      "source_page": 51,
+      "prompt_latex": "\\text{Let } u=2+2i\\sqrt{3} \\text{ and } v=2+2i. \\text{ Write } u \\text{ and } v \\text{ in trigonometric form.}",
+      "technique": "Compute modulus and argument of each given complex number."
+    },
+    {
+      "id": "p51_23b",
+      "source_page": 51,
+      "prompt_latex": "\\text{Write } z = \\frac{u^4}{v^5} \\text{ in trigonometric form, where } u=2+2i\\sqrt{3}, v=2+2i.",
+      "technique": "Apply De Moivre's formula to u^4 and v^5, then divide moduli and subtract arguments."
+    },
+    {
+      "id": "p51_23c",
+      "source_page": 51,
+      "prompt_latex": "\\text{Write } z^{2019} \\text{ in trigonometric form, where } z = \\frac{u^4}{v^5}, u=2+2i\\sqrt{3}, v=2+2i.",
+      "technique": "Apply De Moivre's formula to raise z to the 2019th power, reducing the resulting angle modulo 2\\pi."
+    },
+    {
+      "id": "p51_26a",
+      "source_page": 51,
+      "prompt_latex": "\\text{Let } z=\\sqrt{3}+i \\text{ and } w=\\frac{\\sqrt{6}+\\sqrt{2}}{2}+i\\frac{\\sqrt{6}-\\sqrt{2}}{2}. \\text{ Calculate } z\\cdot w, \\text{ writing the result in the form } a+ib \\text{ where } a,b\\in\\mathbb{R}.",
+      "technique": "Direct multiplication and simplification of two complex numbers in algebraic form."
+    },
+    {
+      "id": "p52_26b",
+      "source_page": 52,
+      "prompt_latex": "\\text{Write } z, zw, \\text{ and } w \\text{ in trigonometric form, where } z=\\sqrt{3}+i, w=\\frac{\\sqrt{6}+\\sqrt{2}}{2}+i\\frac{\\sqrt{6}-\\sqrt{2}}{2}.",
+      "technique": "Compute modulus and argument of z and w individually, and of the product zw (multiply moduli, add arguments), cross-checking with the algebraic-form product found above."
+    },
+    {
+      "id": "p52_26c",
+      "source_page": 52,
+      "prompt_latex": "\\text{Write } w^{2019} \\text{ in trigonometric form, where } w=\\frac{\\sqrt{6}+\\sqrt{2}}{2}+i\\frac{\\sqrt{6}-\\sqrt{2}}{2}.",
+      "technique": "Apply De Moivre's formula to raise w to the 2019th power, reducing the resulting angle modulo 2\\pi."
+    },
+    {
+      "id": "p52_27a",
+      "source_page": 52,
+      "prompt_latex": "\\text{Let } z=\\frac{\\sqrt{3}+1}{2}+i\\frac{\\sqrt{3}-1}{2} \\text{ and } w=1-i. \\text{ Calculate } \\frac{z}{w}, \\text{ writing the result in the form } a+ib \\text{ where } a,b\\in\\mathbb{R}.",
+      "technique": "Multiply numerator and denominator by the conjugate of w to simplify the quotient."
+    },
+    {
+      "id": "p52_27b",
+      "source_page": 52,
+      "prompt_latex": "\\text{Write } \\frac{z}{w} \\text{ and } w \\text{ in trigonometric form, where } z=\\frac{\\sqrt{3}+1}{2}+i\\frac{\\sqrt{3}-1}{2}, w=1-i.",
+      "technique": "Compute modulus and argument of w and of the quotient z/w (found in algebraic form above)."
+    },
+    {
+      "id": "p52_27c",
+      "source_page": 52,
+      "prompt_latex": "\\text{Deduce the trigonometric form of } z \\text{ and of } z^{2019}, \\text{ where } z=\\frac{\\sqrt{3}+1}{2}+i\\frac{\\sqrt{3}-1}{2}.",
+      "technique": "Recover z = (z/w)\\cdot w in trig form (add arguments, multiply moduli), then apply De Moivre's formula for z^{2019}."
+    },
+    {
+      "id": "p52_28a",
+      "source_page": 52,
+      "prompt_latex": "\\text{Let } z=2+2i \\text{ and } w=\\sqrt{6}+i\\sqrt{2}. \\text{ Calculate } \\frac{z}{w}, \\text{ writing the result in the form } a+ib \\text{ where } a,b\\in\\mathbb{R}.",
+      "technique": "Multiply numerator and denominator by the conjugate of w to simplify the quotient."
+    },
+    {
+      "id": "p52_28b",
+      "source_page": 52,
+      "prompt_latex": "\\text{Write } z, w, \\text{ and } \\frac{z}{w} \\text{ in trigonometric form, where } z=2+2i, w=\\sqrt{6}+i\\sqrt{2}.",
+      "technique": "Compute modulus and argument of z and w individually, and of the quotient z/w (divide moduli, subtract arguments)."
+    },
+    {
+      "id": "p52_28c",
+      "source_page": 52,
+      "prompt_latex": "\\text{Write } \\left(\\frac{z}{w}\\right)^{2019} \\text{ in trigonometric form and in algebraic form, where } z=2+2i, w=\\sqrt{6}+i\\sqrt{2}.",
+      "technique": "Apply De Moivre's formula to raise z/w to the 2019th power, reduce the angle modulo 2\\pi, then convert back to algebraic form."
+    }
+  ]
+}

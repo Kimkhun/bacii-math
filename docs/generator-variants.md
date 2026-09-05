@@ -3,62 +3,92 @@
 Every question template the generator can emit, which formulas it tags, and
 which difficulty pools it belongs to. Derived from `backend/engine/generator.py`
 (`_INTEGRAL_VARIANT_BY_DIFFICULTY`, `_INDEFINITE_VARIANT_BY_DIFFICULTY`,
-`_LIMIT_SAMPLERS` + `structures.LIMIT_TECHNIQUES`, complex pools).
+`_LIMIT_VARIANT_BY_DIFFICULTY`, complex pools).
 
-## Complex numbers (5 question types; pools pick random params)
+## Complex numbers (9 question types; pools pick random params)
 
 | Question type | Parameterization | Tags |
 |---|---|---|
 | modulus | Pythagorean-triple pools per difficulty + random signs | `pythagorean`, `sqrt_simplify` |
 | argument | k per difficulty + 8 sign/quadrant combos | `atan2_ratio`, `quadrant_adjustment` |
 | conjugate / real_part / imaginary_part | random a, b ∈ range (b ≠ 0) | `sign_flip` / `extract_real` / `extract_imag` |
+| complex_arithmetic | random z1, z2; operation ∈ {add, subtract, multiply, divide} by difficulty (`solver/complex/arithmetic.py`) | `complex_addition` / `_subtraction` / `_multiplication` / `_division` |
+| complex_power | random z = a+bi; fixed small n (2/3/4 by difficulty), direct binomial expansion — not De Moivre (`solver/complex/power.py`) | `binomial_expansion_i_squared` |
+| de_moivre_power | z built from a "nice" (r, standard-angle) pair (`solver/complex/trig.py`'s 16-angle pool, multiples of 30°/45°) so z itself looks like a real textbook number (e.g. `2+2i√3`); n scales by difficulty, capped so `r^n ≤ 10^18` (kept displayable/gradable — the real exam's huge exponents like `(1-i)^2021` only stay tractable if left in unexpanded power form, which this app's plain-value grading doesn't support yet) (`solver/complex/de_moivre.py`) | `trig_form_conversion`, `de_moivre_formula`, `angle_reduction_mod_2pi`, `trig_to_algebraic` |
+| nth_roots | reverse-built: pick the *answer* root w from the same standard-angle pool, then present z = w^n as the given number; n by difficulty (2/2-3/3-5) (`solver/complex/nth_roots.py`) | `trig_form_conversion`, `nth_root_formula`, `trig_to_algebraic` |
 
-Gemini mode (complex only): LLM proposes a,b + type; SymPy validates.
+Gemini mode (complex only, classic 5 types only): LLM proposes a,b + type; SymPy validates.
+
+**Curated textbook exercises:** each `easy`-difficulty request for `modulus`,
+`argument`, `conjugate`, `real_part`, or `imaginary_part` has a 50% chance of
+drawing a curated textbook exercise instead, if one exists for that exact
+question type (`generator/complex._generate_templates`). The curated pool
+(`engine/structures._COMPLEX_CURATED_TEMPLATES`) is parsed at import time from
+`backend/data/complex_numbers/{formula_name}.json` — only the subset of
+textbook exercises posed as a literal `z = a+bi` (plain integers, no
+powers/radicals) round-trips through the existing a+bi solver, so the curated
+pool is intentionally small (6 exercises as of 2026-08-25). SymPy still
+computes/grades the answer identically to the procedural pool — the curated
+item only supplies the a, b pair and an exam-authored `curated_technique` note
+for reference. The 4 new question types above are procedural-only for now (no
+curated pool wired in yet).
+
+**Still not templated** (of the 164 textbook exercises in
+`backend/data/complex_numbers/`, these categories have no solver yet — see
+`exam-data.md`): standalone "write z in trig form" as its own multi-part
+exercise (`trig_form_conversion.json`, `quotient_trig_form.json` — the trig
+form *value* is already reachable via modulus+argument, but grading the (r, θ)
+pair as two separate blanks needs multi-part grading like probability's
+`grade_multi`, not yet wired for topic `complex`), solving equations in z/z̄
+(`complex_equations.json`), classifying geometric loci
+(`locus_equations.json`), plotting affixes (`geometric_representation.json`),
+and the symmetric-sum/Vieta root-of-unity identities
+(`roots_of_unity.json`'s proof-style problems — `nth_roots` above only covers
+"find a root", not those).
 
 ## Limits
 
 Limits are organized around a **technique registry** (`structures.LIMIT_TECHNIQUES`,
-13 entries — one per solution technique, not per parameterized shape), because
+15 entries — one per solution technique, not per parameterized shape), because
 most limit techniques are tied to a specific algebraic identity rather than
 free coefficients the way integral shapes are (e.g. the angle-addition
 identity only collapses cleanly at x = π/3; swapping coefficients on a sinc
 limit doesn't teach anything new the way swapping integral coefficients does).
 Each registry entry is flagged `parameterizable` or not:
 
-- **11 parameterizable techniques** each have a sampler in `generator.py`
+- **11 parameterizable techniques** each have a sampler in `generator/limits.py`
   (`_LIMIT_SAMPLERS`) that picks *constrained*, not free, parameters — e.g.
   `conjugate_infinity` requires the sqrt's leading coefficient to be a perfect
   square and derives the answer from the other slots — plus a matching
-  narration handler in `solver.py` (`_LIMIT_TECHNIQUE_HANDLERS`) that derives
+  narration handler in `solver/limits.py` (`_LIMIT_TECHNIQUE_HANDLERS`) that derives
   the actual algebra for those specific numbers at request time (not
   hardcoded prose): `direct_substitution`, `factoring_0_0`,
   `rational_function_infinity`, `sinc_standard_limit`,
   `exponential_standard_limit`, `conjugate_infinity`,
   `rationalization_conjugate_finite`, `rationalization_sinc_combo`,
   `exponential_sinc_combo`, `half_angle_sinc_combo`, `log_limit_infinity`.
-- **2 curated-only techniques** stay fixed to the real exam exercises because
+- **4 curated-only techniques** stay fixed to the real exam / textbook exercises because
   parameterizing them would require faking a shape that doesn't generalize:
   `trig_identity_0_0` (Pythagorean identity only cancels cleanly at
-  sin/cos = 0, ±1) and `angle_addition_0_0` (the angle-addition identity only
-  collapses at specific (a, b, point) triples).
+  sin/cos = 0, ±1), `angle_addition_0_0` (the angle-addition identity only
+  collapses at specific (a, b, point) triples), `log_limit_zero` (textbook
+  logarithm zero-limit shapes), and `indeterminate_one_infinity` (1^∞ forms).
 
 Each generation request for a given difficulty has a 50% chance of drawing a
-**curated** exercise (one of the 36 real, SymPy-verified BAC II limit
-questions, 2014-2025, sorted by technique into
-`backend/data/limits/{formula_name}.json`, loaded into
-`structures._LIMIT_CURATED_TEMPLATES` at import time) and otherwise picks a
-random *parameterizable* technique for that difficulty and samples a fresh
-instance. Curated params carry `formula_name` + the exam-authored technique
-text; procedural params carry an explicit `technique` id + its slot values
-(e.g. `{"technique": "sinc_standard_limit", "k": 6, "c": 3}`) — `solver.py`
-dispatches on whichever is present rather than re-inferring the shape from
-the expression.
+**curated** exercise (one of the 56 real, SymPy-verified BAC II & textbook limit
+questions, sorted by technique into `backend/data/limits/{formula_name}.json`,
+loaded into `structures._LIMIT_CURATED_TEMPLATES` at import time) and otherwise
+picks a random *parameterizable* technique for that difficulty and samples a fresh
+instance. Curated params carry `formula_name` + the exam-authored technique text;
+procedural params carry an explicit `technique` id + its slot values
+(e.g. `{"technique": "sinc_standard_limit", "k": 6, "c": 3}`) — `solver/limits.py`
+dispatches on whichever is present rather than re-inferring the shape from the expression.
 
 | Difficulty | Parameterizable techniques | Curated-only techniques |
 |---|---|---|
 | easy | `direct_substitution`, `factoring_0_0` | — |
 | medium | `sinc_standard_limit`, `exponential_standard_limit`, `rationalization_conjugate_finite`, `rationalization_sinc_combo`, `exponential_sinc_combo`, `half_angle_sinc_combo` | `trig_identity_0_0`, `angle_addition_0_0` |
-| hard | `conjugate_infinity`, `log_limit_infinity`, `rational_function_infinity` | — |
+| hard | `conjugate_infinity`, `log_limit_infinity`, `rational_function_infinity` | `log_limit_zero`, `indeterminate_one_infinity` |
 
 (One curated exercise, `2024b`, is excluded from the pool — it's an inverse
 "find a given the limit" problem, not a plain limit to solve. See

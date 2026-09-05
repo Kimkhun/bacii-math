@@ -1,0 +1,88 @@
+{
+  "formula_name": "second_order_homogeneous_constant_coeff",
+  "topic": "differential_equations",
+  "description": "Second-order linear homogeneous ODE with constant coefficients: ay'' + by' + cy = 0. Covers the superposition principle (and its proof), forming the characteristic equation via the y = e^(lambda x) ansatz, the three discriminant cases (Delta > 0, = 0, < 0) and their general-solution forms, and fully-worked examples for each case.",
+  "source": {
+    "files": [
+      "math_book/PXL_20260827_125642343.jpg",
+      "math_book/PXL_20260827_125651870.jpg",
+      "math_book/PXL_20260827_125654352.jpg",
+      "math_book/PXL_20260827_125703256.jpg",
+      "math_book/PXL_20260827_125705708.jpg"
+    ],
+    "description": "Cambodian BAC II grade-12 differential-equations lesson chapter (PHANKIMSIE booklet) — lesson definitions, theorems, and fully worked examples, photographed pages",
+    "extracted_by": "manual OCR/transcription from photographed textbook pages (Claude Code), 2026-08-27"
+  },
+  "count": 5,
+  "lessons": [
+    {
+      "id": "p15_p16_superposition_principle",
+      "source_photo": "PXL_20260827_125642343.jpg",
+      "type": "theorem",
+      "title": "Superposition principle for ay'' + by' + cy = 0",
+      "statement_latex": "\\text{If } f_1, f_2 \\text{ are solutions of } ay''+by'+cy=0, \\text{ then } y = c_1f_1 + c_2f_2 \\text{ is also a solution, for any } c_1, c_2 \\in \\mathbb{R}.",
+      "solution_steps": [
+        "ay''+by'+cy = a(c_1f_1+c_2f_2)'' + b(c_1f_1+c_2f_2)' + c(c_1f_1+c_2f_2)",
+        "= a(c_1f_1''+c_2f_2'') + b(c_1f_1'+c_2f_2') + c(c_1f_1+c_2f_2)",
+        "= c_1(af_1''+bf_1'+cf_1) + c_2(af_2''+bf_2'+cf_2)",
+        "\\text{Since } f_1, f_2 \\text{ solve the homogeneous equation: } af_1''+bf_1'+cf_1 = 0 \\text{ and } af_2''+bf_2'+cf_2 = 0",
+        "ay''+by'+cy = c_1\\cdot 0 + c_2\\cdot 0 = 0"
+      ],
+      "answer_latex": "\\text{So } y = c_1f_1 + c_2f_2 \\text{ is the general solution of } ay''+by'+cy=0.",
+      "technique": "second_order_linear_homogeneous_constant"
+    },
+    {
+      "id": "p16_characteristic_equation",
+      "source_photo": "PXL_20260827_125651870.jpg",
+      "type": "theorem",
+      "title": "Forming the characteristic equation",
+      "statement_latex": "ay''+by'+cy=0,\\quad a,b,c \\in \\mathbb{R},\\ a \\neq 0",
+      "solution_steps": [
+        "\\text{Ansatz: } y = e^{\\lambda x} \\implies y' = \\lambda e^{\\lambda x},\\ y'' = \\lambda^2 e^{\\lambda x}",
+        "a\\lambda^2 e^{\\lambda x} + b\\lambda e^{\\lambda x} + ce^{\\lambda x} = 0"
+      ],
+      "answer_latex": "a\\lambda^2 + b\\lambda + c = 0 \\quad \\text{(the characteristic equation)},\\quad \\Delta = b^2-4ac,\\quad \\lambda = \\frac{-b \\pm \\sqrt{\\Delta}}{2a}",
+      "technique": "second_order_linear_homogeneous_constant"
+    },
+    {
+      "id": "p17_example11",
+      "source_photo": "PXL_20260827_125654352.jpg",
+      "type": "worked_example",
+      "title": "Solve y'' - 5y' + 6y = 0 (Delta > 0, distinct real roots)",
+      "statement_latex": "y'' - 5y' + 6y = 0",
+      "solution_steps": [
+        "\\text{Characteristic equation: } \\lambda^2 - 5\\lambda + 6 = 0",
+        "(\\lambda-3)(\\lambda-2) = 0 \\implies \\lambda = 3 \\text{ or } \\lambda = 2"
+      ],
+      "answer_latex": "y = Ae^{2x} + Be^{3x},\\quad A,B \\in \\mathbb{R}",
+      "technique": "second_order_linear_homogeneous_constant"
+    },
+    {
+      "id": "p17_three_cases_theorem",
+      "source_photo": "PXL_20260827_125654352.jpg",
+      "type": "theorem",
+      "title": "General solution of ay'' + by' + cy = 0 by discriminant sign",
+      "statement_latex": "(E):\\ ay''+by'+cy=0,\\quad a\\neq 0,\\ a,b,c\\in\\mathbb{R}. \\text{ Characteristic equation } a\\lambda^2+b\\lambda+c=0 \\text{ has roots } \\lambda_1, \\lambda_2.",
+      "solution_steps": [
+        "\\text{If } \\Delta > 0\\text{: two distinct real roots } \\lambda_1=\\alpha,\\ \\lambda_2=\\beta \\implies y = Ae^{\\alpha x} + Be^{\\beta x},\\ A,B\\in\\mathbb{R}",
+        "\\text{If } \\Delta = 0\\text{: a repeated real root } \\lambda_1=\\lambda_2=\\alpha \\implies y = (Ax+B)e^{\\alpha x},\\ A,B\\in\\mathbb{R}",
+        "\\text{If } \\Delta < 0\\text{: complex conjugate roots } \\lambda = \\alpha \\pm i\\beta \\implies y = e^{\\alpha x}(A\\cos\\beta x + B\\sin\\beta x),\\ A,B\\in\\mathbb{R}"
+      ],
+      "technique": "second_order_linear_homogeneous_constant"
+    },
+    {
+      "id": "p18_p19_example12",
+      "source_photo": "PXL_20260827_125703256.jpg",
+      "type": "worked_example",
+      "title": "Three-part drill: one example per discriminant case",
+      "statement_latex": "\\text{ក. } 3y'' + 4y' - 4y = 0 \\qquad \\text{ខ. } 2y'' - 6y' + 5y = 0 \\qquad \\text{គ. } 3y'' - 12y' + 12y = 0",
+      "solution_steps": [
+        "\\text{ក. } 3\\lambda^2+4\\lambda-4=0 \\implies (3\\lambda-2)(\\lambda+2)=0 \\implies \\lambda = \\tfrac{2}{3} \\text{ or } \\lambda=-2 \\quad (\\Delta>0)",
+        "\\text{ខ. } 2\\lambda^2-6\\lambda+5=0,\\ \\Delta' = \\left(\\tfrac{-6}{2}\\right)^2 - 2\\cdot 5 = -1 \\implies \\lambda = \\tfrac{3}{2} \\pm \\tfrac{1}{2}i \\quad (\\Delta<0)",
+        "\\text{គ. } 3\\lambda^2-12\\lambda+12=0 \\iff \\lambda^2-4\\lambda+4=0 \\iff (\\lambda-2)^2=0 \\implies \\lambda=2 \\quad (\\Delta=0)"
+      ],
+      "answer_latex": "\\text{ក. } y = Ae^{\\frac{2}{3}x}+Be^{-2x} \\qquad \\text{ខ. } y = e^{\\frac{3}{2}x}\\left(A\\cos\\tfrac{1}{2}x+B\\sin\\tfrac{1}{2}x\\right) \\qquad \\text{គ. } y = (Ax+B)e^{2x},\\quad A,B\\in\\mathbb{R}",
+      "technique": "second_order_linear_homogeneous_constant"
+    }
+  ]
+}

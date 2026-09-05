@@ -7,13 +7,11 @@ venv/
 
 # Secrets
 backend/credentials/
+backend/math_book/
 
 # Runtime artifacts
-detect_writing/scratchpad/
-
-# Backup of the old nested git repo
-detect_writing/.git.old/
 
 # Node
 node_modules/
 .next/
+2022-2023.pdf

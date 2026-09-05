@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Verify the probability topic end to end.
 
 1. Real BAC II exercises: construct multi-part params for the exact slot values

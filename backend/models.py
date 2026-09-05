@@ -2,7 +2,18 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, Uuid, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    Uuid,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -62,6 +73,9 @@ class Attempt(Base):
     step_check: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     lines_boxes: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
     formula_breakdown: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+    hints_used: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    strokes: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    strokes_thumb: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -76,3 +90,23 @@ class Explanation(Base):
     intervened: Mapped[bool] = mapped_column(Boolean)
     trigger: Mapped[str] = mapped_column(String(50))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class StudySession(Base):
+    """A student's saved progress through one multi-part exercise: which parts
+    are answered/typed, the OCR'd work per part, and the correct flags. One row
+    per (user, question) — upserted on every grade (auto-save) and on the
+    explicit 'Save progress' button so long exercises can be resumed later."""
+
+    __tablename__ = "study_sessions"
+    __table_args__ = (UniqueConstraint("user_id", "question_id", name="uq_study_session_user_question"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    question_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("questions.id", ondelete="CASCADE"), index=True)
+    status: Mapped[str] = mapped_column(String(20), server_default="in_progress")
+    state: Mapped[dict] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )

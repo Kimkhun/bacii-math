@@ -1,0 +1,196 @@
+{
+  "domain_log": {
+    "name_en": "Domain of a logarithm",
+    "name_km": "ដែនកំណត់នៃអនុគមន៍លោការីត",
+    "latex": "\\ln(u) \\text{ defined } \\iff u > 0",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "\\ln(u) \\text{ is defined only when } u > 0",
+      "\\frac{a}{b} > 0 \\iff a \\text{ and } b \\text{ have the same sign}"
+    ]
+  },
+  "sign_table": {
+    "name_en": "Sign table",
+    "name_km": "តារាងសញ្ញា",
+    "latex": "\\text{sign of } \\frac{a(x)}{b(x)} \\text{ by intervals}",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "a(x)=0 \\text{ at } x=x_0 \\text{ bounds the sign intervals}"
+    ]
+  },
+  "log_quotient_rule": {
+    "name_en": "Log of a quotient",
+    "name_km": "លោការីតនៃផលធៀប",
+    "latex": "\\ln\\left(\\frac{a}{b}\\right) = \\ln a - \\ln b",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "\\ln\\left(\\frac{a}{b}\\right) = \\ln a - \\ln b"
+    ]
+  },
+  "log_reciprocal": {
+    "name_en": "Log of a reciprocal",
+    "name_km": "លោការីតនៃចំនួនច្រាស",
+    "latex": "\\ln\\left(\\frac{1}{u}\\right) = -\\ln u",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "\\ln(u^{-1}) = -\\ln u"
+    ]
+  },
+  "parity_definition": {
+    "name_en": "Even/odd function",
+    "name_km": "អនុគមន៍គូ ឬសេស",
+    "latex": "g(-x) = g(x) \\text{ even},\\quad g(-x) = -g(x) \\text{ odd}",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "g \\text{ even } \\iff g(-x) = g(x)",
+      "g \\text{ odd } \\iff g(-x) = -g(x)"
+    ]
+  },
+  "vertical_asymptote": {
+    "name_en": "Vertical asymptote",
+    "name_km": "អាស៊ីមតូតឈរ",
+    "latex": "\\lim_{x\\to a^+} f(x) = \\pm\\infty \\text{ or } \\lim_{x\\to a^-} f(x) = \\pm\\infty",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "\\lim_{x\\to a^\\pm} f(x) = \\pm\\infty \\Rightarrow x=a \\text{ vertical asymptote}"
+    ]
+  },
+  "derivative_ln": {
+    "name_en": "Derivative of a logarithm",
+    "name_km": "ដេរីវេនៃអនុគមន៍លោការីត",
+    "latex": "(\\ln u)' = \\frac{u'}{u}",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "(\\ln u)' = \\frac{u'}{u}"
+    ]
+  },
+  "quotient_rule": {
+    "name_en": "Quotient rule",
+    "name_km": "ដេរីវេនៃផលធៀប",
+    "latex": "\\left(\\frac{u}{v}\\right)' = \\frac{u'v - uv'}{v^2}",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "\\left(\\frac{u}{v}\\right)' = \\frac{u'v - uv'}{v^2}"
+    ]
+  },
+  "tangent_equation": {
+    "name_en": "Tangent line equation",
+    "name_km": "សមីការបន្ទាត់ប៉ះ",
+    "latex": "y - y_0 = f'(x_0)(x - x_0)",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "T: y - f(x_0) = f'(x_0)(x - x_0)"
+    ]
+  },
+  "product_rule": {
+    "name_en": "Product rule",
+    "name_km": "ដេរីវេនៃផលគុណ",
+    "latex": "(uv)' = u'v + uv'",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "(uv)' = u'v + uv'"
+    ]
+  },
+  "monotonicity_sign": {
+    "name_en": "Monotonicity from the derivative sign",
+    "name_km": "អថេរភាព និងសញ្ញាដេរីវេ",
+    "latex": "f' > 0 \\Rightarrow f \\text{ increasing},\\quad f' < 0 \\Rightarrow f \\text{ decreasing}",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "f' > 0 \\text{ on } I \\Rightarrow f \\text{ strictly increasing on } I",
+      "f' < 0 \\text{ on } I \\Rightarrow f \\text{ strictly decreasing on } I"
+    ]
+  },
+  "antiderivative_reciprocal_ln": {
+    "name_en": "Reciprocal antiderivative (log)",
+    "name_km": "ព្រីមីទីវនៃអនុគមន៍ច្រាស",
+    "latex": "\\int \\frac{u'}{u}\\,dx = \\ln|u| + C",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "\\int \\frac{u'}{u}\\,dx = \\ln|u| + C"
+    ]
+  },
+  "rational_domain": {
+    "name_en": "Domain of a rational function",
+    "name_km": "ដែនកំណត់នៃអនុគមន៍សនិទាន",
+    "latex": "D_f = \\{x \\in \\mathbb{R} \\mid Q(x) \\neq 0\\}",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "f = \\frac{P}{Q} \\text{ defined } \\iff Q(x) \\neq 0"
+    ]
+  },
+  "euclidean_division": {
+    "name_en": "Polynomial (Euclidean) division",
+    "name_km": "ចែកពហុធា (ចំនួនសេស)",
+    "latex": "P(x) = (x-a)Q(x) + r",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "\\frac{P(x)}{x-a} = Q(x) + \\frac{r}{x-a}"
+    ]
+  },
+  "oblique_asymptote": {
+    "name_en": "Oblique asymptote",
+    "name_km": "អាស៊ីមតូតទ្រេត",
+    "latex": "y = ax + b,\\quad a = \\lim_{x\\to\\infty}\\frac{f(x)}{x},\\quad b = \\lim_{x\\to\\infty}(f(x)-ax)",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "a = \\lim_{x\\to\\infty} \\frac{f(x)}{x}",
+      "b = \\lim_{x\\to\\infty} (f(x) - ax)"
+    ]
+  },
+  "horizontal_asymptote": {
+    "name_en": "Horizontal asymptote",
+    "name_km": "អាស៊ីមតូតដេក",
+    "latex": "y = \\lim_{x\\to\\infty} f(x)",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "\\lim_{x\\to\\infty} f(x) = L \\Rightarrow y = L"
+    ]
+  },
+  "position_asymptote": {
+    "name_en": "Position of the curve vs its asymptote",
+    "name_km": "ទីតាំងខ្សែកោងធៀបនឹងអាស៊ីមតូត",
+    "latex": "\\text{sign of } f(x) - (ax+b)",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "f(x) - (ax+b) > 0 \\Rightarrow C \\text{ above } d"
+    ]
+  },
+  "center_symmetry": {
+    "name_en": "Center of symmetry",
+    "name_km": "ផ្ចិតឆ្លុះ",
+    "latex": "f(a+t) + f(a-t) = 2b",
+    "weight": 2,
+    "group": "functions",
+    "formulas": [
+      "I(a,b) \\text{ center of symmetry } \\iff f(a+t)+f(a-t) = 2b"
+    ]
+  },
+  "graph_drawing": {
+    "name_en": "Sketching the graph",
+    "name_km": "ការសង់ក្រាប",
+    "latex": "\\text{curve } (C) \\text{ with its asymptotes and tangents}",
+    "weight": 1,
+    "group": "functions",
+    "formulas": [
+      "\\text{draw the curve, its asymptotes and tangents}"
+    ]
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "formula_name": "indeterminate_one_infinity",
+  "topic": "limits",
+  "description": "Limits of the indeterminate form 1^∞, solved using lim_{x→0}(1+x)^(1/x) = e and the composite rule lim[f(x)]^g(x) = e^{lim{g(x)[f(x)-1]}} when f(x)→1 and g(x)→∞.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.21.14 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 10,
+  "exercises": [
+    {
+      "id": "p102_1a",
+      "source_page": 102,
+      "prompt_latex": "A = \\lim_{x\\to 0} (1+4x)^{\\frac{2}{x}}",
+      "technique": "1^∞ form: rewrite exponent to match base offset, use lim(1+u)^(1/u)=e",
+      "answer_latex": "e^{8}"
+    },
+    {
+      "id": "p102_1b",
+      "source_page": 102,
+      "prompt_latex": "B = \\lim_{x\\to 0} \\left(\\frac{1-x}{1+x}\\right)^{\\frac{1}{x}}",
+      "technique": "1^∞ form: write (1-x)/(1+x) = 1 + (-2x)/(1+x), then apply lim(1+u)^(1/u)=e",
+      "answer_latex": "e^{-2}"
+    },
+    {
+      "id": "p102_1c",
+      "source_page": 102,
+      "prompt_latex": "C = \\lim_{x\\to 0} (1+3\\sin 4x)^{\\frac{2}{x}}",
+      "technique": "1^∞ form combined with sinc limit sin(4x)/(4x)→1",
+      "answer_latex": "e^{24}"
+    },
+    {
+      "id": "p102_1d",
+      "source_page": 102,
+      "prompt_latex": "D = \\lim_{x\\to 0} (2-\\cos 2x)^{\\frac{1}{x\\sin x}}",
+      "technique": "1^∞ form: rewrite 2-cos2x = 1+2sin^2 x, apply lim(1+u)^(1/u)=e with sinc limits",
+      "answer_latex": "e^{2}"
+    },
+    {
+      "id": "p102_1e",
+      "source_page": 102,
+      "prompt_latex": "E = \\lim_{x\\to 0} (2e^{x}-1)^{\\frac{1}{x}}",
+      "technique": "1^∞ form: rewrite 2e^x-1 = 1+2(e^x-1), apply lim(1+u)^(1/u)=e with exponential standard limit",
+      "answer_latex": "e^{2}"
+    },
+    {
+      "id": "p102_1f",
+      "source_page": 102,
+      "prompt_latex": "F = \\lim_{x\\to 0} (2e^{x^2}-\\cos 2x)^{\\frac{1}{x^2}}",
+      "technique": "1^∞ form using 2e^{x^2}-\\cos2x = 1+2(e^{x^2}-1+\\sin^2 x)",
+      "answer_latex": "e^{4}"
+    },
+    {
+      "id": "p102_1g",
+      "source_page": 102,
+      "prompt_latex": "G = \\lim_{x\\to 0} \\left(\\frac{e^{x}+e^{3x}}{2}\\right)^{\\frac{1}{x}}",
+      "technique": "1^∞ form: rewrite as 1+(e^x+e^{3x}-2)/2, apply lim(1+u)^(1/u)=e with exponential standard limit",
+      "answer_latex": "e^{2}"
+    },
+    {
+      "id": "p102_1h",
+      "source_page": 102,
+      "prompt_latex": "H = \\lim_{x\\to 0} \\left(\\frac{2\\cos 2x}{1+\\cos 2x}\\right)^{\\frac{1}{x^2}}",
+      "technique": "1^∞ form: rewrite as 1-tan^2x form using cos2x identities, apply lim(1+u)^(1/u)=e",
+      "answer_latex": "e^{-1}"
+    },
+    {
+      "id": "p102_1i",
+      "source_page": 102,
+      "prompt_latex": "I = \\lim_{x\\to 0} \\left(\\frac{1+x\\sin 2x}{\\cos 2x}\\right)^{\\frac{1}{x^2}}",
+      "technique": "1^∞ form: rewrite as 1+(1-\\cos2x+x\\sin2x)/\\cos2x, apply lim(1+u)^(1/u)=e",
+      "answer_latex": "e^{4}"
+    },
+    {
+      "id": "p102_1j",
+      "source_page": 102,
+      "prompt_latex": "J = \\lim_{x\\to 0} \\left(\\frac{\\sqrt{1+x^2}}{\\cos x}\\right)^{\\frac{1}{x^2}}",
+      "technique": "1^∞ form: rewrite as 1+(\\sqrt{1+x^2}-\\cos x)/\\cos x, apply lim(1+u)^(1/u)=e",
+      "answer_latex": "e"
+    }
+  ]
+}

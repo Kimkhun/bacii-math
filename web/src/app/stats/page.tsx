@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import { api, Stats } from "@/lib/api";
 
@@ -83,6 +84,7 @@ export default function StatsPage() {
                       <th className="px-4 py-2">Steps checked</th>
                       <th className="px-4 py-2">Got it</th>
                       <th className="px-4 py-2">Missed</th>
+                      <th className="px-4 py-2" />
                     </tr>
                   </thead>
                   <tbody>
@@ -92,6 +94,14 @@ export default function StatsPage() {
                         <td className="px-4 py-2">{f.attempts}</td>
                         <td className="px-4 py-2 text-emerald-600">{f.reached}</td>
                         <td className="px-4 py-2 text-red-600">{f.missed}</td>
+                        <td className="px-4 py-2 text-right">
+                          <Link
+                            href={`/practice?formula=${f.formula}`}
+                            className="px-2.5 py-1 rounded-md bg-slate-900 text-white text-xs font-medium hover:bg-slate-700"
+                          >
+                            Practice
+                          </Link>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

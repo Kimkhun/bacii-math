@@ -1,0 +1,99 @@
+{
+  "formula_name": "second_order_nonhomogeneous_undetermined_coefficients",
+  "topic": "differential_equations",
+  "description": "Second-order linear non-homogeneous ODE ay'' + by' + cy = p(x): general solution y = y_c + y_p, plus the method-of-undetermined-coefficients table for guessing y_p's form from p(x) (polynomial, exponential, sinusoidal, and their products, each split by whether the associated root already appears in the characteristic equation). Ends with a three-part worked drill covering a polynomial RHS, an exponential RHS, and a polynomial-times-trig RHS.",
+  "source": {
+    "files": [
+      "math_book/PXL_20260827_125723777.jpg",
+      "math_book/PXL_20260827_125741823.jpg",
+      "math_book/PXL_20260827_125803072.jpg",
+      "math_book/PXL_20260827_125810132.jpg",
+      "math_book/PXL_20260827_125828179.jpg",
+      "math_book/PXL_20260827_125831689.jpg",
+      "math_book/PXL_20260827_125844223.jpg",
+      "math_book/PXL_20260827_125847359.jpg",
+      "math_book/PXL_20260827_125907817.jpg"
+    ],
+    "description": "Cambodian BAC II grade-12 differential-equations lesson chapter (PHANKIMSIE booklet) — lesson definitions, theorems, and fully worked examples, photographed pages",
+    "extracted_by": "manual OCR/transcription from photographed textbook pages (Claude Code), 2026-08-27"
+  },
+  "count": 5,
+  "lessons": [
+    {
+      "id": "p20_theorem6_existence",
+      "source_photo": "PXL_20260827_125723777.jpg",
+      "type": "theorem",
+      "title": "y = y_c + y_p for ay'' + by' + cy = p(x)",
+      "statement_latex": "ay''+by'+cy=p(x),\\quad p(x)\\neq 0,\\ a,b,c\\in\\mathbb{R}",
+      "solution_steps": [
+        "\\text{Find } y_c\\text{, the general solution of the associated homogeneous equation } ay''+by'+cy=0.",
+        "\\text{Find one particular solution } y_p \\text{ of } ay''+by'+cy=p(x)\\text{, whose form depends on the type of } p(x)."
+      ],
+      "answer_latex": "y = y_c + y_p",
+      "technique": "second_order_linear_nonhomogeneous"
+    },
+    {
+      "id": "p21_yp_table",
+      "source_photo": "PXL_20260827_125741823.jpg",
+      "type": "definition",
+      "title": "Particular-solution guessing table (method of undetermined coefficients)",
+      "statement_latex": "\\text{Let } h(x), g(x) \\text{ denote polynomials of the same degree as the polynomial factor of } p(x), \\text{ and } \\lambda \\text{ range over the roots of the characteristic equation.}",
+      "solution_steps": [
+        "p(x)=f(x)e^{\\alpha x} \\text{ (}f(x)\\text{ a degree-}n\\text{ polynomial): if } \\alpha \\text{ is not a root} \\implies y_p=h(x)e^{\\alpha x}; \\text{ if } \\alpha \\text{ is a simple root} \\implies y_p=xh(x)e^{\\alpha x}; \\text{ if } \\alpha \\text{ is a double root} \\implies y_p=x^2h(x)e^{\\alpha x}",
+        "p(x)=k\\sin\\beta x \\text{ or } k\\cos\\beta x: \\text{ if } \\beta i \\text{ is not a root} \\implies y_p=A\\cos\\beta x+B\\sin\\beta x; \\text{ if } \\beta i \\text{ is a root} \\implies y_p=x(A\\cos\\beta x+B\\sin\\beta x)",
+        "p(x)=f(x)\\cos\\beta x \\text{ or } f(x)\\sin\\beta x: \\text{ if } \\beta i \\text{ is not a root} \\implies y_p=h(x)\\cos\\beta x+g(x)\\sin\\beta x; \\text{ if } \\beta i \\text{ is a root} \\implies y_p=x\\big(h(x)\\cos\\beta x+g(x)\\sin\\beta x\\big)",
+        "p(x)=ke^{\\alpha x}\\cos\\beta x \\text{ or } ke^{\\alpha x}\\sin\\beta x: \\text{ if } \\alpha\\pm i\\beta \\text{ is not a root} \\implies y_p=e^{\\alpha x}(A\\cos\\beta x+B\\sin\\beta x); \\text{ if } \\alpha\\pm i\\beta \\text{ is a root} \\implies y_p=xe^{\\alpha x}(A\\cos\\beta x+B\\sin\\beta x)",
+        "p(x)=f(x)e^{\\alpha x}\\cos\\beta x \\text{ or } f(x)e^{\\alpha x}\\sin\\beta x: \\text{ if } \\alpha\\pm i\\beta \\text{ is not a root} \\implies y_p=e^{\\alpha x}\\big(h(x)\\cos\\beta x+g(x)\\sin\\beta x\\big); \\text{ if } \\alpha\\pm i\\beta \\text{ is a root} \\implies y_p=xe^{\\alpha x}\\big(h(x)\\cos\\beta x+g(x)\\sin\\beta x\\big)",
+        "\\text{Additivity: if } p(x)=f_1(x)+f_2(x) \\text{ and } f_1,f_2 \\text{ give particular solutions } y_{p_1}, y_{p_2} \\text{ respectively, then } y_p=y_{p_1}+y_{p_2}."
+      ],
+      "technique": "undetermined_coefficients_particular_solution"
+    },
+    {
+      "id": "p23_p24_p25_example13a",
+      "source_photo": "PXL_20260827_125803072.jpg",
+      "type": "worked_example",
+      "title": "Solve y'' - 2y' - 3y = 2x^3 - 5x^2 + 3x (polynomial RHS)",
+      "statement_latex": "y'' - 2y' - 3y = 2x^3 - 5x^2 + 3x",
+      "solution_steps": [
+        "\\text{Homogeneous: } \\lambda^2-2\\lambda-3=0 \\implies (\\lambda+1)(\\lambda-3)=0 \\implies \\lambda=-1 \\text{ or } \\lambda=3 \\implies y_c=Ae^{-x}+Be^{3x}",
+        "\\text{Ansatz: } y_p=ax^3+bx^2+cx+d \\implies y_p'=3ax^2+2bx+c \\implies y_p''=6ax+2b",
+        "6ax+2b-2(3ax^2+2bx+c)-3(ax^3+bx^2+cx+d)=2x^3-5x^2+3x",
+        "-3ax^3+(-6a-3b)x^2+(6a-4b-3c)x+(2b-2c-3d)=2x^3-5x^2+3x",
+        "\\begin{cases}-3a=2\\\\-6a-3b=-5\\\\6a-4b-3c=3\\\\2b-2c-3d=0\\end{cases} \\implies \\begin{cases}a=-\\tfrac{2}{3}\\\\b=3\\\\c=-\\tfrac{19}{3}\\\\d=\\tfrac{56}{9}\\end{cases}"
+      ],
+      "answer_latex": "y = Ae^{-x} + Be^{3x} - \\frac{2}{3}x^3 + 3x^2 - \\frac{19}{3}x + \\frac{56}{9},\\quad A,B \\in \\mathbb{R}",
+      "technique": "undetermined_coefficients_particular_solution"
+    },
+    {
+      "id": "p25_p26_example13b",
+      "source_photo": "PXL_20260827_125828179.jpg",
+      "type": "worked_example",
+      "title": "Solve y'' + 3y' + 3y = 3e^{2x} (exponential RHS, complex-root complementary solution)",
+      "statement_latex": "y'' + 3y' + 3y = 3e^{2x}",
+      "solution_steps": [
+        "\\text{Homogeneous: } \\lambda^2+3\\lambda+3=0,\\ \\Delta=3^2-4\\cdot 3=-3 \\implies \\lambda=\\frac{-3\\pm\\sqrt{3}\\,i}{2}=-\\frac{3}{2}\\pm\\frac{\\sqrt3}{2}i \\implies y_c=e^{-\\frac{3}{2}x}\\left(A\\cos\\tfrac{\\sqrt3}{2}x+B\\sin\\tfrac{\\sqrt3}{2}x\\right)",
+        "\\text{Ansatz (}\\lambda=2\\text{ is not a root): } y_p=Ae^{2x} \\implies y_p'=2Ae^{2x} \\implies y_p''=4Ae^{2x}",
+        "4Ae^{2x}+3(2Ae^{2x})+3(Ae^{2x})=3e^{2x} \\implies 13Ae^{2x}=3e^{2x} \\implies A=\\frac{3}{13}"
+      ],
+      "answer_latex": "y = e^{-\\frac{3}{2}x}\\left(A\\cos\\tfrac{\\sqrt3}{2}x+B\\sin\\tfrac{\\sqrt3}{2}x\\right) + \\frac{3}{13}e^{2x},\\quad A,B \\in \\mathbb{R}",
+      "technique": "undetermined_coefficients_particular_solution"
+    },
+    {
+      "id": "p27_p28_example13c",
+      "source_photo": "PXL_20260827_125847359.jpg",
+      "type": "worked_example",
+      "title": "Solve y'' - y' - y = x cos x (polynomial-times-trig RHS)",
+      "statement_latex": "y'' - y' - y = x\\cos x",
+      "solution_steps": [
+        "\\text{Homogeneous: } \\lambda^2-\\lambda-1=0,\\ \\Delta=1-4(1)(-1)=5 \\implies \\lambda=\\frac{1\\pm\\sqrt5}{2} \\implies y_c=Ae^{\\frac{1+\\sqrt5}{2}x}+Be^{\\frac{1-\\sqrt5}{2}x}",
+        "\\text{Ansatz (}\\beta=1,\\ i \\text{ is not a root): } y_p=(ax+b)\\cos x+(cx+d)\\sin x",
+        "y_p'=(cx+a+d)\\cos x+(-ax-b+c)\\sin x",
+        "y_p''=(-ax-b+2c)\\cos x+(-cx-2a-d)\\sin x",
+        "y_p''-y_p'-y_p=x\\cos x \\implies (-2ax-2b+2c-cx-a-d)\\cos x + (-2cx-2a-2d+ax+b-c)\\sin x = x\\cos x",
+        "\\begin{cases}-2a-c=1\\\\-a-2b+2c-d=0\\\\a-2c=0\\\\-2a+b-c-2d=0\\end{cases} \\implies \\begin{cases}a=-\\tfrac{2}{5}\\\\b=-\\tfrac{1}{5}\\\\c=-\\tfrac{1}{5}\\\\d=\\tfrac{2}{5}\\end{cases}"
+      ],
+      "answer_latex": "y = Ae^{\\frac{1+\\sqrt5}{2}x}+Be^{\\frac{1-\\sqrt5}{2}x} + \\left(-\\tfrac{2}{5}x-\\tfrac{1}{5}\\right)\\cos x + \\left(-\\tfrac{1}{5}x+\\tfrac{2}{5}\\right)\\sin x,\\quad A,B \\in \\mathbb{R}",
+      "technique": "undetermined_coefficients_particular_solution"
+    }
+  ]
+}

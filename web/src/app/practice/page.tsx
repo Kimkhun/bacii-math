@@ -1,18 +1,19 @@
 "use client";
 
 import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, FULL_W, LineSnapshot, PEN_WIDTHS } from "@/components/Canvas";
 import MathText from "@/components/MathText";
 import DisambiguationCard, { DisambiguationCandidate } from "@/components/DisambiguationCard";
-import { api, Question, GradeResult, Explanation, DetectResult } from "@/lib/api";
+import FunctionGraph from "@/components/FunctionGraph";
+import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, StrokeDoc } from "@/lib/api";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
 
 const CURSIVE = "'Caveat', 'Segoe Script', cursive";
 
 const MARK_STAGGER_MS = 1000;
-const SESSION_TOTAL = 20;
 
 // Keyframes for the red-pen marks + line pops (shared by every part's canvas).
 const MARKS_STYLE = `
@@ -52,6 +53,11 @@ function markEvents(det: DetectResult, res: GradeResult): { correct: boolean }[]
   return events;
 }
 
+// Values are plain `question_type` strings for topics where that's the only
+// axis of variety (complex, functions). For topics whose real variety is a
+// *technique*/*scenario* one level below question_type (limit's techniques,
+// probability's scenario catalog, integral's per-kind variants), the value is
+// encoded as "<question_type>:<variant>" — see splitTypeValue().
 const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
   complex: [
     { value: "modulus", label: "Modulus" },
@@ -60,13 +66,53 @@ const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: "real_part", label: "Real part" },
     { value: "imaginary_part", label: "Imaginary part" },
   ],
-  limit: [{ value: "limit", label: "Limit" }],
-  integral: [
-    { value: "definite_integral", label: "Definite integral" },
-    { value: "indefinite_integral", label: "Indefinite integral" },
+  limit: [
+    { value: "limit:direct_substitution", label: "Direct substitution" },
+    { value: "limit:factoring_0_0", label: "Factoring (0/0)" },
+    { value: "limit:rationalization_conjugate_finite", label: "Conjugate rationalization" },
+    { value: "limit:sinc_standard_limit", label: "Standard limit sin(x)/x" },
+    { value: "limit:exponential_standard_limit", label: "Standard limit (eˣ-1)/x" },
+    { value: "limit:rationalization_sinc_combo", label: "Conjugate + sinc combo" },
+    { value: "limit:exponential_sinc_combo", label: "Exponential + sinc combo" },
+    { value: "limit:half_angle_sinc_combo", label: "Half-angle + sinc combo" },
+    { value: "limit:rational_function_infinity", label: "Rational function at infinity" },
+    { value: "limit:conjugate_infinity", label: "Conjugate at infinity" },
+    { value: "limit:log_limit_infinity", label: "Logarithmic limit at infinity" },
   ],
-  probability: [{ value: "probability", label: "Probability" }],
+  integral: [
+    { value: "definite_integral", label: "Definite integral (any)" },
+    { value: "definite_integral:polynomial", label: "Definite — polynomial" },
+    { value: "definite_integral:linear_argument", label: "Definite — linear argument" },
+    { value: "definite_integral:mixed_sum", label: "Definite — mixed sum" },
+    { value: "definite_integral:trig", label: "Definite — trig" },
+    { value: "definite_integral:u_substitution", label: "Definite — u-substitution" },
+    { value: "definite_integral:by_parts", label: "Definite — by parts" },
+    { value: "indefinite_integral", label: "Indefinite integral (any)" },
+    { value: "indefinite_integral:power", label: "Indefinite — power" },
+    { value: "indefinite_integral:expand", label: "Indefinite — expand" },
+    { value: "indefinite_integral:split", label: "Indefinite — split" },
+    { value: "indefinite_integral:linear_argument", label: "Indefinite — linear argument" },
+    { value: "indefinite_integral:usub", label: "Indefinite — u-substitution" },
+    { value: "indefinite_integral:trig_sec", label: "Indefinite — trig (sec²)" },
+  ],
+  probability: [
+    { value: "probability:exercise_bag_split_atleast", label: "Balls from a bag" },
+    { value: "probability:exercise_two_bag_odd_even", label: "Two bags of numbered balls" },
+    { value: "probability:exercise_two_box_colors", label: "Two boxes of colors" },
+    { value: "probability:exercise_banknotes", label: "Banknotes" },
+    { value: "probability:exercise_pens", label: "Pens" },
+    { value: "probability:exercise_students", label: "Students" },
+  ],
+  functions: [{ value: "study", label: "Curve study & area" }],
 };
+
+// Splits a TYPE_OPTIONS value into the {question_type, variant} pair the
+// generate API actually wants (see the TYPE_OPTIONS comment above).
+function splitTypeValue(value: string): { question_type?: string; variant?: string } {
+  const i = value.indexOf(":");
+  if (i === -1) return { question_type: value };
+  return { question_type: value.slice(0, i), variant: value.slice(i + 1) };
+}
 
 interface AmbiguousLine {
   index: number;
@@ -79,6 +125,25 @@ interface SessionConfig {
   topic: string;
   questionType: string;
   difficulty: string;
+}
+
+// Snapshot of one part's canvas-adjacent state, captured when navigating away
+// from a question so it can be restored verbatim on return.
+interface PartState {
+  typed: string;
+  detected: string | null;
+  workText: string | null;
+  workLatex: string[] | null;
+  detectResult: DetectResult | null;
+  result: GradeResult | null;
+  marks: ReactNode[] | null;
+  linePops: ReactNode[] | null;
+  // Raw ink snapshot (data URL), captured whenever navigating away from a
+  // part that hasn't been graded yet — grading already preserves the look of
+  // the work via `marks`/`linePops`, but ungraded strokes have nothing else
+  // recording them. Restored via Canvas.loadBackgroundInk() so the student
+  // can keep writing on top of it instead of landing on a frozen image.
+  canvasImage?: string | null;
 }
 
 // Re-draw a past attempt's OCR'd writing at its stored box positions. The text
@@ -359,18 +424,11 @@ function PracticeInner() {
   const [partIndex, setPartIndex] = useState(0);
   const [exerciseDone, setExerciseDone] = useState(false);
 
-  // Session setup (shown before the canvas). Once started, `sessionActive`
-  // drives the "Question N of 20" header + Skip; config stays fixed for the
-  // whole session.
-  const [sessionActive, setSessionActive] = useState(false);
-  const [sessionIndex, setSessionIndex] = useState(1);
-  const [sessionCorrect, setSessionCorrect] = useState(0);
-  const [sessionDone, setSessionDone] = useState(false);
+  // Practice config (defaults until the student picks something and generates).
   const [mode, setMode] = useState("templates");
   const [topic, setTopic] = useState("complex");
   const [questionType, setQuestionType] = useState("any");
   const [difficulty, setDifficulty] = useState("medium");
-  const sessionConfigRef = useRef<SessionConfig | null>(null);
 
   // Per-part state: every sub-part (A/B/C/...) owns its own canvas, typed
   // answer, OCR result, and red-pen marks. Single-part topics use index 0.
@@ -384,6 +442,7 @@ function PracticeInner() {
   const [linePopsByPart, setLinePopsByPart] = useState<(ReactNode[] | null)[]>([]);
 
   const [explanation, setExplanation] = useState<Explanation | null>(null);
+  const [graphGrade, setGraphGrade] = useState<GraphGradeResult | null>(null);
   const [hintLevel, setHintLevel] = useState(0);
   const [ambiguityQueue, setAmbiguityQueue] = useState<AmbiguousLine[] | null>(null);
   const [ambiguityResolved, setAmbiguityResolved] = useState<Record<number, DisambiguationCandidate>>({});
@@ -393,6 +452,9 @@ function PracticeInner() {
   const [tool, setTool] = useState<CanvasTool>("pen");
   const [penWidth, setPenWidth] = useState<number>(PEN_WIDTHS.medium);
   const [eraserWidth, setEraserWidth] = useState<number>(32);
+  const [gridStep, setGridStep] = useState<{ x: number; y: number }>({ x: 1, y: 1 });
+  const [gridScale, setGridScale] = useState(40);
+  const [gridOn, setGridOn] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -401,6 +463,7 @@ function PracticeInner() {
   // top-left pixel position takes over and is remembered per device.
   const [toolbarPos, setToolbarPos] = useState<{ x: number; y: number } | null>(null);
   const [reviewMode, setReviewMode] = useState(false);
+  const [practicingFormula, setPracticingFormula] = useState<{ id: string; name: string } | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -474,6 +537,8 @@ function PracticeInner() {
     setPartIndex(i);
     setExplanation(null);
     setError("");
+    // Each part's canvas owns its own grid — reflect it in the toolbar flag.
+    setGridOn(canvasRefs.current[i]?.hasGrid() ?? false);
   };
 
   useEffect(() => {
@@ -537,9 +602,56 @@ function PracticeInner() {
             step_check: d.step_check ?? undefined,
           });
         }
+        if (d.strokes) setPendingStrokes([d.strokes]);
         setReviewMode(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load attempt");
+      } finally {
+        setBusy(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Forced formula practice: /practice?formula=<id> (from the formula sheet's
+  // "Practice" link, or a post-grade "Practice this" prompt) looks up the
+  // formula's known generator variants and forces the first one, loading it
+  // straight into the canvas. Falls back to a normal random question if the
+  // formula has no known variant (e.g. it's curated-only).
+  useEffect(() => {
+    const formulaId = searchParams.get("formula");
+    if (!formulaId) return;
+    (async () => {
+      setError("");
+      setBusy(true);
+      try {
+        const catalog = await api.formulas();
+        let entry: FormulaEntry | undefined;
+        for (const t of catalog.topics) {
+          entry = t.entries.find((e) => e.id === formulaId);
+          if (entry) break;
+        }
+        const ref = entry?.variants?.[0];
+        const cfg: SessionConfig = ref
+          ? {
+              mode: "templates",
+              topic: ref.topic,
+              questionType: ref.variant ? `${ref.question_type}:${ref.variant}` : ref.question_type,
+              difficulty: ref.difficulty,
+            }
+          : { mode, topic, questionType: "any", difficulty };
+        // Keep the topic/type/difficulty dropdowns in sync with the forced
+        // config — they read from this state, and "New question" reuses it.
+        setMode(cfg.mode);
+        setTopic(cfg.topic);
+        setQuestionType(cfg.questionType);
+        setDifficulty(cfg.difficulty);
+        const q = await generateQuestion(cfg);
+        loadQuestion(q);
+        setPracticingFormula({ id: formulaId, name: entry?.name_en ?? formulaId.replaceAll("_", " ") });
+        router.replace("/practice");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to start formula practice");
       } finally {
         setBusy(false);
       }
@@ -560,6 +672,44 @@ function PracticeInner() {
   const selectEraserWidth = (w: number) => {
     setEraserWidth(w);
     canvasRefs.current.forEach((c) => c?.setEraserWidth(w));
+  };
+
+  // Axes is a drawing tool: selecting it spawns the grid (if absent) and
+  // enters axes-edit mode (tap the canvas to move the origin, use the toolbar
+  // scale/Δ controls to resize). Clicking it again while in axes mode hides the
+  // grid and returns to the pen.
+  const selectAxes = () => {
+    const c = activeCanvas();
+    if (!c) return;
+    if (tool === "axes" && gridOn) {
+      c.hideGrid();
+      setGridOn(false);
+      selectTool("pen");
+      return;
+    }
+    if (!gridOn) {
+      c.spawnGrid(gridStep.x, gridStep.y, null, gridScale);
+      setGridOn(true);
+    }
+    selectTool("axes");
+    markDirty();
+  };
+
+  const changeGridStep = (axis: "x" | "y", v: number) => {
+    if (!Number.isFinite(v)) return;
+    const val = Math.max(0.5, Math.min(50, v));
+    setGridStep((s) => {
+      const next = { ...s, [axis]: val };
+      if (gridOn) activeCanvas()?.setGridSteps(next.x, next.y);
+      return next;
+    });
+  };
+
+  const changeGridScale = (v: number) => {
+    if (!Number.isFinite(v)) return;
+    const val = Math.max(10, Math.min(200, v));
+    setGridScale(val);
+    if (gridOn) activeCanvas()?.setGridScale(val);
   };
 
   const undo = () => {
@@ -596,18 +746,28 @@ function PracticeInner() {
         selectTool("pen");
       } else if (k === "e") {
         selectTool("eraser");
+      } else if (k === "r") {
+        selectTool("ruler");
+      } else if (k === "g") {
+        selectAxes();
+      } else if (k === "c") {
+        selectTool("curve");
+      } else if (k === "o") {
+        selectTool("ellipse");
+      } else if (k === "v") {
+        selectTool("select");
       } else if (k === "[") {
-        if (tool === "pen") selectPenWidth(Math.max(1, penWidth - 1));
-        else selectEraserWidth(Math.max(10, eraserWidth - 1));
+        if (tool === "eraser") selectEraserWidth(Math.max(10, eraserWidth - 1));
+        else selectPenWidth(Math.max(1, penWidth - 1));
       } else if (k === "]") {
-        if (tool === "pen") selectPenWidth(Math.min(30, penWidth + 1));
-        else selectEraserWidth(Math.min(100, eraserWidth + 1));
+        if (tool === "eraser") selectEraserWidth(Math.min(100, eraserWidth + 1));
+        else selectPenWidth(Math.min(30, penWidth + 1));
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tool, penWidth, eraserWidth]);
+  }, [tool, penWidth, eraserWidth, gridOn]);
 
   // Once the user has picked a zoom level themselves (buttons or pinch),
   // stop auto-fitting on resize/rotation so we never yank the view out from
@@ -705,28 +865,57 @@ function PracticeInner() {
     });
   };
 
-  const generateOne = async (cfg: SessionConfig) => {
-    const q = await api.generate(
+  // Load a question into the live per-part state so the canvases and results
+  // panel reflect a fresh exercise (or a resumed/forced one).
+  const loadQuestion = (q: Question) => {
+    const n = Math.max(1, q.params?.parts?.length ?? 0);
+    setQuestion(q);
+    initPartState(n);
+    // Every part's canvas is mounted simultaneously (only hidden via CSS for
+    // non-active parts), so this also wipes any stale ink left over from a
+    // DIFFERENT question that happened to reuse the same part-label keys.
+    canvasRefs.current.forEach((cv) => {
+      if (cv) cv.clear();
+    });
+  };
+
+  // Once a question's canvases are mounted, auto-fit a grid on the
+  // draw-the-graph part to the exercise's reference window, so the student
+  // draws directly over where the graph lives (no manual centering).
+  useEffect(() => {
+    if (!question) return;
+    const parts = (question.params?.parts ?? []) as { label: string; want?: string }[];
+    const graph = question.params?.graph as
+      | { x_min?: number; x_max?: number; y_min?: number; y_max?: number }
+      | undefined;
+    if (!graph || typeof graph.x_min !== "number") return;
+    parts.forEach((p, i) => {
+      if (p.want === "draw") {
+        canvasRefs.current[i]?.fitGridToWindow(graph.x_min!, graph.x_max!, graph.y_min!, graph.y_max!);
+      }
+    });
+  }, [question]);
+
+  const generateQuestion = async (cfg: SessionConfig): Promise<Question> => {
+    const { question_type, variant } =
+      cfg.questionType === "any" ? {} : splitTypeValue(cfg.questionType);
+    return api.generate(
       cfg.topic === "complex" ? cfg.mode : "templates",
       cfg.difficulty,
       cfg.topic,
-      cfg.questionType === "any" ? undefined : cfg.questionType
+      question_type,
+      variant
     );
-    setQuestion(q);
-    initPartState(q.params?.parts?.length ?? 0);
   };
 
-  const startSession = async () => {
+  const newQuestion = async () => {
     setError("");
     setBusy(true);
+    setPracticingFormula(null);
     try {
       const cfg: SessionConfig = { mode, topic, questionType, difficulty };
-      sessionConfigRef.current = cfg;
-      await generateOne(cfg);
-      setSessionIndex(1);
-      setSessionCorrect(0);
-      setSessionDone(false);
-      setSessionActive(true);
+      const q = await generateQuestion(cfg);
+      loadQuestion(q);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate");
     } finally {
@@ -734,32 +923,27 @@ function PracticeInner() {
     }
   };
 
-  const advanceSession = async (wasCorrect: boolean) => {
-    if (wasCorrect) setSessionCorrect((c) => c + 1);
-    if (sessionIndex >= SESSION_TOTAL) {
-      setSessionDone(true);
-      return;
-    }
-    setError("");
-    activeCanvas()?.clear();
-    setBusy(true);
-    try {
-      await generateOne(sessionConfigRef.current!);
-      setSessionIndex((i) => i + 1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate");
-    } finally {
-      setBusy(false);
-    }
+  // Update the config dropdowns — they only take effect when the student
+  // presses "New question" (no auto-regeneration while selecting).
+  const changeTopic = (nextTopic: string) => {
+    if (nextTopic === topic) return;
+    setTopic(nextTopic);
+    setQuestionType("any");
   };
 
-  const skip = () => advanceSession(false);
+  const changeQuestionType = (nextType: string) => {
+    if (nextType === questionType) return;
+    setQuestionType(nextType);
+  };
 
-  const endSession = () => {
-    setSessionActive(false);
-    setSessionDone(false);
+  const changeDifficulty = (next: string) => setDifficulty(next);
+  const changeMode = (next: string) => setMode(next);
+
+  const clearPractice = () => {
     setQuestion(null);
     initPartState(0);
+    activeCanvas()?.clear();
+    setPracticingFormula(null);
   };
 
   const uploadImage = () => fileRef.current?.click();
@@ -795,7 +979,14 @@ function PracticeInner() {
       setDetectResult(finalDet);
       setDetected(finalDet.raw_text || resolvedLines[resolvedLines.length - 1] || "(nothing detected)");
       const answer = finalDet.raw_text || resolvedLines[resolvedLines.length - 1] || "";
-      const res = await api.grade(question.id, answer, work, finalDet.lines_boxes, currentPart ?? undefined);
+      const strokes = activeCanvas()?.getStrokes() ?? null;
+      const strokesThumb = activeCanvas()?.getStrokesThumb() ?? null;
+      const strokesToSend =
+        strokes && JSON.stringify(strokes).length <= 500_000 ? strokes : null;
+      const res = await api.grade(
+        question.id, answer, work, finalDet.lines_boxes, currentPart ?? undefined, hintLevel,
+        strokesToSend, strokesThumb,
+      );
       setResult(res);
       const nowDone = res.correct && res.all_complete;
       if (nowDone) {
@@ -804,6 +995,12 @@ function PracticeInner() {
         setPartIndex((i) => Math.min(i + 1, partLabels.length - 1));
       }
       if (res.explanation) setExplanation(res.explanation);
+      if (question.topic === "functions" && res.graph) {
+        const thumb = activeCanvas()?.getInkSnapshot();
+        if (thumb) {
+          api.gradeGraph(question.id, thumb).then((gg) => setGraphGrade(gg)).catch(() => {});
+        }
+      }
       const map = activeCanvas()?.getExportMap();
       const nextMarks =
         map && finalDet.lines_boxes?.length ? buildMarks(finalDet, res, map, debug) : null;
@@ -833,7 +1030,6 @@ function PracticeInner() {
       }
       const newStreak = updateStreak(res.correct);
       setStreak(newStreak);
-      if (nowDone && sessionActive) advanceSession(true);
 
       // Play the grade sounds in sync with the progressive reveal. When the answer is
       // correct (SymPy-verified), EVERY line celebrates with a rising ding — the
@@ -882,9 +1078,42 @@ function PracticeInner() {
     setError("");
     setResult(null);
     setExplanation(null);
+    setGraphGrade(null);
     setMarks(null);
     setLinePops(null);
     setBusy(true);
+
+    // A "draw the graph" part has no numeric answer — checking it runs the
+    // graph-drawing check (gradeGraph) on the ink instead of OCR grading.
+    const partsArr = (question.params?.parts ?? []) as { label: string; want?: string }[];
+    const activeMeta = currentPart ? partsArr.find((p) => p.label === currentPart) : undefined;
+    if (activeMeta?.want === "draw") {
+      const thumb = activeCanvas()?.getInkSnapshot();
+      if (!thumb) {
+        setError("Draw the graph on the page first.");
+        setBusy(false);
+        return;
+      }
+      try {
+        const gg = await api.gradeGraph(question.id, thumb);
+        setGraphGrade(gg);
+        setResult({
+          correct: true,
+          reason: "graph",
+          expected: "",
+          attempt_id: "",
+          part: currentPart ?? undefined,
+          all_complete: true,
+        } as GradeResult);
+        setExerciseDone(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Graph check failed");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     try {
       const answer = typed.trim();
       if (answer) {
@@ -971,6 +1200,133 @@ function PracticeInner() {
     setError("Redraw that line, then check your work again.");
   };
 
+  const [sessions, setSessions] = useState<SessionSummary[] | null>(null);
+  const [savedFlash, setSavedFlash] = useState<string | null>(null);
+  const [resumeWriting, setResumeWriting] = useState<(DetectResult | null)[]>([]);
+  // Vector strokes to restore into per-part canvases once they mount (resume +
+  // review). Loaded in an effect so canvasRefs are populated after re-render.
+  const [pendingStrokes, setPendingStrokes] = useState<(StrokeDoc | null)[] | null>(null);
+
+  useEffect(() => {
+    if (!pendingStrokes) return;
+    pendingStrokes.forEach((doc, i) => {
+      const c = canvasRefs.current[i];
+      if (c && doc) c.loadStrokes(doc);
+    });
+    setPendingStrokes(null);
+  }, [pendingStrokes]);
+
+  useEffect(() => {
+    if (!reviewMode && !question) {
+      api.myProgress().then(setSessions).catch(() => {});
+    }
+  }, [reviewMode, question]);
+
+  const saveProgressNow = async () => {
+    if (!question) {
+      setError("Generate a question first.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      let ty = typed.trim();
+      let wt = workText;
+      let boxes = detectResult?.lines_boxes ?? null;
+      if (!ty && !wt) {
+        const ink = activeCanvas()?.getImageBase64();
+        if (ink) {
+          const det = await api.detect(ink);
+          setDetectResult(det);
+          setDetected(det.raw_text || "(nothing detected)");
+          wt = det.lines?.length ? det.lines.join("\n") : null;
+          boxes = det.lines_boxes ?? null;
+          setWorkText(wt);
+          setWorkLatex(det.lines_latex?.length ? det.lines_latex : null);
+        }
+      }
+      const strokes = activeCanvas()?.getStrokes() ?? null;
+      const strokesThumb = activeCanvas()?.getStrokesThumb() ?? null;
+      const strokesToSend =
+        strokes && JSON.stringify(strokes).length <= 500_000 ? strokes : null;
+      const summary = await api.saveProgress(
+        question.id, currentPart ?? undefined,
+        ty || undefined, wt ?? undefined, boxes ?? undefined,
+        strokesToSend, strokesThumb,
+      );
+      setSavedFlash(`Saved (${summary.parts_done}/${summary.parts_total} parts)`);
+      setTimeout(() => setSavedFlash(null), 3000);
+      api.myProgress().then(setSessions).catch(() => {});
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deleteSession = async (id: string) => {
+    try {
+      await api.deleteProgress(id);
+      setSessions((s) => (s ? s.filter((x) => x.id !== id) : s));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+    }
+  };
+
+  const loadSession = async (id: string) => {
+    setBusy(true);
+    try {
+      const d = await api.progress(id);
+      const labels = Object.keys(d.parts);
+      if (!d.question) throw new Error("Question missing from saved progress");
+      setQuestion(d.question);
+      initPartState(labels.length);
+      setReviewMode(false);
+      setResumeWriting(Array(labels.length).fill(null));
+      const strokesArr: (StrokeDoc | null)[] = Array(labels.length).fill(null);
+      let firstUndone = labels.length - 1;
+      const allDone = labels.length > 0;
+      labels.forEach((lab, i) => {
+        const st = d.parts[lab];
+        if (!st) return;
+        setAt(setTypedByPart, i, st.typed ?? "");
+        setAt(setWorkTextByPart, i, st.work_text ?? null);
+        setAt(setWorkLatexByPart, i, null);
+        if (st.strokes) strokesArr[i] = st.strokes;
+        if (st.lines_boxes?.length) {
+          const det = {
+            lines: (st.work_text ?? "").split("\n").filter(Boolean),
+            lines_boxes: st.lines_boxes,
+          } as DetectResult;
+          setAt(setResumeWriting, i, det);
+        }
+        if (st.correct) {
+          setAt(setResultByPart, i, {
+            correct: true, reason: "saved", expected: "", attempt_id: "",
+          } as GradeResult);
+        } else if (firstUndone === labels.length - 1) {
+          firstUndone = i;
+        }
+      });
+      const done = allDone && labels.every((lab) => d.parts[lab]?.correct);
+      setExerciseDone(done);
+      setPartIndex(firstUndone);
+      setPendingStrokes(strokesArr);
+
+      // Keep the config dropdowns in sync so "New question" generates in the
+      // resumed exercise's topic/type/difficulty.
+      setMode("templates");
+      setTopic(d.question.topic);
+      setQuestionType(d.question.question_type);
+      setDifficulty(d.question.difficulty);
+      router.replace("/practice");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to resume");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const showExplanation = async () => {
     if (!question) return;
     setBusy(true);
@@ -1012,121 +1368,7 @@ function PracticeInner() {
     }
   };
 
-  const showSetup = !reviewMode && !sessionActive;
-
-  if (showSetup) {
-    return (
-      <AuthGuard>
-        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#f2f1ed] px-4">
-          <div className="w-full max-w-md bg-white border border-[#e4e2db] rounded-2xl shadow-sm p-6 space-y-4">
-            <div>
-              <h1 className="text-xl font-bold text-[#23272e]">Start a practice session</h1>
-              <p className="mt-1 text-sm text-[#8a857b]">
-                {SESSION_TOTAL} questions, handwritten and graded instantly.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <label className="block">
-                <span className="text-xs font-medium text-[#6b6558]">Topic</span>
-                <select
-                  value={topic}
-                  onChange={(e) => {
-                    setTopic(e.target.value);
-                    setQuestionType("any");
-                  }}
-                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
-                >
-                  <option value="complex">Complex numbers</option>
-                  <option value="limit">Limits</option>
-                  <option value="integral">Integrals</option>
-                  <option value="probability">Probability</option>
-                </select>
-              </label>
-              <label className="block">
-                <span className="text-xs font-medium text-[#6b6558]">Question type</span>
-                <select
-                  value={questionType}
-                  onChange={(e) => setQuestionType(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
-                >
-                  <option value="any">Any type</option>
-                  {TYPE_OPTIONS[topic].map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <span className="text-xs font-medium text-[#6b6558]">Difficulty</span>
-                <select
-                  value={difficulty}
-                  onChange={(e) => setDifficulty(e.target.value)}
-                  className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </label>
-              {topic === "complex" && (
-                <label className="block">
-                  <span className="text-xs font-medium text-[#6b6558]">Generation mode</span>
-                  <select
-                    value={mode}
-                    onChange={(e) => setMode(e.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-[#dddad1] rounded-md text-sm"
-                  >
-                    <option value="templates">Templates</option>
-                    <option value="gemini">Gemini</option>
-                  </select>
-                </label>
-              )}
-            </div>
-            {error && <p className="text-xs text-red-600">{error}</p>}
-            <button
-              onClick={startSession}
-              disabled={busy}
-              className="w-full px-4 py-2.5 rounded-lg bg-[#23272e] text-white text-sm font-semibold hover:bg-[#31363f] disabled:opacity-50"
-            >
-              {busy ? "Starting..." : `Start session (${SESSION_TOTAL} questions)`}
-            </button>
-          </div>
-        </div>
-      </AuthGuard>
-    );
-  }
-
-  if (sessionDone) {
-    return (
-      <AuthGuard>
-        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#f2f1ed] px-4">
-          <div className="w-full max-w-md bg-white border border-[#e4e2db] rounded-2xl shadow-sm p-6 text-center space-y-4">
-            <h1 className="text-xl font-bold text-[#23272e]">Session complete!</h1>
-            <p className="text-4xl font-extrabold text-emerald-600">
-              {sessionCorrect} / {SESSION_TOTAL}
-            </p>
-            <p className="text-sm text-[#8a857b]">correct on the first check</p>
-            <div className="flex gap-2">
-              <button
-                onClick={startSession}
-                disabled={busy}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-[#23272e] text-white text-sm font-semibold hover:bg-[#31363f] disabled:opacity-50"
-              >
-                Start another session
-              </button>
-              <button
-                onClick={endSession}
-                className="px-4 py-2.5 rounded-lg border border-[#dddad1] text-sm font-medium hover:bg-[#faf9f6]"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      </AuthGuard>
-    );
-  }
+  const bannerShown = reviewMode || !!practicingFormula;
 
   return (
     <AuthGuard>
@@ -1149,12 +1391,25 @@ function PracticeInner() {
             </button>
           </div>
         )}
+        {practicingFormula && !reviewMode && (
+          <div className="fixed top-[76px] left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto">
+            <span>
+              Practicing: <span className="font-semibold capitalize">{practicingFormula.name}</span>
+            </span>
+            <button
+              onClick={() => setPracticingFormula(null)}
+              className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-medium"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         <style>{MARKS_STYLE}</style>
 
         {partLabels.length > 0 && (
           <div
             className={`fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md px-2 py-1.5 pointer-events-auto ${
-              reviewMode ? "top-[124px]" : "top-[76px]"
+              bannerShown ? "top-[124px]" : "top-[76px]"
             }`}
           >
             <span className="text-xs text-[#8a857b] pr-1">Part</span>
@@ -1192,6 +1447,7 @@ function PracticeInner() {
                 zoom={zoom}
                 onChange={markDirty}
                 onZoomChange={onCanvasZoomChange}
+                onToolAutoSwitch={selectTool}
                 overlay={
                   marksByPart[i]?.length || linePopsByPart[i]?.length || (i === partIndex && ambiguityQueue?.length) ? (
                     <>
@@ -1213,6 +1469,7 @@ function PracticeInner() {
             zoom={zoom}
             onChange={markDirty}
             onZoomChange={onCanvasZoomChange}
+            onToolAutoSwitch={selectTool}
             overlay={
               marks?.length || linePops?.length || ambiguityQueue?.length ? (
                 <>
@@ -1238,11 +1495,63 @@ function PracticeInner() {
                 )}
               </div>
             ) : (
-              <span className="text-[#8a857b] text-sm">Loading question…</span>
+              <span className="text-[#8a857b] text-sm">
+                Pick a topic &amp; difficulty, then press New question.
+              </span>
             )}
           </div>
 
           <div className="flex items-center gap-3.5 shrink-0">
+            {!reviewMode && (
+              <>
+                <select
+                  value={topic}
+                  onChange={(e) => changeTopic(e.target.value)}
+                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                  title="Topic"
+                >
+                  <option value="complex">Complex numbers</option>
+                  <option value="limit">Limits</option>
+                  <option value="integral">Integrals</option>
+                  <option value="probability">Probability</option>
+                  <option value="functions">Functions</option>
+                </select>
+                <select
+                  value={questionType}
+                  onChange={(e) => changeQuestionType(e.target.value)}
+                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                  title="Question type"
+                >
+                  <option value="any">Any type</option>
+                  {TYPE_OPTIONS[topic].map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={difficulty}
+                  onChange={(e) => changeDifficulty(e.target.value)}
+                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                  title="Difficulty"
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+                {topic === "complex" && (
+                  <select
+                    value={mode}
+                    onChange={(e) => changeMode(e.target.value)}
+                    className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                    title="Generation mode"
+                  >
+                    <option value="templates">Templates</option>
+                    <option value="gemini">Gemini</option>
+                  </select>
+                )}
+              </>
+            )}
             {streak > 0 && (
               <span
                 className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-xs font-semibold whitespace-nowrap"
@@ -1251,17 +1560,68 @@ function PracticeInner() {
                 🔥 {streak}
               </span>
             )}
-            {sessionActive && (
-              <span className="text-[12.5px] text-[#8a857b] whitespace-nowrap">
-                Question {sessionIndex} of {SESSION_TOTAL}
+            {savedFlash && (
+              <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                {savedFlash}
               </span>
             )}
+            {sessions && sessions.length > 0 && !reviewMode && (
+              <details className="relative">
+                <summary className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+                  Saved ({sessions.length})
+                </summary>
+                <div className="absolute right-0 top-full mt-1.5 w-72 max-h-64 overflow-y-auto bg-white border border-[#e4e2db] rounded-lg shadow-lg p-2 space-y-1.5 z-40">
+                  {sessions.map((s) => (
+                    <div
+                      key={s.id}
+                      className="flex items-center justify-between gap-2 rounded-md border border-[#e4e2db] bg-[#faf9f6] p-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-xs font-medium text-[#23272e] truncate">
+                          {(s.question?.prompt ?? "").split("\n")[0]}
+                        </div>
+                        <div className="text-[11px] text-[#8a857b]">
+                          {s.question?.question_type.replace("_", " ")} · {s.parts_done}/{s.parts_total} parts
+                          {s.status === "completed" ? " · done" : ""}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <button
+                          onClick={() => loadSession(s.id)}
+                          disabled={busy}
+                          className="px-2.5 py-1 rounded-md bg-[#23272e] text-white text-xs font-medium hover:bg-[#31363f]"
+                        >
+                          Resume
+                        </button>
+                        <button
+                          onClick={() => deleteSession(s.id)}
+                          disabled={busy}
+                          className="px-2 py-1 rounded-md border border-[#dddad1] text-xs text-[#8a857b] hover:bg-white"
+                          title="Delete saved progress"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
             <button
-              onClick={skip}
-              disabled={busy}
+              onClick={saveProgressNow}
+              disabled={busy || !question}
               className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
+              title="Save progress for later"
             >
-              Skip
+              Save
+            </button>
+            <button
+              onClick={newQuestion}
+              disabled={busy}
+              className="px-[15px] py-2 stylus:px-5 stylus:py-3 rounded-[7px] bg-[#23272e] text-white text-[12.5px] font-semibold hover:bg-[#31363f] disabled:opacity-50"
+              title="Generate a new question"
+            >
+              {busy ? "Working..." : "New question"}
             </button>
           </div>
         </div>
@@ -1289,6 +1649,15 @@ function PracticeInner() {
                   ? `Part ${result.part ?? ""} correct`
                   : "Incorrect"}
               </div>
+              {exerciseDone && (
+                <button
+                  onClick={newQuestion}
+                  disabled={busy}
+                  className="mt-2 w-full px-3 py-2 rounded-lg bg-[#23272e] text-white text-xs font-semibold hover:bg-[#31363f] disabled:opacity-50"
+                >
+                  {busy ? "Working..." : "Next question →"}
+                </button>
+              )}
               {partLabels.length > 0 && (
                 <div className="mt-1 flex items-center gap-1 text-xs">
                   {partLabels.map((lab, i) => (
@@ -1312,18 +1681,23 @@ function PracticeInner() {
                   {result.parts.map((pv) => (
                     <div
                       key={pv.label}
-                      className={`flex items-center justify-between rounded px-2 py-1 ${
+                      className={`rounded px-2 py-1 ${
                         pv.correct ? "bg-emerald-100/80 text-emerald-900" : "bg-red-100/80 text-red-900"
                       }`}
                     >
-                      <span className="font-semibold">
-                        {pv.correct ? "✓" : "✗"} Part {pv.label}
-                      </span>
-                      <span className="text-xs">
-                        {pv.given ? `you: ${pv.given} · ` : ""}
-                        {pv.correct ? "" : `expected ${pv.expected}`}
-                        {!pv.correct && !pv.given ? "(unanswered)" : ""}
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold">
+                          {pv.correct ? "✓" : "✗"} Part {pv.label}
+                        </span>
+                        <span className="text-xs">
+                          {pv.given ? `you: ${pv.given} · ` : ""}
+                          {pv.correct ? "" : `expected ${pv.expected}`}
+                          {!pv.correct && !pv.given ? "(unanswered)" : ""}
+                        </span>
+                      </div>
+                      {pv.note && (
+                        <div className="mt-0.5 text-xs text-emerald-800/90">{pv.note}</div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1335,6 +1709,107 @@ function PracticeInner() {
                 )
               )}
               <div className="mt-1 text-xs text-[#8a857b]">Reason: {result.reason}</div>
+              {result.teacher_feedback?.content && (
+                <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 shadow-sm">
+                  <div className="flex items-center gap-1.5 font-semibold text-amber-800 mb-1">
+                    <span>👨‍🏫</span>
+                    <span>ការណែនាំពីលោកគ្រូ (Teacher's Exam Rubric Tip)</span>
+                  </div>
+                  <MathText text={result.teacher_feedback.content} className="whitespace-pre-wrap font-sans" />
+                </div>
+              )}
+              {!result.correct &&
+                result.step_check?.first_error_line != null &&
+                (() => {
+                  const fumbled = result.step_check!.line_results.find(
+                    (l) => l.line === result.step_check!.first_error_line
+                  )?.formula;
+                  if (!fumbled) return null;
+                  return (
+                    <Link
+                      href={`/practice?formula=${fumbled}`}
+                      className="mt-2 inline-block px-2.5 py-1 rounded-md bg-[#23272e] text-white text-xs font-medium hover:bg-[#31363f]"
+                    >
+                      Practice: {fumbled.replaceAll("_", " ")}
+                    </Link>
+                  );
+                })()}
+              {result.graph && (
+                <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                  <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
+                    Reference graph — compare with your drawing
+                  </div>
+                  <FunctionGraph graph={result.graph} />
+                  {result.graph_check && (
+                    <div className="mt-2 text-xs">
+                      <div className="text-[#8a857b]">Labels your drawing includes:</div>
+                      <div className="mt-0.5 flex flex-wrap gap-x-2">
+                        {result.graph_check.items.map((it) => (
+                          <span
+                            key={it.label}
+                            className={it.found ? "text-emerald-700 font-semibold" : "text-[#8a857b] opacity-60"}
+                          >
+                            {it.label} {it.found ? "✓" : "·"}
+                          </span>
+                        ))}
+                      </div>
+                      {result.graph_check.found < result.graph_check.total && (
+                        <div className="mt-1 text-[#8a857b] text-[11px]">
+                          Missing labels aren't counted wrong — add them and redraw to match the
+                          reference curve.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {graphGrade && !graphGrade.error && (
+                    <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                      <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
+                        Graph Drawing Assessment
+                      </div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className={`text-lg font-bold ${graphGrade.score! >= 80 ? "text-emerald-700" : graphGrade.score! >= 60 ? "text-amber-600" : "text-red-600"}`}>
+                          {graphGrade.score}/100
+                        </span>
+                        <div className="flex gap-1.5 text-xs">
+                          {graphGrade.curve_correct !== undefined && (
+                            <span className={graphGrade.curve_correct ? "text-emerald-700" : "text-red-600"}>
+                              Curve {graphGrade.curve_correct ? "✓" : "✗"}
+                            </span>
+                          )}
+                          {graphGrade.asymptotes_correct !== undefined && (
+                            <span className={graphGrade.asymptotes_correct ? "text-emerald-700" : "text-red-600"}>
+                              Asymptotes {graphGrade.asymptotes_correct ? "✓" : "✗"}
+                            </span>
+                          )}
+                          {graphGrade.tangent_correct !== null && graphGrade.tangent_correct !== undefined && (
+                            <span className={graphGrade.tangent_correct ? "text-emerald-700" : "text-red-600"}>
+                              Tangent {graphGrade.tangent_correct ? "✓" : "✗"}
+                            </span>
+                          )}
+                          {graphGrade.points_correct !== undefined && (
+                            <span className={graphGrade.points_correct ? "text-emerald-700" : "text-red-600"}>
+                              Points {graphGrade.points_correct ? "✓" : "✗"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {graphGrade.feedback && (
+                        <p className="text-xs text-[#3f3c35] mb-1">{graphGrade.feedback}</p>
+                      )}
+                      {graphGrade.suggestions && graphGrade.suggestions.length > 0 && (
+                        <ul className="text-[11px] text-[#8a857b] list-disc list-inside space-y-0.5">
+                          {graphGrade.suggestions.map((s, i) => <li key={i}>{s}</li>)}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                  {graphGrade?.error === "rate_limited" && (
+                    <div className="mt-2 text-[11px] text-[#8a857b]">
+                      Graph assessment unavailable (rate limited).
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -1380,10 +1855,42 @@ function PracticeInner() {
                   {(!hintLevel || hintLevel >= (explanation.steps?.length ?? 0)) && (
                     <MathText text={explanation.content} className="whitespace-pre-wrap" />
                   )}
+                  {explanation.teacher_feedback?.content && (
+                    <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 shadow-sm">
+                      <div className="flex items-center gap-1.5 font-semibold text-amber-800 mb-1">
+                        <span>👨‍🏫</span>
+                        <span>ការណែនាំពីលោកគ្រូ (Teacher's Exam Rubric Tip)</span>
+                      </div>
+                      <MathText text={explanation.teacher_feedback.content} className="whitespace-pre-wrap font-sans" />
+                    </div>
+                  )}
                   {explanation.work_check?.content && (
                     <div className="mt-3 border-t border-[#e4e2db] pt-2">
                       <div className="text-xs font-medium text-[#8a857b] uppercase">Your work check</div>
                       <MathText text={explanation.work_check.content} className="mt-1 whitespace-pre-wrap" />
+                    </div>
+                  )}
+                  {explanation.graph && (
+                    <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                      <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
+                        Reference graph
+                      </div>
+                      <FunctionGraph graph={explanation.graph} />
+                      {explanation.graph_check && (
+                        <div className="mt-2 text-xs">
+                          <div className="text-[#8a857b]">Labels your drawing includes:</div>
+                          <div className="mt-0.5 flex flex-wrap gap-x-2">
+                            {explanation.graph_check.items.map((it) => (
+                              <span
+                                key={it.label}
+                                className={it.found ? "text-emerald-700 font-semibold" : "text-[#8a857b] opacity-60"}
+                              >
+                                {it.label} {it.found ? "✓" : "·"}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1442,7 +1949,124 @@ function PracticeInner() {
               >
                 Eraser
               </button>
+              <button
+                onClick={() => selectTool("ruler")}
+                title="Straight line / ruler (R)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "ruler"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Line
+              </button>
+              <button
+                onClick={() => selectTool("curve")}
+                title="Curve — drag to bend a smooth line (C)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "curve"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Curve
+              </button>
+              <button
+                onClick={() => selectTool("ellipse")}
+                title="Ellipse — drag corner-to-corner (O)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "ellipse"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Ellipse
+              </button>
+              <button
+                onClick={() => selectTool("select")}
+                title="Select / move — click a shape to grab its points, drag to reshape (V)"
+                className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
+                  tool === "select"
+                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-[#7a756a] font-normal"
+                }`}
+              >
+                Select
+              </button>
             </div>
+            <button
+              onClick={selectAxes}
+              title="Coordinate axes (G): select to spawn, tap the page to move the origin, use scale/Δ to resize"
+              className={`px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border text-[12.5px] font-medium ${
+                tool === "axes" && gridOn
+                  ? "border-[#23272e] bg-[#23272e] text-white"
+                  : gridOn
+                  ? "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]"
+                  : "border-[#e4e2db] text-[#6b6558] hover:bg-[#faf9f6]"
+              }`}
+            >
+              {tool === "axes" && gridOn ? "Axes ✓" : "Axes"}
+            </button>
+            {tool === "axes" && gridOn && (
+              <>
+                <div className="flex items-center gap-1.5 rounded-[7px] border border-[#e4e2db] px-2 py-1.5 text-[12px] text-[#6b6558]" title="Zoom: pixels per unit">
+                  <span>scale</span>
+                  <input
+                    type="number"
+                    min={10}
+                    max={200}
+                    step={5}
+                    value={gridScale}
+                    onChange={(e) => changeGridScale(Number(e.target.value))}
+                    className="w-12 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
+                    aria-label="Grid scale (px per unit)"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 rounded-[7px] border border-[#e4e2db] px-2 py-1.5 text-[12px] text-[#6b6558]">
+                  <span>Δx</span>
+                  <input
+                    type="number"
+                    min={0.5}
+                    max={50}
+                    step={0.5}
+                    value={gridStep.x}
+                    onChange={(e) => changeGridStep("x", Number(e.target.value))}
+                    className="w-11 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
+                    aria-label="Grid x step"
+                  />
+                  <span>Δy</span>
+                  <input
+                    type="number"
+                    min={0.5}
+                    max={50}
+                    step={0.5}
+                    value={gridStep.y}
+                    onChange={(e) => changeGridStep("y", Number(e.target.value))}
+                    className="w-11 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
+                    aria-label="Grid y step"
+                  />
+                </div>
+                {question?.params?.graph && (
+                  <button
+                    onClick={() => {
+                      const g = question.params.graph as {
+                        x_min?: number;
+                        x_max?: number;
+                        y_min?: number;
+                        y_max?: number;
+                      };
+                      if (typeof g.x_min === "number") {
+                        activeCanvas()?.fitGridToWindow(g.x_min!, g.x_max!, g.y_min!, g.y_max!);
+                      }
+                    }}
+                    className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6]"
+                    title="Re-fit the grid to the exercise's reference window"
+                  >
+                    Fit
+                  </button>
+                )}
+              </>
+            )}
             <button
               onClick={undo}
               disabled={!canUndo}
@@ -1512,22 +2136,24 @@ function PracticeInner() {
 
         {/* Pen/eraser size + debug, tucked into an unobtrusive corner strip */}
         <div className="fixed left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-auto flex flex-col items-center gap-2 bg-white/90 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md p-2">
-          <span className="text-[10px] text-[#a8a296]">{tool === "pen" ? 30 : 100}</span>
+          <span className="text-[10px] text-[#a8a296]">{tool === "eraser" ? 100 : 30}</span>
           <input
             type="range"
-            min={tool === "pen" ? 1 : 10}
-            max={tool === "pen" ? 30 : 100}
+            min={tool === "eraser" ? 10 : 1}
+            max={tool === "eraser" ? 100 : 30}
             step={1}
-            value={tool === "pen" ? penWidth : eraserWidth}
+            value={tool === "eraser" ? eraserWidth : penWidth}
             onChange={(e) =>
-              tool === "pen" ? selectPenWidth(Number(e.target.value)) : selectEraserWidth(Number(e.target.value))
+              tool === "eraser"
+                ? selectEraserWidth(Number(e.target.value))
+                : selectPenWidth(Number(e.target.value))
             }
             className="w-6 h-24 stylus:w-10 stylus:h-32 accent-[#23272e] [writing-mode:vertical-lr] [direction:rtl] cursor-pointer"
             aria-label="Size"
           />
-          <span className="text-[10px] text-[#a8a296]">{tool === "pen" ? 1 : 10}</span>
+          <span className="text-[10px] text-[#a8a296]">{tool === "eraser" ? 10 : 1}</span>
           <span className="text-xs font-semibold text-[#6b6558] tabular-nums">
-            {tool === "pen" ? penWidth : eraserWidth}
+            {tool === "eraser" ? eraserWidth : penWidth}
           </span>
           <div className="w-full border-t border-[#e4e2db] my-1" />
           <button

@@ -1,0 +1,158 @@
+{
+  "id": "function_study_2025_science_vii",
+  "source": {
+    "year": 2025,
+    "track": "science",
+    "section": "VII",
+    "subject_km": "គណិតវិទ្យា",
+    "description": "BAC II 2025 (science) Part VII: full function study of g(x) = ln((-x-3)/(x-3)). Restructured to the official sub-question layout (1: domain+parity, 2: limits+g'+monotonicity+variation table, 3: tangent+graph+sign, 4: h'+area).",
+    "extracted_by": "manual transcription from exam (2026-08), answers verified with SymPy"
+  },
+  "difficulty": "hard",
+  "var": "x",
+  "fn_name": "g",
+  "function_expr": "log((-x-3)/(x-3))",
+  "pattern": "g(x) = ln((-x-3)/(x-3))",
+  "pattern_latex": "g(x) = \\ln\\left(\\frac{-x-3}{x-3}\\right)",
+  "prompt": "We have the function g defined by g(x) = ln((-x-3)/(x-3)).\n1. Find the domain of g and determine whether g is even or odd (g is even iff g(-x)=g(x), odd iff g(-x)=-g(x)).\n2. Compute the limits of g at -3 and at 3. Study the monotonicity of g over its domain and build the variation table.\n3. In an orthonormal frame (O, i, j), let C be the graph of g. Find the equation of the tangent line T to C at the point of abscissa 0. Draw C and T. Study the sign of g(x) according to x.\n4. a. Compute the derivative of h defined by h(x) = x g(x).\n   b. Find the area of the region bounded by C, the x-axis, and the lines x = 0 and x = 1.",
+  "prompt_latex": "\\text{គេមានអនុគមន៍ } g \\text{ ដែល } g(x)=\\ln\\left(\\frac{-x-3}{x-3}\\right) .\\\\ \\text{1. រកដែនកំណត់នៃអនុគមន៍ } g \\text{ និងសិក្សាថាតើ } g \\text{ ជាអនុគមន៍គូ ឬសេស?}\\\\ \\text{2. គណនាលីមីតនៃ } g \\text{ ត្រង់ } -3 \\text{ និងត្រង់ } 3 \\text{ ; សិក្សាអថេរភាពនៃ } g \\text{ លើដែនកំណត់របស់វា និងសង់តារាងអថេរភាព។}\\\\ \\text{3. កំណត់សមីការនៃបន្ទាត់ប៉ះ } T \\text{ ទៅនឹងក្រាប } C \\text{ ត្រង់ចំណុចដែលមានអាប់ស៊ីស } 0 \\text{ រួចសង់ក្រាប } C \\text{ និងបន្ទាត់ប៉ះ } T \\text{ ; សិក្សាសញ្ញានៃ } g(x) \\text{ ទៅតាមតម្លៃនៃ } x .\\\\ \\text{4. } (a)\\ \\text{គណនាដេរីវេនៃអនុគមន៍ } h \\text{ ដែល } h(x)=x\\,g(x) .\\quad (b)\\ \\text{រកផ្ទៃក្រឡានៃផ្នែកប្លង់នៅចន្លោះក្រាប } C \\text{ អ័ក្ស } x \\text{ និងបន្ទាត់ } x=0,\\ x=1 .",
+  "graph": {
+    "x_min": -5,
+    "x_max": 5,
+    "y_min": -4,
+    "y_max": 4,
+    "samples": 160,
+    "asymptotes": [
+      { "kind": "vertical", "x": -3 },
+      { "kind": "vertical", "x": 3 }
+    ],
+    "tangent": { "x0": 0 },
+    "points": [
+      { "x": 0, "y": 0, "label": "O" }
+    ]
+  },
+  "parts": [
+    {
+      "label": "1.a",
+      "want": "domain",
+      "kind": "interval",
+      "expected": [
+        { "lo": -3, "hi": 3, "lo_open": true, "hi_open": true }
+      ],
+      "display": "ដែនកំណត់ D = (-3, 3)",
+      "question_km": "រកដែនកំណត់នៃអនុគមន៍ $g$",
+      "technique": "អនុគមន៍ $g$ កំណត់បានលុះត្រា $\\frac{-x-3}{x-3} > 0$ ។ ចំណុលំបែក៖ $-x-3=0 \\Rightarrow x=-3$ និង $x-3=0 \\Rightarrow x=3$ ។ តារាងសញ្ញា៖ $\\frac{-x-3}{x-3} > 0$ លើ $(-3,3)$ ។ ដូច្នេះ $D = (-3, 3)$ ។"
+    },
+    {
+      "label": "1.b",
+      "want": "parity",
+      "kind": "choice",
+      "expected": "odd",
+      "display": "សេស",
+      "question_km": "សិក្សាថាតើ $g$ ជាអនុគមន៍គូ ឬសេស?",
+      "technique": "$g(x)=\\ln\\left(\\frac{-x-3}{x-3}\\right)=\\ln(-x-3)-\\ln(x-3)$ ។ គេបាន $g(-x)=\\ln(x-3)-\\ln(-x-3)=-[\\ln(-x-3)-\\ln(x-3)]=-g(x)$ ។ ម្យ៉ាងទៀត $g(-x)=\\ln\\left(\\frac{x-3}{-x-3}\\right)=\\ln\\left(\\left(\\frac{-x-3}{x-3}\\right)^{-1}\\right)=-\\ln\\left(\\frac{-x-3}{x-3}\\right)=-g(x)$ ។ ដូច្នេះ $g$ ជាអនុគមន៍សេស (សេស) ។",
+      "choices": {
+        "odd": {
+          "words": ["odd", "odd function", "សេស", "អនុគមន៍សេស", "impair", "fonction impaire"]
+        },
+        "even": {
+          "words": ["even", "even function", "គូ", "អនុគមន៍គូ", "paire", "fonction paire"]
+        },
+        "neither": {
+          "words": ["neither", "neither odd nor even", "មិនគូមិនសេស", "ni paire ni impaire"]
+        }
+      }
+    },
+    {
+      "label": "2.a",
+      "want": "limit",
+      "kind": "infinity",
+      "point": "-3",
+      "side": "+",
+      "expected": "-oo",
+      "display": "lim x→-3⁺ g(x) = −∞",
+      "question_km": "គណនាលីមីតនៃ $g$ ត្រង់ $-3$",
+      "technique": "ជិត $x \\to -3^+$ គេបាន $\\frac{-x-3}{x-3} \\to \\frac{0^+}{-6} = 0^+$ ដូច្នេះ $g(x)=\\ln(0^+) \\to -\\infty$ ។"
+    },
+    {
+      "label": "2.b",
+      "want": "limit",
+      "kind": "infinity",
+      "point": "3",
+      "side": "-",
+      "expected": "oo",
+      "display": "lim x→3⁻ g(x) = +∞",
+      "question_km": "គណនាលីមីតនៃ $g$ ត្រង់ $3$",
+      "technique": "ជិត $x \\to 3^-$ គេបាន $\\frac{-x-3}{x-3} \\to \\frac{-6}{0^-} = +\\infty$ ដូច្នេះ $g(x)=\\ln(+\\infty) \\to +\\infty$ ។"
+    },
+    {
+      "label": "2.c",
+      "want": "derivative",
+      "kind": "expression",
+      "expected": "6/((-x-3)*(x-3))",
+      "display": "g'(x) = 6/((-x-3)(x-3))",
+      "question_km": "គណនា $g'(x)$",
+      "technique": "$g(x)=\\ln(-x-3)-\\ln(x-3)$ ។ គេបាន $g'(x)=\\frac{-1}{-x-3}-\\frac{1}{x-3}=\\frac{-x+3+x+3}{(-x-3)(x-3)}=\\frac{6}{(-x-3)(x-3)}$ ។"
+    },
+    {
+      "label": "2.d",
+      "want": "monotonicity",
+      "kind": "monotonicity",
+      "question_km": "សិក្សាអថេរភាពនៃ $g$ លើដែនកំណត់របស់វា",
+      "technique": "$g'(x)=\\frac{6}{(-x-3)(x-3)} > 0$ ចំពោះគ្រប់ $x \\in D$ ។ ដូច្នេះ $g$ កើនលើ $(-3,3)$ ។"
+    },
+    {
+      "label": "2.e",
+      "want": "variation_table",
+      "kind": "variation_table",
+      "question_km": "សង់តារាងអថេរភាពនៃ $g$",
+      "technique": "រួមផ្គុំសញ្ញា $g'(x)$ និងលីមីតនៅចន្លោះអាស៊ីមតូតទាំងពីរចូលជាតារាងអថេរភាព។"
+    },
+    {
+      "label": "3.a",
+      "want": "tangent",
+      "kind": "line",
+      "x0": 0,
+      "expected": "2*x/3",
+      "display": "សមីការបន្ទាត់ប៉ះ T: y = 2x/3",
+      "question_km": "កំណត់សមីការបន្ទាត់ប៉ះ $T$ ត្រង់ចំណុចដែលមានអាប់ស៊ីស $0$",
+      "technique": "$g(0)=\\ln 1 = 0$ ។ $g'(0)=\\frac{6}{(-3)(-3)}=\\frac{6}{9}=\\frac{2}{3}$ ។ $T:\\ y-0=\\frac{2}{3}(x-0)$ គឺ $y=\\frac{2}{3}x$ ។"
+    },
+    {
+      "label": "3.b",
+      "want": "draw",
+      "kind": "draw",
+      "question_km": "សង់ក្រាប $C$ និងបន្ទាត់ប៉ះ $T$",
+      "technique": "សង់ក្រាប $C$ រួមជាមួយអាស៊ីមតូតឈរ $x=-3$ និង $x=3$ និងបន្ទាត់ប៉ះ $T$ កាត់ត្រង់ចំណុចដើមត្រើម $O$ ។"
+    },
+    {
+      "label": "3.c",
+      "want": "sign",
+      "kind": "sign",
+      "question_km": "សិក្សាសញ្ញានៃ $g(x)$ ទៅតាមតម្លៃនៃ $x$",
+      "technique": "ចំពោះ $x \\in (-3,0)$ គេបាន $g(x) < 0$ និងចំពោះ $x \\in (0,3)$ គេបាន $g(x) > 0$ ។"
+    },
+    {
+      "label": "4.a",
+      "want": "derivative_product",
+      "kind": "expression",
+      "h_expr": "x*log((-x-3)/(x-3))",
+      "expected": "diff",
+      "display": "h'(x) = ln((-x-3)/(x-3)) − 6x/(x²-9)",
+      "question_km": "គណនាដេរីវេនៃអនុគមន៍ $h$ ដែល $h(x) = x\\,g(x)$",
+      "technique": "$h(x)=x\\,g(x)$ គេបាន $h'(x)=g(x)+x\\,g'(x)=\\ln\\left(\\frac{-x-3}{x-3}\\right)+\\frac{6x}{(-x-3)(x-3)}=\\ln\\left(\\frac{-x-3}{x-3}\\right)-\\frac{6x}{x^2-9}$ ។"
+    },
+    {
+      "label": "4.b",
+      "want": "integral",
+      "kind": "expression",
+      "lower": "0",
+      "upper": "1",
+      "expected": "-3*log(9) + log(2) + 3*log(8)",
+      "display": "S = ln 2 + 3 ln 8 − 3 ln 9 ឯកតាផ្ទៃ",
+      "exact_only": true,
+      "question_km": "រកផ្ទៃក្រឡានៃផ្នែកប្លង់នៅចន្លោះក្រាប $C$ អ័ក្ស $x$ និងបន្ទាត់ $x=0,\\ x=1$",
+      "technique": "$S=\\int_{0}^{1} g(x)\\,dx = \\left[x\\ln\\left(\\frac{-x-3}{x-3}\\right)\\right]_{0}^{1} + 3[\\ln|x^2-9|]_{0}^{1} = \\ln 2 + 3\\ln 8 - 3\\ln 9$ ។"
+    }
+  ]
+}

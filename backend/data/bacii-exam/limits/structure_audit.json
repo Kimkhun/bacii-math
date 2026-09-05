@@ -147,6 +147,86 @@
   "2025d": {
    "status": "mapped",
    "technique": "angle_addition_0_0"
+  },
+  "p102_1a": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1b": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1c": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1d": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1e": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1f": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1g": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1h": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1i": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p102_1j": {
+   "status": "mapped",
+   "technique": "indeterminate_one_infinity"
+  },
+  "p98_1a": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1b": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1c": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1d": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1e": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1f": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1g": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1h": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1i": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
+  },
+  "p98_1j": {
+   "status": "mapped",
+   "technique": "log_limit_zero"
   }
  },
  "grade_results": {
@@ -350,13 +430,13 @@
   }
  },
  "counts": {
-  "exercises_total": 37,
-  "mapped": 36,
+  "exercises_total": 57,
+  "mapped": 56,
   "excluded": 1,
   "uncovered": 0,
-  "techniques_total": 13,
+  "techniques_total": 15,
   "parameterizable": 11,
-  "curated_only": 2,
+  "curated_only": 4,
   "all_checks_pass": true
  },
  "excluded_reasons": {

@@ -66,6 +66,11 @@ export default function HistoryPage() {
                     >
                       {a.correct ? "Correct" : "Wrong"}
                     </span>
+                    {!!a.hints_used && (
+                      <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-700">
+                        {a.hints_used} hint{a.hints_used === 1 ? "" : "s"} used
+                      </span>
+                    )}
                     <span className="ml-auto">{new Date(a.created_at).toLocaleString()}</span>
                   </div>
 
@@ -89,6 +94,14 @@ export default function HistoryPage() {
                       </div>
                     )}
                   </div>
+
+                  {a.strokes_thumb && (
+                    <img
+                      src={a.strokes_thumb}
+                      alt="Your handwriting"
+                      className="mt-2 max-h-36 w-auto max-w-full rounded border border-slate-200 bg-white shadow-sm object-contain"
+                    />
+                  )}
 
                   {missed.length > 0 && (
                     <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">

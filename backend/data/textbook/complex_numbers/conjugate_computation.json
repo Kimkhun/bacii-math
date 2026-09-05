@@ -1,0 +1,19 @@
+{
+  "formula_name": "conjugate_computation",
+  "topic": "complex_numbers",
+  "description": "Compute the conjugate of a complex number given in algebraic form. Multiple-choice exercise.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.08.38 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook, Chapter 1 (complex numbers, algebraic form) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 1,
+  "exercises": [
+    {
+      "id": "p20_3",
+      "source_page": 20,
+      "prompt_latex": "\\text{Given the complex number } z = -3+2i. \\text{ The conjugate of } z \\text{ is: (a) } \\bar z = 3-2i \\quad \\text{(b) } \\bar z = -3-2i \\quad \\text{(c) } \\bar z = 3+2i \\quad \\text{(d) } \\bar z = -2+3i \\quad \\text{(e) another answer}",
+      "technique": "Definition of conjugate: for z=a+bi, \\bar z = a-bi."
+    }
+  ]
+}

@@ -3202,25 +3202,25 @@
    "correct": true,
    "checks": [
     {
-     "answer": "-cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 + 2*cos(x)**2 - cos(x)",
+     "answer": "-2*sin(x)**2 - cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 - cos(x)",
      "expected": true,
      "got": true,
      "reason": "indefinite"
     },
     {
-     "answer": "-cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 + 2*cos(x)**2 - cos(x) + C",
+     "answer": "-2*sin(x)**2 - cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 - cos(x) + C",
      "expected": true,
      "got": true,
      "reason": "indefinite"
     },
     {
-     "answer": "-cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 + 2*cos(x)**2 - cos(x) + 5",
+     "answer": "-2*sin(x)**2 - cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 - cos(x) + 5",
      "expected": true,
      "got": true,
      "reason": "indefinite"
     },
     {
-     "answer": "-cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 + 2*cos(x)**2 - cos(x) + x",
+     "answer": "-2*sin(x)**2 - cos(x)**5/5 + cos(x)**4 - 2*cos(x)**3 - cos(x) + x",
      "expected": false,
      "got": false,
      "reason": "mismatch"

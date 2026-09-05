@@ -1,0 +1,19 @@
+{
+  "formula_name": "geometric_representation",
+  "topic": "complex_numbers",
+  "description": "Plot the points representing given complex numbers (affixes) in the complex plane (xOy) relative to the orthonormal frame (O, i, j).",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.08.38 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook, Chapter 1 (complex numbers, algebraic form) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 1,
+  "exercises": [
+    {
+      "id": "p23_23",
+      "source_page": 23,
+      "prompt_latex": "\\text{In the complex plane (xOy), plot the points representing the affixes of the complex numbers: } z_1=1+3i,\\ z_2=-4+2i,\\ z_3=-2-5i,\\ z_4=3-4i.",
+      "technique": "Plot the point M(a,b) for each z=a+bi, where a is the horizontal (real) coordinate and b is the vertical (imaginary) coordinate."
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "formula_name": "power_and_polynomial_expressions",
+  "topic": "complex_numbers",
+  "description": "Evaluate polynomial expressions and integer powers of complex numbers, including sums of powers of i using the period-4 cycle.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.08.38 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook, Chapter 1 (complex numbers, algebraic form) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 7,
+  "exercises": [
+    {
+      "id": "p21_9",
+      "source_page": 21,
+      "prompt_latex": "\\text{Given } z=1+2i. \\text{ Compute } w = z^2-3z+4.",
+      "technique": "Substitute z into the polynomial and expand using i^2=-1."
+    },
+    {
+      "id": "p21_10",
+      "source_page": 21,
+      "prompt_latex": "\\text{Given } u=3+2i \\text{ and } v=2-i. \\text{ Compute } z = u^2-uv+v^2.",
+      "technique": "Expand each term using i^2=-1 and combine real/imaginary parts."
+    },
+    {
+      "id": "p21_11",
+      "source_page": 21,
+      "prompt_latex": "\\text{Given } a=2+i. \\text{ Compute } z = \\frac{a^2-3a+6}{3-a}.",
+      "technique": "Substitute a, simplify numerator, then divide by multiplying by the conjugate of the denominator."
+    },
+    {
+      "id": "p22_14",
+      "source_page": 22,
+      "prompt_latex": "\\text{Given } z=2+3i. \\text{ Compute } z^2,\\ z^3 \\text{ and } z^4.",
+      "technique": "Binomial expansion (a+bi)^n using i^2=-1, i^3=-i, i^4=1."
+    },
+    {
+      "id": "p22_15",
+      "source_page": 22,
+      "prompt_latex": "\\text{Compute } z = 1+i+i^2+i^3+\\cdots+i^{2020}.",
+      "technique": "Use the periodicity of powers of i (period 4: i^{4n}=1, i^{4n+1}=i, i^{4n+2}=-1, i^{4n+3}=-i) to group and sum the terms."
+    },
+    {
+      "id": "p23_21a",
+      "source_page": 23,
+      "prompt_latex": "\\text{Given the complex numbers } a=2+i,\\ b=1-3i,\\ c=-3+2i. \\text{ (a) Write } z=a^3+b^3+c^3 \\text{ and } w=abc \\text{ in algebraic form.}",
+      "technique": "Compute each cube via binomial expansion, sum them for z, and multiply the three numbers directly for w."
+    },
+    {
+      "id": "p23_21b",
+      "source_page": 23,
+      "prompt_latex": "\\text{Given } z=a^3+b^3+c^3 \\text{ and } w=abc \\text{ from the previous part (}a=2+i,\\ b=1-3i,\\ c=-3+2i\\text{). (b) Show that } \\frac{z}{w} \\text{ is a real number.}",
+      "technique": "Compute the quotient z/w (e.g. by multiplying by the conjugate of w) and verify its imaginary part is zero."
+    }
+  ]
+}

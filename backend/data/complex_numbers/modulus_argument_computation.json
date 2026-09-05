@@ -1,0 +1,157 @@
+{
+  "formula_name": "modulus_argument_computation",
+  "topic": "complex_numbers",
+  "description": "Computing the modulus |z| and argument arg(z) of complex numbers given in algebraic form, including multiple-choice questions and finding z from modulus/argument constraint equations.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.13.16 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook, Chapter 2 (complex numbers, trigonometric form / powers / roots) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 24,
+  "exercises": [
+    {
+      "id": "p36_1",
+      "source_page": 36,
+      "prompt_latex": "\\text{Given } z = -8 + 6i \\text{, the modulus of } z \\text{ is:} \\quad \\text{(ក) } |z|=14 \\quad \\text{(ខ) } |z|=2 \\quad \\text{(គ) } |z|=5 \\quad \\text{(ង) } |z|=10 \\quad \\text{(ច) other answer}",
+      "technique": "|z| = sqrt(a^2+b^2), multiple choice"
+    },
+    {
+      "id": "p36_2",
+      "source_page": 36,
+      "prompt_latex": "\\text{Given } z = 2x + i(1-x^2),\\ x \\in \\mathbb{R} \\text{. The modulus of } z \\text{ is:} \\quad \\text{(ក) } |z|=\\sqrt{1+x^2} \\quad \\text{(ខ) } |z|=(1+x^2)^2 \\quad \\text{(គ) } |z|=1+x^2 \\quad \\text{(ង) } |z|=1+|x| \\quad \\text{(ច) other answer}",
+      "technique": "|z| = sqrt(a^2+b^2), multiple choice"
+    },
+    {
+      "id": "p36_3",
+      "source_page": 36,
+      "prompt_latex": "\\text{Given } z = -2\\sqrt{3} - 2i \\text{. The modulus of } z \\text{ is:} \\quad \\text{(ក) } |z|=4 \\quad \\text{(ខ) } |z|=8 \\quad \\text{(គ) } |z|=16 \\quad \\text{(ង) } |z|=\\sqrt{14} \\quad \\text{(ច) other answer}",
+      "technique": "|z| = sqrt(a^2+b^2), multiple choice"
+    },
+    {
+      "id": "p36_4",
+      "source_page": 36,
+      "prompt_latex": "\\text{Given } z = 4\\sqrt{2}(1+i) \\text{. One argument of } z \\text{ is:} \\quad \\text{(ក) } \\frac{\\pi}{8} \\quad \\text{(ខ) } \\frac{\\pi}{4} \\quad \\text{(គ) } \\frac{\\pi}{6} \\quad \\text{(ង) } \\frac{\\pi}{6} \\quad \\text{(ច) other answer}",
+      "technique": "arg(z) from a+ib form, multiple choice"
+    },
+    {
+      "id": "p37_5a",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus of: } z = 3+4i",
+      "technique": "|z| = sqrt(a^2+b^2)"
+    },
+    {
+      "id": "p37_5b",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus of: } z = (1+3i)^4",
+      "technique": "|z^n| = |z|^n"
+    },
+    {
+      "id": "p37_5c",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus of: } z = \\left[(1+\\sqrt{7}) + i(1-\\sqrt{7})\\right]^3",
+      "technique": "|z^n| = |z|^n"
+    },
+    {
+      "id": "p37_5d",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus of: } z = -2\\sqrt{3} + 2i",
+      "technique": "|z| = sqrt(a^2+b^2)"
+    },
+    {
+      "id": "p37_5e",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus of: } z = \\dfrac{(1+3i)^6}{3-4i}",
+      "technique": "|z/w| = |z|/|w|, |z^n| = |z|^n"
+    },
+    {
+      "id": "p37_5f",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus of: } z = \\dfrac{(1-3i)^5}{2+i}",
+      "technique": "|z/w| = |z|/|w|, |z^n| = |z|^n"
+    },
+    {
+      "id": "p37_6",
+      "source_page": 37,
+      "prompt_latex": "\\text{Find the complex number } z \\text{ such that } iz + |z| = 1 + 3i",
+      "technique": "modulus/argument equation solving (set z=a+ib, separate real/imaginary parts)"
+    },
+    {
+      "id": "p37_7",
+      "source_page": 37,
+      "prompt_latex": "\\text{Find the complex number } z \\text{ such that } iz + |z+1+2i| = 4 + 3i",
+      "technique": "modulus/argument equation solving (set z=a+ib, separate real/imaginary parts)"
+    },
+    {
+      "id": "p37_8a",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate an argument of: } z = 4\\sqrt{3} + 4i",
+      "technique": "arg(z) from a+ib form"
+    },
+    {
+      "id": "p37_8b",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate an argument of: } z = -3 + i\\sqrt{3}",
+      "technique": "arg(z) from a+ib form"
+    },
+    {
+      "id": "p37_8c",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate an argument of: } z = 2 - 2i",
+      "technique": "arg(z) from a+ib form"
+    },
+    {
+      "id": "p37_8d",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate an argument of: } z = -\\sqrt{3} - i",
+      "technique": "arg(z) from a+ib form"
+    },
+    {
+      "id": "p37_8e",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate an argument of: } z = i\\sqrt{5}",
+      "technique": "arg(z) from a+ib form"
+    },
+    {
+      "id": "p37_8f",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate an argument of: } z = -4i",
+      "technique": "arg(z) from a+ib form"
+    },
+    {
+      "id": "p37_9a",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus and an argument of: } z = \\sqrt{2} + i\\sqrt{2}",
+      "technique": "|z| and arg(z) from a+ib form"
+    },
+    {
+      "id": "p37_9b",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus and an argument of: } z = -2 + 2i\\sqrt{3}",
+      "technique": "|z| and arg(z) from a+ib form"
+    },
+    {
+      "id": "p37_9c",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus and an argument of: } z = 1 - i",
+      "technique": "|z| and arg(z) from a+ib form"
+    },
+    {
+      "id": "p37_9d",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus and an argument of: } z = -3 - i\\sqrt{3}",
+      "technique": "|z| and arg(z) from a+ib form"
+    },
+    {
+      "id": "p37_9e",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus and an argument of: } z = \\sqrt{3} + i",
+      "technique": "|z| and arg(z) from a+ib form"
+    },
+    {
+      "id": "p37_9f",
+      "source_page": 37,
+      "prompt_latex": "\\text{Calculate the modulus and an argument of: } z = -\\sqrt{2} - i\\sqrt{6}",
+      "technique": "|z| and arg(z) from a+ib form"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "formula_name": "arithmetic_operations",
+  "topic": "complex_numbers",
+  "description": "Basic arithmetic on complex numbers in algebraic form: sum, difference, product, and quotient of two given complex numbers.",
+  "source": {
+    "file": "Scanned Document 24-8-26 at 9.08.38 at night.pdf",
+    "description": "Cambodian BAC II grade-12 math textbook, Chapter 1 (complex numbers, algebraic form) — exercises only",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-25"
+  },
+  "count": 6,
+  "exercises": [
+    {
+      "id": "p20_4",
+      "source_page": 20,
+      "prompt_latex": "\\text{Given } z_1=3+2i \\text{ and } z_2=-1+3i. \\text{ Compute } z_1+z_2. \\quad \\text{(a) } 4+5i \\quad \\text{(b) } 4-i \\quad \\text{(c) } 2+5i \\quad \\text{(d) } 2+6i \\quad \\text{(e) another answer}",
+      "technique": "Addition of complex numbers: (a+bi)+(c+di)=(a+c)+(b+d)i."
+    },
+    {
+      "id": "p21_5",
+      "source_page": 21,
+      "prompt_latex": "\\text{Given } z_1=-3-2i \\text{ and } z_2=-5+i. \\text{ Compute } z_1-z_2. \\quad \\text{(a) } 2-i \\quad \\text{(b) } 2-3i \\quad \\text{(c) } -8-3i \\quad \\text{(d) } 2+3i \\quad \\text{(e) another answer}",
+      "technique": "Subtraction of complex numbers: (a+bi)-(c+di)=(a-c)+(b-d)i."
+    },
+    {
+      "id": "p21_6",
+      "source_page": 21,
+      "prompt_latex": "\\text{Given } z_1=1+3i \\text{ and } z_2=2-i. \\text{ Compute } z_1 z_2. \\quad \\text{(a) } -1+5i \\quad \\text{(b) } 4-5i \\quad \\text{(c) } 4+5i \\quad \\text{(d) } -4+5i \\quad \\text{(e) another answer}",
+      "technique": "Multiplication of complex numbers using i^2=-1."
+    },
+    {
+      "id": "p21_7",
+      "source_page": 21,
+      "prompt_latex": "\\text{Given } z_1=5-i \\text{ and } z_2=1-i. \\text{ Compute } z_1+z_2,\\ z_1-z_2,\\ z_1 z_2 \\text{ and } \\frac{z_1}{z_2}.",
+      "technique": "Addition, subtraction, multiplication, and division (multiply by conjugate of denominator) of complex numbers."
+    },
+    {
+      "id": "p21_8",
+      "source_page": 21,
+      "prompt_latex": "\\text{Given } z_1=3+7i \\text{ and } z_2=5+2i. \\text{ Compute } z_1+z_2,\\ z_1-z_2,\\ z_1 z_2 \\text{ and } \\frac{z_1}{z_2}.",
+      "technique": "Addition, subtraction, multiplication, and division (multiply by conjugate of denominator) of complex numbers."
+    },
+    {
+      "id": "p23_22",
+      "source_page": 23,
+      "prompt_latex": "\\text{Given } z_1=3+2i \\text{ and } z_2=2+4i. \\text{ Compute the algebraic forms of } z_1+z_2,\\ z_1-z_2,\\ 2z_2 \\text{ and } 2z_1+z_2.",
+      "technique": "Addition, subtraction, and scalar multiplication of complex numbers."
+    }
+  ]
+}

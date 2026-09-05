@@ -39,6 +39,10 @@ class GenerateRequest(BaseModel):
     question_type: str | None = None
     generation_mode: str = "templates"
     seed: int | None = None
+    # Sub-category within question_type — e.g. a limit technique
+    # (factoring_0_0, conjugate_infinity, ...) or a probability scenario id.
+    # Ignored by topics/question_types that don't have this extra axis.
+    variant: str | None = None
 
 
 class GradeRequest(BaseModel):
@@ -47,6 +51,14 @@ class GradeRequest(BaseModel):
     work_text: str | None = None
     lines_boxes: list | None = None
     part: str | None = None
+    hints_used: int = 0
+    strokes: dict | None = None
+    strokes_thumb: str | None = None
+
+
+class GradeGraphRequest(BaseModel):
+    question_id: uuid.UUID
+    strokes_thumb: str
 
 
 class ExplainRequest(BaseModel):
@@ -57,3 +69,13 @@ class ExplainRequest(BaseModel):
 
 class ReplayRequest(BaseModel):
     question_id: uuid.UUID
+
+
+class SaveProgressRequest(BaseModel):
+    question_id: uuid.UUID
+    part: str | None = None
+    typed: str | None = None
+    work_text: str | None = None
+    lines_boxes: list | None = None
+    strokes: dict | None = None
+    strokes_thumb: str | None = None

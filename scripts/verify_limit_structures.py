@@ -30,6 +30,8 @@ sys.path.insert(0, os.path.abspath(BACKEND))
 from sympy import N, latex, nsimplify, simplify  # noqa: E402
 
 from engine import generator, grader, solver, structures  # noqa: E402
+from engine.generator.limits import generate_limit_for_technique  # noqa: E402
+from engine.solver.limits import _solve_limit  # noqa: E402
 
 EXCLUDED = {
     "2024b": "implicit 'find a' ask (lim ... = 1, find a) rather than a plain limit — doesn't round-trip through parse_latex",
@@ -43,10 +45,14 @@ def _excluded_techniques():
     check."""
     out = {}
     for fpath in sorted(glob.glob(os.path.join(BACKEND, "data", "limits", "*.json"))):
-        data = json.load(open(fpath, encoding="utf-8"))
+        try:
+            data = json.load(open(fpath, encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        tech = data.get("formula_name")
         for ex in data.get("exercises", []):
-            if ex["id"] in EXCLUDED:
-                out[ex["id"]] = data["formula_name"]
+            if ex.get("id") in EXCLUDED:
+                out[ex["id"]] = tech
     return out
 
 
@@ -60,7 +66,7 @@ def expected_ids():
 
 
 def _curated_matches_recorded(item):
-    result = solver._solve_limit({
+    result = _solve_limit({
         "expr": str(item["expr"]), "var": item["var"], "point": str(item["point"]),
         "formula_name": item["formula_name"], "curated_technique": item["technique"],
         "curated_formula_latex": item.get("formula_latex", ""), "source_id": item["id"],
@@ -135,7 +141,7 @@ def main():
             continue
         try:
             rng = random.Random(zlib.crc32(technique.encode()) & 0xFFFFFFFF)
-            problem = generator.generate_limit_for_technique(rng, technique)
+            problem = generate_limit_for_technique(rng, technique)
             sol = solver.solve("limit", "limit", problem["params"])
         except Exception as exc:
             failures.append((technique, f"sample/solve: {exc}"))

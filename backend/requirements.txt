@@ -16,3 +16,4 @@ bcrypt
 pydantic-settings
 psycopg[binary]
 pillow
+antlr4-python3-runtime==4.11

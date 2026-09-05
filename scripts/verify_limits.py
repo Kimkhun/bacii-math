@@ -261,6 +261,8 @@ def main():
 
     for fpath in files:
         data = json.load(open(fpath, encoding="utf-8"))
+        if "exams" not in data:
+            continue
         year = data["exams"][0]["exam_date"][:4]
         for exam in data["exams"]:
             for sec in exam["sections"]:
