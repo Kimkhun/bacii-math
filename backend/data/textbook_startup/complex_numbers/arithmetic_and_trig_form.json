@@ -1,0 +1,97 @@
+{
+  "formula_name": "arithmetic_and_trig_form",
+  "topic": "complex_numbers",
+  "description": "Foundational complex-number drills: powers of i, a+bi arithmetic (sums/products/quotients/conjugates), solving quadratics in C, and converting a+bi values to trigonometric (modulus-argument) form.",
+  "source": {
+    "file": "book/Start Up Part 1.pdf (physical book pages 1-4)",
+    "description": "Cambodian BAC II grade-12 math exercise compendium (Start Up Community), Lesson 1: ចំនួនកុំផ្លិច (Complex Numbers) — exercises only, no worked solutions",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-28"
+  },
+  "count": 12,
+  "exercises": [
+    {
+      "id": "p1_1_powers_of_i",
+      "source_page": 1,
+      "prompt_latex": "i^{5}; i^{10}; i^{15}; i^{20}; i^{22}; i^{16}; i^{28}; i^{30}; i^{37}; i^{47}; i^{55}; i^{61}; i^{71}; i^{81}; i^{200}; i^{2001}; i^{2012}; i^{2019}; i^{200}+i^{410}; i^{2015}+i^{2011}-i^{3}; 2i^{2002}+i^{500}-i^{17}",
+      "technique": "Reduce exponent mod 4 to evaluate powers of i (i^0=1, i^1=i, i^2=-1, i^3=-i), then combine"
+    },
+    {
+      "id": "p1_2_arithmetic_abi_form",
+      "source_page": 1,
+      "prompt_latex": "z=(7+3i)+(-1-5i);\\ z=(-4-7i)+(-10-33i);\\ z=(4+6i)+(15+24i);\\ z=(15+10i)-(2+10i);\\ z=(-20-50i)+(21+20i);\\ z=13i-(14-7i);\\ z=22+(-5+8i)+10i;\\ z=(4/3+1/3i)+(5/6+7/6i);\\ z=15i-(3-25i)+\\sqrt{-81};\\ z=(2-3i)(1-i);\\ z=(4+2i)^2;\\ z=(2+i)(-1+i)+(1+2i)^2;\\ z=(1+i\\sqrt3)^3;\\ z=(1-i)^3(1+i);\\ z=\\frac{1-i}{1+i};\\ z=\\frac{6-7i}{1+i};\\ z=\\frac{2-i}{-i};\\ z=\\frac{1+i}{i};\\ z=\\frac{\\sqrt2+\\sqrt2 i}{\\sqrt2-\\sqrt2 i};\\ z=\\frac{(1-2i)^2}{1-\\sqrt2 i};\\ z=\\frac{(2-i)(1-2i)}{i};\\ z=\\left(\\frac{2i}{1+i}\\right)^4;\\ z=\\frac{1}{2+i}+\\frac{1}{2-i};\\ z=\\frac{2+3i}{2-3i}+\\frac{2-3i}{2+3i}",
+      "technique": "Standard a+bi arithmetic: expand, rationalize denominators by multiplying by the conjugate, simplify"
+    },
+    {
+      "id": "p2_3_evaluate_given_z_zp",
+      "source_page": 2,
+      "prompt_latex": "z=2-i,\\ z'=-1+3i:\\quad z'\\cdot\\bar z + z^2;\\quad \\frac1z+\\frac1{z'};\\quad \\frac1{z^2};\\quad \\frac{z'+2}{z+2i}",
+      "technique": "Substitute given z, z' and simplify using conjugate/reciprocal/power rules"
+    },
+    {
+      "id": "p2_4_solve_quadratic_in_C",
+      "source_page": 2,
+      "prompt_latex": "z^2-3z+4=0;\\ z^2-2z+3=0;\\ 2z^2+2z+3=0;\\ z^2-4z+6=0;\\ 3z^2-2z+3=0;\\ z^2-\\sqrt3 z+1=0;\\ z^2+4z+13=0;\\ z^2+2\\sqrt2 z+4=0",
+      "technique": "Quadratic in C: negative discriminant, roots are conjugate pair (-b\\pm i\\sqrt{|\\Delta|})/(2a)"
+    },
+    {
+      "id": "p2_5_find_x_y",
+      "source_page": 2,
+      "prompt_latex": "2x-yi=2+i;\\ 2x^2+3yi=18-i;\\ (3x-1)+(2y-4)i=0;\\ (x^2+3)+2yi=2x+(y^2-3)i;\\ (4x-2y)+2(x+y)i=2+4i;\\ (1+i)(x+iy)+(3-2i)(x-iy)=\\frac{8-9i}{1+2i}",
+      "technique": "Equate real and imaginary parts of both sides to solve for real x, y"
+    },
+    {
+      "id": "p2_6_write_trig_form_24items",
+      "source_page": 2,
+      "prompt_latex": "z=1+\\sqrt3 i;\\ \\sqrt3+i;\\ -1+\\sqrt3 i;\\ 2-2\\sqrt3 i;\\ -4-4\\sqrt3 i;\\ -\\sqrt2+\\sqrt2 i;\\ \\sqrt2+\\sqrt2 i;\\ 1-i;\\ -2\\sqrt2-2\\sqrt2 i;\\ 1+0i;\\ 8;\\ -1;\\ i;\\ -i;\\ -2023i;\\ 3\\sqrt2-3\\sqrt2 i;\\ -3\\sqrt3+3i;\\ -4-4\\sqrt3 i;\\ \\sqrt3-i;\\ (1+i)^{12};\\ (1-\\sqrt3 i)^{300};\\ (2+2i)^{15};\\ \\left(-\\frac{\\sqrt2}2+\\frac{\\sqrt2}2 i\\right)^{15};\\ (\\sqrt3+i)^{2024}",
+      "technique": "Compute modulus r=|z| and argument \\theta=\\arg z, write z=r(\\cos\\theta+i\\sin\\theta); for powers, apply De Moivre first"
+    },
+    {
+      "id": "p3_7_to_13_multipart_trig_and_products",
+      "source_page": 3,
+      "prompt_latex": "z_1=-1+i\\sqrt3,\\ z_2=1-i\\sqrt3;\\ a=\\sqrt3/2-i/2,\\ b=2+2\\sqrt3 i;\\ z_1=1+i\\sqrt3,\\ z_2=6(\\cos\\pi/4-i\\sin\\pi/4);\\ Z=(\\sqrt3+i\\sqrt3)(\\cos\\pi/3+i\\sin\\pi/3);\\ z_1=1+i,\\ z_2=1+\\sqrt3 i;\\ a=1+2\\sqrt3+3i,\\ b=1-2\\sqrt3-i;\\ A=\\frac{2(1+i)^2}{1-i\\sqrt3}",
+      "technique": "Multi-part: compute sum/difference/product/quotient of two complex numbers then express results in trig form, using cos(7\\pi/12), sin(7\\pi/12) via angle-addition"
+    },
+    {
+      "id": "p4_14_to_19_multipart",
+      "source_page": 4,
+      "prompt_latex": "z^2-2\\sqrt2 z+4=0\\ (\\text{find modulus/argument of a root}),\\ W=\\left(\\frac{\\sqrt2+i\\sqrt2}{\\sqrt2-i\\sqrt2}\\right)^2;\\ z^2-8z+64=0,\\ (2z_1+\\bar z_2)^3;\\ z_1=-1+i\\sqrt3,\\ z_2=-1-i\\sqrt3\\ \\text{(roots of }z^3-8=0\\text{?)};\\ z=2+2i\\sqrt3\\ (\\text{find }z+\\bar z,\\ (z/\\bar z)^3,\\ \\text{root of }z^2=-4(z+4i\\sqrt3));\\ z_1=\\sqrt3-3i,\\ z_2=3(1+i\\sqrt3);\\ x=-\\tfrac12-i\\tfrac{\\sqrt3}2,\\ y=-\\tfrac12+i\\tfrac{\\sqrt3}2\\ (A=x-y^2,\\ B=x^2+x+1,\\ C=x^{2019}+y^{2019})",
+      "technique": "Multi-part: solve quadratic in C, find modulus/argument of roots, verify roots satisfy a cubic, compute high powers via trig form"
+    },
+    {
+      "id": "p5_20_to_26_multipart",
+      "source_page": 5,
+      "prompt_latex": "z_1=\\frac{2(\\cos\\pi/12+i\\sin\\pi/12)^2}{1+i\\sqrt3},\\ z_2=(1-i)x+(1-y)(1+i);\\ z=1-i\\sqrt3\\ (\\text{trig form of }z,\\ z^{2002});\\ z=i,\\ w=\\tfrac12+\\tfrac{\\sqrt3}2 i\\ (z+2iw,\\ A=w/(i-zw));\\ a=2+2i,\\ b=-3+i\\ (x=a+bi,\\ y=a-bi,\\ z=\\tfrac12 xy,\\ w=y/x,\\ mz+nw=7+6i);\\ z=x+yi,\\ a=\\sqrt3-i,\\ b=2-2\\sqrt3 i\\ (z=a/b);\\ z=4+4i\\sqrt3,\\ z=-\\sqrt2+i\\sqrt2,\\ z=-2\\sqrt3-2i\\ (\\text{nth roots});\\ z_1=i(3+2i)(2+i)^2",
+      "technique": "Multi-part word-style problems combining trig form, conjugates, and solving for unknown real coefficients m,n"
+    },
+    {
+      "id": "p6_hard_14items_compute_abi",
+      "source_page": 6,
+      "prompt_latex": "z=\\sqrt{1-5}-i+2;\\ z=i(1-i)+\\sqrt{-12}-\\sqrt{27};\\ z=3i-2i\\sqrt{-45};\\ z=\\sqrt{i\\sqrt{-16}}-1;\\ z=2-\\sqrt[3]{-8i^3};\\ z=2i-\\sqrt{25i^4};\\ z=i\\sqrt{-i\\sqrt{-81}}+1;\\ z=(-1+i)\\sqrt2-\\sqrt{-2};\\ z=2(2-i)^2+(1+i)^2;\\ z=\\frac{(1-2i)(2+i)}{1-i};\\ z=\\frac{(2-3i)(3+5i)}{(1+i)(1-2i)};\\ z=\\frac{2-3i}{1+i}+\\frac{1-\\sqrt2 i}{1-i};\\ z=\\frac{1-2i}{\\sqrt3-1}+\\frac{1+2i}{\\sqrt3+1};\\ z=\\left[(\\sqrt3-1)+i(\\sqrt3+1)\\right]^2",
+      "technique": "Simplify square roots of negative numbers as i\\sqrt{positive}, then combine with a+bi arithmetic"
+    },
+    {
+      "id": "p6_hard_16items_trig_form",
+      "source_page": 6,
+      "prompt_latex": "z=\\sqrt3+3i;\\ -3-\\sqrt3 i;\\ -3\\sqrt3+3i;\\ -4-4\\sqrt3 i;\\ \\frac{-3-3i}{1-\\sqrt3 i};\\ \\frac{-3\\sqrt3+3i}{2\\sqrt2+2\\sqrt2 i};\\ \\frac{-2+2i}{3+3\\sqrt3 i};\\ \\frac{2\\sqrt2-2\\sqrt2 i}{\\sqrt3-3i};\\ \\sin\\pi/4-i\\cos\\pi/4;\\ 1+\\cos3\\pi/5+i\\sin3\\pi/5;\\ 1+\\cos2\\pi/9+i\\sin2\\pi/9;\\ 1+\\cos2\\pi/7+i\\sin2\\pi/7;\\ 1-\\cos2\\pi/5+i\\sin2\\pi/5;\\ 1-\\cos4\\pi/5+i\\sin4\\pi/5;\\ 2+\\sqrt3+i;\\ 2-\\sqrt2+\\sqrt2 i",
+      "technique": "Write as trig form; some require half-angle identities 1\\pm\\cos\\theta = 2\\cos^2 or 2\\sin^2(\\theta/2)"
+    },
+    {
+      "id": "p7_p8_hard_multipart",
+      "source_page": 7,
+      "prompt_latex": "z_1=\\sqrt2+i\\sqrt2,\\ z_2=1+i\\sqrt3,\\ z_3=\\sqrt3+i\\ (a+bi=\\sqrt2 z_1+iz_2+z_3);\\ z^2+z+1=0\\ \\text{in }\\mathbb C,\\ w=(z_2+1)/(z_1+1);\\ z=(\\sqrt3+1)+i(\\sqrt3-1),\\ w=\\sqrt2+i\\sqrt2\\ (p=zw);\\ Z=\\frac{\\cos\\pi/4+i\\sin\\pi/4}{\\sqrt3+i}\\ ((Z+1/2)^3);\\ A=(\\sqrt3-1)+i(\\sqrt3+1),\\ B=(x+iy)/(1+i);\\ Z=1-\\cos\\pi/7-i\\sin\\pi/7\\ (Z^{14});\\ z=\\sin\\pi/3+i\\cos\\pi/3\\ (z^6,z^{12});\\ Z=a+bi,\\ A=i(1+Z);\\ z^3-1=0\\ \\text{in }\\mathbb C\\ (A=(1+z_1+z_1^2)^{2017},\\ B=z_1^{12}+z_2^{12});\\ x^2-x+1=0\\ (y=(x_1+1)/(x_2+1),\\ z=y^{2017}/(x_1x_2));\\ z=\\sin\\pi/3+i\\cos\\pi/3",
+      "technique": "Multi-part: solve cubic/quadratic roots of unity, combine trig form with high powers and symmetric expressions"
+    },
+    {
+      "id": "p119_semester1_review_bank",
+      "source_page": 119,
+      "prompt_latex": "A=(2-3i)(2i-4)+(1-2i)^2;\\ B=i(1-i)-(2-i)(1+i)^2;\\ C=\\frac2{1-i}-\\frac3{1+i};\\ D=\\frac{2-3i}{2+3i}-\\frac{2+3i}{2-3i};\\ E=\\frac{(1-i\\sqrt3)(\\sqrt3+i)}{1-i};\\ F=[(\\sqrt2-1)+i(\\sqrt2+1)]^2;\\ z_1=-1+i\\sqrt3,z_2=2\\sqrt3+2i,z_3=\\sqrt2-i\\sqrt2:\\ \\text{write trig form, find trig form of}\\ z_1z_2,(z_1z_3)^2;\\ \\text{find modulus/argument of}\\ z_2^2/(z_1z_3),\\ \\text{prove}\\ A=(2z_1/z_2)^{2020}\\ \\text{real};\\ z^2+4z+16=0\\ \\text{in C};\\ z_1=-2-2i\\sqrt3,z_2=-2+2i\\sqrt3:\\ \\text{write}\\ (z_2-\\tfrac12\\bar z_1)\\ \\text{trig form};\\ x=(\\sqrt2-1)+i(\\sqrt2+1),y=(\\sqrt2+1)+i(\\sqrt2-1):\\ \\text{compute}\\ x+y,x-y,y^2,xy,\\ \\text{modulus/argument of}\\ ((x-y)/(x+y))^2;\\ z=(2\\sqrt3-2i)(\\cos\\pi/8+i\\sin\\pi/8)^2:\\ \\text{write trig form, prove}\\ z^{12}\\ \\text{real, find exact}\\ \\cos\\pi/12,\\sin\\pi/12",
+      "technique": "Semester-1 review bank (កម្រងលំហាត់ស្រាវជ្រាវសម្រាប់ធ្វើឆមាសលើកទី១): complex-number section combining a+bi simplification, trig form, De Moivre, and root-finding review across multiple exercises"
+    },
+    {
+      "id": "p124_p125_semester1_review_bank_extra",
+      "source_page": 124,
+      "prompt_latex": "z_1=\\sqrt3+i,z_2=-\\sqrt3+i,z_3=2-2i:\\ \\text{compute sum/diff/products, trig forms};\\ z=-2+2i\\sqrt3,w=1+i:\\ \\text{compute}\\ zw,z/w,\\ \\text{trig forms};\\ z=3+i\\sqrt3,w=\\tfrac14(-\\sqrt2+i\\sqrt2):\\ \\text{trig forms, }zw,z/w;\\ x=(\\sqrt2-1)+i(\\sqrt2+1),y=(\\sqrt2+1)+i(\\sqrt2-1):\\ \\text{compute}\\ x+y,x-y\\ \\text{trig forms};\\ z_1=-\\sqrt3-i,z_2=-2+2i,w=2(\\cos\\pi/3-i\\sin\\pi/3):\\ \\text{compute}\\ z_1z_2,z_2w\\ \\text{trig forms, modulus/argument of}\\ (z_2w)^2;\\ z_1=2021+2022i,z_2=2022+2021i,w=2\\sqrt2(-\\cos\\pi/3+i\\sin\\pi/3):\\ z=z_1-z_2\\ \\text{trig form, modulus/argument of}\\ z^2,\\ zw;\\ z=-\\sqrt2+i\\sqrt6,w=2+2i:\\ \\text{verify}\\ w\\ \\text{root of}\\ w^2-4w+8=0,\\ \\text{trig form of}\\ z,w,\\ A=(z/w)^{12}\\ \\text{real};\\ z=3+i\\sqrt3:\\ \\text{verify root of}\\ z^2+12=6z;\\ w=1+i\\sqrt3:\\ \\text{trig form}\\ zw,\\ \\text{verify}\\ w^{2022}-2^{2022}=0;\\ \\text{solve}\\ z^2+2z\\sqrt3+4=0\\ \\text{in C}, z_1=-\\sqrt3+i,z_2=-\\sqrt3-i:\\ \\text{trig form}\\ z_1+\\bar z_2,(z_1+\\bar z_2)^2;\\ z=2+2i\\sqrt3:\\ \\text{compute}\\ z+\\bar z,\\ \\text{trig form}\\ z,\\bar z,\\ \\text{modulus/argument}\\ z/\\bar z,\\ \\text{verify}\\ \\bar z\\ \\text{root of}\\ z^2=-4(z+4i\\sqrt3);\\ z_1=\\sqrt3-3i,z_2=3(1+i\\sqrt3):\\ \\text{verify}\\ z_2=\\sqrt3\\bar z_1,\\ \\text{trig form}\\ z_2,\\bar z_1,\\ \\text{verify}\\ z_1\\ \\text{root of}\\ z^2=2(\\sqrt3z-6)$",
+      "technique": "Semester-1 review bank continued: further complex-number multi-part combining root-verification, trig form, and high-power evaluation"
+    }
+  ]
+}

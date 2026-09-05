@@ -19,7 +19,13 @@ from sympy.parsing.sympy_parser import (
 from ..solver import solve
 
 
-_LOCAL = {"I": I, "i": I, "pi": pi, "e": E, "sqrt": sqrt, "binomial": binomial}
+_LOCAL = {
+    "I": I, "i": I, "pi": pi, "e": E, "sqrt": sqrt, "binomial": binomial,
+    # ODE arbitrary constants: without these, SymPy's implicit-multiplication
+    # parser splits "C1"/"C2" into "C*1"/"C*2" (a letter+trailing-digit token
+    # is treated as implicit multiplication, not a single symbol name).
+    "C1": Symbol("C1"), "C2": Symbol("C2"), "C3": Symbol("C3"),
+}
 _TRANS = standard_transformations + (implicit_multiplication_application, convert_xor)
 
 _DEFAULT_TOL = 1e-4
@@ -52,11 +58,35 @@ def parse_answer(text):
         .replace("∞", "oo")
     )
     text = _LIM_PREFIX.sub("", text)
+    # OCR sometimes concatenates an ODE arbitrary constant directly onto the
+    # following function name ("C1cos(x)", "C2sin(x)") with no space. Without
+    # a space, sympy's implicit-multiplication parser can't tell "C1cos" is
+    # meant as C1 * cos and instead shatters the whole run into single-letter
+    # symbols (C*1*c*o*s), so insert the boundary explicitly.
+    text = _re.sub(r"\b(C[123])(?=[A-Za-z])", r"\1 ", text)
+    # A leaked LaTeX exponent group ("e^{2x}") must become parenthesized
+    # ("e^(2x)"), not bare ("e^2x") — Python/sympy's "^" binds to only the
+    # next token, so "e^2x" parses as (e^2)*x, silently changing the meaning
+    # of every multi-character exponent (a very common ODE/exponential shape).
+    text = _re.sub(r"\^\s*\{([^{}]*)\}", r"^(\1)", text)
     text = _re.sub(r"√\s*(\d+(?:\.\d+)?)", r"sqrt(\1)", text)
     text = text.replace("√", "sqrt")
     text = _COMB_NOTATION.sub(r"binomial(\1, \2)", text)
     text = _re.sub(r"\binf(?:inity)?\b", "oo", text)
-    return parse_expr(text, local_dict=_LOCAL, transformations=_TRANS)
+    try:
+        return parse_expr(text, local_dict=_LOCAL, transformations=_TRANS)
+    except Exception:
+        # The OCR "raw_text" final answer is meant to be the bare value (e.g.
+        # "36"), but the model sometimes echoes the whole equation instead
+        # (e.g. "AB.AC=36"), which isn't parseable as-is (dot-product notation
+        # reads as a Python attribute access). Retry with just the RHS of the
+        # last "=" before giving up — this only fires on a parse failure, so a
+        # deliberately equation-shaped answer that parses fine is untouched.
+        if "=" in text:
+            rhs = text.rsplit("=", 1)[1].strip()
+            if rhs:
+                return parse_expr(rhs, local_dict=_LOCAL, transformations=_TRANS)
+        raise
 
 def _numeric_close(user, expected, tol):
     try:
@@ -132,6 +162,53 @@ def _equivalent_exact(value, expected, var, diff=None):
 
 def _is_given_restatement(lhs: str) -> bool:
     return lhs.strip().lower() in ("z", "z bar", "z_bar", "z̄")
+
+_AT_POINT_RE = _re.compile(r"\bat\s+[A-Za-z]\w*\s*$", _re.I)
+
+def _is_point_label(lhs: str) -> bool:
+    """A trailing 'at x'/'at t' right before '=' names the point a section is
+    about ('1. Value of the Function at x = 0', 'Tangent at x = 2') — a title,
+    not a new assertion. Naming the point this way is common across topics, so
+    this isn't continuity-specific."""
+    return bool(_AT_POINT_RE.search(lhs.strip()))
+
+def _is_equation_restatement(text, given_equations) -> bool:
+    """True when some adjacent pair of "="-separated segments of `text` is
+    the same equation as one of `given_equations` (either orientation) — a
+    restated setup equation, not a computed value. Every adjacent pair is
+    tried (not just the whole line's first/last segment), so a chain like
+    "y'(0) = C2 - C1 = 2" matches on its middle-to-last segment even though
+    its first segment ("y'(0)") is just a label. A pair that fails to parse
+    (e.g. one straddling a "=>" arrow) is simply skipped."""
+    segments = text.split("=")
+    for j in range(len(segments) - 1):
+        for k in range(j + 1, len(segments)):
+            try:
+                lhs_expr = parse_answer(segments[j])
+                rhs_expr = parse_answer(segments[k])
+            except Exception:
+                continue
+            if any(
+                (simplify(lhs_expr - geq.lhs) == 0 and simplify(rhs_expr - geq.rhs) == 0)
+                or (simplify(lhs_expr - geq.rhs) == 0 and simplify(rhs_expr - geq.lhs) == 0)
+                for geq in given_equations
+            ):
+                return True
+    return False
+
+
+def _given_match(value, given) -> bool:
+    """True when `value` structurally equals `given`, or (for symbolic values,
+    e.g. a restated piecewise branch expression) is equivalent under simplify."""
+    try:
+        if value == given:
+            return True
+    except Exception:
+        pass
+    try:
+        return simplify(value - given) == 0
+    except Exception:
+        return False
 
 # ---------------------------------------------------------------------------
 # answer_kind judging (function study & other study-style topics)
@@ -317,6 +394,28 @@ def _judge_monotonicity(expected, user_answer, tol):
     return ok, "exact" if ok else "mismatch", None
 
 
+_DISCONTINUOUS_RE = _re.compile(r"\b(discontinuous|non-?continuous|not\s+continuous)\b", _re.I)
+_CONTINUOUS_RE = _re.compile(r"\bcontinuous\b", _re.I)
+
+def _judge_continuity(expected, user_answer):
+    """Continuity verdict answer: BAC II students write a full conclusion
+    sentence ('...on peut dire que f est discontinue en x=1'-style, or 'In
+    conclusion ... it is not continuous at x = 1'), not a bare value, so this
+    scans the free text for the verdict instead of parsing it as math.
+    'discontinuous' is checked first since it contains 'continuous' as a
+    substring and 'not continuous' negates it — a plain \\bcontinuous\\b
+    match after that filter is unambiguous."""
+    text = user_answer or ""
+    if _DISCONTINUOUS_RE.search(text):
+        verdict = "discontinuous"
+    elif _CONTINUOUS_RE.search(text):
+        verdict = "continuous"
+    else:
+        return False, "mismatch", None
+    ok = verdict == expected
+    return ok, "exact" if ok else "mismatch", None
+
+
 def _judge_variation_table(expected, user_answer, checkpoints, tol):
     """Variation-table answer: judged by whether the student's written lines
     contain every checkpoint value (g'(x) and the limits/extrema). Tolerant —
@@ -363,6 +462,8 @@ def _judge_by_kind(kind, expected, user_answer, tol=_DEFAULT_TOL, choices=None, 
         return _judge_line(expected, user_answer, tol)
     if kind in ("sign", "monotonicity", "variation_table"):
         return _judge_study(kind, expected, user_answer, tol, checkpoints)
+    if kind == "continuity":
+        return _judge_continuity(expected, user_answer)
     return _judge_expression(expected, user_answer, tol, exact_only)
 
 def _match_checkpoint(value, cp, tol, var_sym):
@@ -411,6 +512,8 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     if solution.get("work_mode") == "any_order":
         return _analyze_work_any_order(solution, params, lines, tol)
     given_expr = solution.get("given")
+    given_expressions = solution.get("given_expressions") or []
+    given_equations = solution.get("given_equations") or []
     checkpoints = list(solution.get("checkpoints", []))
     if not checkpoints or checkpoints[-1]["value"] != solution["answer_exact"]:
         checkpoints.append({"label": "final answer", "value": solution["answer_exact"], "formula": None})
@@ -420,18 +523,82 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     first_error_line = None
     matched_checkpoints = set()
 
+    var_sym = Symbol(params.get("var", "x"))
     for i, raw in enumerate(lines, 1):
         text = raw.strip()
         if not text:
             continue
 
-        if "=" in text:
+        # A continuity conclusion line ("...so f is discontinuous at x=2")
+        # often restates the join point as "x = 2" — parsing the tail after
+        # "=" would check that point value against a checkpoint it was never
+        # meant to match. The verdict itself is graded separately (against
+        # answer_kind "continuity"); here it's a restatement, not a computed
+        # checkpoint, so skip it rather than flag it wrong.
+        if _CONTINUOUS_RE.search(text) or _DISCONTINUOUS_RE.search(text):
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "conclusion"})
+            continue
+
+        had_equals = "=" in text
+        if had_equals:
             lhs, _, value_str = text.rpartition("=")
-            if _is_given_restatement(lhs):
+            if _is_given_restatement(lhs) or _is_point_label(lhs):
                 line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
                 continue
         else:
             value_str = text
+
+        # A "±"/"∓" line (e.g. "r = 1 ± i") compactly asserts a *pair* of
+        # values (both characteristic roots at once) rather than one — SymPy's
+        # parser otherwise reads "±" as a bare symbol name, turning "1±i" into
+        # the nonsense expression "I*±" instead of raising, which would then
+        # be checked (and fail) against a single checkpoint. Try both signs
+        # against the next two checkpoints as a pair before falling through
+        # to the normal single-value path.
+        if "±" in value_str or "∓" in value_str:
+            flip = "∓" in value_str
+            plus_str = value_str.replace("±", "+").replace("∓", "-" if flip else "+")
+            minus_str = value_str.replace("±", "-").replace("∓", "+" if flip else "-")
+            try:
+                v_plus = parse_answer(plus_str)
+                v_minus = parse_answer(minus_str)
+            except Exception:
+                line_results.append({"line": i, "text": raw, "checked": False, "reason": "unparsed"})
+                continue
+            pair_idx = None
+            for idx in range(pointer, len(checkpoints) - 1):
+                a, b = checkpoints[idx], checkpoints[idx + 1]
+                if (
+                    (_match_checkpoint(v_plus, a, tol, var_sym) and _match_checkpoint(v_minus, b, tol, var_sym))
+                    or (_match_checkpoint(v_minus, a, tol, var_sym) and _match_checkpoint(v_plus, b, tol, var_sym))
+                ):
+                    pair_idx = idx
+                    break
+            if pair_idx is not None:
+                matched_checkpoints.update({pair_idx, pair_idx + 1})
+                line_results.append({
+                    "line": i,
+                    "text": raw,
+                    "checked": True,
+                    "correct": True,
+                    "matches": checkpoints[pair_idx]["label"],
+                    "formula": checkpoints[pair_idx].get("formula"),
+                    "expected": f"{checkpoints[pair_idx]['value']}, {checkpoints[pair_idx + 1]['value']}",
+                })
+                pointer = pair_idx + 2
+                continue
+            target = checkpoints[pointer] if pointer < len(checkpoints) else None
+            line_results.append({
+                "line": i,
+                "text": raw,
+                "checked": True,
+                "correct": False,
+                "formula": target.get("formula") if target else None,
+                "expected": str(target["value"]) if target else None,
+            })
+            if first_error_line is None:
+                first_error_line = i
+            continue
 
         try:
             value = parse_answer(value_str)
@@ -443,12 +610,69 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
             line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
             continue
 
+        # A line ending in a bare combination of ODE arbitrary constants
+        # ("y(0) = ... = C1", "y'(0) = ... = C1 + C2") labels an intermediate
+        # result for the *next* line to resolve numerically ("C1 = 1",
+        # "1 + C2 = 1 => C2 = 0") rather than asserting a value itself — this
+        # is the common ODE pattern of deferring the numeric solve to its own
+        # line. Skip it rather than checking the symbolic combination against
+        # the numeric checkpoint it's a placeholder for.
+        _ode_consts = {Symbol("C1"), Symbol("C2"), Symbol("C3")}
+        try:
+            is_const_combo = bool(value.free_symbols) and value.free_symbols <= _ode_consts
+        except AttributeError:
+            is_const_combo = False
+        if is_const_combo:
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "label"})
+            continue
+
+        # A symbolic value (free variable still present) that matches one of
+        # the problem's own given expressions (e.g. continuity's piecewise
+        # branch formulas) is a restatement of the setup, not a computed
+        # checkpoint — never a concrete number, so this can't shadow a real
+        # numeric checkpoint match below.
+        try:
+            symbolic_value = bool(value.free_symbols)
+        except AttributeError:
+            symbolic_value = False
+        if symbolic_value and given_expressions and any(_given_match(value, g) for g in given_expressions):
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
+            continue
+
+        # A bare line with no "=" that parses to a free-standing symbolic
+        # expression (e.g. "AB x AC" as a section header announcing the next
+        # computation) isn't an asserted value — skip it rather than flagging
+        # it wrong against whatever checkpoint comes next. Lines that DO use
+        # "=" still get checked normally even if symbolic (e.g. "f'(x) = ...").
+        if not had_equals:
+            try:
+                if bool(value.free_symbols):
+                    line_results.append({"line": i, "text": raw, "checked": False, "reason": "label"})
+                    continue
+            except AttributeError:
+                pass
+
+        # Try the immediately-next checkpoint first. Only if that fails do we
+        # consider the line a restatement of a given equation (e.g. the
+        # characteristic equation "r^2 - 2r + 2 = 0", or an IC substitution
+        # "y'(0) = C2 - C1 = 2") — checked here, before scanning further
+        # ahead, so a trivial trailing value like the "0" in "... = 0" can't
+        # accidentally match some unrelated later checkpoint that happens to
+        # equal 0/1/etc. and derail the pointer past checkpoints the student
+        # never actually asserted. A line that fails both still gets one more
+        # chance against later checkpoints, so genuinely skipped-ahead work
+        # (an intermediate line the student omitted) still verifies.
         matched_idx = None
-        var_sym = Symbol(params.get("var", "x"))
-        for idx in range(pointer, len(checkpoints)):
-            if _match_checkpoint(value, checkpoints[idx], tol, var_sym):
-                matched_idx = idx
-                break
+        if pointer < len(checkpoints) and _match_checkpoint(value, checkpoints[pointer], tol, var_sym):
+            matched_idx = pointer
+        elif had_equals and given_equations and _is_equation_restatement(text, given_equations):
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
+            continue
+        else:
+            for idx in range(pointer + 1, len(checkpoints)):
+                if _match_checkpoint(value, checkpoints[idx], tol, var_sym):
+                    matched_idx = idx
+                    break
 
         if matched_idx is not None:
             label = checkpoints[matched_idx]["label"]
@@ -463,6 +687,20 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
                 "expected": str(checkpoints[matched_idx]["value"]),
             })
             pointer = matched_idx + 1
+        elif pointer > 0 and _match_checkpoint(value, checkpoints[pointer - 1], tol, var_sym):
+            # Restates a value already reached (e.g. an unevaluated expression
+            # line immediately followed by its evaluated form) — not a new
+            # checkpoint, but not an error either.
+            line_results.append({
+                "line": i,
+                "text": raw,
+                "checked": True,
+                "correct": True,
+                "matches": checkpoints[pointer - 1]["label"],
+                "formula": checkpoints[pointer - 1].get("formula"),
+                "expected": str(checkpoints[pointer - 1]["value"]),
+                "restated": True,
+            })
         else:
             target = checkpoints[pointer] if pointer < len(checkpoints) else None
             line_results.append({
@@ -643,6 +881,54 @@ def grade(topic, question_type, params, user_answer, tolerance=None):
     tol = tolerance if tolerance is not None else _DEFAULT_TOL
     solution = solve(topic, question_type, params)
     expected = solution["answer_exact"]
+
+    kind = solution.get("answer_kind")
+    if kind:
+        # Word-heavy / non-numeric answers (domain intervals, odd/even/sign
+        # classifications, monotonicity, variation tables, tangent lines,
+        # one-sided infinities): dispatch to the same deterministic shape
+        # judges function-study parts use, rather than forcing the answer
+        # through SymPy's expression parser. Any topic's solver can opt in by
+        # setting "answer_kind" (+ "choices"/"exact_only" as needed) on its
+        # solve() output — no plumbing beyond this.
+        try:
+            verdict, reason, note = _judge_by_kind(
+                kind, expected, user_answer, tol,
+                choices=solution.get("choices"),
+                exact_only=solution.get("exact_only", False),
+                checkpoints=solution.get("checkpoints"),
+            )
+        except Exception as exc:
+            return {
+                "correct": False,
+                "reason": f"could not parse answer: {exc}",
+                "given": user_answer,
+                "expected": str(expected),
+                "answer_decimal": solution["answer_decimal"],
+                "steps": solution["steps"],
+            }
+        try:
+            given = str(parse_answer(user_answer))
+        except Exception:
+            given = user_answer.strip()
+        display = solution.get("answer_display") or str(expected)
+        if not isinstance(expected, (list, dict, str)):
+            expected_latex = solution.get("answer_latex") or latex(expected)
+        else:
+            expected_latex = solution.get("answer_latex") or display
+        result = {
+            "correct": verdict,
+            "reason": reason,
+            "given": given,
+            "expected": display,
+            "expected_latex": expected_latex,
+            "answer_decimal": solution["answer_decimal"],
+            "steps": solution["steps"],
+            "graph": solution.get("graph"),
+        }
+        if note:
+            result["note"] = note
+        return result
 
     try:
         user = parse_answer(user_answer)

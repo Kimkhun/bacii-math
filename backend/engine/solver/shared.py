@@ -16,8 +16,13 @@ QUESTION_TYPES_BY_TOPIC = {
     "complex": QUESTION_TYPES,
     "limit": ("limit",),
     "integral": ("definite_integral", "indefinite_integral"),
-    "probability": ("probability",),
+    "probability": ("probability", "counting"),
     "functions": ("study",),
+    "continuity": ("check_continuity",),
+    "derivatives": ("compute_derivative",),
+    "differential_equations": ("solve_ode",),
+    "vectors_space": ("vector_ops",),
+    "conics": ("classify_conic",),
 }
 
 def format_z(a, b):

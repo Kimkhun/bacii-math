@@ -1,0 +1,37 @@
+{
+  "formula_name": "continuity_full_book",
+  "topic": "continuity",
+  "description": "Continuity-of-a-function drills: checking continuity of a plain formula at a point, checking/enforcing continuity of a piecewise function at the join point (often by finding an unknown parameter a/K/m so left-limit = right-limit = f(point)).",
+  "source": {
+    "file": "book/Start Up Part 1.pdf (physical book pages 19-21)",
+    "description": "Cambodian BAC II grade-12 math exercise compendium (Start Up Community), Lesson 3: ភាពជាប់នៃអនុគមន៍ (Continuity of Functions) — exercises only, no worked solutions",
+    "extracted_by": "manual OCR/transcription from scanned textbook (Claude Code), 2026-08-28"
+  },
+  "count": 3,
+  "exercises": [
+    {
+      "id": "p19_check_continuity_at_point_9items",
+      "source_page": 19,
+      "prompt_latex": "f(x)=\\sqrt{x^3+1}\\ \\text{at}\\ x=2;\\ f(x)=\\{3x-2\\ (x\\le2),\\ (x^2-4)/(x-2)\\ (x>2)\\}\\ \\text{at}\\ x=2;\\ f(x)=\\{2x-3\\ (x\\ge1),\\ x^2-x-1\\ (x<1)\\}\\ \\text{at}\\ x=1;\\ f(x)=\\{(x^2-9)/(x-3)\\ (x>3),\\ x\\ (x\\le3)\\}\\ \\text{at}\\ x=3;\\ f(x)=\\{\\sqrt{x^2+2x+6}\\ (x\\ge1),\\ (2x-11)/(x-2)\\ (x<1)\\}\\ \\text{at}\\ x=1;\\ f(x)=\\{3x+5\\ (x\\ge0),\\ \\sin5x/x\\ (x<0)\\}\\ \\text{at}\\ x=0;\\ f(x)=\\{(1-x)/(1+x)\\ (x\\ge0),\\ 2\\sqrt{x^2}-\\sin x)/x\\ (x<0)\\}\\ \\text{at}\\ x=0;\\ f(x)=\\{(x^2-4x+3)/(x-1)\\ (x\\ne1),\\ -2\\ (x=1)\\}\\ \\text{at}\\ x=1;\\ f(x)=\\{(2x^2-8)/(x-2)\\ (x\\ne2),\\ -3\\ (x=2)\\}\\ \\text{at}\\ x=2",
+      "technique": "check_continuity_at_point: compute lim from each side (and f(point) if defined piecewise) and compare"
+    },
+    {
+      "id": "p20_check_or_fix_continuity_9items",
+      "source_page": 20,
+      "prompt_latex": "f(x)=\\{x\\sin x/\\tan^2x\\ (x\\ne0),\\ 1\\ (x=0)\\}\\ \\text{at}\\ x=0;\\ f(x)=\\{x\\sin4x/(1-\\cos2x)\\ (x\\ne0),\\ 2\\ (x=0)\\}\\ \\text{at}\\ x=0;\\ f(x)=\\{(\\sin2x-2\\sin x)/x^3\\ (x\\ne0),\\ -1\\ (x=0)\\}\\ \\text{at}\\ x=0;\\ f(x)=\\{(e^x+e^{-x}-2)/x\\ (x\\ne0),\\ 1\\ (x=0)\\};\\ f(x)=\\{\\ln(1+2\\sin^2x)/x^2\\ (x\\ne0),\\ 2\\ (x=0)\\};\\ f(x)=\\{(1-\\cos ax)/x^2\\ (x\\ne0),\\ 8\\ (x=0)\\}\\ \\text{find}\\ a\\ \\text{for continuity};\\ f(x)=\\{x^2+ax+2\\ (x\\le1),\\ (x+a)^2\\ (x>1)\\}\\ \\text{find}\\ a\\ \\text{for continuity at}\\ x=1;\\ f(x)=\\{Ax-3\\ (x<2),\\ 3-x+2x^2\\ (x\\ge2)\\}\\ \\text{and}\\ f(x)=\\{1-3x\\ (x<4),\\ Ax^2+2x-3\\ (x\\ge4)\\}\\ \\text{find}\\ A;\\ f(x)=\\{(2-2\\cos2ax)/x^2\\ (x\\ne0),\\ 9\\ (x=0)\\}\\ \\text{find}\\ a",
+      "technique": "find_parameter_for_continuity: set lim_{x\\to c}f(x) equal to f(c) (or equal the other side's limit) and solve for the unknown constant, often via sinc/exponential/log standard limits"
+    },
+    {
+      "id": "p21_check_or_fix_continuity_9items",
+      "source_page": 21,
+      "prompt_latex": "f(x)=\\{(\\sin x+\\cos x-\\sqrt2)/(\\pi/4-x)^2\\ (x\\ne\\pi/4),\\ -\\sqrt2/2\\ (x=\\pi/4)\\};\\ f(x)=\\{(1+\\cos x)/(\\pi-x)^2\\ (x\\ne\\pi),\\ a+2\\ (x=\\pi)\\}\\ \\text{find}\\ a;\\ f(x)=\\{(\\sqrt2-\\sqrt{1+\\cos4x})/(2x^2)\\ (x\\ne0),\\ a^2-3a+\\sqrt2\\ (x=0)\\}\\ \\text{find}\\ a;\\ f(x)=\\{(1-\\cos4x)/(4x^2)\\ (x\\ne0),\\ \\ln(K-2020)\\ (x=0)\\}\\ \\text{find}\\ K;\\ f(x)=\\{x\\ (x<-1),\\ ax+b\\ (-1\\le x\\le4),\\ -2x\\ (x>4)\\}\\ \\text{find}\\ a,b;\\ f(x)=\\{\\sin(\\pi x/2)\\ (x<-1),\\ ax^2+bx+1\\ (-1\\le x\\le2),\\ -2x^2+3\\ (x>2)\\}\\ \\text{find}\\ a,b;\\ f(x)=\\{x^2+1\\ (x<a),\\ 15-5x\\ (a\\le x\\le b),\\ 5x-25\\ (x>b)\\}\\ \\text{find}\\ a,b;\\ f(x)=(2e^x-2)\\sin x/(1-\\cos^2x),\\ x\\ne0,\\ f(0)=\\ln(e\\sqrt m)+1,\\ \\text{find}\\ m\\ \\text{for continuity};\\ f(x)=\\sin\\pi x/(\\pi(x^2-x))\\ (x\\ne1),\\ f(1)=k^2+4k+2,\\ \\text{find}\\ k",
+      "technique": "find_parameter_for_continuity, including multi-piece (3-branch) functions requiring continuity at two join points simultaneously"
+    },
+    {
+      "id": "p121_semester1_review_bank_4items",
+      "source_page": 121,
+      "prompt_latex": "f(x)=\\{(\\sin3x-x)/x\\ (x<0),\\ \\sqrt{x+4}-\\sqrt[3]x+x\\ (x\\ge0)\\}\\ \\text{check continuity at}\\ x=0;\\ f(x)=\\{4\\sin(x-1)/(x^2-1)\\ (x\\ne1),\\ 2\\ (x=1)\\}\\ \\text{check continuity at}\\ x=1;\\ f(x)=\\{ax^2+x+2\\ (x\\ge-1),\\ (a-x)^2-2\\ (x<-1)\\}\\ \\text{find}\\ a\\ \\text{for continuity at}\\ x=-1;\\ f(x)=\\{(x^2+4x+3)/(\\sqrt{x^2+3}-2)\\ (x\\ne-1),\\ -2\\sqrt a\\ (x=-1)\\}\\ \\text{find}\\ a;\\ f(x)=(2e^x-2)\\sin x/(1-\\cos^2x)\\ (x\\ne0),\\ f(0)=\\ln(e\\sqrt m)+1,\\ \\text{find}\\ m\\ \\text{for continuity at}\\ x=0;\\ f(x)=\\sin\\pi x/[\\pi(x^2-x)]\\ (x\\ne1),\\ f(1)=k^2+4k+2,\\ \\text{find}\\ k\\ \\text{for continuity at}\\ x=1",
+      "technique": "Semester-1 review bank (section III): additional continuity-at-a-point and find-the-parameter drills reusing sinc/exponential/log standard limits"
+    }
+  ]
+}

@@ -7,6 +7,11 @@ from engine import scenarios
 from engine.solver import QUESTION_TYPES_BY_TOPIC, solve as _solve
 
 from .complex import _generate_gemini, _generate_templates
+from .conics import _generate_conics
+from .continuity import _generate_continuity
+from .counting import _generate_counting
+from .derivatives import _generate_derivatives
+from .differential_equations import _generate_differential_equations
 from .functions import _generate_functions
 from .integrals import (
     _INDEFINITE_VARIANT_BY_DIFFICULTY,
@@ -16,9 +21,13 @@ from .integrals import (
 )
 from .limits import _LIMIT_TECHNIQUES_BY_DIFFICULTY, _generate_limit
 from .probability import _generate_probability
+from .vectors_space import _generate_vectors_space
 
 
-TOPICS = ("complex", "limit", "integral", "probability", "functions")
+TOPICS = (
+    "complex", "limit", "integral", "probability", "functions",
+    "continuity", "derivatives", "differential_equations", "vectors_space", "conics",
+)
 _VALID_DIFFICULTIES = ("easy", "medium", "hard")
 
 def _generate_expr_templates(topic, difficulty, seed, question_type, variant=None):
@@ -44,10 +53,27 @@ async def generate(topic="complex", difficulty="medium", seed=None, question_typ
         raise ValueError(f"unknown topic: {topic}")
 
     if topic == "probability":
+        if question_type == "counting":
+            return _generate_counting(random.Random(seed), difficulty)
         return _generate_probability(random.Random(seed), difficulty, question_type, variant)
 
     if topic == "functions":
         return _generate_functions(random.Random(seed), difficulty, question_type)
+
+    if topic == "continuity":
+        return _generate_continuity(random.Random(seed), difficulty, question_type)
+
+    if topic == "derivatives":
+        return _generate_derivatives(random.Random(seed), difficulty, question_type)
+
+    if topic == "differential_equations":
+        return _generate_differential_equations(random.Random(seed), difficulty, question_type)
+
+    if topic == "vectors_space":
+        return _generate_vectors_space(random.Random(seed), difficulty, question_type)
+
+    if topic == "conics":
+        return _generate_conics(random.Random(seed), difficulty, question_type)
 
     if topic in ("limit", "integral"):
         return _generate_expr_templates(topic, difficulty, seed, question_type, variant)
