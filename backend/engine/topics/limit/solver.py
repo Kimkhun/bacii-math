@@ -1,6 +1,7 @@
 """Limit solver (technique handlers for parameterizable techniques + curated ``formula_name`` branch)."""
 from sympy import (
     N,
+    Pow,
     Symbol,
     cancel,
     cos,
@@ -10,6 +11,7 @@ from sympy import (
     factor,
     latex,
     limit,
+    log,
     oo,
     simplify,
     sin,
@@ -24,11 +26,86 @@ def _limit_step(title, detail, formula):
     return {"title": title, "detail": detail, "formula": formula}
 
 
-def _curated_limit_steps(params, var, point_latex, expr, result):
+def _has_radical(e):
+    return any(isinstance(a, Pow) and not a.exp.is_integer for a in e.atoms(Pow))
+
+
+def _rationalization_conjugate_checkpoints(x, point, expr, formula):
+    """Derive the intermediate "cancelled form" checkpoint for a 0/0 limit
+    where exactly one of numerator/denominator carries a square root: rationalize
+    that side by its conjugate, cancel the shared (x - point) factor against the
+    other (polynomial) side, and report the resulting expression. Generalizes the
+    5 curated `rationalization_conjugate_finite` exercises (whichever side —
+    numerator or denominator — the sqrt is on, and any leading constant
+    multiplier) instead of hardcoding each one. Returns [] when the shape
+    doesn't match (e.g. both sides have a radical), leaving the caller with
+    just the final-value checkpoint."""
+    try:
+        num, den = expr.as_numer_denom()
+        if _has_radical(num) and not _has_radical(den):
+            sqrt_side, poly_side, side = num, den, "num"
+        elif _has_radical(den) and not _has_radical(num):
+            sqrt_side, poly_side, side = den, num, "den"
+        else:
+            return []
+        terms = sqrt_side.as_ordered_terms()
+        sqrt_terms = sum(t for t in terms if _has_radical(t))
+        other_terms = sum(t for t in terms if not _has_radical(t))
+        conjugate = other_terms - sqrt_terms
+        rationalized = expand(sqrt_side * conjugate)
+        if side == "num":
+            reduced = cancel(rationalized / poly_side)
+            cancelled = reduced / conjugate
+        else:
+            reduced = cancel(poly_side / rationalized)
+            cancelled = reduced * conjugate
+        if simplify(cancelled.subs(x, point) - limit(expr, x, point)) != 0:
+            return []
+    except Exception:
+        return []
+    return [{"label": "cancelled form", "value": cancelled, "formula": formula}]
+
+
+# formula_names whose parameterized handler (below) computes its checkpoints
+# purely from (x, point, expr) — no technique-specific params like a curated
+# exercise's k/a/d — so it can be reused as-is to derive intermediate
+# checkpoints for the curated version of the same technique.
+_CURATED_REUSABLE_HANDLERS = {"direct_substitution", "factoring_0_0", "rational_function_infinity"}
+
+
+def _exponential_standard_limit_checkpoints(x, point, expr, formula):
+    """Derive the two intermediate "divide by the variable, apply the
+    standard exponential limit separately" checkpoints for a 0/0 limit shaped
+    like (e^{ax}-1)/(e^{bx}-1) at x=0: the numerator and denominator each
+    divided by x and limited on their own (giving a and b respectively).
+    Purely generic on `expr` — no a/b params needed — so it covers curated
+    exercises too, whatever the exact coefficients. Returns [] when the
+    denominator's own limit is 0 (shape doesn't apply)."""
+    try:
+        num, den = expr.as_numer_denom()
+        num_lim = limit(num / x, x, point)
+        den_lim = limit(den / x, x, point)
+        if den_lim == 0:
+            return []
+        if simplify(num_lim / den_lim - limit(expr, x, point)) != 0:
+            return []
+    except Exception:
+        return []
+    return [
+        {"label": "numerator limit", "value": num_lim, "formula": formula},
+        {"label": "denominator limit", "value": den_lim, "formula": formula},
+    ]
+
+
+def _curated_limit_steps(params, var, x, point, point_latex, expr, result):
     """Curated real BAC II exercise: SymPy still computes `result` (the graded
     answer); the exam-authored technique text narrates the steps instead of a
     generic technique handler — the curated JSON only stores prose, not a
-    reusable parameterized derivation."""
+    reusable parameterized derivation. A handful of formula_names still get a
+    generically-derived intermediate checkpoint (either by reusing the
+    parameter-free handler for the same technique, or a bespoke generic
+    deriver for `rationalization_conjugate_finite`) so correct intermediate
+    work verifies instead of only the final answer."""
     formula = params["formula_name"]
     steps = [_limit_step(
         "Apply the technique", params.get("curated_technique", ""), formula,
@@ -42,7 +119,20 @@ def _curated_limit_steps(params, var, point_latex, expr, result):
         f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr)}\\) = {inline_latex(result)}.",
         formula,
     ))
-    checkpoints = [{"label": "final value", "value": result, "formula": formula}]
+    checkpoints = []
+    if formula == "rationalization_conjugate_finite":
+        checkpoints.extend(_rationalization_conjugate_checkpoints(x, point, expr, formula))
+    elif formula == "exponential_standard_limit":
+        checkpoints.extend(_exponential_standard_limit_checkpoints(x, point, expr, formula))
+    elif formula in _CURATED_REUSABLE_HANDLERS:
+        try:
+            _, extra_cps = _LIMIT_TECHNIQUE_HANDLERS[formula]({}, var, x, point, point_latex, expr, result)
+            for cp in extra_cps:
+                if simplify(cp["value"] - result) != 0:
+                    checkpoints.append({**cp, "formula": formula})
+        except Exception:
+            pass
+    checkpoints.append({"label": "final value", "value": result, "formula": formula})
     return steps, checkpoints
 
 
@@ -133,7 +223,11 @@ def _handle_sinc_standard_limit(params, var, x, point, point_latex, expr, result
             "sinc_standard_limit",
         ),
     ]
-    checkpoints = [{"label": "final value", "value": result, "formula": "sinc_standard_limit"}]
+    rewritten = c * k * sin(k * x) / (k * x)
+    checkpoints = [
+        {"label": "rewritten form", "value": rewritten, "formula": "sinc_standard_limit"},
+        {"label": "final value", "value": result, "formula": "sinc_standard_limit"},
+    ]
     return steps, checkpoints
 
 
@@ -151,7 +245,8 @@ def _handle_exponential_standard_limit(params, var, x, point, point_latex, expr,
             "exponential_standard_limit",
         ),
     ]
-    checkpoints = [{"label": "final value", "value": result, "formula": "exponential_standard_limit"}]
+    checkpoints = _exponential_standard_limit_checkpoints(x, point, expr, "exponential_standard_limit")
+    checkpoints.append({"label": "final value", "value": result, "formula": "exponential_standard_limit"})
     return steps, checkpoints
 
 
@@ -330,7 +425,11 @@ def _handle_log_limit_infinity(params, var, x, point, point_latex, expr, result)
             "log_limit_infinity",
         ),
     ]
-    checkpoints = [{"label": "final value", "value": result, "formula": "log_limit_infinity"}]
+    rewritten = c * x * log(1 + k / x)
+    checkpoints = [
+        {"label": "rewritten form", "value": rewritten, "formula": "log_limit_infinity"},
+        {"label": "final value", "value": result, "formula": "log_limit_infinity"},
+    ]
     return steps, checkpoints
 
 
@@ -384,7 +483,7 @@ def _solve_limit(params):
     ]
 
     if params.get("formula_name"):
-        more_steps, checkpoints = _curated_limit_steps(params, var, point_latex, expr, result)
+        more_steps, checkpoints = _curated_limit_steps(params, var, x, point, point_latex, expr, result)
     else:
         technique = params.get("technique")
         handler = _LIMIT_TECHNIQUE_HANDLERS.get(technique)
@@ -406,4 +505,6 @@ def _solve_limit(params):
         "formula_tags": _formula_tags(steps),
         "checkpoints": checkpoints,
         "given": expr,
+        "point": point,
+        "var": var,
     }

@@ -8,7 +8,7 @@ lives in ``engine.topics.functions.grader``.
 import math
 import re as _re
 
-from sympy import E, Expr, I, N, Symbol, binomial, im, latex, oo, pi, re, simplify, sqrt
+from sympy import E, Expr, I, N, Symbol, binomial, im, latex, limit, oo, pi, re, simplify, sqrt
 from sympy import solve as sym_solve
 from sympy.parsing.sympy_parser import (
     convert_xor,
@@ -41,10 +41,63 @@ _LIM_PREFIX = _re.compile(
     r")?"
 )
 
+# Same limit notation as `_LIM_PREFIX`, but capturing the bound variable/point
+# (and required, not optional) so a "lim_{u->0} sin(u)/u = 1" style lemma line
+# can be evaluated as an actual limit rather than an algebraic identity — see
+# `_is_known_limit_fact`. No leading "^" anchor: the clause is searched for
+# anywhere in `lhs`, since prose (in any language) commonly precedes it
+# ("Multiply and divide by 9: lim_{u->0} sin(u)/u = 1").
+_LIM_CLAUSE = _re.compile(
+    r"\blim\s*(?:"
+    r"_\s*\{\s*([A-Za-z])\s*(?:->|→|\\to)\s*([^}]+)\}\s*|"
+    r"\(\s*([A-Za-z])\s*(?:->|→|\\to)\s*([^)]+)\)\s*"
+    r")"
+)
+
 # Probability "C(6,2)"-style combination notation -> SymPy binomial. Only
 # matches integer-argument C(,) tokens, so a lone "+C" (integration constant)
 # is never touched.
 _COMB_NOTATION = _re.compile(r"\bC\(\s*(\d+)\s*,\s*(\d+)\s*\)")
+
+# "sin^2(x)" — the conventional way to write sin(x)^2 in this exam context
+# (it's how the app's own generated step text renders it: see
+# engine/topics/limit/solver.py's "\\sin^2({k}{var})") — parses wrong without
+# help: sympy's implicit-multiplication grammar reads "sin^2(x)" as the bare
+# `sin` function *class* raised to the 2nd power, then multiplied by "(x)"
+# (`sin**2 * (x)`), which isn't even a valid power (FunctionClass ** int) and
+# raises. Rewritten to "sin(x)**2" before parsing.
+_TRIG_POWER_RE = _re.compile(
+    r"\b(sin|cos|tan|cot|sec|csc|sinh|cosh|tanh|ln|log)\s*\^\s*(\d+)\s*(?=\()"
+)
+
+def _rewrite_trig_powers(text):
+    out = []
+    pos = 0
+    while True:
+        m = _TRIG_POWER_RE.search(text, pos)
+        if not m:
+            out.append(text[pos:])
+            break
+        out.append(text[pos:m.start()])
+        func, power = m.group(1), m.group(2)
+        open_idx = m.end()
+        depth = 0
+        end_idx = None
+        for j in range(open_idx, len(text)):
+            if text[j] == "(":
+                depth += 1
+            elif text[j] == ")":
+                depth -= 1
+                if depth == 0:
+                    end_idx = j
+                    break
+        if end_idx is None:
+            out.append(text[m.start():])
+            pos = len(text)
+            break
+        out.append(f"{func}{text[open_idx:end_idx + 1]}**{power}")
+        pos = end_idx + 1
+    return "".join(out)
 
 def _normalize_ocr_text(text):
     """OCR-specific normalization applied before any other parsing: ODE
@@ -63,6 +116,7 @@ def parse_answer(text):
     if not text:
         raise ValueError("empty answer")
     text = _normalize_ocr_text(text)
+    text = _rewrite_trig_powers(text)
     text = (
         text.replace("π", "pi")
         .replace("×", "*")
@@ -71,6 +125,15 @@ def parse_answer(text):
         .replace("−", "-")
         .replace("∞", "oo")
     )
+    # Square brackets used as an extra layer of grouping around a limit's
+    # argument ("lim [7*9*sin(9x)/(9x)]") — never an actual list literal in
+    # this domain — must read as parens, or sympy's parser hands back a
+    # Python list instead of an expression. Scoped to text that actually
+    # starts with "lim": elsewhere (e.g. a domain answer like "[0, 2)")
+    # square/round brackets are semantically different (closed vs open) and
+    # must NOT be merged.
+    if _LIM_PREFIX.match(text):
+        text = text.replace("[", "(").replace("]", ")")
     text = _LIM_PREFIX.sub("", text)
     # OCR sometimes concatenates an ODE arbitrary constant directly onto the
     # following function name ("C1cos(x)", "C2sin(x)") with no space. Without
@@ -185,6 +248,124 @@ def _is_point_label(lhs: str) -> bool:
     not a new assertion. Naming the point this way is common across topics, so
     this isn't continuity-specific."""
     return bool(_AT_POINT_RE.search(lhs.strip()))
+
+_LEADING_NUMBER_RE = _re.compile(r"^\s*(-?\d+(?:\.\d+)?)\b")
+
+def _is_var_point_declaration(lhs: str, value_str: str, var_name: str) -> bool:
+    """A line whose math content is just '<var> = <number>' ('Step 1: substitute
+    x = 0 directly', with prose in English, Khmer, or any other language around
+    it) names the substitution point rather than asserting a computed value —
+    the '<var> ='/'= <number>' math spans are typeset separately from the
+    surrounding sentence, so the language of that sentence never affects
+    whether this fires. `value_str` may still carry trailing prose after the
+    number (rpartition split on the line's LAST '=', which can land mid
+    sentence); only the leading numeral is required to match.
+
+    The variable must be preceded by whitespace/start-of-string, not `\b`
+    alone — `\b` also matches right after an operator like '/' or '*', which
+    would misfire on a bare trailing variable that's actually part of a larger
+    expression ('sin(9x)/x', not a point declaration)."""
+    if not _re.search(rf"(?:^|\s){_re.escape(var_name)}\s*$", lhs.strip()):
+        return False
+    return bool(_LEADING_NUMBER_RE.match(value_str))
+
+def _is_known_limit_fact(lhs: str, value) -> bool:
+    """True when `lhs` is itself a 'lim_{var->point} expr' clause (a named
+    standard-limit lemma the student cited, e.g. substituting u=9x and writing
+    'lim_{u->0} sin(u)/u = 1') and that limit really does evaluate to `value`.
+    Unlike a plain algebraic identity, sin(u)/u isn't identically 1 — only its
+    limit at 0 is — so this must actually take the limit, not just simplify
+    the difference."""
+    matches = list(_LIM_CLAUSE.finditer(lhs))
+    if not matches:
+        return False
+    m = matches[-1]
+    var = m.group(1) or m.group(3)
+    point_str = m.group(2) or m.group(4)
+    body_str = lhs[m.end():]
+    try:
+        var_sym = Symbol(var)
+        point_val = parse_answer(point_str)
+        body_expr = parse_answer(body_str)
+        computed = limit(body_expr, var_sym, point_val)
+        return simplify(computed - value) == 0 or _numeric_close(computed, value, _DEFAULT_TOL)
+    except Exception:
+        return False
+
+def _is_self_consistent_identity(lhs: str, value, var_sym=None, point=None) -> bool:
+    """True when `lhs` parses on its own to the same value as the line's
+    already-parsed RHS ('e^0 = 1', where both sides evaluate to 1) — a true
+    aside fact the student jotted down, not a claim about the checkpoint
+    sequence. Only called once a line has already failed to match any
+    checkpoint, so this never masks a genuine wrong answer: a *wrong*
+    computation ('2+2 = 5') fails this check too and still falls through to
+    being flagged.
+
+    For a limit problem (`point` given), also accepts a sub-expression whose
+    *actual limit* at the problem's own point matches `value`, even with no
+    'lim' notation at all ('2/(x+2) = 0' mid-derivation, x -> +infinity) — a
+    true partial-limit fact, not a checkpoint claim. `lhs`'s genuinely wrong
+    limit still fails this and falls through to being flagged."""
+    try:
+        if simplify(parse_answer(lhs) - value) == 0:
+            return True
+    except Exception:
+        pass
+    if _is_known_limit_fact(lhs, value):
+        return True
+    if point is not None and var_sym is not None:
+        try:
+            lhs_expr = parse_answer(lhs)
+            if lhs_expr.has(var_sym):
+                computed = limit(lhs_expr, var_sym, point)
+                if simplify(computed - value) == 0 or _numeric_close(computed, value, _DEFAULT_TOL):
+                    return True
+        except Exception:
+            pass
+    return False
+
+_KHMER_SPLIT_RE = _re.compile(r"[ក-៿]+")
+
+def _clause_is_true_chain(clause: str, var_sym=None, point=None) -> bool:
+    """One "="-chained clause ('a^2-b^2 = (a-b)(a+b)', or a longer
+    'X = Y = Z' chain) is true only when EVERY consecutive pair parses and is
+    self-consistent — not just one of them, so a clause that also smuggles in
+    a wrong claim ('a^2-b^2=(a-b)(a+b) ... 4-1=10') still fails this."""
+    segs = [s for s in clause.split("=") if s.strip()]
+    if len(segs) < 2:
+        return False
+    try:
+        parsed = [parse_answer(s) for s in segs]
+    except Exception:
+        return False
+    return all(
+        _is_self_consistent_identity(segs[j], parsed[j + 1], var_sym, point)
+        for j in range(len(parsed) - 1)
+    )
+
+def _line_has_true_identity_pair(raw_text: str, var_sym=None, point=None) -> bool:
+    """`_is_self_consistent_identity` generalized to a line carrying more than
+    one clause ('using a^2-b^2=(a-b)(a+b) on e^6x-1=(e^3x)^2-1^2' — the
+    algebra-identity reminder *and* its application, chained in one line, with
+    a Khmer connector standing in for "on"/"applied to" rather than another
+    "="). Splitting only on "=" would hand the identity check a segment
+    spanning "(a-b)(a+b) e^6x-1" — the tail of one clause fused to the head of
+    the next by the connector's removal — which is neither a valid expression
+    nor a real assertion. Takes the *original* un-Khmer-stripped `raw_text`
+    (analyze_work's `text` has already had Khmer replaced by a space by this
+    point, which is exactly what would cause that false fusion) and splits
+    into clauses on every Khmer run first, THEN checks each clause's own "="
+    chain internally.
+
+    Requires EVERY clause that contains an "=" to be a true chain — not just
+    one of them — so a true identity glued to an unrelated wrong claim in the
+    same line ('...=(a-b)(a+b) applied to 4-1=10') still isn't masked: that
+    second clause fails `_clause_is_true_chain` and the whole line still falls
+    through to being flagged."""
+    clauses = [c for c in _KHMER_SPLIT_RE.split(raw_text) if "=" in c]
+    if not clauses:
+        return False
+    return all(_clause_is_true_chain(c, var_sym, point) for c in clauses)
 
 def _is_equation_restatement(text, given_equations) -> bool:
     """True when some adjacent pair of "="-separated segments of `text` is
@@ -411,6 +592,21 @@ def _judge_monotonicity(expected, user_answer, tol):
 _DISCONTINUOUS_RE = _re.compile(r"\b(discontinuous|non-?continuous|not\s+continuous)\b", _re.I)
 _CONTINUOUS_RE = _re.compile(r"\bcontinuous\b", _re.I)
 
+# Khmer script (letters + digits + punctuation, e.g. the "៖" colon and "។"
+# period) is used only for narration in this app — math is always written in
+# Latin/LaTeX notation (see CLAUDE.md) — so it's stripped from every work
+# line before any splitting/parsing below. Without this, a trailing Khmer
+# clause glued onto a line's asserted value ("... = 1 យើងបាន៖", "then we
+# get:") survives the "=" split into `value_str` and sympy's implicit-
+# multiplication parser reads it as an extra symbol multiplied onto the
+# value, corrupting an otherwise-correct line into a parsed-but-wrong one —
+# and a leading Khmer clause on `lhs` does the same to the tautology/
+# known-limit-fact checks, which parse `lhs` on its own.
+_KHMER_RE = _re.compile(r"[ក-៿]+")
+
+def _strip_khmer(text: str) -> str:
+    return _re.sub(r"\s+", " ", _KHMER_RE.sub(" ", text)).strip()
+
 def _judge_continuity(expected, user_answer):
     """Continuity verdict answer: BAC II students write a full conclusion
     sentence ('...on peut dire que f est discontinue en x=1'-style, or 'In
@@ -528,6 +724,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     given_expr = solution.get("given")
     given_expressions = solution.get("given_expressions") or []
     given_equations = solution.get("given_equations") or []
+    limit_point = solution.get("point")
     checkpoints = list(solution.get("checkpoints", []))
     if not checkpoints or checkpoints[-1]["value"] != solution["answer_exact"]:
         checkpoints.append({"label": "final answer", "value": solution["answer_exact"], "formula": None})
@@ -539,7 +736,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
 
     var_sym = Symbol(params.get("var", "x"))
     for i, raw in enumerate(lines, 1):
-        text = raw.strip()
+        text = _strip_khmer(raw.strip())
         if not text:
             continue
         # Normalize OCR digraphs ("C_1" -> "C1", "+-"/"-+" -> "±"/"∓") before
@@ -720,6 +917,27 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
                 "expected": str(checkpoints[pointer - 1]["value"]),
                 "restated": True,
             })
+        elif had_equals and _is_var_point_declaration(lhs, value_str, params.get("var", "x")):
+            # 'x = 0' (Step 1: substitute x = 0 directly) names the
+            # substitution point rather than asserting a computed value.
+            # Checked only here, after every checkpoint match attempt above
+            # has failed — so on a topic where the answer genuinely *is*
+            # 'var = value' (solving for the variable itself), a line that
+            # matches the checkpoint sequence is matched there first and
+            # never reaches this fallback.
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
+        elif had_equals and _is_self_consistent_identity(lhs, value, var_sym, limit_point):
+            # A true aside identity ('e^0 = 1') that doesn't match any
+            # checkpoint — a known-value substitution the student jotted down,
+            # not a step in the checkpoint sequence, so it's neither a new
+            # checkpoint nor an error.
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "identity"})
+        elif had_equals and _line_has_true_identity_pair(raw, var_sym, limit_point):
+            # Same idea, for a line chaining more than one "="-separated
+            # clause ('using a^2-b^2=(a-b)(a+b): e^6x-1=(e^3x)^2-1^2') where
+            # the true pair isn't the last one, so the plain lhs/value split
+            # above couldn't isolate it.
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "identity"})
         else:
             target = checkpoints[pointer] if pointer < len(checkpoints) else None
             line_results.append({
@@ -771,7 +989,7 @@ def _analyze_work_any_order(solution, params, lines, tol):
     matched_checkpoints = set()
 
     for i, raw in enumerate(lines, 1):
-        text = raw.strip()
+        text = _strip_khmer(raw.strip())
         if not text:
             continue
         if "=" in text:
