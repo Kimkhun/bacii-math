@@ -420,8 +420,21 @@ const Canvas = forwardRef<
     useLayoutEffect(() => {
       redraw();
       const g = grownRef.current;
-      if (g.top || g.left) {
-        wrapperRef.current?.scrollBy({ top: g.top * zoom, left: g.left * zoom });
+      const wrapper = wrapperRef.current;
+      if (wrapper && (g.top || g.left)) {
+        // Absolute scrollTo (reading scroll position fresh, right now) rather
+        // than a relative scrollBy — if anything nudged the wrapper's scroll
+        // between when this grow was queued and this effect actually running
+        // (iOS rubber-band/momentum from the gesture that just ended, however
+        // brief), a relative delta would compound that drift instead of
+        // landing on the correct absolute position. `behavior: "instant"`
+        // rules out any inherited smooth-scroll animating the correction
+        // where the user can see it happen.
+        wrapper.scrollTo({
+          top: wrapper.scrollTop + g.top * zoom,
+          left: wrapper.scrollLeft + g.left * zoom,
+          behavior: "instant",
+        });
         grownRef.current = { top: 0, left: 0 };
       }
       growingRef.current = false;
@@ -778,7 +791,11 @@ const Canvas = forwardRef<
 
     if (fullscreen) {
       return (
-        <div ref={wrapperRef} className="fixed inset-0 overflow-auto bg-[#f2f1ed]">
+        <div
+          ref={wrapperRef}
+          className="fixed inset-0 overflow-auto bg-[#f2f1ed]"
+          style={{ overscrollBehavior: "contain" }}
+        >
           <div
             className="relative mt-[92px] mx-8 mb-6 rounded-[3px] overflow-hidden shadow-[0px_2px_10px_0px_rgba(0,0,0,0.07)]"
             style={{ width: W * zoom, height: H * zoom }}
