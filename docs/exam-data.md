@@ -24,7 +24,7 @@ of truth).
   *every* exercise, which used to be silently swallowed and empty the entire
   curated pool with no visible error (see `structures._load_limit_curated`,
   which now re-raises `ImportError` instead of skipping it like a bad prompt).
-- **Sorted by technique** into `backend/data/limits/{formula_name}.json` (13
+- **Sorted by technique** into `backend/engine/topics/limit/data/curated/{formula_name}.json` (13
   categories, e.g. `factoring_0_0`, `sinc_standard_limit`, `conjugate_infinity`
   — see below) — this is what the generator's curated limit pool actually
   reads, and what `structures.LIMIT_TECHNIQUES` (the technique registry) is
@@ -48,9 +48,9 @@ of truth).
 ## 3. How the data becomes playable
 
 - All of `backend/data/` is mounted into the backend container (`./backend:/app`).
-- **Limits:** `backend/data/limits/{formula_name}.json` (37 real exercises +
+- **Limits:** `backend/engine/topics/limit/data/curated/{formula_name}.json` (37 real exercises +
   20 textbook exercises, sorted by technique) is loaded at import by
-  `engine/structures._LIMIT_CURATED_TEMPLATES`, parsed into SymPy expr/point
+  `engine/topics/limit/structures._LIMIT_CURATED_TEMPLATES`, parsed into SymPy expr/point
   pairs, and mixed into the live limit generator (50% curated per request,
   50% a random *parameterizable* technique's sampler) — see
   `generator-variants.md` and `structures.LIMIT_TECHNIQUES`. The exam-authored
@@ -75,8 +75,8 @@ of truth).
   bank: `log_limit_zero`, `indeterminate_one_infinity`). Kept as raw
   extraction — no answers, no dedup against the live data folders.
 - **How it feeds the live folders:** the same files (or a subset) are copied
-  into the existing `backend/data/limits/` and a new top-level
-  `backend/data/complex_numbers/` folder, checked for `prompt_latex`
+  into the existing `backend/engine/topics/limit/data/curated/` and a new top-level
+  `backend/engine/topics/complex/data/curated/` folder, checked for `prompt_latex`
   duplicates against the exam-derived data first (none found).
   - **Limits:** both textbook files needed `answer_latex` added (the
     generator's curated-limit loader requires it) — computed directly with
@@ -90,12 +90,12 @@ of truth).
     literal `z = a+bi` (plain-integer) subset with a recognized question type
     (modulus/argument/conjugate/real_part/imaginary_part) was pulled into a
     new curated pool — 6 exercises, `easy` difficulty
-    (`engine/structures._COMPLEX_CURATED_TEMPLATES`, mirroring the limit
+    (`engine/topics/complex/generator._COMPLEX_CURATED_TEMPLATES`, mirroring the limit
     loader's parse-once-at-import + graceful-skip pattern). See
     `generator-variants.md` for how it's mixed into `generate()`.
 
 ## 5. Formula catalog (content data, mounted)
 
-`backend/data/formulas/*.json` — merged over the built-in registry by
+each topic's `backend/engine/topics/<topic>/data/formulas.json` — merged over the built-in registry by
 `engine/formulas.py` at import; malformed entries skipped; built-ins are the
 fallback. See `adding-question-types.md` for the entry format.

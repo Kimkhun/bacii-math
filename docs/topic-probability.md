@@ -21,9 +21,9 @@ Three strategies were trialed for the Khmer text (see the session notes):
    `backend/engine/solver.py`, dispatched on `params["structure"]`. SymPy
    computes the exact `Rational` answer + checkpoints (`n(Ω)`, `n(A)`, `P(A)`
    fraction lines — line-checked like everything else).
-2. **Khmer text** (content): `backend/data/scenarios/probability.json` —
+2. **Khmer text** (content): `backend/engine/topics/probability/data/scenarios/probability.json` —
    sentence frames parameterized from **real BAC II exam problems** supplied by
-   the user (2026-08-23). Same user-editable pattern as `backend/data/formulas/`.
+   the user (2026-08-23). Same user-editable pattern as each topic's `data/formulas.json`.
 3. **Generator**: picks a scenario → samples valid params (ranges +
    constraints) → fills the Khmer text → the solver computes the math. **The
    LLM is not involved in v1 generation.**
@@ -45,7 +45,7 @@ the catalog's constraints prevent them, the solver refuses them. Answers are
 SymPy-exact `Rational`s; grading handles `3/10`, `0.3`, and `C(6,2)`-style
 combination notation (added to `parse_answer`).
 
-## The scenario catalog (`backend/data/scenarios/probability.json`)
+## The scenario catalog (`backend/engine/topics/probability/data/scenarios/probability.json`)
 
 User-owned content: 14 entries whose Khmer frames are parameterizations of the
 real exam sentences (bag of white/black balls, banknotes 5000៛/10000៛, red/blue
@@ -69,7 +69,7 @@ pens, student groups, two boxes, numbered bags). Each entry:
   allowed as strings — used by the union/conditional params when scenarios
   arrive).
 - `derived`: slots computed from other slots, evaluated in order by the same
-  safe AST evaluator (`backend/engine/scenarios.py` — whitelisted operators
+  safe AST evaluator (`backend/engine/topics/probability/scenarios.py` — whitelisted operators
   only: `+ - * // % **`, comparisons, `and/or/not`; no calls, no attributes).
 - `constraints`: expressions that must all hold; the sampler retries (~80
   attempts) then skips to the next scenario. Range sizes are small, so
@@ -81,7 +81,7 @@ pens, student groups, two boxes, numbered bags). Each entry:
   exam problem** (laplace single-draw, binomial coins, union, conditional) —
   add frames there once real examples are provided.
 
-The loader (`engine/scenarios.py`) mirrors the formulas loader: JSON is the
+The loader (`engine/topics/probability/scenarios.py`) mirrors the formulas loader: JSON is the
 content, no built-in fallback, malformed files/entries are skipped, and
 `VARIANT_BY_DIFFICULTY` drives the generator pools and the admin `/templates`
 inventory rows (1 easy / 3 medium / 2 hard exercises).

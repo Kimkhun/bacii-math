@@ -9,11 +9,12 @@ mathematically-exact grading plus step-by-step explanations. Current topic: Comp
 argument, conjugate, real/imaginary parts); architecture is meant to extend to other BAC II topics later.
 
 **Core principles that constrain design decisions:**
-- **SymPy is the source of truth.** Answers and grading are always computed by SymPy (`backend/engine/solver.py`,
-  `grader.py`), never by an LLM. Never let an LLM compute or validate a math answer directly.
+- **SymPy is the source of truth.** Answers and grading are always computed by SymPy (each topic's
+  `engine/topics/<topic>/solver.py`, plus the generic grading core in `engine/core/grading.py`), never by
+  an LLM. Never let an LLM compute or validate a math answer directly.
 - **LLMs only narrate and propose.** Gemini (Vertex AI) → Ollama → deterministic SymPy text is the fallback
   chain for turning SymPy's steps into friendly explanations. In Gemini generation mode, the LLM proposes a
-  problem but SymPy still recomputes/validates the answer before it's accepted (`engine/generator.py`).
+  problem but SymPy still recomputes/validates the answer before it's accepted (`engine/topics/complex/generator.py`).
 - **Handwriting OCR is cloud-first but optional-local.** Default OCR provider is Gemini vision via
   Vertex AI (the same service account used for explanations). Local Ollama on the host remains available
   as an alternative or fallback via `VISION_PROVIDER=ollama|gemini|fallback` (`engine/vision.py`).
@@ -81,15 +82,25 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
 - `services.py` — orchestration layer: wires `engine/` + `models.py` + `cache.py` together for each
   endpoint's use case (create question, grade, explain, stats). This is the place to look first to
   understand a request's full flow.
-- `engine/` — the math/AI core, framework-agnostic:
-  - `solver.py` — SymPy computation of exact answers + solution steps for each `question_type`.
-  - `generator.py` — builds problems either from integer templates (`generation_mode="templates"`,
-    keeps answers clean — Pythagorean triples for modulus, multiples of pi/4 for argument) or via
-    Gemini proposal re-validated by SymPy (`generation_mode="gemini"`). Probability questions are
-    built from the user-owned scenario catalog (`engine/scenarios.py` +
-    `backend/data/scenarios/*.json`): sampled slots → constraint-validated → filled Khmer sentence
-    → SymPy-solved (no LLM in v1 generation).
-  - `grader.py` — compares a user answer against the SymPy-exact answer (exact or tolerance-based).
+- `engine/` — the math/AI core, framework-agnostic, organized **by topic**:
+  - `solver.py` / `generator.py` / `grader.py` — thin public facade modules (do not rename); each
+    re-exports the real implementation from `engine/core/` and `engine/topics/<topic>/`.
+  - `core/` — the topic-neutral kernel: `dispatch.py` (routes `solve()`/`generate()` to the right
+    topic), `grading.py` (`parse_answer`/`analyze_work`/`grade`/`grade_part` + every generic
+    answer-kind judge — compares a user answer against the SymPy-exact answer, exact or
+    tolerance-based), `shared.py` (question-type registry + small SymPy formatting helpers),
+    `slots.py`/`expr_shared.py` (template-filling helpers shared by the limit/integral generators).
+  - `topics/<topic>/` — one self-contained folder per BAC II topic (`complex`, `limit`, `integral`,
+    `probability`, `functions`, `continuity`, `derivatives`, `differential_equations`,
+    `vectors_space`, `conics`), each with its own `solver.py` (SymPy computation of exact answers +
+    solution steps), `generator.py` (builds problems either from integer templates —
+    `generation_mode="templates"`, keeps answers clean — or via Gemini proposal re-validated by
+    SymPy for `generation_mode="gemini"`, complex-topic only), `grader.py` (topic-specific grading
+    rules, when any differ from the generic core), and `data/` (curated real-exam exercises +
+    formula-sheet JSON). Probability's scenario catalog lives at
+    `engine/topics/probability/scenarios.py` + `data/scenarios/*.json`: sampled slots →
+    constraint-validated → filled Khmer sentence → SymPy-solved (no LLM in v1 generation). See
+    `docs/engine-layout.md` for the full file map and the "add a topic" recipe.
   - `explainer.py` — turns solver steps into deterministic plain-text explanation (LLM fallback baseline).
   - `llm.py` — Gemini (Vertex AI) client (text + vision) + Ollama text/vision calls, with the
     Gemini → Ollama → deterministic fallback chain and rate-limiting via `cache.allow_gemini`.
@@ -138,8 +149,9 @@ Web reads `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:8016`).
 
 ## Adding a new topic
 
-The complex-numbers implementation is the template for extending to other BAC II topics (functions,
-geometry, differential equations, integrals, conics, probability): add a solver for the topic's
-question types in `engine/solver.py`, template/Gemini generation in `engine/generator.py`, grading rules
-in `engine/grader.py`, and extend `QUESTION_TYPES` accordingly — `services.py` and the routers are
-already topic-agnostic (topic is just a field on `Question`).
+Each BAC II topic is a self-contained folder under `engine/topics/<topic>/`. Add a new one by writing
+`solver.py` (the topic's SymPy computation), `generator.py` (template/Gemini generation), and `grader.py`
+(only needed if grading differs from the generic core in `engine/core/grading.py`) — then register the
+topic + its question types in `engine/core/shared.py` and `engine/core/dispatch.py`. `services.py` and the
+routers are already topic-agnostic (topic is just a field on `Question`). Full recipe:
+`docs/engine-layout.md` and `docs/adding-question-types.md`.

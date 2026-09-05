@@ -16,7 +16,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 from sympy import N, simplify, sympify
 
-from engine.generator.functions import _FUNCTION_CURATED_TEMPLATES, _build_curated_function
+from engine.topics.functions.generator import _FUNCTION_CURATED_TEMPLATES, _build_curated_function
 from engine.grader import grade_part
 from engine.solver import solve
 

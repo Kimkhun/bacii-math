@@ -10,13 +10,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sympy import latex
 
 import cache
-from engine import explainer, formulas, generator, graph_grader, grader, llm, scenarios, solver, structures
-from engine.generator.integrals import (
+from engine import explainer, formulas, generator, grader, llm, solver
+from engine.topics.functions import graph_grader
+from engine.topics.functions.generator import _FUNCTION_CURATED_TEMPLATES
+from engine.topics.integral import structures as integral_structures
+from engine.topics.integral.generator import (
     _INDEFINITE_VARIANT_BY_DIFFICULTY,
     _INTEGRAL_VARIANT_BY_DIFFICULTY,
 )
-from engine.generator.functions import _FUNCTION_CURATED_TEMPLATES
-from engine.generator.limits import generate_limit_for_technique
+from engine.topics.limit import structures as limit_structures
+from engine.topics.limit.generator import generate_limit_for_technique
+from engine.topics.probability import scenarios
 from models import Attempt, Explanation, Question, Step, StudySession, User
 from schemas import GenerateRequest, SaveProgressRequest
 
@@ -708,14 +712,14 @@ def _build_integral_structure_payload() -> dict:
         return _integral_structure_payload
 
     by_qt: dict[str, list] = {}
-    for struct in structures.all_integral_structures():
+    for struct in integral_structures.all_integral_structures():
         by_qt.setdefault(struct["question_type"], []).append(struct)
 
     question_types = []
     for qt in ("indefinite_integral", "definite_integral"):
         entries = []
         for struct in by_qt.get(qt, []):
-            sample = structures.build_sample(
+            sample = integral_structures.build_sample(
                 struct, seed=zlib.crc32(struct["id"].encode()) & 0xFFFFFFFF
             )
             solution = sample["solution"]
@@ -724,7 +728,7 @@ def _build_integral_structure_payload() -> dict:
                 "question_type": qt,
                 "difficulty": struct["difficulty"],
                 "pattern": struct["pattern"],
-                "pattern_latex": structures.build_pattern_latex(struct),
+                "pattern_latex": integral_structures.build_pattern_latex(struct),
                 "sample_prompt": sample["prompt"],
                 "sample_prompt_latex": sample["prompt_latex"],
                 "sample_answer": str(solution["answer_exact"]),
@@ -744,7 +748,7 @@ _limit_structure_payload = None
 def _build_limit_structure_payload() -> dict:
     """One card per limit *technique* (not per parameterized shape — most limit
     techniques are tied to a specific identity, not free coefficients; see
-    `structures.LIMIT_TECHNIQUES`). Parameterizable techniques additionally get
+    `limit_structures.LIMIT_TECHNIQUES`). Parameterizable techniques additionally get
     a deterministic procedurally-generated sample; curated-only techniques show
     one real BAC II exercise instead. Memoized like the integral payload."""
     global _limit_structure_payload
@@ -752,11 +756,11 @@ def _build_limit_structure_payload() -> dict:
         return _limit_structure_payload
 
     curated_by_technique: dict[str, list] = {}
-    for item in structures._LIMIT_CURATED_TEMPLATES:
+    for item in limit_structures._LIMIT_CURATED_TEMPLATES:
         curated_by_technique.setdefault(item["formula_name"], []).append(item)
 
     entries = []
-    for technique, meta in structures.LIMIT_TECHNIQUES.items():
+    for technique, meta in limit_structures.LIMIT_TECHNIQUES.items():
         curated = sorted(curated_by_technique.get(technique, []), key=lambda it: it["id"])
         source_labels = [it["id"] for it in curated]
         entry = {
@@ -1016,7 +1020,7 @@ def _topic_structure_summary(topic: str) -> dict:
         qts: dict[str, int] = {}
         diffs: set = set()
         curated = 0
-        for s in structures.all_integral_structures():
+        for s in integral_structures.all_integral_structures():
             qts[s["question_type"]] = qts.get(s["question_type"], 0) + 1
             diffs.add(s.get("difficulty"))
             if s.get("source_labels"):
@@ -1031,13 +1035,13 @@ def _topic_structure_summary(topic: str) -> dict:
 
     if topic == "limit":
         curated_techniques = {
-            item["formula_name"] for item in structures._LIMIT_CURATED_TEMPLATES
+            item["formula_name"] for item in limit_structures._LIMIT_CURATED_TEMPLATES
         }
-        diffs = {meta["difficulty"] for meta in structures.LIMIT_TECHNIQUES.values()}
+        diffs = {meta["difficulty"] for meta in limit_structures.LIMIT_TECHNIQUES.values()}
         return {
             "topic": topic,
-            "question_types": [{"question_type": "limit", "count": len(structures.LIMIT_TECHNIQUES)}],
-            "structure_count": len(structures.LIMIT_TECHNIQUES),
+            "question_types": [{"question_type": "limit", "count": len(limit_structures.LIMIT_TECHNIQUES)}],
+            "structure_count": len(limit_structures.LIMIT_TECHNIQUES),
             "difficulties": sorted(diffs),
             "curated": len(curated_techniques),
         }

@@ -6,8 +6,9 @@ exercises). Follow them in order and run the verification checklist at the end.
 
 ## 1. Record the formulas first (content)
 
-Formulas live in `backend/data/formulas/*.json` (merged over the built-in
-registry in `engine/formulas.py` — built-ins are the fallback). One entry per
+Formulas live in each topic's `engine/topics/<topic>/data/formulas.json`
+(merged over the built-in registry in `engine/formulas.py` — built-ins are
+the fallback). One entry per
 **technique id** (what the solver will tag), not per formula:
 
 ```json
@@ -27,7 +28,7 @@ registry in `engine/formulas.py` — built-ins are the fallback). One entry per
 - Difficulty = sum of distinct tags' weights (≤1 easy, 2 medium, ≥3 hard).
 - Unknown ids never crash (fallback: raw id, weight 1).
 
-## 2. Add the solver (`backend/engine/solver.py`)
+## 2. Add the solver (`backend/engine/topics/<topic>/solver.py`)
 
 1. Write `_solve_<type>(params)`:
    - Compute the answer with SymPy (the only math authority).
@@ -39,8 +40,9 @@ registry in `engine/formulas.py` — built-ins are the fallback). One entry per
    - `formula_tags`: derive with `_formula_tags(steps)` (ordered distinct ids).
    - `given`: the original expression (lets `analyze_work` skip restatements).
    - `answer_decimal`: `None` is fine for symbolic answers.
-2. Register: add the type to `QUESTION_TYPES_BY_TOPIC[topic]` and a branch in
-   `solve()`.
+2. Register: add the type to `QUESTION_TYPES_BY_TOPIC[topic]` (in
+   `engine/core/shared.py`) and a branch in `solve()` (in
+   `engine/core/dispatch.py`).
 
 Gotchas learned:
 - `e**x` becomes `exp(x)` in SymPy — check `term.has(exp)`, not `has(E)`.
@@ -49,7 +51,7 @@ Gotchas learned:
 - `explainer._problem_desc` must handle your new type's params (e.g. indefinite
   integrals have no `lower`/`upper` — forgetting this 500s on explanations).
 
-## 3. Extend the grader only if the rule differs (`backend/engine/grader.py`)
+## 3. Extend the grader only if the rule differs (`backend/engine/topics/<topic>/grader.py`)
 
 - New grading semantics (e.g. indefinite: any `F(x) + const` is correct →
   `not simplify(user - expected).has(var)`).
@@ -60,7 +62,7 @@ Gotchas learned:
   infinity) never need an LLM to grade — set `"answer_kind"` on the solve()
   output (plus `"choices"` for a word/phrase kind, or `"exact_only"`) and
   `grade()`/`grade_part()` dispatch to the matching deterministic judge in
-  `grader/grader.py` (`_judge_interval`, `_judge_choice`, `_judge_infinity`,
+  `engine/core/grading.py` (`_judge_interval`, `_judge_choice`, `_judge_infinity`,
   `_judge_line`, `_judge_sign`/`_judge_monotonicity`/`_judge_variation_table`,
   `_judge_continuity`). `_judge_choice` requires the answer to equal one of a
   fixed word/phrase list exactly (after stripping punctuation) — right for
@@ -73,7 +75,7 @@ Gotchas learned:
   asking an LLM whether it's correct — SymPy/deterministic matching is the only
   grading authority in this codebase.
 
-## 4. Add the generator template (`backend/engine/generator.py`)
+## 4. Add the generator template (`backend/engine/topics/<topic>/generator.py`)
 
 1. Write `_generate_<type>(rng, difficulty)`:
    - **Parameterize everything.** Pick coefficients/constants/bounds from pools.
@@ -84,9 +86,10 @@ Gotchas learned:
      students and the grading UX.
    - Return via `_build_expr_problem(...)` (or `_build(...)` for complex),
      including `"variant"` and any metadata in `params`.
-2. Wire the dispatch: `_generate_expr_templates` (or `generate()` for complex),
-   question-type validation lists, and `_INTEGRAL_VARIANT_BY_DIFFICULTY` pool
-   (or, for limits, add the technique to `structures.LIMIT_TECHNIQUES` with
+2. Wire the dispatch: `_generate_expr_templates` (or `generate()` for complex,
+   in `engine/core/dispatch.py`), question-type validation lists, and
+   `_INTEGRAL_VARIANT_BY_DIFFICULTY` pool (or, for limits, add the technique
+   to `engine/topics/limit/structures.py`'s `LIMIT_TECHNIQUES` with
    `parameterizable: True` plus a sampler in `_LIMIT_SAMPLERS` and a narration
    handler in `solver._LIMIT_TECHNIQUE_HANDLERS` — see `generator-variants.md`;
    only mark a technique parameterizable if it actually generalizes under
@@ -104,7 +107,8 @@ Add the new type to `TYPE_OPTIONS[topic]` (label shown to students).
 Backend:
 ```bash
 cd backend
-python -m py_compile engine/solver.py engine/grader.py engine/generator.py
+python -m py_compile engine/solver.py engine/grader.py engine/generator.py \
+  engine/topics/<topic>/solver.py engine/topics/<topic>/generator.py
 # rolls: generate many per difficulty → solve → grade exact answer == correct
 # + the type's edge cases (e.g. "+C"/"+5"/wrong for indefinite)
 # + confirm formula_tags include the new ids
@@ -131,11 +135,13 @@ the new catalog entry, `/templates` shows a live sample of the new template
 - **Exam bank data** (fixed real questions): `backend/data/bacii-exam/<topic>/*.json`
   + a verify script (`scripts/verify_limits.py`) that SymPy-checks every
   answer. For limits, the bank is also sorted by technique into
-  `backend/data/limits/{formula_name}.json` and loaded straight into the
-  generator's curated pool (`engine/structures._LIMIT_CURATED_TEMPLATES`) —
-  see `exam-data.md`. `scripts/verify_limit_structures.py` additionally audits
+  `engine/topics/limit/data/curated/{formula_name}.json` and loaded straight
+  into the generator's curated pool
+  (`engine/topics/limit/structures._LIMIT_CURATED_TEMPLATES`) — see
+  `exam-data.md`. `scripts/verify_limit_structures.py` additionally audits
   the technique registry: every curated exercise maps to a known technique,
   and every parameterizable technique's sampler produces a gradeable-correct
   instance.
-- **Formula sheet**: the catalog JSON (`backend/data/formulas/*.json`) doubles
-  as student-facing content (names, translations, the `formulas` list).
+- **Formula sheet**: each topic's catalog JSON
+  (`engine/topics/<topic>/data/formulas.json`) doubles as student-facing
+  content (names, translations, the `formulas` list).

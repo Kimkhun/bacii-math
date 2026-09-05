@@ -23,8 +23,8 @@ Gemini mode (complex only, classic 5 types only): LLM proposes a,b + type; SymPy
 `argument`, `conjugate`, `real_part`, or `imaginary_part` has a 50% chance of
 drawing a curated textbook exercise instead, if one exists for that exact
 question type (`generator/complex._generate_templates`). The curated pool
-(`engine/structures._COMPLEX_CURATED_TEMPLATES`) is parsed at import time from
-`backend/data/complex_numbers/{formula_name}.json` — only the subset of
+(`engine/topics/complex/generator._COMPLEX_CURATED_TEMPLATES`) is parsed at import time from
+`backend/engine/topics/complex/data/curated/{formula_name}.json` — only the subset of
 textbook exercises posed as a literal `z = a+bi` (plain integers, no
 powers/radicals) round-trips through the existing a+bi solver, so the curated
 pool is intentionally small (6 exercises as of 2026-08-25). SymPy still
@@ -34,7 +34,7 @@ for reference. The 4 new question types above are procedural-only for now (no
 curated pool wired in yet).
 
 **Still not templated** (of the 164 textbook exercises in
-`backend/data/complex_numbers/`, these categories have no solver yet — see
+`backend/engine/topics/complex/data/curated/`, these categories have no solver yet — see
 `exam-data.md`): standalone "write z in trig form" as its own multi-part
 exercise (`trig_form_conversion.json`, `quotient_trig_form.json` — the trig
 form *value* is already reachable via modulus+argument, but grading the (r, θ)
@@ -76,7 +76,7 @@ Each registry entry is flagged `parameterizable` or not:
 
 Each generation request for a given difficulty has a 50% chance of drawing a
 **curated** exercise (one of the 56 real, SymPy-verified BAC II & textbook limit
-questions, sorted by technique into `backend/data/limits/{formula_name}.json`,
+questions, sorted by technique into `backend/engine/topics/limit/data/curated/{formula_name}.json`,
 loaded into `structures._LIMIT_CURATED_TEMPLATES` at import time) and otherwise
 picks a random *parameterizable* technique for that difficulty and samples a fresh
 instance. Curated params carry `formula_name` + the exam-authored technique text;
@@ -122,8 +122,8 @@ coefficient pools — sign variety comes from template structure.
 
 ## Probability (`topic=probability`, `question_type=probability`)
 
-Scenarios come from the user-owned catalog `backend/data/scenarios/probability.json`
-(loaded by `engine/scenarios.py`); the admin `/templates` inventory forces one row
+Scenarios come from the user-owned catalog `backend/engine/topics/probability/data/scenarios/probability.json`
+(loaded by `engine/topics/probability/scenarios.py`); the admin `/templates` inventory forces one row
 per scenario id per difficulty. Answers are SymPy-exact fractions.
 
 | Difficulty | Scenarios (catalog ids) | Tags |
@@ -139,5 +139,5 @@ Structures with no catalog scenarios yet (solver-ready, awaiting real frames):
 
 `GET /templates` forces every variant per difficulty (deterministic seed per
 row) — the authoritative live view of this table. `GET /formulas` lists the
-registry (built-ins + `backend/data/formulas/*.json` overlays, incl. the 8
+registry (built-ins + each topic's `backend/engine/topics/<topic>/data/formulas.json` overlays, incl. the 8
 probability techniques) with names/latex/weights/formulas.

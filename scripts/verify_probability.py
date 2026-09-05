@@ -25,7 +25,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "backend"))
 
-from engine import generator, grader, scenarios, solver  # noqa: E402
+from engine import generator, grader, solver  # noqa: E402
+from engine.topics.probability import scenarios  # noqa: E402
 
 
 def generate_sync(*args, **kwargs):

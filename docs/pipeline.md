@@ -165,7 +165,7 @@ explanations(id, attempt_id, question_id, provider, content,
              intervened, trigger, created_at)
 ```
 
-Formula content lives OUTSIDE the DB in `backend/data/formulas/*.json`
+Formula content lives OUTSIDE the DB in each topic's `backend/engine/topics/<topic>/data/formulas.json`
 (loaded over the built-in registry at import; edited without touching code).
 
 ## Still not documented (candidates for future docs)
