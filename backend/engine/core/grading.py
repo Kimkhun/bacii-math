@@ -564,6 +564,37 @@ def _judge_expression(expected, user_answer, tol, exact_only=False):
         return True, "numeric", None
     return False, "mismatch", None
 
+def _parse_vector(text):
+    """Parse a vector/point answer like '(2,-2,-2)', '2,-2,-2', or
+    'AB=(2,-2,-2)' into a list of SymPy values, one per component."""
+    text = _strip_lead(text.strip())
+    if text.startswith("(") and text.endswith(")"):
+        text = text[1:-1]
+    comps = [c.strip() for c in text.split(",") if c.strip()]
+    if not comps:
+        raise ValueError("empty vector")
+    return [parse_answer(c) for c in comps]
+
+
+def _judge_vector(expected, user_answer, tol):
+    """Vector/point answer: component-wise equivalence against `expected` (a
+    list/tuple of SymPy values), same exact-then-numeric ladder as a scalar
+    answer. Used for questions whose deliverable is a coordinate vector or
+    point rather than a single number (e.g. AB = (2,-2,-2))."""
+    try:
+        user = _parse_vector(user_answer)
+    except Exception:
+        return False, "mismatch", None
+    if len(user) != len(expected):
+        return False, "mismatch", None
+    x_sym = Symbol("x")
+    for u, e in zip(user, expected):
+        if _equivalent_exact(u, e, x_sym) or _numeric_close(u, e, tol):
+            continue
+        return False, "mismatch", None
+    return True, "exact", None
+
+
 def _judge_sign(expected, user_answer, tol):
     """Sign-of-g answer: expected is the list of positive interval dicts; the
     student's interval list is judged structurally (order/union tolerant)."""
@@ -626,6 +657,26 @@ def _judge_continuity(expected, user_answer):
     return ok, "exact" if ok else "mismatch", None
 
 
+_ABOVE_RE = _re.compile(r"\b(above|over|au-dessus|លើ)\b", _re.I)
+_BELOW_RE = _re.compile(r"\b(below|under|au-dessous|en-dessous|ក្រោម)\b", _re.I)
+
+
+def _judge_position(expected, user_answer):
+    """Position-of-curve-relative-to-line verdict ('C lies above d1' /
+    'C is below d1'): like ``_judge_continuity``, this scans a full sentence
+    for the verdict keyword rather than requiring the answer to equal one
+    word exactly (the shape ``_judge_choice`` expects)."""
+    text = user_answer or ""
+    if _ABOVE_RE.search(text):
+        verdict = "above"
+    elif _BELOW_RE.search(text):
+        verdict = "below"
+    else:
+        return False, "mismatch", None
+    ok = verdict == expected
+    return ok, "exact" if ok else "mismatch", None
+
+
 def _judge_variation_table(expected, user_answer, checkpoints, tol):
     """Variation-table answer: judged by whether the student's written lines
     contain every checkpoint value (g'(x) and the limits/extrema). Tolerant —
@@ -670,10 +721,14 @@ def _judge_by_kind(kind, expected, user_answer, tol=_DEFAULT_TOL, choices=None, 
         return _judge_infinity(expected, user_answer)
     if kind == "line":
         return _judge_line(expected, user_answer, tol)
+    if kind == "vector":
+        return _judge_vector(expected, user_answer, tol)
     if kind in ("sign", "monotonicity", "variation_table"):
         return _judge_study(kind, expected, user_answer, tol, checkpoints)
     if kind == "continuity":
         return _judge_continuity(expected, user_answer)
+    if kind == "position":
+        return _judge_position(expected, user_answer)
     return _judge_expression(expected, user_answer, tol, exact_only)
 
 def _match_checkpoint(value, cp, tol, var_sym):

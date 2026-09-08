@@ -27,6 +27,8 @@ from ..topics.integral.generator import (
 from ..topics.integral.solver import _solve_definite_integral, _solve_indefinite_integral
 from ..topics.limit.generator import _LIMIT_TECHNIQUES_BY_DIFFICULTY, _generate_limit
 from ..topics.limit.solver import _solve_limit
+from ..topics.past_exam.generator import _generate_past_exam
+from ..topics.past_exam.solver import _solve_past_exam
 from ..topics.probability import scenarios
 from ..topics.probability.counting import _generate_counting, _solve_counting
 from ..topics.probability.generator import _generate_probability
@@ -61,6 +63,8 @@ def solve(topic, question_type, params):
         return _solve_vector_ops(params)
     if topic == "conics":
         return _solve_conic(params)
+    if topic == "past_exam":
+        return _solve_past_exam(question_type, params)
     raise ValueError(f"unknown topic: {topic}")
 
 
@@ -76,6 +80,7 @@ def serialize(solution):
 TOPICS = (
     "complex", "limit", "integral", "probability", "functions",
     "continuity", "derivatives", "differential_equations", "vectors_space", "conics",
+    "past_exam",
 )
 _VALID_DIFFICULTIES = ("easy", "medium", "hard")
 
@@ -123,6 +128,9 @@ async def generate(topic="complex", difficulty="medium", seed=None, question_typ
 
     if topic == "conics":
         return _generate_conics(random.Random(seed), difficulty, question_type)
+
+    if topic == "past_exam":
+        return _generate_past_exam(random.Random(seed), difficulty, question_type)
 
     if topic in ("limit", "integral"):
         return _generate_expr_templates(topic, difficulty, seed, question_type, variant)

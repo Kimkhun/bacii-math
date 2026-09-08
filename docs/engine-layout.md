@@ -24,6 +24,21 @@ backend/engine/
                        limit and integral generators
     expr_shared.py      problem-dict builder + small expr formatters, shared
                        by the limit and integral generators
+    rubric.py           build_rubric()/score_work() — deterministic,
+                       step-by-step POINTS scoring for ANY topic's live/
+                       generated question (not just past_exam's historical
+                       exams): derives a rubric mechanically from that
+                       question's own solve() checkpoints/parts (step-count-
+                       weighted across parts, 40%-final/60%-intermediate
+                       within one part), then matches a student's full
+                       written work against it, order-tolerant, reusing
+                       grade()/grade_part()'s own judges for structured
+                       final answers (interval/choice/sign/monotonicity/
+                       continuity). See docs/exam-data.md §6 for the
+                       shared design (and engine/topics/past_exam/rubric.py
+                       for the historical-exam variant that hand-lists
+                       steps instead, since a real paper's numbers don't
+                       change).
   llm.py, vision.py, notation.py, explainer.py, formulas.py, cache.py
                         # cross-cutting infra, not topic-specific
 
@@ -42,6 +57,10 @@ backend/engine/
                         graph_grader.py/graph_renderer.py, data/curated/*.json
     continuity/, derivatives/, differential_equations/, vectors_space/, conics/
                         solver.py, generator.py, grader.py, data/curated/curated.json
+    past_exam/            verbatim replay of a full past exam paper (not a
+                        randomized template) — solver.py only for the question
+                        shapes no other topic covers; data/curated/<year>.json.
+                        See docs/exam-data.md §6.
 ```
 
 Each topic folder that has a formula-sheet catalog also carries

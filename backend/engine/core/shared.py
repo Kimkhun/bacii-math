@@ -24,6 +24,7 @@ QUESTION_TYPES_BY_TOPIC = {
     "differential_equations": ("solve_ode",),
     "vectors_space": ("vector_ops",),
     "conics": ("classify_conic",),
+    "past_exam": ("2018_q1", "2018_q3", "2018_q5_vectors", "2018_q5_conic", "2018_q7"),
 }
 
 def format_z(a, b):
