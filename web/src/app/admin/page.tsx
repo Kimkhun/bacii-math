@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AuthGuard from "@/components/AuthGuard";
+import AdminGuard from "@/components/AdminGuard";
 import FunctionGraph from "@/components/FunctionGraph";
 import MathText from "@/components/MathText";
 import StructureModal from "@/components/StructureModal";
@@ -113,7 +113,7 @@ export default function AdminPage() {
   const DIFFICULTY_ORDER = ["easy", "medium", "hard"];
 
   return (
-    <AuthGuard>
+    <AdminGuard>
       <div className="max-w-5xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-slate-900 mb-6">Admin</h1>
         {error && <p className="text-sm text-red-600">{error}</p>}
@@ -370,6 +370,6 @@ export default function AdminPage() {
       {selected && (
         <StructureModal structure={selected} onClose={() => setSelected(null)} />
       )}
-    </AuthGuard>
+    </AdminGuard>
   );
 }

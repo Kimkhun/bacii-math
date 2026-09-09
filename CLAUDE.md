@@ -79,28 +79,45 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
 ### Backend layout (`backend/`)
 - `main.py` — FastAPI app, CORS, router registration.
 - `routers/` — thin HTTP layer (`auth.py`, `problems.py`, `vision.py`); delegates to `services.py`.
+  `problems.py` also exposes past-exam replay (`GET /problems/exam/{exam_id}`,
+  `POST /problems/exam/{exam_id}/submit`) and, under `me_router`, formula/template introspection
+  endpoints (`/me/formulas`, `/me/templates`, `/me/templates/structures`, `/me/templates/summary`,
+  `/me/templates/structures/regenerate`) used by the web `/admin` page; `/me/formulas` is separate
+  and student-facing (used by `/formulas` and `/practice` too). The template endpoints are gated by
+  `get_current_admin_user` (`core/deps.py`), which requires `User.is_admin`. There is no signup path
+  or promotion endpoint for admin — the single admin account is upserted from `ADMIN_EMAIL`/
+  `ADMIN_PASSWORD` env vars on every backend startup (`main.py`'s `seed_admin_user`).
 - `services.py` — orchestration layer: wires `engine/` + `models.py` + `cache.py` together for each
-  endpoint's use case (create question, grade, explain, stats). This is the place to look first to
-  understand a request's full flow.
+  endpoint's use case (create question, grade, explain, stats, exam replay, template introspection).
+  This is the place to look first to understand a request's full flow.
 - `engine/` — the math/AI core, framework-agnostic, organized **by topic**:
   - `solver.py` / `generator.py` / `grader.py` — thin public facade modules (do not rename); each
     re-exports the real implementation from `engine/core/` and `engine/topics/<topic>/`.
   - `core/` — the topic-neutral kernel: `dispatch.py` (routes `solve()`/`generate()` to the right
     topic), `grading.py` (`parse_answer`/`analyze_work`/`grade`/`grade_part` + every generic
     answer-kind judge — compares a user answer against the SymPy-exact answer, exact or
-    tolerance-based), `shared.py` (question-type registry + small SymPy formatting helpers),
-    `slots.py`/`expr_shared.py` (template-filling helpers shared by the limit/integral generators).
+    tolerance-based), `rubric.py` (deterministic step-by-step points rubric for generated/live
+    questions of any topic — derives per-checkpoint point weights mechanically from the same
+    `checkpoints` list `solve()` already returns, so no topic hand-lists point values), `shared.py`
+    (question-type registry + small SymPy formatting helpers), `slots.py`/`expr_shared.py`
+    (template-filling helpers shared by the limit/integral generators).
   - `topics/<topic>/` — one self-contained folder per BAC II topic (`complex`, `limit`, `integral`,
     `probability`, `functions`, `continuity`, `derivatives`, `differential_equations`,
-    `vectors_space`, `conics`), each with its own `solver.py` (SymPy computation of exact answers +
-    solution steps), `generator.py` (builds problems either from integer templates —
+    `vectors_space`, `conics`, `past_exam`), each with its own `solver.py` (SymPy computation of
+    exact answers + solution steps), `generator.py` (builds problems either from integer templates —
     `generation_mode="templates"`, keeps answers clean — or via Gemini proposal re-validated by
     SymPy for `generation_mode="gemini"`, complex-topic only), `grader.py` (topic-specific grading
     rules, when any differ from the generic core), and `data/` (curated real-exam exercises +
     formula-sheet JSON). Probability's scenario catalog lives at
     `engine/topics/probability/scenarios.py` + `data/scenarios/*.json`: sampled slots →
-    constraint-validated → filled Khmer sentence → SymPy-solved (no LLM in v1 generation). See
-    `docs/engine-layout.md` for the full file map and the "add a topic" recipe.
+    constraint-validated → filled Khmer sentence → SymPy-solved (no LLM in v1 generation).
+    `past_exam` is a special topic backing full past-exam replay (`backend/data/past_exams/*.json`,
+    e.g. the 2018 exam): its own `rubric.py` hand-lists each question's graded steps in the teacher's
+    printed order (mirroring the paper's layout) and derives point weights from them with the same
+    two rules as `core/rubric.py`, rather than reusing the generic solver-checkpoint-derived rubric.
+    See `docs/engine-layout.md` for the full file map and the "add a topic" recipe, and
+    `docs/README.md` for the full documentation index (pipeline, step-checking, canvas, exam-data,
+    generator variants, etc.).
   - `explainer.py` — turns solver steps into deterministic plain-text explanation (LLM fallback baseline).
   - `llm.py` — Gemini (Vertex AI) client (text + vision) + Ollama text/vision calls, with the
     Gemini → Ollama → deterministic fallback chain and rate-limiting via `cache.allow_gemini`.
@@ -122,8 +139,19 @@ incorrect answer does it build an explanation (`_build_explanation`) and run `ll
 on the student's specific mistake. Explanations are cached in Redis by `(question_type, a, b)` so
 identical questions reuse a previously-generated Gemini explanation instead of re-billing.
 
+### Rubric-based (points) grading
+Alongside pass/fail step grading, `engine/core/rubric.py` and `engine/topics/past_exam/rubric.py`
+compute a deterministic points breakdown per question/exam (used by the exam-replay flow). Both derive
+point weights mechanically from an ordered list of graded steps — the last step of a part/item gets 40%
+of that part's points, the rest split the remaining 60% evenly — rather than hand-typing point values;
+they differ only in where that step list comes from (the generic solver's `checkpoints` vs. a
+hand-listed order matching the printed exam paper). See the module docstrings for the full rationale.
+
 ### Web layout (`web/src/`)
-- `app/` — Next.js App Router pages: `/`, `/login`, `/signup`, `/practice`, `/history`, `/stats`.
+- `app/` — Next.js App Router pages: `/`, `/login`, `/signup`, `/practice`, `/history`, `/stats`,
+  `/formulas`, `/exam` (past-exam replay, points-rubric results), `/admin` (formula/template
+  inventory and structure regeneration, admin-only both client-side via `AdminGuard` and
+  server-side via the `me_router` template endpoints above).
 - `components/` — `Canvas` (handwriting capture), `QuestionCard`, `Navbar`, `AuthGuard`.
 - `context/AuthContext.tsx` — JWT stored in `localStorage`, exposes auth state to the app.
 - `lib/api.ts` — typed API client; auto-refreshes the access token on a 401 using the refresh token.

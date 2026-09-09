@@ -97,6 +97,8 @@ export async function refreshToken(): Promise<boolean> {
 export interface User {
   id: string;
   email: string;
+  plan: string;
+  is_admin: boolean;
   created_at: string;
 }
 
@@ -250,6 +252,18 @@ export interface GraphGradeResult {
   message?: string;
 }
 
+export interface RubricScore {
+  earned: number;
+  possible: number;
+  breakdown: {
+    item: string;
+    label: string;
+    points_earned: number;
+    points_possible: number;
+    matched_line: string | null;
+  }[];
+}
+
 export interface GradeResult {
   attempt_id: string;
   correct: boolean;
@@ -265,6 +279,7 @@ export interface GradeResult {
   step_check?: StepCheck | null;
   graph?: GraphSpec | null;
   graph_check?: GraphCheck | null;
+  rubric_score?: RubricScore | null;
 }
 
 export interface Attempt {
@@ -441,6 +456,50 @@ export interface Stats {
   by_formula?: FormulaStat[];
 }
 
+export interface ExamQuestion {
+  label: string;
+  prompt_en?: string;
+  prompt_latex?: string;
+  answer_latex?: string;
+  gradable: boolean;
+}
+
+export interface ExamSection {
+  id: string;
+  title_en?: string;
+  title_km?: string;
+  given_en?: string;
+  given_km?: string;
+  given_latex?: string;
+  questions: ExamQuestion[];
+}
+
+export interface Exam {
+  exam_id: string;
+  exam_date?: string;
+  duration_minutes?: number;
+  total_points?: number;
+  sections: ExamSection[];
+}
+
+export interface ExamQuestionResult {
+  earned: number;
+  possible: number;
+  breakdown: {
+    item: string;
+    label: string;
+    points_earned: number;
+    points_possible: number;
+    matched_line: string | null;
+  }[];
+}
+
+export interface ExamResult {
+  earned: number;
+  possible: number;
+  per_question: Record<string, ExamQuestionResult>;
+}
+
 export const api = {
   signup: (email: string, password: string) =>
     request<AuthResponse>("/auth/signup", { method: "POST", body: { email, password }, auth: "none" }),
@@ -501,6 +560,12 @@ export const api = {
     request<GraphGradeResult>("/problems/grade-graph", {
       method: "POST",
       body: { question_id, strokes_thumb },
+    }),
+  exam: (exam_id: string) => request<Exam>(`/problems/exam/${exam_id}`),
+  submitExam: (exam_id: string, answers: Record<string, string>) =>
+    request<ExamResult>(`/problems/exam/${exam_id}/submit`, {
+      method: "POST",
+      body: { answers },
     }),
   regenerateStructure: (structure_id: string) =>
     request<{ structure: TemplateStructure }>("/templates/structures/regenerate", {

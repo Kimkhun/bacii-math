@@ -1766,6 +1766,27 @@ function PracticeInner() {
                 )
               )}
               <div className="mt-1 text-xs text-[#8a857b]">Reason: {result.reason}</div>
+              {result.rubric_score && (
+                <div className="mt-2 rounded-md border border-[#e4e2db] bg-[#faf9f6] p-2.5">
+                  <div className="flex items-center justify-between text-xs font-semibold text-[#3f3c35]">
+                    <span>Step-by-step score</span>
+                    <span>
+                      {result.rubric_score.earned.toFixed(1)} / {result.rubric_score.possible.toFixed(0)}
+                    </span>
+                  </div>
+                  <div className="mt-1 space-y-0.5">
+                    {result.rubric_score.breakdown.map((b, i) => (
+                      <div
+                        key={i}
+                        className={`text-[11px] ${b.points_earned > 0 ? "text-emerald-700" : "text-[#8a857b]"}`}
+                      >
+                        {b.points_earned > 0 ? "✓" : "✗"} {b.label} ({b.points_earned.toFixed(1)}/
+                        {b.points_possible.toFixed(1)})
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {result.teacher_feedback?.content && (
                 <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 shadow-sm">
                   <div className="flex items-center gap-1.5 font-semibold text-amber-800 mb-1">

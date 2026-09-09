@@ -1,8 +1,11 @@
 import asyncio
 import hashlib
+import json
+import os
 import random
 import uuid
 import zlib
+from fractions import Fraction
 
 from fastapi import HTTPException, status
 from sqlalchemy import case, func, select
@@ -11,6 +14,8 @@ from sympy import latex
 
 import cache
 from engine import explainer, formulas, generator, grader, llm, solver
+from engine.core.rubric import score_work
+from engine.topics.past_exam.rubric import mark_full_exam
 from engine.topics.functions import graph_grader
 from engine.topics.functions.generator import _FUNCTION_CURATED_TEMPLATES
 from engine.topics.integral import structures as integral_structures
@@ -221,6 +226,15 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
         attempt.formula_breakdown = step_check.get("formula_breakdown")
         attempt.step_check = step_check
         resp["step_check"] = step_check
+
+        if question.topic != "functions":
+            try:
+                rubric_result = score_work(
+                    question.topic, question.question_type, spec, work_text.split("\n"), question_points=10
+                )
+                resp["rubric_score"] = _fractions_to_float(rubric_result)
+            except Exception:
+                pass
 
     if question.topic == "functions" and work_text:
         resp["graph_check"] = grader.grade_graph_check(question.spec, work_text.split("\n"))
@@ -1082,6 +1096,91 @@ async def get_template_summary() -> dict:
     """Admin Overview rollup: per-topic counts computed from the static
     registries (no expensive per-structure SymPy solving)."""
     return {"topics": [_topic_structure_summary(t) for t in generator.TOPICS]}
+
+
+_EXAM_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "past_exams")
+
+# Fixed params for the two exam questions whose rubric needs numeric inputs
+# (q1's box composition, q6's ODE coefficients + initial conditions) — the
+# exam's numbers never change, so these mirror engine/topics/past_exam's own
+# curated data rather than being derived from student input.
+_EXAM_PARAMS = {
+    "2018": {
+        1: {"white": 2, "red": 4, "blue": 4, "draw": 3},
+        3: {"z1_re": "3", "z1_im": "3*sqrt(3)", "z2_re": "sqrt(3)", "z2_im": "1"},
+        5: {
+            "A": [1, 2, 3], "B": [3, 0, 1], "C": [-1, 0, 1], "D": [2, 1, 2],
+            "n": [0, 1, -1], "conic_expr": "(2*x+3*y)**2 - 12*(x*y+3)",
+        },
+        6: {"b": 4, "c": -5, "ics": {"x0": 0, "y0": 3, "yp0": -3}},
+        7: {"expr": "-x+4+log((x+1)/(x-1))", "domain_lo": "1", "tangent_slope": "-5/3"},
+    },
+}
+
+
+def _load_exam(exam_id: str) -> dict:
+    path = os.path.join(_EXAM_DATA_DIR, f"{exam_id}.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"unknown exam: {exam_id}")
+    exams = data.get("exams") or []
+    if not exams:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"unknown exam: {exam_id}")
+    return exams[0]
+
+
+# Sub-question labels with no auto-gradable final value (sketches, "show
+# that" steps not covered by GRADED_STEPS) — flagged so the frontend can mark
+# them self-check-only instead of claiming they count toward the score.
+_UNGRADABLE_LABELS = {"ng"}
+
+
+async def get_exam(exam_id: str) -> dict:
+    exam = _load_exam(exam_id)
+    sections = []
+    for section in exam["sections"]:
+        questions = [
+            {**q, "gradable": q.get("label") not in _UNGRADABLE_LABELS}
+            for q in section.get("questions", section.get("questions_a", []) + section.get("questions_b", []))
+        ]
+        sections.append({
+            "id": section["id"],
+            "title_en": section.get("title_en"),
+            "title_km": section.get("title_km"),
+            "given_en": section.get("given_en"),
+            "given_km": section.get("given_km"),
+            "given_latex": section.get("given_latex") or section.get("given_latex_b"),
+            "questions": questions,
+        })
+    return {
+        "exam_id": exam_id,
+        "exam_date": exam.get("exam_date"),
+        "duration_minutes": exam.get("duration_minutes"),
+        "total_points": exam.get("total_points"),
+        "sections": sections,
+    }
+
+
+def _fractions_to_float(obj):
+    if isinstance(obj, Fraction):
+        return float(obj)
+    if isinstance(obj, dict):
+        return {k: _fractions_to_float(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_fractions_to_float(v) for v in obj]
+    return obj
+
+
+async def submit_exam(exam_id: str, answers: dict[str, str]) -> dict:
+    _load_exam(exam_id)  # 404s on an unknown exam_id before grading
+    params_by_question = _EXAM_PARAMS.get(exam_id, {})
+    lines_by_question = {
+        int(q_no): text.split("\n") for q_no, text in answers.items() if text.strip()
+    }
+    result = mark_full_exam(exam_id, params_by_question, lines_by_question)
+    return _fractions_to_float(result)
 
 
 async def get_stats(db, user) -> dict:
