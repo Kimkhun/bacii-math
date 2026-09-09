@@ -174,6 +174,11 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
         labels = [str(p.get("label")) for p in spec["parts"]]
         if part not in labels:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, f"unknown part: {part}")
+        if work_text:
+            segments = grader.split_work_by_part(work_text.split("\n"), labels)
+            part_val = grader.last_value_of_lines(segments.get(part, []))
+            if part_val:
+                user_answer = part_val
         result = grader.grade_part(question.topic, question.question_type, spec, part, user_answer)
     elif is_multi:
         labels = [str(p.get("label")) for p in spec["parts"]]
@@ -873,7 +878,7 @@ async def _km_solution_for(
         return cached
     if not facts:
         return None
-    km = await llm.generate_km_function_solution(facts)
+    km = await llm.narrate_km_solution(facts)
     if km and km.get("parts"):
         await cache.set_km_solution(key, km)
         return km

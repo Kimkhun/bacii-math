@@ -27,7 +27,7 @@
       "exam_date": "2022-10-05",
       "prompt_latex": "\\lim_{x\\to 1} \\frac{\\sqrt{x+3}-2}{\\sqrt{x}-1}",
       "answer_latex": "\\frac{1}{2}",
-      "technique": "0/0 at x=1. Rationalize both numerator and denominator by multiplying by (sqrt(x+3)+2) and (sqrt(x)+1); this turns the ratio into (x-1)(sqrt x+1) / [(x-1)(sqrt(x+3)+2)], and the (x-1) factors cancel.",
+      "technique": "0/0 at x=1. Rationalize both numerator and denominator: multiply the numerator by (sqrt(x+3)+2) to get (x+3-4) = (x-1), and multiply the denominator by (sqrt(x)+1) to get (x-1). This turns the ratio into [(x-1)(sqrt(x)+1)] / [(x-1)(sqrt(x+3)+2)]. Cancelling the (x-1) common factor gives (sqrt(x)+1)/(sqrt(x+3)+2). Direct substitution of x=1 yields (1+1)/(2+2) = 2/4 = 1/2.",
       "formula_latex": "\\sqrt{x+3}-2=\\frac{x-1}{\\sqrt{x+3}+2};\\quad \\sqrt{x}-1=\\frac{x-1}{\\sqrt{x}+1}"
     },
     {

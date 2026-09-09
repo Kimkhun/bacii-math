@@ -1,0 +1,115 @@
+{
+  "id": "function_study_2024_science_vii",
+  "source": {
+    "year": 2024,
+    "track": "science",
+    "section": "VII",
+    "subject_km": "គណិតវិទ្យា",
+    "description": "BAC II 2024 (science) Part VII: full function study of f(x) = ln(x+1) - ln(x-1) - x + 2 on (1, +oo).",
+    "extracted_by": "manual transcription from exam (2026-08), answers verified with SymPy"
+  },
+  "difficulty": "hard",
+  "var": "x",
+  "fn_name": "f",
+  "function_expr": "log(x+1) - log(x-1) - x + 2",
+  "pattern": "f(x) = ln(x+1) - ln(x-1) - x + 2",
+  "pattern_latex": "f(x) = \\ln(x+1) - \\ln(x-1) - x + 2",
+  "domain": [
+    { "lo": 1, "hi": "oo", "lo_open": true, "hi_open": true }
+  ],
+  "prompt": "VII. (៣៥ពិន្ទុ) គេមានអនុគមន៍ f កំណត់លើ (1, +∞) ដោយ f(x) = ln(x+1) - ln(x-1) - x + 2 ។ គេតាង (C) ក្រាបរបស់វានៅក្នុងប្លង់ប្រដាប់ដោយតម្រុយអរតូណរម៉ាល់ (O, i, j) ។\n\n១. បង្ហាញថា f(x) = 2 - x + ln((x+1)/(x-1)) ។ គណនាលីមីតនៃ f(x) ត្រង់ 1 និង +∞ ។\n២. បង្ហាញថានៅលើ (1, +∞) ដេរីវេនៃអនុគមន៍ f គឺ f'(x) = -(x^2+1)/((x+1)(x-1)) ។ សិក្សាអថេរភាព និងសង់តារាងអថេរភាពនៃ f ។\n៣. បង្ហាញថា បន្ទាត់ (d) មានសមីការ y = -x + 2 ជាអាស៊ីមតូតទ្រេតនៃក្រាប C ។\n៤. ប្រៀបធៀបទីតាំងនៃក្រាប (C) ធៀបនឹងបន្ទាត់ (d) ។ សង់ក្រាប (C) និងបន្ទាត់ (d) ។ (ប្រើតម្លៃ ln 3 = 1.1)",
+  "prompt_latex": "\\text{VII. (៣៥ពិន្ទុ) គេមានអនុគមន៍ } f \\text{ កំណត់លើ } (1, +\\infty) \\text{ ដោយ } f(x) = \\ln(x+1) - \\ln(x-1) - x + 2 \\text{ ។ គេតាង } (C) \\text{ ក្រាបរបស់វានៅក្នុងប្លង់ប្រដាប់ដោយតម្រុយអរតូណរម៉ាល់ } (O, \\vec{i}, \\vec{j}) \\text{ ។}\\\\ \\text{១. បង្ហាញថា } f(x) = 2 - x + \\ln\\left(\\frac{x+1}{x-1}\\right) \\text{ ។ គណនាលីមីតនៃ } f(x) \\text{ ត្រង់ } 1 \\text{ និង } +\\infty \\text{ ។}\\\\ \\text{២. បង្ហាញថានៅលើ } (1, +\\infty) \\text{ ដេរីវេនៃអនុគមន៍ } f \\text{ គឺ } f'(x) = \\frac{-(x^2+1)}{(x+1)(x-1)} \\text{ ។ សិក្សាអថេរភាព និងសង់តារាងអថេរភាពនៃ } f \\text{ ។}\\\\ \\text{៣. បង្ហាញថា បន្ទាត់ } (d) \\text{ មានសមីការ } y = -x + 2 \\text{ ជាអាស៊ីមតូតទ្រេតនៃក្រាប } C \\text{ ។}\\\\ \\text{៤. ប្រៀបធៀបទីតាំងនៃក្រាប } (C) \\text{ ធៀបនឹងបន្ទាត់ } (d) \\text{ ។ សង់ក្រាប } (C) \\text{ និងបន្ទាត់ } (d) \\text{ ។ (ប្រើតម្លៃ } \\ln 3 = 1.1\\text{)}",
+  "graph": {
+    "x_min": 0,
+    "x_max": 7,
+    "y_min": -6,
+    "y_max": 5,
+    "samples": 180,
+    "asymptotes": [
+      { "kind": "vertical", "x": 1 },
+      { "kind": "oblique", "line": "-x + 2", "label": "d: y = -x + 2" }
+    ],
+    "points": [
+      { "x": 2, "y": 1.0986, "label": "A(2, 1.1)" }
+    ]
+  },
+  "parts": [
+    {
+      "label": "1.a",
+      "want": "rewrite",
+      "expected": "2 - x + log((x+1)/(x-1))",
+      "display": "f(x) = 2 - x + ln((x+1)/(x-1))",
+      "question_km": "បង្ហាញថា $f(x) = 2 - x + \\ln\\left(\\frac{x+1}{x-1}\\right)$",
+      "technique": "តាមរូបមន្ត $\\ln A - \\ln B = \\ln\\left(\\frac{A}{B}\\right)$ ចំពោះ $x \\in (1,+\\infty)$ គេបាន $\\ln(x+1) - \\ln(x-1) = \\ln\\left(\\frac{x+1}{x-1}\\right)$ ។ ដូច្នេះ $f(x) = 2 - x + \\ln\\left(\\frac{x+1}{x-1}\\right)$ ។"
+    },
+    {
+      "label": "1.b",
+      "want": "limit",
+      "kind": "infinity",
+      "point": "1",
+      "side": "+",
+      "expected": "oo",
+      "display": "lim x→1⁺ f(x) = +∞",
+      "question_km": "គណនាលីមីតនៃ $f(x)$ ត្រង់ $1$",
+      "technique": "ជិត $x \\to 1^+$ គេបាន $\\frac{x+1}{x-1} \\to \\frac{2}{0^+} = +\\infty$ នាំឱ្យ $\\ln\\left(\\frac{x+1}{x-1}\\right) \\to +\\infty$ និង $2-x \\to 1$ ដូច្នេះ $\\lim_{x \\to 1^+} f(x) = +\\infty$ ។"
+    },
+    {
+      "label": "1.c",
+      "want": "limit",
+      "kind": "infinity",
+      "point": "oo",
+      "expected": "-oo",
+      "display": "lim x→+∞ f(x) = −∞",
+      "question_km": "គណនាលីមីតនៃ $f(x)$ ត្រង់ $+\\infty$",
+      "technique": "ជិត $x \\to +\\infty$ គេបាន $\\lim_{x \\to +\\infty} \\frac{x+1}{x-1} = 1$ នាំឱ្យ $\\lim_{x \\to +\\infty} \\ln\\left(\\frac{x+1}{x-1}\\right) = \\ln 1 = 0$ និង $\\lim_{x \\to +\\infty} (2-x) = -\\infty$ ដូច្នេះ $\\lim_{x \\to +\\infty} f(x) = -\\infty$ ។"
+    },
+    {
+      "label": "2.a",
+      "want": "derivative",
+      "kind": "expression",
+      "expected": "-(x**2+1)/(x**2-1)",
+      "display": "f'(x) = -(x^2+1)/((x+1)(x-1))",
+      "question_km": "បង្ហាញថានៅលើ $(1, +\\infty)$ ដេរីវេនៃ $f$ គឺ $f'(x) = \\frac{-(x^2+1)}{(x+1)(x-1)}$",
+      "technique": "គេមាន $f(x) = \\ln(x+1) - \\ln(x-1) - x + 2$ នាំឱ្យ $f'(x) = \\frac{1}{x+1} - \\frac{1}{x-1} - 1 = \\frac{(x-1) - (x+1) - (x^2-1)}{(x+1)(x-1)} = \\frac{x-1-x-1-x^2+1}{(x+1)(x-1)} = \\frac{-(x^2+1)}{(x+1)(x-1)}$ ។"
+    },
+    {
+      "label": "2.b",
+      "want": "monotonicity",
+      "kind": "monotonicity",
+      "display": "ចុះ លើ (1, +∞)",
+      "question_km": "សិក្សាអថេរភាពនៃអនុគមន៍ $f$",
+      "technique": "គ្រប់ $x \\in (1, +\\infty)$ គេមាន $x^2 + 1 > 0$ និង $(x+1)(x-1) = x^2-1 > 0$ នាំឱ្យ $f'(x) = \\frac{-(x^2+1)}{(x+1)(x-1)} < 0$ ។ ដូចនេះ $f$ ជាអនុគមន៍ចុះដាច់ខាតលើ $(1, +\\infty)$ ។"
+    },
+    {
+      "label": "2.c",
+      "want": "variation_table",
+      "kind": "table",
+      "question_km": "សង់តារាងអថេរភាពនៃ $f$",
+      "technique": "តារាងអថេរភាពនៃ $f$ លើចន្លោះ $(1, +\\infty)$ ៖"
+    },
+    {
+      "label": "3.a",
+      "want": "asymptote",
+      "line_expr": "-x + 2",
+      "side": "+",
+      "display": "បន្ទាត់ (d): y = -x + 2 ជាអាស៊ីមតូតទ្រេតនៃក្រាប C",
+      "question_km": "បង្ហាញថាបន្ទាត់ $(d)$ មានសមីការ $y = -x + 2$ ជាអាស៊ីមតូតទ្រេតនៃក្រាប $C$",
+      "technique": "គណនា $\\lim_{x \\to +\\infty} [f(x) - (-x + 2)] = \\lim_{x \\to +\\infty} \\ln\\left(\\frac{x+1}{x-1}\\right) = \\ln 1 = 0$ ។ ដូចនេះ បន្ទាត់ $(d): y = -x + 2$ ជាអាស៊ីមតូតទ្រេតនៃក្រាប $(C)$ នៅខាង $+\\infty$ ។"
+    },
+    {
+      "label": "4.a",
+      "want": "position",
+      "line_expr": "-x + 2",
+      "display": "(C) នៅខាងលើបន្ទាត់ (d) លើចន្លោះ (1, +∞)",
+      "question_km": "ប្រៀបធៀបទីតាំងនៃក្រាប $(C)$ ធៀបនឹងបន្ទាត់ $(d)$",
+      "technique": "ពិនិត្យសញ្ញានៃផលដក $f(x) - y = \\ln\\left(\\frac{x+1}{x-1}\\right)$ ។ ចំពោះ $x > 1$ គេបាន $\\frac{x+1}{x-1} = 1 + \\frac{2}{x-1} > 1$ នាំឱ្យ $\\ln\\left(\\frac{x+1}{x-1}\\right) > 0$ គ្រប់ $x \\in (1, +\\infty)$ ។ ដូច្នេះ ក្រាប $(C)$ ស្ថិតនៅខាងលើបន្ទាត់ $(d)$ ជានិច្ចលើចន្លោះ $(1, +\\infty)$ ។"
+    },
+    {
+      "label": "4.b",
+      "want": "draw",
+      "kind": "draw",
+      "question_km": "សង់ក្រាប $(C)$ និងបន្ទាត់ $(d)$ (ប្រើតម្លៃ $\\ln 3 = 1.1$)",
+      "technique": "សង់អាស៊ីមតូតឈរ $x = 1$, អាស៊ីមតូតទ្រេត $(d): y = -x + 2$, និងចំណុចពិសេស $A(2, \\ln 3) \\approx A(2, 1.1)$ រួចសង់ខ្សែកោង $(C)$ ចុះពី $+\\infty$ ទៅ $-\\infty$ ស្ថិតនៅខាងលើ $(d)$ ។"
+    }
+  ]
+}

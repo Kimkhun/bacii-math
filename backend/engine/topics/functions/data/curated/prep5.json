@@ -14,7 +14,7 @@
   "function_expr": "(x - 1)**2/(2*(x - 2))",
   "pattern": "f(x) = (x - 1)^2/(2(x - 2))",
   "pattern_latex": "f(x) = \\frac{(x-1)^2}{2(x-2)}",
-  "prompt": "We are given the function f(x) = (x-1)^2 / (2(x-2)), with x ≠ 2, and graph (C).\n1. Compute lim_{x→2} f(x) and lim_{x→±∞} f(x). Determine the equation of the vertical asymptote of (C).\n2. Show that the line (l): y = x/2 is an oblique asymptote of (C). Study the position of (C) relative to (l).\n3. Compute f'(x) and build the variation table of f.\n4. Draw (C) and its asymptotes.",
+  "prompt": "គេឱ្យអនុគមន៍ y = f(x) = (x-1)^2 / (2(x-2)) ; x ≠ 2 មានក្រាប (C) ។\n\n1. គណនា lim_{x→2} f(x) និង lim_{x→±∞} f(x) រួចកំណត់សមីការអាស៊ីមតូតឈរនៃក្រាប (C) ។\n2. បង្ហាញថាបន្ទាត់ (l): y = x/2 ជាអាស៊ីមតូតទ្រេតនៃក្រាប (C) រួចសិក្សាទីតាំងធៀបរវាងក្រាប (C) និង (l) ។\n3. គណនា f'(x) រួចសង់តារាងអថេរភាពនៃ f ។\n4. សង់ក្រាប (C) និងអាស៊ីមតូតរបស់វា។",
   "prompt_latex": "\\text{គេឱ្យអនុគមន៍ } y=f(x)=\\frac{(x-1)^2}{2(x-2)}\\ ;\\ x\\neq 2 \\text{ មានក្រាប } (C) .\\\\ \\text{1. គណនា } \\lim_{x\\to 2} f(x) \\text{ និង } \\lim_{x\\to \\pm\\infty} f(x) \\text{ រួចកំណត់សមីការអាស៊ីមតូតឈរនៃក្រាប } (C) .\\\\ \\text{2. បង្ហាញថាបន្ទាត់ } (l):\\ y=\\frac{1}{2}x \\text{ ជាអាស៊ីមតូតទ្រេតនៃក្រាប } (C) \\text{ រួចសិក្សាទីតាំងធៀបរវាងក្រាប } (C) \\text{ និង } (l) .\\\\ \\text{3. គណនា } f'(x) \\text{ រួចសង់តារាងអថេរភាពនៃ } f .\\\\ \\text{4. សង់ក្រាប } (C) \\text{ និងអាស៊ីមតូតរបស់វា។}",
   "graph": {
     "x_min": -3,

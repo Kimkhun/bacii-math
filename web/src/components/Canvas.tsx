@@ -306,8 +306,9 @@ const Canvas = forwardRef<
     onZoomChange?: (zoom: number) => void;
     overlay?: ReactNode;
     onToolAutoSwitch?: (tool: CanvasTool) => void;
+    topOffset?: number;
   }
->(({ width = 640, height = 820, fullscreen = false, onChange, zoom = 1, onZoomChange, overlay, onToolAutoSwitch }, ref) => {
+>(({ width = 640, height = 820, fullscreen = false, onChange, zoom = 1, onZoomChange, overlay, onToolAutoSwitch, topOffset }, ref) => {
     const initialW = fullscreen ? FULL_W : width;
     const initialH = fullscreen ? FULL_H : height;
     const [canvasWidth, setCanvasWidth] = useState(initialW);
@@ -2120,8 +2121,8 @@ const Canvas = forwardRef<
           style={{ overscrollBehavior: "contain" }}
         >
           <div
-            className="relative mt-[92px] mx-8 mb-6 rounded-[3px] overflow-hidden shadow-[0px_2px_10px_0px_rgba(0,0,0,0.07)]"
-            style={{ width: W * zoom, height: H * zoom }}
+            className="relative mx-8 mb-6 rounded-[3px] overflow-hidden shadow-[0px_2px_10px_0px_rgba(0,0,0,0.07)]"
+            style={{ width: W * zoom, height: H * zoom, marginTop: topOffset ?? 92 }}
           >
             <canvas
               ref={canvasRef}

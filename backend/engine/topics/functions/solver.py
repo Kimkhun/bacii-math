@@ -59,9 +59,24 @@ def _interval_display(ivs):
 def _positive_intervals(u, x):
     """Open intervals where the real expression u > 0, by sign-testing between
     the roots of its numerator and denominator (the MoEYS sign-table method)."""
-    num, den = u.as_numer_denom()
-    pts = set(r for r in solve(num, x) if r.is_real)
-    pts.update(r for r in solve(den, x) if r.is_real)
+    if u.has(log):
+        u_comb = logcombine(u, force=True)
+        if isinstance(u_comb, log):
+            arg = u_comb.args[0]
+            num, den = (arg - 1).as_numer_denom()
+            pts = set(r for r in solve(num, x) if r.is_real)
+            pts.update(r for r in solve(den, x) if r.is_real)
+            arg_num, arg_den = arg.as_numer_denom()
+            pts.update(r for r in solve(arg_num, x) if r.is_real)
+            pts.update(r for r in solve(arg_den, x) if r.is_real)
+        else:
+            num, den = u.as_numer_denom()
+            pts = set(r for r in solve(num, x) if r.is_real)
+            pts.update(r for r in solve(den, x) if r.is_real)
+    else:
+        num, den = u.as_numer_denom()
+        pts = set(r for r in solve(num, x) if r.is_real)
+        pts.update(r for r in solve(den, x) if r.is_real)
     pts = sorted(pts)
     if not pts:
         bounds = [(-oo, oo)]
@@ -79,8 +94,11 @@ def _positive_intervals(u, x):
             mid = hi - 1
         else:
             mid = (lo + hi) / 2
-        val = simplify(u.subs(x, mid))
-        positive = val.is_positive if val.is_positive is not None else N(val) > 0
+        try:
+            val = simplify(u.subs(x, mid))
+            positive = val.is_positive if val.is_positive is not None else float(N(val)) > 0
+        except Exception:
+            positive = False
         if positive:
             out.append({"lo": _f(lo), "hi": _f(hi), "lo_open": True, "hi_open": True})
     return out
@@ -625,9 +643,17 @@ def _solve_part_integral(params, x, expr, part):
     return _part_solution(part, result, latex(result), display, decimal, steps, checkpoints, ctx=ctx)
 
 
-def _domain_intervals(expr, x):
+def _domain_intervals(expr, x, params=None):
     """Open intervals of the real domain of ``expr`` (log argument > 0, or
     rationals excluding denominator roots)."""
+    if params and params.get("domain"):
+        dom_spec = params["domain"]
+        return [{
+            "lo": float("-inf") if str(d["lo"]) in ("-oo", "-inf", "-∞") else float(d["lo"]),
+            "hi": float("inf") if str(d["hi"]) in ("oo", "inf", "+oo", "+inf", "+∞", "∞") else float(d["hi"]),
+            "lo_open": d.get("lo_open", True),
+            "hi_open": d.get("hi_open", True),
+        } for d in dom_spec]
     if isinstance(expr, log):
         u = expr.args[0]
         return _positive_intervals(u, x)
@@ -640,6 +666,25 @@ def _domain_intervals(expr, x):
             for i in range(len(bounds) - 1)]
 
 
+def _solve_part_rewrite(params, x, expr, part):
+    var = params["var"]
+    target_expr = part.get("target_expr") or part.get("expected")
+    target = sympify(target_expr, locals=_calc_locals(var)) if target_expr else expr
+    fn_name = params.get("fn_name", "f")
+    display = part.get("display") or f"{fn_name}({var}) = {latex(target)}"
+    steps = [
+        {"title": "Rewrite expression",
+         "detail": part.get("technique", "") or f"Use log rules: \\(\\ln(A) - \\ln(B) = \\ln\\left(\\frac{{A}}{{B}}\\right)\\).",
+         "formula": "log_quotient_rule"},
+        {"title": "Conclusion",
+         "detail": f"\\({fn_name}({var}) = {latex(target)}\\).",
+         "formula": "log_quotient_rule"},
+    ]
+    checkpoints = [{"label": "rewritten", "value": target, "formula": "log_quotient_rule"}]
+    ctx = {"expr": latex(target), "fn": fn_name}
+    return _part_solution(part, target, latex(target), display, None, steps, checkpoints, ctx=ctx)
+
+
 def _solve_part_monotonicity(params, x, expr, part):
     """BAC II 'study the variation of g': sign of g'(x) per domain interval and
     the resulting monotonicity verdict. The domain is split at critical points
@@ -649,7 +694,7 @@ def _solve_part_monotonicity(params, x, expr, part):
     var = params["var"]
     der = simplify(diff(expr, x))
     crit = sorted(set(float(r) for r in solve(der, x) if r.is_real))
-    dom = _domain_intervals(expr, x)
+    dom = _domain_intervals(expr, x, params)
     bps = set()
     for iv in dom:
         if iv["lo"] != float("-inf"):
@@ -723,7 +768,7 @@ def _solve_part_sign(params, x, expr, part):
     """Sign of g(x): intervals where g > 0 and where g < 0 (MoEYS asks 'study the
     sign of g(x) according to x'). Restricted to the real domain of g."""
     var = params["var"]
-    dom = _domain_intervals(expr, x)
+    dom = _domain_intervals(expr, x, params)
     if isinstance(expr, log):
         u = expr.args[0]
         # g>0 <=> u>1 ; g<0 <=> 0<u<1 (automatically inside the domain u>0)
@@ -754,7 +799,7 @@ def _solve_part_variation_table(params, x, expr, part):
     structure (``variation_table``) the frontend renders as a real table."""
     var = params["var"]
     der = simplify(diff(expr, x))
-    dom = _domain_intervals(expr, x)
+    dom = _domain_intervals(expr, x, params)
     crit = sorted(set(float(r) for r in solve(der, x) if r.is_real))
     bps = set()
     for iv in dom:
@@ -977,6 +1022,8 @@ def _solve_function_study(params):
             sol = _solve_part_variation_table(params, x, expr, part)
         elif want == "sign":
             sol = _solve_part_sign(params, x, expr, part)
+        elif want in ("rewrite", "form", "identity"):
+            sol = _solve_part_rewrite(params, x, expr, part)
         else:
             raise ValueError(f"unknown function-study want: {want}")
         for cp in part.get("extra_checkpoints") or []:

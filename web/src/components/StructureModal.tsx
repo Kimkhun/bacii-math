@@ -201,43 +201,48 @@ function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
               </td>
             </tr>
 
-            {/* Row 3: y = g(x) */}
+            {/* Row 3: y = f(x) */}
             <tr>
               <td className="border-r border-slate-900 px-4 py-5 font-semibold text-slate-900 text-center whitespace-nowrap">
-                y = g(x)
+                y = f(x)
               </td>
               <td colSpan={Math.max(2, n)} className="px-3 py-3">
-                <div className="flex items-center justify-between w-full h-16 relative">
-                  {/* Left limit / value at bottom */}
-                  <span className="self-end pb-1 font-mono font-semibold text-slate-900 text-xs">
-                    <MathText text={`\\(${normVal(vt.func_values[0])}\\)`} />
-                  </span>
+                {(() => {
+                  const isDec = vt.arrows[0] === "↘";
+                  return (
+                    <div className="flex items-center justify-between w-full h-16 relative">
+                      {/* Left limit / value */}
+                      <span className={`${isDec ? "self-start pt-1" : "self-end pb-1"} font-mono font-semibold text-slate-900 text-xs`}>
+                        <MathText text={`\\(${normVal(vt.func_values[0])}\\)`} />
+                      </span>
 
-                  {/* Arrow in middle */}
-                  <div className="flex-1 flex items-center justify-center px-4">
-                    <svg className="w-full h-12" preserveAspectRatio="none" viewBox="0 0 100 40">
-                      <defs>
-                        <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                          <polygon points="0 0, 6 3, 0 6" fill="#1e293b" />
-                        </marker>
-                      </defs>
-                      <line
-                        x1="10"
-                        y1="34"
-                        x2="90"
-                        y2="6"
-                        stroke="#1e293b"
-                        strokeWidth="1.5"
-                        markerEnd="url(#arrowhead)"
-                      />
-                    </svg>
-                  </div>
+                      {/* Arrow in middle */}
+                      <div className="flex-1 flex items-center justify-center px-4">
+                        <svg className="w-full h-12" preserveAspectRatio="none" viewBox="0 0 100 40">
+                          <defs>
+                            <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                              <polygon points="0 0, 6 3, 0 6" fill="#1e293b" />
+                            </marker>
+                          </defs>
+                          <line
+                            x1="10"
+                            y1={isDec ? "6" : "34"}
+                            x2="90"
+                            y2={isDec ? "34" : "6"}
+                            stroke="#1e293b"
+                            strokeWidth="1.5"
+                            markerEnd="url(#arrowhead)"
+                          />
+                        </svg>
+                      </div>
 
-                  {/* Right limit / value at top */}
-                  <span className="self-start pt-1 font-mono font-semibold text-slate-900 text-xs">
-                    <MathText text={`\\(${normVal(vt.func_values[n - 1])}\\)`} />
-                  </span>
-                </div>
+                      {/* Right limit / value */}
+                      <span className={`${isDec ? "self-end pb-1" : "self-start pt-1"} font-mono font-semibold text-slate-900 text-xs`}>
+                        <MathText text={`\\(${normVal(vt.func_values[n - 1])}\\)`} />
+                      </span>
+                    </div>
+                  );
+                })()}
               </td>
             </tr>
           </tbody>

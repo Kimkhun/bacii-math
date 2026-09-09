@@ -42,23 +42,43 @@ def _rationalization_conjugate_checkpoints(x, point, expr, formula):
     just the final-value checkpoint."""
     try:
         num, den = expr.as_numer_denom()
-        if _has_radical(num) and not _has_radical(den):
-            sqrt_side, poly_side, side = num, den, "num"
-        elif _has_radical(den) and not _has_radical(num):
-            sqrt_side, poly_side, side = den, num, "den"
+        has_num_rad = _has_radical(num)
+        has_den_rad = _has_radical(den)
+
+        if has_num_rad and not has_den_rad:
+            terms = num.as_ordered_terms()
+            sqrt_terms = sum(t for t in terms if _has_radical(t))
+            other_terms = sum(t for t in terms if not _has_radical(t))
+            conjugate = other_terms - sqrt_terms
+            rationalized = expand(num * conjugate)
+            reduced = cancel(rationalized / den)
+            cancelled = reduced / conjugate
+        elif has_den_rad and not has_num_rad:
+            terms = den.as_ordered_terms()
+            sqrt_terms = sum(t for t in terms if _has_radical(t))
+            other_terms = sum(t for t in terms if not _has_radical(t))
+            conjugate = other_terms - sqrt_terms
+            rationalized = expand(den * conjugate)
+            reduced = cancel(num / rationalized)
+            cancelled = reduced * conjugate
+        elif has_num_rad and has_den_rad:
+            terms_num = num.as_ordered_terms()
+            sqrt_terms_num = sum(t for t in terms_num if _has_radical(t))
+            other_terms_num = sum(t for t in terms_num if not _has_radical(t))
+            c_num = other_terms_num - sqrt_terms_num
+
+            terms_den = den.as_ordered_terms()
+            sqrt_terms_den = sum(t for t in terms_den if _has_radical(t))
+            other_terms_den = sum(t for t in terms_den if not _has_radical(t))
+            c_den = other_terms_den - sqrt_terms_den
+
+            rat_num = expand(num * c_num)
+            rat_den = expand(den * c_den)
+            reduced_poly = cancel(rat_num / rat_den)
+            cancelled = reduced_poly * c_den / c_num
         else:
             return []
-        terms = sqrt_side.as_ordered_terms()
-        sqrt_terms = sum(t for t in terms if _has_radical(t))
-        other_terms = sum(t for t in terms if not _has_radical(t))
-        conjugate = other_terms - sqrt_terms
-        rationalized = expand(sqrt_side * conjugate)
-        if side == "num":
-            reduced = cancel(rationalized / poly_side)
-            cancelled = reduced / conjugate
-        else:
-            reduced = cancel(poly_side / rationalized)
-            cancelled = reduced * conjugate
+
         if simplify(cancelled.subs(x, point) - limit(expr, x, point)) != 0:
             return []
     except Exception:

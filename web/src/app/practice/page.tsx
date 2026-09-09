@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
+import { ReactNode, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
@@ -51,6 +51,83 @@ function markEvents(det: DetectResult, res: GradeResult): { correct: boolean }[]
     if (lineRes && lineRes.checked) events.push({ correct: !!lineRes.correct });
   });
   return events;
+}
+
+const KM_DIGITS: Record<string, string> = {
+  "1": "១", "2": "២", "3": "៣", "4": "៤", "5": "៥",
+  "6": "៦", "7": "៧", "8": "៨", "9": "៩",
+};
+
+function latexToMixedText(raw: string): string {
+  if (!raw.includes("\\text{")) return raw;
+  let out = "";
+  let i = 0;
+  while (i < raw.length) {
+    const textIdx = raw.indexOf("\\text{", i);
+    if (textIdx === -1) {
+      const rest = raw.slice(i).trim();
+      if (rest) out += " $" + rest + "$ ";
+      break;
+    }
+    const mathPart = raw.slice(i, textIdx).trim();
+    if (mathPart) out += " $" + mathPart + "$ ";
+    let depth = 1;
+    let j = textIdx + 6;
+    while (j < raw.length && depth > 0) {
+      if (raw[j] === "{") depth++;
+      else if (raw[j] === "}") depth--;
+      j++;
+    }
+    const textPart = raw.slice(textIdx + 6, j - 1);
+    out += textPart;
+    i = j;
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+function getCleanLines(raw: string): string[] {
+  if (!raw) return [];
+  if (raw.includes("\\\\")) {
+    return raw
+      .split("\\\\")
+      .map((s) => latexToMixedText(s.trim()))
+      .filter(Boolean);
+  }
+  return raw.split("\n").map((s) => latexToMixedText(s.trim())).filter(Boolean);
+}
+
+function parseFullProblem(
+  rawPrompt: string | null | undefined,
+  sections: SectionGroup[]
+): { preamble: string | null; items: { key: string; text: string }[] } {
+  if (!rawPrompt) return { preamble: null, items: [] };
+  const lines = getCleanLines(rawPrompt);
+  if (!lines.length) return { preamble: null, items: [] };
+
+  let preamble: string | null = null;
+  let qLines = lines;
+  if (!/^(?:1|១)[.\s]/.test(lines[0])) {
+    preamble = lines[0];
+    qLines = lines.slice(1);
+  }
+
+  const items = qLines.map((line, idx) => {
+    const match = line.match(/^(?:([0-9]+)|([១-៩]))[.\s]/);
+    let secKey = String(idx + 1);
+    if (match) {
+      if (match[1]) secKey = match[1];
+      else if (match[2]) {
+        const k = Object.entries(KM_DIGITS).find(([_, v]) => v === match[2]);
+        if (k) secKey = k[0];
+      }
+    }
+    return {
+      key: secKey,
+      text: line,
+    };
+  });
+
+  return { preamble, items };
 }
 
 // Values are plain `question_type` strings for topics where that's the only
@@ -519,7 +596,54 @@ function PracticeInner() {
   const marks = marksByPart[partIndex] ?? null;
   const linePops = linePopsByPart[partIndex] ?? null;
 
-  const activeCanvas = () => canvasRefs.current[partIndex] ?? null;
+  interface SectionInfo {
+    key: string;
+    label: string;
+    partIndices: number[];
+  }
+
+  const sections: SectionInfo[] = useMemo(() => {
+    if (!question?.params?.parts?.length) return [];
+    const map = new Map<string, number[]>();
+    question.params.parts.forEach((p: any, idx: number) => {
+      const rawLabel = String(p.label || idx + 1);
+      const secKey = rawLabel.includes(".") ? rawLabel.split(".")[0] : rawLabel;
+      if (!map.has(secKey)) map.set(secKey, []);
+      map.get(secKey)!.push(idx);
+    });
+    return Array.from(map.entries()).map(([key, partIndices]) => ({
+      key,
+      label: key,
+      partIndices,
+    }));
+  }, [question]);
+
+  const activeSectionIndex = useMemo(() => {
+    if (!sections.length) return 0;
+    const idx = sections.findIndex((s) => s.partIndices.includes(partIndex));
+    return idx >= 0 ? idx : 0;
+  }, [sections, partIndex]);
+
+  const currentSection = sections[activeSectionIndex] ?? null;
+  const currentPartObj = question?.params?.parts?.[partIndex] ?? null;
+
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(88);
+
+  useLayoutEffect(() => {
+    if (!headerRef.current) return;
+    const update = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight + 14);
+      }
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, [question, partIndex, activeSectionIndex]);
+
+  const activeCanvas = () => canvasRefs.current[activeSectionIndex] ?? null;
 
   const initPartState = (n: number, start = 0) => {
     const m = Math.max(1, n);
@@ -544,8 +668,9 @@ function PracticeInner() {
     setPartIndex(i);
     setExplanation(null);
     setError("");
-    // Each part's canvas owns its own grid — reflect it in the toolbar flag.
-    setGridOn(canvasRefs.current[i]?.hasGrid() ?? false);
+    const secIdx = sections.findIndex((s) => s.partIndices.includes(i));
+    const targetSec = secIdx >= 0 ? secIdx : 0;
+    setGridOn(canvasRefs.current[targetSec]?.hasGrid() ?? false);
   };
 
   useEffect(() => {
@@ -937,10 +1062,12 @@ function PracticeInner() {
     if (!graph || typeof graph.x_min !== "number") return;
     parts.forEach((p, i) => {
       if (p.want === "draw") {
-        canvasRefs.current[i]?.fitGridToWindow(graph.x_min!, graph.x_max!, graph.y_min!, graph.y_max!);
+        const secIdx = sections.findIndex((s) => s.partIndices.includes(i));
+        const target = secIdx >= 0 ? secIdx : i;
+        canvasRefs.current[target]?.fitGridToWindow(graph.x_min!, graph.x_max!, graph.y_min!, graph.y_max!);
       }
     });
-  }, [question]);
+  }, [question, sections]);
 
   const generateQuestion = async (cfg: SessionConfig): Promise<Question> => {
     const { question_type, variant } =
@@ -1303,11 +1430,13 @@ function PracticeInner() {
   useEffect(() => {
     if (!pendingStrokes) return;
     pendingStrokes.forEach((doc, i) => {
-      const c = canvasRefs.current[i];
+      const secIdx = sections.length > 0 ? sections.findIndex((s) => s.partIndices.includes(i)) : i;
+      const target = secIdx >= 0 ? secIdx : i;
+      const c = canvasRefs.current[target];
       if (c && doc) c.loadStrokes(doc);
     });
     setPendingStrokes(null);
-  }, [pendingStrokes]);
+  }, [pendingStrokes, sections]);
 
   useEffect(() => {
     if (!reviewMode && !question) {
@@ -1467,7 +1596,10 @@ function PracticeInner() {
     <AuthGuard>
       <div className="relative">
         {reviewMode && (
-          <div className="fixed top-[76px] left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto">
+          <div
+            className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto"
+            style={{ top: headerHeight + 8 }}
+          >
             <span>Reviewing a past attempt — your writing is restored, draw on it or start fresh.</span>
             <button
               onClick={replayReview}
@@ -1485,7 +1617,10 @@ function PracticeInner() {
           </div>
         )}
         {practicingSkill && !practicingFormula && !reviewMode && (
-          <div className="fixed top-[76px] left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto">
+          <div
+            className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto"
+            style={{ top: headerHeight + 8 }}
+          >
             <span>
               Practicing: <span className="font-semibold">{practicingSkill.label}</span>
             </span>
@@ -1504,7 +1639,10 @@ function PracticeInner() {
           </div>
         )}
         {practicingFormula && !reviewMode && (
-          <div className="fixed top-[76px] left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto">
+          <div
+            className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto"
+            style={{ top: headerHeight + 8 }}
+          >
             <span>
               Practicing: <span className="font-semibold capitalize">{practicingFormula.name}</span>
             </span>
@@ -1518,66 +1656,44 @@ function PracticeInner() {
         )}
         <style>{MARKS_STYLE}</style>
 
-        {partLabels.length > 0 && (
-          <div
-            className={`fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md px-2 py-1.5 pointer-events-auto ${
-              bannerShown ? "top-[124px]" : "top-[76px]"
-            }`}
-          >
-            <span className="text-xs text-[#8a857b] pr-1">Part</span>
-            {partLabels.map((lab, i) => {
-              const done = !!resultByPart[i]?.correct;
-              return (
-                <button
-                  key={lab}
-                  onClick={() => setActivePart(i)}
-                  disabled={busy}
-                  className={`px-2.5 py-1 stylus:px-3 stylus:py-2 rounded text-sm font-semibold transition-colors ${
-                    i === partIndex
-                      ? "bg-[#23272e] text-white"
-                      : done
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "text-[#6b6558] hover:bg-[#faf9f6]"
-                  }`}
-                >
-                  {done ? "✓ " : ""}
-                  {lab}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {partLabels.length > 0 ? (
-          partLabels.map((lab, i) => (
-            <div key={lab} className={i === partIndex ? "" : "hidden"}>
-              <Canvas
-                ref={(el) => {
-                  canvasRefs.current[i] = el;
-                }}
-                fullscreen
-                zoom={zoom}
-                onChange={markDirty}
-                onZoomChange={onCanvasZoomChange}
-                onToolAutoSwitch={selectTool}
-                overlay={
-                  marksByPart[i]?.length || linePopsByPart[i]?.length || (i === partIndex && ambiguityQueue?.length) ? (
-                    <>
-                      {linePopsByPart[i]}
-                      {marksByPart[i]}
-                      {i === partIndex && renderAmbiguityCard()}
-                    </>
-                  ) : undefined
-                }
-              />
-            </div>
-          ))
+        {sections.length > 0 ? (
+          sections.map((sec, sIdx) => {
+            const secPartIndices = sec.partIndices;
+            const secMarks = secPartIndices.flatMap((idx) => marksByPart[idx] || []);
+            const secLinePops = secPartIndices.flatMap((idx) => linePopsByPart[idx] || []);
+            const isCurrent = sIdx === activeSectionIndex;
+            return (
+              <div key={sec.key} className={isCurrent ? "" : "hidden"}>
+                <Canvas
+                  ref={(el) => {
+                    canvasRefs.current[sIdx] = el;
+                  }}
+                  fullscreen
+                  topOffset={headerHeight}
+                  zoom={zoom}
+                  onChange={markDirty}
+                  onZoomChange={onCanvasZoomChange}
+                  onToolAutoSwitch={selectTool}
+                  overlay={
+                    secMarks.length || secLinePops.length || (isCurrent && ambiguityQueue?.length) ? (
+                      <>
+                        {secLinePops}
+                        {secMarks}
+                        {isCurrent && renderAmbiguityCard()}
+                      </>
+                    ) : undefined
+                  }
+                />
+              </div>
+            );
+          })
         ) : (
           <Canvas
             ref={(el) => {
               canvasRefs.current[0] = el;
             }}
             fullscreen
+            topOffset={headerHeight}
             zoom={zoom}
             onChange={markDirty}
             onZoomChange={onCanvasZoomChange}
@@ -1594,24 +1710,72 @@ function PracticeInner() {
           />
         )}
 
-        {/* Question bar: Find <prompt> ................ Question N of 20  Skip */}
-        <div className="fixed inset-x-0 top-0 z-10 min-h-[68px] bg-white border-b border-[#e4e2db] flex items-center justify-between gap-3 pl-7 pr-6 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-          <div className="flex items-center gap-2.5 min-w-0">
-            {question ? (
-              <div className="flex items-baseline gap-2.5 min-w-0">
-                <span className="font-medium text-[#23272e] text-base shrink-0">Find</span>
-                {question.prompt_latex ? (
-                  <MathText text={`\\(${question.prompt_latex}\\)`} className="text-[#23272e]" />
-                ) : (
-                  <span className="font-medium text-[#23272e]">{question.prompt}</span>
-                )}
-              </div>
-            ) : (
-              <span className="text-[#8a857b] text-sm">
-                Pick a topic &amp; difficulty, then press New question.
-              </span>
-            )}
-          </div>
+        {/* Question bar: Preamble + Section Exercise + Sub-steps */}
+        <div
+          ref={headerRef}
+          className="fixed inset-x-0 top-0 z-10 bg-white border-b border-[#e4e2db] flex flex-col pl-7 pr-6 pb-2.5 pt-[max(0.75rem,env(safe-area-inset-top))] shadow-sm"
+        >
+          <div className="flex items-start justify-between gap-3 w-full">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              {question ? (
+                <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                  {sections.length > 0 ? (() => {
+                    const { preamble, items } = parseFullProblem(
+                      question.prompt_latex || question.prompt,
+                      sections
+                    );
+                    const activeKey = currentSection?.key ?? "1";
+                    return (
+                      <div className="space-y-1.5 min-w-0 max-h-[32vh] overflow-y-auto pr-1">
+                        {preamble && (
+                          <div className="text-[13px] text-[#475569] font-medium leading-relaxed pb-0.5 border-b border-[#f1f0ea]">
+                            <MathText text={preamble} />
+                          </div>
+                        )}
+                        <div className="space-y-1">
+                          {items.map((item, i) => {
+                            const isActive = item.key === activeKey;
+                            return (
+                              <div
+                                key={`${item.key}-${i}`}
+                                onClick={() => {
+                                  const sec = sections.find((s) => s.key === item.key);
+                                  if (sec) {
+                                    const target =
+                                      sec.partIndices.find((idx) => !resultByPart[idx]?.correct) ??
+                                      sec.partIndices[0];
+                                    setActivePart(target);
+                                  }
+                                }}
+                                className={`cursor-pointer transition-all rounded px-2.5 py-1 ${
+                                  isActive
+                                    ? "bg-amber-50 text-[#0f172a] font-semibold text-[14px] border-l-[3px] border-amber-500 shadow-sm"
+                                    : "text-[#64748b] text-[12.5px] opacity-75 hover:opacity-100 hover:bg-[#faf9f6]"
+                                }`}
+                              >
+                                <MathText text={item.text} />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })() : question.prompt_latex ? (
+                    <div className="text-[#23272e] font-medium text-sm sm:text-base leading-relaxed min-w-0">
+                      <MathText text={`\\(${question.prompt_latex}\\)`} className="text-[#23272e]" />
+                    </div>
+                  ) : (
+                    <div className="text-[#23272e] font-medium text-sm sm:text-base leading-relaxed min-w-0">
+                      <span className="font-medium text-[#23272e]">{question.prompt}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <span className="text-[#8a857b] text-sm">
+                  សូមជ្រើសរើសប្រធានបទ និងកម្រិត រួចចុច &quot;New question&quot;។
+                </span>
+              )}
+            </div>
 
           <div className="flex items-center gap-3.5 shrink-0">
             {!reviewMode && (
@@ -1743,13 +1907,49 @@ function PracticeInner() {
           </div>
         </div>
 
-        {error && (
-          <div className="fixed top-[76px] left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-            <p className="pointer-events-auto bg-red-50 border border-red-200 text-red-700 text-xs rounded-md px-3 py-1.5 shadow-md">
-              {error}
-            </p>
+        {/* Section Tabs: Clean English number tabs (1, 2, 3, 4) */}
+        {sections.length > 0 && (
+          <div className="flex items-center gap-2 border-t border-[#f0eee8] pt-2 mt-2 w-full">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {sections.map((sec, sIdx) => {
+                const isSecDone = sec.partIndices.every((idx) => resultByPart[idx]?.correct);
+                const isSecActive = sIdx === activeSectionIndex;
+                return (
+                  <button
+                    key={sec.key}
+                    onClick={() => {
+                      const target = sec.partIndices.find((idx) => !resultByPart[idx]?.correct) ?? sec.partIndices[0];
+                      setActivePart(target);
+                    }}
+                    disabled={busy}
+                    className={`min-w-[34px] h-[30px] px-3 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                      isSecActive
+                        ? "bg-[#23272e] text-white shadow-sm ring-2 ring-slate-900/10"
+                        : isSecDone
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                        : "bg-[#f2f1ed] text-[#6b6558] hover:bg-[#e7e5df] border border-transparent"
+                    }`}
+                  >
+                    {isSecDone && <span className="text-emerald-700">✓</span>}
+                    <span>{sec.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
+      </div>
+
+      {error && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+          style={{ top: headerHeight + 8 }}
+        >
+          <p className="pointer-events-auto bg-red-50 border border-red-200 text-red-700 text-xs rounded-md px-3 py-1.5 shadow-md">
+            {error}
+          </p>
+        </div>
+      )}
 
         {/* Right-side results / explanation panel */}
         <div className="fixed right-3 bottom-24 z-10 w-[calc(100vw-1.5rem)] sm:w-96 max-h-[55vh] overflow-y-auto pointer-events-auto space-y-3">
@@ -1775,7 +1975,28 @@ function PracticeInner() {
                   {busy ? "Working..." : "Next question →"}
                 </button>
               )}
-              {partLabels.length > 0 && (
+              {sections.length > 0 ? (
+                <div className="mt-1 flex items-center gap-1 text-xs">
+                  {sections.map((sec, sIdx) => {
+                    const secDone = sec.partIndices.every((idx) => resultByPart[idx]?.correct);
+                    const isSecActive = sIdx === activeSectionIndex;
+                    return (
+                      <span
+                        key={sec.key}
+                        className={`px-2 py-0.5 rounded font-bold ${
+                          secDone
+                            ? "bg-emerald-600 text-white"
+                            : isSecActive
+                            ? "bg-[#23272e] text-white"
+                            : "bg-[#e4e2db] text-[#8a857b]"
+                        }`}
+                      >
+                        {sec.label}
+                      </span>
+                    );
+                  })}
+                </div>
+              ) : partLabels.length > 0 ? (
                 <div className="mt-1 flex items-center gap-1 text-xs">
                   {partLabels.map((lab, i) => (
                     <span
@@ -1792,7 +2013,7 @@ function PracticeInner() {
                     </span>
                   ))}
                 </div>
-              )}
+              ) : null}
               {result.parts?.length ? (
                 <div className="mt-2 space-y-1 text-sm">
                   {result.parts.map((pv) => (
@@ -1804,7 +2025,7 @@ function PracticeInner() {
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-semibold">
-                          {pv.correct ? "✓" : "✗"} Part {pv.label}
+                          {pv.correct ? "✓" : "✗"} {pv.correct ? "Correct" : "Needs revision"}
                         </span>
                         <span className="text-xs">
                           {pv.given ? `you: ${pv.given} · ` : ""}
