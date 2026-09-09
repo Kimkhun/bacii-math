@@ -456,6 +456,125 @@ export interface Stats {
   by_formula?: FormulaStat[];
 }
 
+// --- profile / skill progress ---------------------------------------------
+// The backend tracks one "skill" per practisable exercise type (a technique
+// like sin(x)/x limits, not a whole topic) plus one per formula the
+// step-checker watches. See backend/engine/core/mastery.py for what the
+// numbers mean.
+
+export interface SkillEstimate {
+  /** Recency-weighted success rate over recent attempts, 0-1. */
+  rate: number;
+  /** How much proof there is, in (time-decayed) attempts. 0 = never tried. */
+  evidence: number;
+  /** Ability estimate, shrunk toward a pessimistic prior when evidence is thin. */
+  ability: number;
+  /** How certain that ability estimate is, 0-1. */
+  confidence: number;
+  /** The 0-100 bar: 100 * ability * confidence. */
+  level: number;
+}
+
+export interface Skill extends SkillEstimate {
+  key: string;
+  topic: string;
+  topic_label: string;
+  question_type: string;
+  variant: string | null;
+  label: string;
+  difficulty: string;
+  practice: boolean;
+  forceable: boolean;
+  attempts: number;
+  correct: number;
+  streak: number;
+  best_streak: number;
+  days_idle: number;
+  last_seen_at: string | null;
+  status: "untouched" | "learning" | "shaky" | "solid" | "mastered";
+  band: string;
+  weak_formulas: { formula: string; name: string; level: number }[];
+}
+
+export interface FormulaSkill extends SkillEstimate {
+  formula: string;
+  name: string;
+  latex: string | null;
+  topic: string | null;
+  topic_label: string | null;
+  attempts: number;
+  correct: number;
+  days_idle: number;
+  status: string;
+  /** Which exercise type to practise to drill this formula, if any. */
+  skill_key: string | null;
+}
+
+export interface Aggregate {
+  /** 0-100 over the skills actually practised — the headline bar. */
+  score: number;
+  /** The same total spread over every skill, so untouched material counts 0. */
+  syllabus_score: number;
+  mastery: number;
+  coverage: number;
+  practised: number;
+  total: number;
+  band: string;
+}
+
+export interface TopicProgress extends Aggregate {
+  topic: string;
+  label: string;
+  practice: boolean;
+  engaged: boolean;
+  skills_total: number;
+  skills_practised: number;
+  attempts: number;
+  correct: number;
+  strongest: string | null;
+  weakest: string | null;
+}
+
+export type SuggestionKind =
+  | "weak_skill"
+  | "weak_formula"
+  | "rusty_skill"
+  | "unproven_skill"
+  | "new_skill"
+  | "new_topic"
+  | "first_steps";
+
+export interface Suggestion {
+  kind: SuggestionKind;
+  priority: number;
+  title: string;
+  reason: string;
+  contrast: string | null;
+  detail: string | null;
+  topic: string | null;
+  topic_label: string | null;
+  skill_key: string | null;
+  formula: string | null;
+  level: number;
+  target: { topic: string; question_type: string; variant: string | null; difficulty: string } | null;
+}
+
+export interface Profile {
+  user: { id: string; email: string; plan: string; member_since: string | null };
+  level: Aggregate & {
+    attempts: number;
+    correct: number;
+    accuracy: number;
+    topics_started: number;
+    topics_total: number;
+  };
+  topics: TopicProgress[];
+  skills: Skill[];
+  formulas: FormulaSkill[];
+  suggestions: Suggestion[];
+  activity: { date: string; attempts: number; correct: number }[];
+}
+
 export interface ExamQuestion {
   label: string;
   prompt_en?: string;
@@ -551,6 +670,11 @@ export const api = {
   attempts: () => request<Attempt[]>("/attempts"),
   attempt: (id: string) => request<AttemptDetail>(`/attempts/${id}`),
   stats: () => request<Stats>("/stats"),
+  profile: () => request<Profile>("/profile"),
+  rebuildProfile: () =>
+    request<{ rebuilt: boolean; attempts_replayed: number }>("/profile/rebuild", { method: "POST" }),
+  skillCatalog: () =>
+    request<{ topics: string[]; labels: Record<string, string>; skills: Skill[] }>("/skills"),
   formulas: () => request<FormulaCatalog>("/formulas"),
   templates: () => request<TemplateInventory>("/templates"),
   templateStructures: (topic?: string) =>

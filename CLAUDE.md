@@ -78,7 +78,9 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
 
 ### Backend layout (`backend/`)
 - `main.py` — FastAPI app, CORS, router registration.
-- `routers/` — thin HTTP layer (`auth.py`, `problems.py`, `vision.py`); delegates to `services.py`.
+- `routers/` — thin HTTP layer (`auth.py`, `problems.py`, `profile.py`, `vision.py`); delegates to `services.py`.
+  `profile.py` serves the student profile (`/profile`, `/profile/rebuild`, `/skills`) — skill level,
+  per-topic progress and practice suggestions; see "Skill progress" below.
   `problems.py` also exposes past-exam replay (`GET /problems/exam/{exam_id}`,
   `POST /problems/exam/{exam_id}/submit`) and, under `me_router`, formula/template introspection
   endpoints (`/me/formulas`, `/me/templates`, `/me/templates/structures`, `/me/templates/summary`,
@@ -88,8 +90,8 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
   or promotion endpoint for admin — the single admin account is upserted from `ADMIN_EMAIL`/
   `ADMIN_PASSWORD` env vars on every backend startup (`main.py`'s `seed_admin_user`).
 - `services.py` — orchestration layer: wires `engine/` + `models.py` + `cache.py` together for each
-  endpoint's use case (create question, grade, explain, stats, exam replay, template introspection).
-  This is the place to look first to understand a request's full flow.
+  endpoint's use case (create question, grade, explain, stats, exam replay, template introspection,
+  skill tracking + profile). This is the place to look first to understand a request's full flow.
 - `engine/` — the math/AI core, framework-agnostic, organized **by topic**:
   - `solver.py` / `generator.py` / `grader.py` — thin public facade modules (do not rename); each
     re-exports the real implementation from `engine/core/` and `engine/topics/<topic>/`.
@@ -100,7 +102,10 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
     questions of any topic — derives per-checkpoint point weights mechanically from the same
     `checkpoints` list `solve()` already returns, so no topic hand-lists point values), `shared.py`
     (question-type registry + small SymPy formatting helpers), `slots.py`/`expr_shared.py`
-    (template-filling helpers shared by the limit/integral generators).
+    (template-filling helpers shared by the limit/integral generators), `skills.py` (the skill
+    taxonomy — one leaf per practisable exercise type, derived from the generators' own registries),
+    `mastery.py` (the 0-100 skill-level math: recency-weighted rate + time-decayed evidence) and
+    `coaching.py` (the deterministic "what to practise next" rules).
   - `topics/<topic>/` — one self-contained folder per BAC II topic (`complex`, `limit`, `integral`,
     `probability`, `functions`, `continuity`, `derivatives`, `differential_equations`,
     `vectors_space`, `conics`, `past_exam`), each with its own `solver.py` (SymPy computation of
@@ -125,7 +130,8 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
     (`VISION_PROVIDER=gemini|ollama|fallback`). Returns plain-text `lines` (fed to `analyze_work`
     and the LLM), `lines_latex` (display-only LaTeX, rendered with KaTeX in the web UI), the
     extracted final answer, and a `provider` field.
-- `models.py` — SQLAlchemy 2.0 async models: `User`, `Question`, `Step`, `Attempt`, `Explanation`.
+- `models.py` — SQLAlchemy 2.0 async models: `User`, `Question`, `Step`, `Attempt`, `Explanation`,
+  `StudySession`, `SkillState` (the per-student skill/formula mastery tracker).
 - `schemas.py` — Pydantic request/response models.
 - `cache.py` — Redis-backed explanation cache (keyed by `question_type:a:b`) and per-user Gemini
   rate limiting (`gemini_rate_limit_per_minute`, default 10/min).
@@ -147,8 +153,21 @@ of that part's points, the rest split the remaining 60% evenly — rather than h
 they differ only in where that step list comes from (the generic solver's `checkpoints` vs. a
 hand-listed order matching the printed exam paper). See the module docstrings for the full rationale.
 
+### Skill progress & practice suggestions
+Every graded attempt also updates two hidden trackers (`SkillState` rows): one for the **exercise
+type** the question belongs to (a leaf skill from `engine/core/skills.py` — "sin(x)/x limits", not
+"limits") and one per **formula** the step-checker watched. `engine/core/mastery.py` turns those into
+a 0-100 level (recency-weighted success rate x time-decayed evidence, shrunk toward a pessimistic
+prior, so the bar fills only once a skill is repeatedly *shown*), and `engine/core/coaching.py` ranks
+what to practise next — including the case that matters most, a technique sitting far below its own
+topic ("your Limits score is 52, but sin(x)/x sits at 26"). `GET /profile` assembles all of it.
+The tracker is replayable: `rebuild_skill_states` replays stored attempts and reproduces exactly what
+live recording wrote, so changing `mastery.TRACKER_VERSION` re-derives everything with no migration.
+Full design: `docs/skill-progress.md`.
+
 ### Web layout (`web/src/`)
 - `app/` — Next.js App Router pages: `/`, `/login`, `/signup`, `/practice`, `/history`, `/stats`,
+  `/profile` (skill level, per-topic progress bars, practice suggestions),
   `/formulas`, `/exam` (past-exam replay, points-rubric results), `/admin` (formula/template
   inventory and structure regeneration, admin-only both client-side via `AdminGuard` and
   server-side via the `me_router` template endpoints above).
@@ -181,5 +200,7 @@ Each BAC II topic is a self-contained folder under `engine/topics/<topic>/`. Add
 `solver.py` (the topic's SymPy computation), `generator.py` (template/Gemini generation), and `grader.py`
 (only needed if grading differs from the generic core in `engine/core/grading.py`) — then register the
 topic + its question types in `engine/core/shared.py` and `engine/core/dispatch.py`. `services.py` and the
-routers are already topic-agnostic (topic is just a field on `Question`). Full recipe:
+routers are already topic-agnostic (topic is just a field on `Question`), and the profile picks the topic
+up automatically — but if the topic has a sub-technique axis worth tracking separately, teach
+`engine/core/skills.py` how to enumerate it and how to read it back out of `params`. Full recipe:
 `docs/engine-layout.md` and `docs/adding-question-types.md`.

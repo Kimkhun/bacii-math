@@ -89,12 +89,16 @@ def _build_curated_vector(item):
     }
 
 
-def _generate_vectors_space(rng, difficulty, question_type=None):
+def _generate_vectors_space(rng, difficulty, question_type=None, variant=None):
+    """`variant` is one of the curated pool's `op` values (magnitude, dot,
+    cross_magnitude, ...). Unknown variants are ignored."""
     if question_type not in (None, "vector_ops"):
         raise ValueError(f"question_type {question_type} does not match topic vectors_space")
-    pool = [t for t in _VECTORS_CURATED if t.get("difficulty") == difficulty]
-    if not pool:
-        pool = _VECTORS_CURATED
+    pool = _VECTORS_CURATED
+    if variant:
+        pool = [t for t in pool if t.get("op") == variant] or _VECTORS_CURATED
+    by_difficulty = [t for t in pool if t.get("difficulty") == difficulty]
+    pool = by_difficulty or pool
     if not pool:
         raise ValueError(f"no curated vector exercises for difficulty {difficulty}")
     return _build_curated_vector(rng.choice(pool))

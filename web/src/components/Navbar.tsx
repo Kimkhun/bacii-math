@@ -16,6 +16,7 @@ export default function Navbar() {
         </Link>
         {user && (
           <div className="flex items-center gap-4 text-sm">
+            <Link href="/profile" className="text-slate-600 hover:text-slate-900">Profile</Link>
             <Link href="/practice" className="text-slate-600 hover:text-slate-900">Practice</Link>
             <Link href="/exam" className="text-slate-600 hover:text-slate-900">Exam mode</Link>
             <Link href="/history" className="text-slate-600 hover:text-slate-900">History</Link>

@@ -97,12 +97,16 @@ def _build_curated_ode(item):
     }
 
 
-def _generate_differential_equations(rng, difficulty, question_type=None):
+def _generate_differential_equations(rng, difficulty, question_type=None, variant=None):
+    """`variant` is one of the curated pool's `kind` values (first/second order,
+    homogeneous or not). Unknown variants are ignored."""
     if question_type not in (None, "solve_ode"):
         raise ValueError(f"question_type {question_type} does not match topic differential_equations")
-    pool = [t for t in _ODE_CURATED if t.get("difficulty") == difficulty]
-    if not pool:
-        pool = _ODE_CURATED
+    pool = _ODE_CURATED
+    if variant:
+        pool = [t for t in pool if t.get("kind") == variant] or _ODE_CURATED
+    by_difficulty = [t for t in pool if t.get("difficulty") == difficulty]
+    pool = by_difficulty or pool
     if not pool:
         raise ValueError(f"no curated differential-equation exercises for difficulty {difficulty}")
     return _build_curated_ode(rng.choice(pool))

@@ -1,0 +1,15 @@
+{
+  "conic_classification": {
+    "name_en": "Classify a conic by completing the square",
+    "name_km": "",
+    "weight": 2,
+    "group": "conics",
+    "latex": "Ax^2+By^2+Cx+Dy+E = 0",
+    "formulas": [
+      "\\frac{(x-h)^2}{a^2}+\\frac{(y-k)^2}{b^2}=1 \\text{ (ellipse)}",
+      "\\frac{(x-h)^2}{a^2}-\\frac{(y-k)^2}{b^2}=1 \\text{ (hyperbola)}",
+      "(y-k)^2 = 4p(x-h) \\text{ (parabola)}",
+      "c^2 = a^2 - b^2 \\text{ (ellipse)},\\quad c^2 = a^2 + b^2 \\text{ (hyperbola)}"
+    ]
+  }
+}

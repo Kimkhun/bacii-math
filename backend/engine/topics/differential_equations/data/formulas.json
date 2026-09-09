@@ -84,5 +84,18 @@
       "p(x) = kx^n e^{\\alpha x},\\ \\lambda = \\alpha \\implies y_p = xe^{\\lambda x}(A_nx^n + A_{n-1}x^{n-1} + \\dots + A_1x + A_0)",
       "p(x) = kx^n e^{\\alpha x},\\ \\lambda = \\alpha\\ (\\Delta = 0) \\implies y_p = x^2e^{\\lambda x}(A_nx^n + A_{n-1}x^{n-1} + \\dots + A_1x + A_0)"
     ]
+  },
+  "solve_ode": {
+    "name_en": "Solve a differential equation",
+    "name_km": "",
+    "weight": 2,
+    "group": "differential_equations",
+    "latex": "y' + ay = 0 \\Rightarrow y = Ce^{-ax}",
+    "formulas": [
+      "y''+by'+cy=0:\\ r^2+br+c=0",
+      "\\Delta>0:\\ y=C_1e^{r_1x}+C_2e^{r_2x}",
+      "\\Delta=0:\\ y=(C_1+C_2x)e^{rx}",
+      "\\Delta<0:\\ y=e^{\\alpha x}(C_1\\cos\\beta x + C_2\\sin\\beta x)"
+    ]
   }
 }

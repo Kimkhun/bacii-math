@@ -57,12 +57,16 @@ def _build_curated_conic(item):
     }
 
 
-def _generate_conics(rng, difficulty, question_type=None):
+def _generate_conics(rng, difficulty, question_type=None, variant=None):
+    """`variant` is one of the curated pool's `ask` values (vertex_x, center_y,
+    focal parameter p, ...). Unknown variants are ignored."""
     if question_type not in (None, "classify_conic"):
         raise ValueError(f"question_type {question_type} does not match topic conics")
-    pool = [t for t in _CONICS_CURATED if t.get("difficulty") == difficulty]
-    if not pool:
-        pool = _CONICS_CURATED
+    pool = _CONICS_CURATED
+    if variant:
+        pool = [t for t in pool if t.get("ask") == variant] or _CONICS_CURATED
+    by_difficulty = [t for t in pool if t.get("difficulty") == difficulty]
+    pool = by_difficulty or pool
     if not pool:
         raise ValueError(f"no curated conic exercises for difficulty {difficulty}")
     return _build_curated_conic(rng.choice(pool))

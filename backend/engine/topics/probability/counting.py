@@ -107,10 +107,16 @@ def _build_curated_counting(item):
     }
 
 
-def _generate_counting(rng, difficulty):
-    pool = [t for t in _COUNTING_CURATED if t.get("difficulty") == difficulty]
-    if not pool:
-        pool = _COUNTING_CURATED
+def _generate_counting(rng, difficulty, variant=None):
+    """`variant` is the technique the expression exercises — "combination",
+    "permutation", "factorial" or "mixed" (see engine.core.skills). Unknown
+    variants are ignored."""
+    pool = _COUNTING_CURATED
+    if variant:
+        from engine.core.skills import counting_variant
+        pool = [t for t in pool if counting_variant(t.get("expr")) == variant] or _COUNTING_CURATED
+    by_difficulty = [t for t in pool if t.get("difficulty") == difficulty]
+    pool = by_difficulty or pool
     if not pool:
         raise ValueError(f"no curated counting exercises for difficulty {difficulty}")
     return _build_curated_counting(rng.choice(pool))

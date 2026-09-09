@@ -8,7 +8,7 @@ import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, FULL_W, LineSnapshot
 import MathText from "@/components/MathText";
 import DisambiguationCard, { DisambiguationCandidate } from "@/components/DisambiguationCard";
 import FunctionGraph from "@/components/FunctionGraph";
-import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, StrokeDoc } from "@/lib/api";
+import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, Skill, StrokeDoc } from "@/lib/api";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
 
 const CURSIVE = "'Caveat', 'Segoe Script', cursive";
@@ -470,6 +470,7 @@ function PracticeInner() {
   const [toolbarPos, setToolbarPos] = useState<{ x: number; y: number } | null>(null);
   const [reviewMode, setReviewMode] = useState(false);
   const [practicingFormula, setPracticingFormula] = useState<{ id: string; name: string } | null>(null);
+  const [practicingSkill, setPracticingSkill] = useState<{ key: string; label: string } | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -658,6 +659,45 @@ function PracticeInner() {
         router.replace("/practice");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to start formula practice");
+      } finally {
+        setBusy(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Forced skill practice: /practice?skill=<topic/question_type[:variant]>
+  // (from the profile's "Practise this" buttons). The skill key already
+  // encodes exactly what the generator needs, so this only has to look up the
+  // skill's label and starting difficulty from the catalog.
+  useEffect(() => {
+    const skillKey = searchParams.get("skill");
+    if (!skillKey) return;
+    (async () => {
+      setError("");
+      setBusy(true);
+      try {
+        const catalog = await api.skillCatalog();
+        const skill: Skill | undefined = catalog.skills.find((s) => s.key === skillKey);
+        const slash = skillKey.indexOf("/");
+        const cfg: SessionConfig = {
+          mode: "templates",
+          topic: skill?.topic ?? (slash === -1 ? topic : skillKey.slice(0, slash)),
+          // The generator wants "<question_type>:<variant>", which is exactly
+          // the skill key with its topic prefix removed.
+          questionType: slash === -1 ? "any" : skillKey.slice(slash + 1),
+          difficulty: skill?.difficulty ?? difficulty,
+        };
+        setMode(cfg.mode);
+        setTopic(cfg.topic);
+        setQuestionType(cfg.questionType);
+        setDifficulty(cfg.difficulty);
+        const q = await generateQuestion(cfg);
+        loadQuestion(q);
+        setPracticingSkill({ key: skillKey, label: skill?.label ?? cfg.questionType.replaceAll("_", " ") });
+        router.replace("/practice");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to start skill practice");
       } finally {
         setBusy(false);
       }
@@ -918,6 +958,7 @@ function PracticeInner() {
     setError("");
     setBusy(true);
     setPracticingFormula(null);
+    setPracticingSkill(null);
     try {
       const cfg: SessionConfig = { mode, topic, questionType, difficulty };
       const q = await generateQuestion(cfg);
@@ -1420,7 +1461,7 @@ function PracticeInner() {
     }
   };
 
-  const bannerShown = reviewMode || !!practicingFormula;
+  const bannerShown = reviewMode || !!practicingFormula || !!practicingSkill;
 
   return (
     <AuthGuard>
@@ -1440,6 +1481,25 @@ function PracticeInner() {
               className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-medium"
             >
               Exit review
+            </button>
+          </div>
+        )}
+        {practicingSkill && !practicingFormula && !reviewMode && (
+          <div className="fixed top-[76px] left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto">
+            <span>
+              Practicing: <span className="font-semibold">{practicingSkill.label}</span>
+            </span>
+            <Link
+              href="/profile"
+              className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-medium"
+            >
+              Back to profile
+            </Link>
+            <button
+              onClick={() => setPracticingSkill(null)}
+              className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-medium"
+            >
+              Dismiss
             </button>
           </div>
         )}

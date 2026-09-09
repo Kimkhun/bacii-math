@@ -6,7 +6,7 @@ from core import security
 from core.config import settings
 from db import SessionLocal
 from models import User
-from routers import auth, problems, vision
+from routers import auth, problems, profile, vision
 
 app = FastAPI(title="BACII Math Engine", version="0.2.0")
 
@@ -46,6 +46,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(problems.router)
 app.include_router(problems.me_router)
+app.include_router(profile.router)
 app.include_router(vision.router)
 
 

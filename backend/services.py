@@ -5,15 +5,18 @@ import os
 import random
 import uuid
 import zlib
+from datetime import datetime, timedelta, timezone
 from fractions import Fraction
 
 from fastapi import HTTPException, status
-from sqlalchemy import case, func, select
+from sqlalchemy import case, delete, func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sympy import latex
 
 import cache
 from engine import explainer, formulas, generator, grader, llm, solver
+from engine.core import coaching, mastery, skills
 from engine.core.rubric import score_work
 from engine.topics.past_exam.rubric import mark_full_exam
 from engine.topics.functions import graph_grader
@@ -26,7 +29,7 @@ from engine.topics.integral.generator import (
 from engine.topics.limit import structures as limit_structures
 from engine.topics.limit.generator import generate_limit_for_technique
 from engine.topics.probability import scenarios
-from models import Attempt, Explanation, Question, Step, StudySession, User
+from models import Attempt, Explanation, Question, SkillState, Step, StudySession, User
 from schemas import GenerateRequest, SaveProgressRequest
 
 WORK_UNREADABLE_MSG = (
@@ -282,6 +285,11 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
         )
         if rubric_tip:
             resp["teacher_feedback"] = {"content": rubric_tip, "provider": provider}
+
+    # Update the hidden skill trackers behind the student's profile. Runs on
+    # every attempt (right or wrong) — a correct answer is exactly as much
+    # evidence as a wrong one.
+    await record_skill_progress(db, user, question, attempt, at=datetime.now(timezone.utc))
 
     # Auto-save progress: every grade updates the exercise's session so long
     # multi-part exercises can be resumed without an explicit button.
@@ -641,7 +649,12 @@ async def get_formulas_catalog() -> dict:
             "formulas": e.get("formulas") or [],
             "variants": await generator.variants_for_formula(tag),
         })
-    order = [g for g in ("complex", "limit", "integral", "probability", "functions") if g in by_group]
+    # Teaching order first, then anything else the registry has — a topic that
+    # grows a formula file must not silently vanish from the formula sheet.
+    preferred = ("complex", "limit", "integral", "probability", "functions", "continuity",
+                 "derivatives", "differential_equations", "vectors_space", "conics")
+    order = [g for g in preferred if g in by_group]
+    order += [g for g in by_group if g not in order]
     return {"topics": [{"topic": g, "entries": by_group[g]} for g in order]}
 
 
@@ -1234,4 +1247,401 @@ async def get_stats(db, user) -> dict:
         "accuracy": round(correct / total, 4) if total else 0.0,
         "by_topic": by_topic,
         "by_formula": sorted(by_formula.values(), key=lambda a: (-a["missed"], a["formula"])),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Skill tracking & the student profile
+#
+# Every graded attempt updates two hidden trackers (`SkillState` rows): one for
+# the *exercise type* the question belongs to (a leaf skill from
+# engine.core.skills — "sin(x)/x limits", not "limits") and one per *formula*
+# the step-checker watched. `get_profile` reads both back as progress bars plus
+# a ranked list of what to practise next. `engine.core.mastery` owns the
+# scoring formula; `engine.core.coaching` owns the suggestion rules.
+# ---------------------------------------------------------------------------
+
+
+def _difficulty_of(question) -> str:
+    return question.difficulty if question.difficulty in ("easy", "medium", "hard") else "medium"
+
+
+def _formula_events(correct: bool, step_check: dict | None):
+    """(formula_tag, score) pairs for one attempt's checkpoint breakdown.
+
+    A checkpoint the student reached is evidence they can execute that step. A
+    checkpoint they *missed* only counts against them when the final answer was
+    also wrong: the step-check runs on correct attempts too, and a correct
+    answer found by a valid alternative route legitimately skips the standard
+    path's checkpoints. Counting those as misses would invent weaknesses (the
+    same false-miss rule `get_stats`' by_formula uses).
+    """
+    for item in (step_check or {}).get("formula_breakdown") or []:
+        fid = item.get("formula")
+        if not fid:
+            continue
+        if item.get("reached"):
+            yield fid, 1.0
+        elif not correct:
+            yield fid, 0.0
+
+
+def _days_between(earlier, later) -> float:
+    """Days between two timestamps, tolerating a naive one (an older row
+    written before the column carried a timezone) by reading it as UTC."""
+    if earlier is None or later is None:
+        return 0.0
+    if (earlier.tzinfo is None) != (later.tzinfo is None):
+        earlier = earlier.replace(tzinfo=timezone.utc) if earlier.tzinfo is None else earlier
+        later = later.replace(tzinfo=timezone.utc) if later.tzinfo is None else later
+    return max(0.0, (later - earlier).total_seconds() / 86400.0)
+
+
+def _apply_event(state: SkillState, score: float, correct: bool, at) -> None:
+    """Fold one scored event into a SkillState row, in place."""
+    state.w_total, state.w_correct, state.evidence = mastery.apply_attempt(
+        state.w_total, state.w_correct, state.evidence, score,
+        days_since_last=_days_between(state.last_seen_at, at),
+    )
+    state.attempts += 1
+    state.correct += 1 if correct else 0
+    state.streak = state.streak + 1 if correct else 0
+    state.best_streak = max(state.best_streak, state.streak)
+    state.last_score = float(score)
+    state.last_seen_at = at
+    state.tracker_version = mastery.TRACKER_VERSION
+
+
+async def _skill_states(db, user, keys_by_kind: dict[str, set[str]]) -> dict[tuple[str, str], SkillState]:
+    """Load (and create, unflushed) the SkillState rows for the given keys."""
+    wanted = {(kind, key) for kind, keys in keys_by_kind.items() for key in keys}
+    if not wanted:
+        return {}
+    def _blank(kind, key):
+        topic = skills.resolve(key)["topic"] if kind == "exercise" else formulas.resolve_formula(key).get("group")
+        return {
+            "user_id": user.id, "kind": kind, "skill_key": key, "topic": topic,
+            "w_total": 0.0, "w_correct": 0.0, "evidence": 0.0,
+            "attempts": 0, "correct": 0, "streak": 0, "best_streak": 0,
+            "tracker_version": mastery.TRACKER_VERSION,
+        }
+
+    # Insert-if-missing before reading, rather than adding ORM objects for the
+    # keys a SELECT didn't find: two grade requests racing on the same
+    # brand-new skill (a double-clicked submit, or two parts of one exercise)
+    # would otherwise both create the row and the second commit would fail the
+    # unique constraint, losing the attempt with it.
+    await db.execute(
+        pg_insert(SkillState)
+        .values([_blank(kind, key) for kind, key in sorted(wanted)])
+        .on_conflict_do_nothing(constraint="uq_skill_state_user_kind_key")
+    )
+    rows = (
+        await db.scalars(
+            select(SkillState).where(
+                SkillState.user_id == user.id,
+                SkillState.kind.in_({k for k, _ in wanted}),
+                SkillState.skill_key.in_({k for _, k in wanted}),
+            )
+        )
+    ).all()
+    return {(r.kind, r.skill_key): r for r in rows if (r.kind, r.skill_key) in wanted}
+
+
+async def record_skill_progress(db, user, question, attempt, at=None) -> None:
+    """Update the student's hidden trackers from one graded attempt.
+
+    Called from `grade_question` before the commit, so the attempt and the
+    progress it produced land in the same transaction. Deliberately total:
+    every topic feeds the same two trackers, so a new topic needs no wiring
+    here beyond appearing in the skill catalog.
+    """
+    skill_key = skills.skill_key_for(question.topic, question.question_type, question.spec)
+    step_check = attempt.step_check
+    score = mastery.attempt_score(
+        attempt.correct,
+        difficulty=_difficulty_of(question),
+        partial=mastery.partial_from_grade(step_check),
+        hints_used=attempt.hints_used or 0,
+    )
+    events = list(_formula_events(attempt.correct, step_check))
+    states = await _skill_states(db, user, {
+        "exercise": {skill_key},
+        "formula": {fid for fid, _ in events},
+    })
+    at = at or datetime.now(timezone.utc)
+
+    _apply_event(states[("exercise", skill_key)], score, attempt.correct, at)
+    for fid, formula_score in events:
+        _apply_event(states[("formula", fid)], formula_score, formula_score >= 1.0, at)
+
+
+async def rebuild_skill_states(db, user) -> int:
+    """Recompute every tracker for one student by replaying their attempts.
+
+    Used to backfill students who practised before tracking existed, and to
+    migrate rows whenever `mastery.TRACKER_VERSION` changes — the scoring rules
+    are a moving target early on, and mixing two scales in one average would be
+    worse than recomputing. Because every input (`correct`, difficulty,
+    `step_check`, `hints_used`, timestamps) is persisted on the attempt, the
+    replay reproduces exactly what live recording would have written.
+    """
+    await db.execute(delete(SkillState).where(SkillState.user_id == user.id))
+    rows = (
+        await db.execute(
+            select(Attempt, Question)
+            .join(Question, Attempt.question_id == Question.id)
+            .where(Attempt.user_id == user.id)
+            .order_by(Attempt.created_at, Attempt.id)
+        )
+    ).all()
+    states: dict[tuple[str, str], SkillState] = {}
+
+    def _state(kind, key):
+        existing = states.get((kind, key))
+        if existing is not None:
+            return existing
+        topic = skills.resolve(key)["topic"] if kind == "exercise" else formulas.resolve_formula(key).get("group")
+        created = SkillState(
+            user_id=user.id, kind=kind, skill_key=key, topic=topic,
+            w_total=0.0, w_correct=0.0, evidence=0.0,
+            attempts=0, correct=0, streak=0, best_streak=0,
+            tracker_version=mastery.TRACKER_VERSION,
+        )
+        db.add(created)
+        states[(kind, key)] = created
+        return created
+
+    for attempt, question in rows:
+        at = attempt.created_at or datetime.now(timezone.utc)
+        skill_key = skills.skill_key_for(question.topic, question.question_type, question.spec)
+        score = mastery.attempt_score(
+            attempt.correct,
+            difficulty=_difficulty_of(question),
+            partial=mastery.partial_from_grade(attempt.step_check),
+            hints_used=attempt.hints_used or 0,
+        )
+        _apply_event(_state("exercise", skill_key), score, attempt.correct, at)
+        for fid, formula_score in _formula_events(attempt.correct, attempt.step_check):
+            _apply_event(_state("formula", fid), formula_score, formula_score >= 1.0, at)
+
+    await db.commit()
+    return len(rows)
+
+
+async def _ensure_skill_states(db, user) -> None:
+    """Backfill or migrate the trackers before reading them.
+
+    Rebuilds when the student has attempts but no tracker rows (they practised
+    before this feature shipped) or when any row predates the current scoring
+    rules.
+    """
+    stale = await db.scalar(
+        select(func.count()).select_from(SkillState).where(
+            SkillState.user_id == user.id,
+            SkillState.tracker_version != mastery.TRACKER_VERSION,
+        )
+    ) or 0
+    if stale:
+        await rebuild_skill_states(db, user)
+        return
+    tracked = await db.scalar(
+        select(func.count()).select_from(SkillState).where(SkillState.user_id == user.id)
+    ) or 0
+    if tracked:
+        return
+    attempted = await db.scalar(
+        select(func.count()).select_from(Attempt).where(Attempt.user_id == user.id)
+    ) or 0
+    if attempted:
+        await rebuild_skill_states(db, user)
+
+
+def _skill_view(meta: dict, row: SkillState | None, now) -> dict:
+    """One leaf skill as the profile shows it: the catalog metadata, the raw
+    counters a student can check against their own memory, and the estimate."""
+    days_idle = _days_between(row.last_seen_at, now) if row else 0.0
+    est = mastery.estimate(
+        row.w_total if row else 0.0,
+        row.w_correct if row else 0.0,
+        row.evidence if row else 0.0,
+        days_since_last=days_idle,
+    )
+    return {
+        **est,
+        "key": meta["key"],
+        "topic": meta["topic"],
+        "topic_label": meta["topic_label"],
+        "question_type": meta["question_type"],
+        "variant": meta["variant"],
+        "label": meta["label"],
+        "difficulty": meta["difficulty"],
+        "practice": meta["practice"],
+        "forceable": meta["forceable"],
+        "attempts": row.attempts if row else 0,
+        "correct": row.correct if row else 0,
+        "streak": row.streak if row else 0,
+        "best_streak": row.best_streak if row else 0,
+        "days_idle": round(days_idle, 1),
+        "last_seen_at": row.last_seen_at.isoformat() if row and row.last_seen_at else None,
+        "status": mastery.status(est),
+        "band": mastery.band(est["level"]),
+        "weak_formulas": [],
+    }
+
+
+def _formula_view(fid: str, row: SkillState, now) -> dict:
+    entry = formulas.resolve_formula(fid)
+    days_idle = _days_between(row.last_seen_at, now)
+    est = mastery.estimate(row.w_total, row.w_correct, row.evidence, days_since_last=days_idle)
+    return {
+        **est,
+        "formula": fid,
+        "name": entry.get("name_en") or fid.replace("_", " "),
+        "latex": entry.get("latex"),
+        "topic": entry.get("group"),
+        "topic_label": skills.TOPIC_LABELS.get(entry.get("group"), entry.get("group")),
+        "attempts": row.attempts,
+        "correct": row.correct,
+        "days_idle": round(days_idle, 1),
+        "status": mastery.status(est),
+        "skill_key": None,
+    }
+
+
+async def _link_formulas_to_skills(skill_views: list[dict], formula_views: list[dict]) -> None:
+    """Attach a practisable skill to each weak formula, and the weak formulas
+    to each weak skill, using the generator's formula<->variant indexes.
+
+    Only runs when there is something weak to explain: building those indexes
+    samples one question per variant, and an already-strong profile shouldn't
+    pay for it.
+    """
+    weak_skills = [s for s in skill_views if coaching.is_weak_skill(s)]
+    weak_formulas = [f for f in formula_views if coaching.is_weak_formula(f)]
+    if not weak_skills and not weak_formulas:
+        return
+    try:
+        for f in weak_formulas:
+            refs = await generator.variants_for_formula(f["formula"])
+            if refs:
+                ref = refs[0]
+                f["skill_key"] = skills.make_key(ref["topic"], ref["question_type"], ref["variant"])
+        by_formula = {f["formula"]: f for f in formula_views}
+        for s in weak_skills:
+            tags = await generator.formulas_for_skill(s["key"])
+            missed = [by_formula[t] for t in tags if t in by_formula and coaching.is_weak_formula(by_formula[t])]
+            missed.sort(key=lambda f: f["ability"])
+            s["weak_formulas"] = [
+                {"formula": f["formula"], "name": f["name"], "level": f["level"]} for f in missed[:3]
+            ]
+    except Exception:
+        # A generator hiccup must never cost the student their profile — the
+        # scores are all still valid, only the "why" annotations are missing.
+        pass
+
+
+async def _activity(db, user, days: int = 14) -> list[dict]:
+    since = datetime.now(timezone.utc) - timedelta(days=days - 1)
+    rows = await db.execute(
+        select(
+            func.date(Attempt.created_at).label("day"),
+            func.count().label("attempts"),
+            func.sum(case((Attempt.correct.is_(True), 1), else_=0)).label("correct"),
+        )
+        .where(Attempt.user_id == user.id, Attempt.created_at >= since)
+        .group_by(func.date(Attempt.created_at))
+        .order_by(func.date(Attempt.created_at))
+    )
+    return [
+        {"date": str(day), "attempts": total, "correct": int(ok or 0)}
+        for day, total, ok in rows.all()
+    ]
+
+
+async def get_profile(db, user) -> dict:
+    """The student's profile: one overall skill level, a bar per topic, every
+    leaf skill's estimate, the formula-level weak spots, and a ranked list of
+    what to practise next.
+
+    The single headline number is the mean of `ability x confidence` across
+    every leaf skill of the topics the student has actually started — so it
+    rises both by getting better at what they practise and by covering more of
+    each topic, and it can't be filled by repeating one easy exercise. See
+    `engine.core.mastery` for the derivation.
+    """
+    await _ensure_skill_states(db, user)
+    now = datetime.now(timezone.utc)
+
+    rows = (await db.scalars(select(SkillState).where(SkillState.user_id == user.id))).all()
+    exercise_rows = {r.skill_key: r for r in rows if r.kind == "exercise"}
+    formula_rows = {r.skill_key: r for r in rows if r.kind == "formula"}
+
+    catalog_keys = {s["key"] for s in skills.SKILLS}
+    skill_views = [_skill_view(s, exercise_rows.get(s["key"]), now) for s in skills.SKILLS]
+    # Progress recorded against a skill the catalog has since dropped still
+    # belongs to the student — show it rather than silently losing it.
+    skill_views += [
+        _skill_view(skills.resolve(key), row, now)
+        for key, row in exercise_rows.items() if key not in catalog_keys
+    ]
+    formula_views = sorted(
+        (_formula_view(fid, row, now) for fid, row in formula_rows.items()),
+        key=lambda f: (f["ability"], -f["attempts"]),
+    )
+    await _link_formulas_to_skills(skill_views, formula_views)
+
+    topics = {}
+    for topic in skills.practice_topics() + [t for t in skills.NON_PRACTICE_TOPICS]:
+        views = [s for s in skill_views if s["topic"] == topic]
+        if not views:
+            continue
+        agg = mastery.aggregate(views, total_skills=len(views))
+        practised = [s for s in views if s["evidence"] > 0]
+        strongest = max(practised, key=lambda s: s["level"], default=None)
+        weakest = min(practised, key=lambda s: s["level"], default=None)
+        topics[topic] = {
+            **agg,
+            "topic": topic,
+            "label": skills.TOPIC_LABELS.get(topic, topic.replace("_", " ").capitalize()),
+            "practice": topic not in skills.NON_PRACTICE_TOPICS,
+            "engaged": bool(practised),
+            "skills_total": len(views),
+            "skills_practised": len(practised),
+            "attempts": sum(s["attempts"] for s in views),
+            "correct": sum(s["correct"] for s in views),
+            "strongest": strongest["key"] if strongest else None,
+            "weakest": weakest["key"] if weakest else None,
+        }
+
+    engaged = [t for t, v in topics.items() if v["practice"] and v["engaged"]]
+    # The headline is measured over the whole practisable syllabus, so
+    # `score` (ability on what's been practised) and `syllabus_score`
+    # (the same spread over everything) are two views of one number.
+    practice_views = [s for s in skill_views if s["practice"]]
+    overall = mastery.aggregate(practice_views, total_skills=len(practice_views))
+
+    total_attempts = sum(s["attempts"] for s in skill_views)
+    total_correct = sum(s["correct"] for s in skill_views)
+
+    suggestions = coaching.build_suggestions(skill_views, formula_views, topics)
+    for s in suggestions:
+        s["target"] = skills.practice_target(s["skill_key"]) if s["skill_key"] else None
+
+    return {
+        "user": {"id": str(user.id), "email": user.email, "plan": user.plan,
+                 "member_since": user.created_at.isoformat() if user.created_at else None},
+        "level": {
+            **overall,
+            "attempts": total_attempts,
+            "correct": total_correct,
+            "accuracy": round(total_correct / total_attempts, 4) if total_attempts else 0.0,
+            "topics_started": len(engaged),
+            "topics_total": len(skills.practice_topics()),
+        },
+        "topics": sorted(topics.values(), key=lambda t: (not t["practice"], -t["score"], t["label"])),
+        "skills": skill_views,
+        "formulas": formula_views,
+        "suggestions": suggestions,
+        "activity": await _activity(db, user),
     }

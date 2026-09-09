@@ -97,12 +97,23 @@ def _build_curated_continuity(item):
     }
 
 
-def _generate_continuity(rng, difficulty, question_type=None):
+def _has_unknown(item):
+    return item.get("unknown") not in (None, "", "None")
+
+
+def _generate_continuity(rng, difficulty, question_type=None, variant=None):
+    """`variant` targets one of the two shapes this topic really has:
+    "check_at_point" (both branches given, decide continuity) or
+    "find_parameter" (an unknown constant to solve for). Unknown variants are
+    ignored rather than fatal, so a stale practice link still yields a question."""
     if question_type not in (None, "check_continuity"):
         raise ValueError(f"question_type {question_type} does not match topic continuity")
-    pool = [t for t in _CONTINUITY_CURATED if t.get("difficulty") == difficulty]
-    if not pool:
-        pool = _CONTINUITY_CURATED
+    pool = _CONTINUITY_CURATED
+    if variant in ("check_at_point", "find_parameter"):
+        want = variant == "find_parameter"
+        pool = [t for t in pool if _has_unknown(t) == want] or _CONTINUITY_CURATED
+    by_difficulty = [t for t in pool if t.get("difficulty") == difficulty]
+    pool = by_difficulty or pool
     if not pool:
         raise ValueError(f"no curated continuity exercises for difficulty {difficulty}")
     return _build_curated_continuity(rng.choice(pool))

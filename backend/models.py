@@ -93,6 +93,50 @@ class Explanation(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class SkillState(Base):
+    """The hidden per-student tracker behind the profile progress bars.
+
+    One row per (user, kind, skill_key): ``kind="exercise"`` rows track a leaf
+    skill from ``engine.core.skills`` (a technique like `sin(x)/x` limits, not
+    a whole topic), ``kind="formula"`` rows track one formula/technique id from
+    the step-check's ``formula_breakdown``. Both are updated on every graded
+    attempt and read back by ``services.get_profile``.
+
+    ``w_total``/``w_correct`` are the recency-weighted EMA weights and
+    ``evidence`` the (unbounded, time-decayed) amount of proof — see
+    ``engine.core.mastery`` for what they mean and how they roll up. The raw
+    ``attempts``/``correct`` counters are kept alongside purely for display,
+    since a student reads "12 of 15 right" more easily than an EMA.
+
+    ``tracker_version`` records which revision of the scoring rules wrote the
+    row, so a change to those rules replays the attempt history rather than
+    silently mixing two scales.
+    """
+
+    __tablename__ = "skill_states"
+    __table_args__ = (UniqueConstraint("user_id", "kind", "skill_key", name="uq_skill_state_user_kind_key"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(20), nullable=False, server_default="exercise")
+    skill_key: Mapped[str] = mapped_column(String(120), nullable=False)
+    topic: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    w_total: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
+    w_correct: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
+    evidence: Mapped[float] = mapped_column(Float, nullable=False, server_default="0")
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    correct: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    streak: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    best_streak: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    last_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    tracker_version: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
+    last_seen_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class StudySession(Base):
     """A student's saved progress through one multi-part exercise: which parts
     are answered/typed, the OCR'd work per part, and the correct flags. One row

@@ -1,0 +1,12 @@
+{
+  "continuity_at_point": {
+    "name_en": "Continuity at a point",
+    "name_km": "",
+    "weight": 2,
+    "group": "continuity",
+    "latex": "\\lim_{x\\to a^-}f(x) = \\lim_{x\\to a^+}f(x) = f(a)",
+    "formulas": [
+      "\\text{left limit} = \\text{right limit} = \\text{value}"
+    ]
+  }
+}

@@ -108,26 +108,26 @@ async def generate(topic="complex", difficulty="medium", seed=None, question_typ
 
     if topic == "probability":
         if question_type == "counting":
-            return _generate_counting(random.Random(seed), difficulty)
+            return _generate_counting(random.Random(seed), difficulty, variant)
         return _generate_probability(random.Random(seed), difficulty, question_type, variant)
 
     if topic == "functions":
         return _generate_functions(random.Random(seed), difficulty, question_type)
 
     if topic == "continuity":
-        return _generate_continuity(random.Random(seed), difficulty, question_type)
+        return _generate_continuity(random.Random(seed), difficulty, question_type, variant)
 
     if topic == "derivatives":
-        return _generate_derivatives(random.Random(seed), difficulty, question_type)
+        return _generate_derivatives(random.Random(seed), difficulty, question_type, variant)
 
     if topic == "differential_equations":
-        return _generate_differential_equations(random.Random(seed), difficulty, question_type)
+        return _generate_differential_equations(random.Random(seed), difficulty, question_type, variant)
 
     if topic == "vectors_space":
-        return _generate_vectors_space(random.Random(seed), difficulty, question_type)
+        return _generate_vectors_space(random.Random(seed), difficulty, question_type, variant)
 
     if topic == "conics":
-        return _generate_conics(random.Random(seed), difficulty, question_type)
+        return _generate_conics(random.Random(seed), difficulty, question_type, variant)
 
     if topic == "past_exam":
         return _generate_past_exam(random.Random(seed), difficulty, question_type)
@@ -153,6 +153,7 @@ async def generate(topic="complex", difficulty="medium", seed=None, question_typ
 # ---------------------------------------------------------------------------
 
 _VARIANT_INDEX = None
+_SKILL_FORMULA_INDEX = None
 
 
 def _variants_for(topic, question_type, difficulty):
@@ -162,13 +163,27 @@ def _variants_for(topic, question_type, difficulty):
         return _INDEFINITE_VARIANT_BY_DIFFICULTY.get(difficulty, [])
     if topic == "limit":
         return _LIMIT_TECHNIQUES_BY_DIFFICULTY.get(difficulty, [])
-    if topic == "probability":
+    if topic == "probability" and question_type == "probability":
         return list(scenarios.VARIANT_BY_DIFFICULTY.get(difficulty, ()))
-    return [None]
+    # Curated topics (and probability's counting pool) discriminate on a field
+    # of their own — the skill catalog already enumerates those, so reuse it
+    # rather than re-deriving the same lists here.
+    from .skills import skills_for_topic
+    variants = [
+        s["variant"] for s in skills_for_topic(topic)
+        if s["question_type"] == question_type and s["variant"] and s["difficulty"] == difficulty
+    ]
+    return variants or [None]
 
 
-async def _build_variant_index():
-    index: dict[str, list[dict]] = {}
+async def _build_indexes():
+    """One sampling pass, two indexes: formula tag -> generator refs (for
+    "practise this formula") and skill key -> formula tags (for explaining
+    *why* a skill is weak — "you keep missing the quotient rule here")."""
+    from .skills import make_key
+
+    by_formula: dict[str, list[dict]] = {}
+    by_skill: dict[str, list[str]] = {}
     for topic in TOPICS:
         for qt in QUESTION_TYPES_BY_TOPIC.get(topic, ()):
             for difficulty in _VALID_DIFFICULTIES:
@@ -183,16 +198,32 @@ async def _build_variant_index():
                     except Exception:
                         continue
                     ref = {"topic": topic, "question_type": qt, "variant": variant, "difficulty": difficulty}
-                    for tag in solution.get("formula_tags") or []:
-                        index.setdefault(tag, []).append(ref)
-    return index
+                    tags = solution.get("formula_tags") or []
+                    seen = by_skill.setdefault(make_key(topic, qt, variant), [])
+                    for tag in tags:
+                        by_formula.setdefault(tag, []).append(ref)
+                        if tag not in seen:
+                            seen.append(tag)
+    return by_formula, by_skill
+
+
+async def _indexes():
+    global _VARIANT_INDEX, _SKILL_FORMULA_INDEX
+    if _VARIANT_INDEX is None or _SKILL_FORMULA_INDEX is None:
+        _VARIANT_INDEX, _SKILL_FORMULA_INDEX = await _build_indexes()
+    return _VARIANT_INDEX, _SKILL_FORMULA_INDEX
 
 
 async def variants_for_formula(tag: str) -> list[dict]:
     """All (topic, question_type, variant, difficulty) refs that produced a
     question touching formula `tag`, most-recently-built index. Empty list if
     the formula has no known generator variant (e.g. curated-only)."""
-    global _VARIANT_INDEX
-    if _VARIANT_INDEX is None:
-        _VARIANT_INDEX = await _build_variant_index()
-    return _VARIANT_INDEX.get(tag, [])
+    by_formula, _ = await _indexes()
+    return by_formula.get(tag, [])
+
+
+async def formulas_for_skill(key: str) -> list[str]:
+    """The formula tags a skill's questions are known to exercise, in solution
+    order. Empty for a skill whose deterministic sample failed to generate."""
+    _, by_skill = await _indexes()
+    return by_skill.get(key, [])

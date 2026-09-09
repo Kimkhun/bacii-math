@@ -49,12 +49,16 @@ def _build_curated_derivative(item):
     }
 
 
-def _generate_derivatives(rng, difficulty, question_type=None):
+def _generate_derivatives(rng, difficulty, question_type=None, variant=None):
+    """`variant` is "order_1"/"order_2" — first vs second derivative, the only
+    axis the curated pool distinguishes. Unknown variants are ignored."""
     if question_type not in (None, "compute_derivative"):
         raise ValueError(f"question_type {question_type} does not match topic derivatives")
-    pool = [t for t in _DERIVATIVE_CURATED if t.get("difficulty") == difficulty]
-    if not pool:
-        pool = _DERIVATIVE_CURATED
+    pool = _DERIVATIVE_CURATED
+    if variant and variant.startswith("order_"):
+        pool = [t for t in pool if f"order_{t.get('order', 1)}" == variant] or _DERIVATIVE_CURATED
+    by_difficulty = [t for t in pool if t.get("difficulty") == difficulty]
+    pool = by_difficulty or pool
     if not pool:
         raise ValueError(f"no curated derivative exercises for difficulty {difficulty}")
     return _build_curated_derivative(rng.choice(pool))

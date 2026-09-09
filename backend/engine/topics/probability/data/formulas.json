@@ -80,5 +80,17 @@
     "formulas": [
       "P(\\text{at least one white}) = 1 - P(\\text{no white})"
     ]
+  },
+  "counting": {
+    "name_en": "Counting: permutations & combinations",
+    "name_km": "",
+    "weight": 1,
+    "group": "probability",
+    "latex": "C(n,r)=\\binom{n}{r}=\\frac{n!}{r!(n-r)!},\\quad P(n,r)=A_n^r=\\frac{n!}{(n-r)!}",
+    "formulas": [
+      "\\binom{n}{r} = \\binom{n}{n-r}",
+      "P(n,r) = r!\\binom{n}{r}",
+      "n! = n(n-1)\\cdots 1"
+    ]
   }
 }
