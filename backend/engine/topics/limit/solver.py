@@ -473,7 +473,12 @@ def _legacy_inferred_steps(var, x, point, point_latex, expr, result):
     a known `technique` (shouldn't happen once callers always tag one of
     those, but kept as a safety net)."""
     if point in (oo, -oo):
-        return _handle_rational_function_infinity({}, var, x, point, point_latex, expr, result)
+        try:
+            return _handle_rational_function_infinity({}, var, x, point, point_latex, expr, result)
+        except Exception:
+            return [
+                _limit_step("Evaluate the limit at infinity", f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr)} = {latex(result)}\\).", "direct_substitution")
+            ], [{"label": "final value", "value": result, "formula": "direct_substitution"}]
     try:
         direct = simplify(expr.subs(x, point))
     except Exception:
@@ -481,6 +486,7 @@ def _legacy_inferred_steps(var, x, point, point_latex, expr, result):
     if direct is not None and direct.is_finite:
         return _handle_direct_substitution({}, var, x, point, point_latex, expr, result)
     return _handle_factoring_0_0({}, var, x, point, point_latex, expr, result)
+
 
 
 def _solve_limit(params):
