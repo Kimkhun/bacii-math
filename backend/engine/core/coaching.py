@@ -29,6 +29,8 @@ The rules, in the order they usually win:
    easy skills to start on rather than an empty page.
 """
 
+from .skills import DIFFICULTY_RANK, difficulty_rank, teaching_rank
+
 #: Ability below which an attempted skill counts as a weakness.
 WEAK_ABILITY = 0.60
 #: Ability below which a formula counts as a weakness (stricter: a formula miss
@@ -201,18 +203,17 @@ def _unproven_suggestions(skills):
 
 
 def _new_skill_suggestions(skills, topics):
-    rank = {"easy": 0, "medium": 1, "hard": 2}
     candidates = [
         s for s in skills
         if s["practice"] and s["evidence"] <= 0 and (topics.get(s["topic"]) or {}).get("engaged")
     ]
-    candidates.sort(key=lambda s: (rank.get(s["difficulty"], 1), s["key"]))
+    candidates.sort(key=difficulty_rank)
     out = []
     for s in candidates:
         topic = topics.get(s["topic"]) or {}
         out.append({
             "kind": "new_skill",
-            "priority": 14.0 - rank.get(s["difficulty"], 1) * 2.0,
+            "priority": 14.0 - DIFFICULTY_RANK.get(s["difficulty"], 1) * 2.0,
             "title": f"Try {s['label']}",
             "reason": (
                 f"You haven't attempted this one yet — it's part of "
@@ -235,8 +236,7 @@ def _new_topic_suggestions(skills, topics):
     engaged = [t for t in topics.values() if t.get("engaged") and t.get("practice", True)]
     if not engaged or any(t["score"] < TOPIC_SATISFIED for t in engaged):
         return []
-    rank = {"easy": 0, "medium": 1, "hard": 2}
-    for s in sorted(skills, key=lambda s: (rank.get(s["difficulty"], 1), s["key"])):
+    for s in sorted(skills, key=teaching_rank):
         topic = topics.get(s["topic"]) or {}
         if not s["practice"] or topic.get("engaged"):
             continue
@@ -257,9 +257,8 @@ def _new_topic_suggestions(skills, topics):
 
 
 def _first_steps(skills):
-    rank = {"easy": 0, "medium": 1, "hard": 2}
     picks, seen_topics = [], set()
-    for s in sorted(skills, key=lambda s: (rank.get(s["difficulty"], 1), s["key"])):
+    for s in sorted(skills, key=teaching_rank):
         if not s["practice"] or s["topic"] in seen_topics:
             continue
         seen_topics.add(s["topic"])

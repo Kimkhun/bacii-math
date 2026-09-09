@@ -217,6 +217,9 @@ def continuity_variant(params):
     return "find_parameter" if unknown not in (None, "None", "") else "check_at_point"
 
 
+DIFFICULTY_RANK = {"easy": 0, "medium": 1, "hard": 2}
+
+
 def _curated_variants(pool, field):
     """Distinct values of a curated pool's discriminator field, in first-seen
     order, each with the easiest difficulty it appears at (that's the one a
@@ -227,7 +230,7 @@ def _curated_variants(pool, field):
         if value in (None, "", "None"):
             continue
         value = str(value)
-        rank = {"easy": 0, "medium": 1, "hard": 2}.get(item.get("difficulty"), 1)
+        rank = DIFFICULTY_RANK.get(item.get("difficulty"), 1)
         if value not in seen or rank < seen[value][0]:
             seen[value] = (rank, item.get("difficulty", "medium"))
     return [(v, d) for v, (_, d) in seen.items()]
@@ -382,6 +385,36 @@ def practice_topics():
         if s["practice"] and s["topic"] not in seen:
             seen.append(s["topic"])
     return seen
+
+
+#: topic -> its position in the catalog, which follows the order BAC II
+#: teaches them (complex numbers, limits, integrals, ...). Anything that has to
+#: pick "which skill first" should tie-break on this rather than on the key,
+#: or it ends up recommending alphabetically — conics before limits.
+TOPIC_ORDER = {t: i for i, t in enumerate(practice_topics())}
+
+#: skill key -> its position in the catalog, for a stable final tie-break.
+SKILL_ORDER = {s["key"]: i for i, s in enumerate(SKILLS)}
+
+
+def teaching_rank(skill):
+    """Sort key for "what should this student do first": earliest topic in the
+    course, then easiest, then catalog order."""
+    return (
+        TOPIC_ORDER.get(skill["topic"], len(TOPIC_ORDER)),
+        DIFFICULTY_RANK.get(skill["difficulty"], 1),
+        SKILL_ORDER.get(skill["key"], 0),
+    )
+
+
+def difficulty_rank(skill):
+    """Sort key for "what's the gentlest next step": easiest first, then
+    earliest topic in the course."""
+    return (
+        DIFFICULTY_RANK.get(skill["difficulty"], 1),
+        TOPIC_ORDER.get(skill["topic"], len(TOPIC_ORDER)),
+        SKILL_ORDER.get(skill["key"], 0),
+    )
 
 
 def practice_target(key):

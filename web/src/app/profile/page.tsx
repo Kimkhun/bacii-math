@@ -70,7 +70,9 @@ function ActivityStrip({ activity }: { activity: Profile["activity"] }) {
 
   return (
     <div>
-      <div className="flex items-end gap-1 h-12">
+      {/* items-stretch, not items-end: the day columns size the percentage-height
+          bars inside them, and a percentage resolves to 0 against an auto height. */}
+      <div className="flex items-stretch gap-1 h-12">
         {days.map((d) => (
           <div
             key={d.date}
