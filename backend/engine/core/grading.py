@@ -613,6 +613,8 @@ def _judge_monotonicity(expected, user_answer, tol):
         iv = piece.get("interval", "")
         nums = _re.findall(r"-?\d+(?:\.\d+)?", iv)
         has_bounds = all(n in text.replace(" ", "") for n in nums) if nums else True
+        if not has_bounds and _re.search(r"\b(d|domain|ដែន)\b", text):
+            has_bounds = True
         kw = inc_kw if piece.get("direction") == "inc" else dec_kw
         has_kw = any(k in text for k in kw)
         if not (has_bounds and has_kw):
