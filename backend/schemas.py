@@ -24,6 +24,7 @@ class UserOut(BaseModel):
     id: uuid.UUID
     email: str
     plan: str = "free"
+    is_admin: bool = False
     created_at: datetime
 
 
@@ -69,6 +70,12 @@ class ExplainRequest(BaseModel):
 
 class ReplayRequest(BaseModel):
     question_id: uuid.UUID
+
+
+class ExamSubmitRequest(BaseModel):
+    # {question_no (as string, "1".."7"): student's raw work, one asserted
+    # fact per line} — a question the student left blank may be omitted.
+    answers: dict[str, str] = {}
 
 
 class SaveProgressRequest(BaseModel):

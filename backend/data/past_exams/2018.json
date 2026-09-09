@@ -1,0 +1,135 @@
+{
+  "source": {
+    "file": "2018_Question.pdf",
+    "description": "Cambodian BAC II grade-12 exam booklet, math section, WITH the teacher's official graded worked solutions (pages 2-6 of the PDF).",
+    "extracted_by": "manual OCR/transcription from scanned PDF (Claude Code), 2026-09-07"
+  },
+  "exams": [
+    {
+      "exam_date": "2018-08-20",
+      "subject_km": "គណិតវិទ្យា",
+      "subject_en": "Mathematics",
+      "track": "science",
+      "duration_minutes": 150,
+      "total_points": 125,
+      "note": "Printed header reads ' ពិន្ទុ : ១២៥' (125 points; matches backend/data/bacii-exam/limits/2018.json's prior extraction). No per-question point breakdown is printed on the paper itself; the per-question split used by the marking scheme (engine/topics/past_exam/rubric.py) — I:10, II:15, III:15, IV:15, V:25, VI:10, VII:35, summing to 125 — was supplied directly rather than derived from the source.",
+      "sections": [
+        {
+          "id": "I",
+          "title_km": "ប្រូបាបប៊ីលីតេ",
+          "title_en": "Probability / counting",
+          "given_km": "ក្នុងប្រអប់មួយមានឡុងពណ៌ស 2, ពណ៌ក្រហម 4, ពណ៌ខៀវ 4។ ចាប់ 3 ព្រមគ្នាដោយចៃដន្យ។",
+          "given_en": "A box has 2 white, 4 red, and 4 blue balls. Draw 3 simultaneously at random.",
+          "engine": {"topic": "past_exam", "question_type": "2018_q1"},
+          "questions": [
+            {"label": "A", "prompt_en": "P(A): all 3 balls are red.", "answer_latex": "P(A)=\\frac{1}{30}"},
+            {"label": "B", "prompt_en": "P(B): at least 2 of the 3 balls are blue.", "answer_latex": "P(B)=\\frac{1}{3}"},
+            {"label": "C", "prompt_en": "P(C): the 3 balls are all different colors.", "answer_latex": "P(C)=\\frac{4}{15}"}
+          ]
+        },
+        {
+          "id": "II",
+          "title_km": "គណនាលីមីត",
+          "title_en": "Compute the limits",
+          "engine": {"topic": "limit", "question_type": "limit",
+                      "note": "Already live in engine/topics/limit/data/curated/{factoring_0_0,sinc_standard_limit,angle_addition_0_0}.json, ids 2018a/2018b/2018c, from a prior extraction pass."},
+          "questions": [
+            {"label": "a", "prompt_latex": "\\lim_{x\\to 1} \\frac{x^2(x-2)+x^2+x-1}{1-x}", "answer_latex": "-2"},
+            {"label": "b", "prompt_latex": "\\lim_{x\\to 0} \\frac{-2x}{\\sin 3x}", "answer_latex": "-\\frac{2}{3}"},
+            {"label": "c", "prompt_latex": "\\lim_{x\\to \\frac{\\pi}{3}} \\frac{\\sin x - \\sqrt{3}\\cos x}{2(\\pi-3x)}", "answer_latex": "-\\frac{1}{3}"}
+          ]
+        },
+        {
+          "id": "III",
+          "title_km": "កំណត់ចំនួនកុំផ្លិច",
+          "title_en": "Complex numbers",
+          "given_latex": "z_1 = 3+3i\\sqrt3,\\quad z_2 = \\sqrt3+i",
+          "engine": {"topic": "past_exam", "question_type": "2018_q3",
+                      "note": "Irrational (sqrt) coefficients are outside the existing complex topic's plain-integer a+bi solver."},
+          "questions": [
+            {"label": "a", "prompt_en": "Compute z1*z2 and z1/z2.",
+             "answer_latex": "z_1 z_2 = 12i,\\quad \\frac{z_1}{z_2} = \\frac{3\\sqrt3}{2}+\\frac{3}{2}i"},
+            {"label": "b", "prompt_en": "Write z1*z2 and (z1/z2)^2 in trigonometric form.",
+             "answer_latex": "z_1 z_2 = 12\\left(\\cos\\frac{\\pi}{2}+i\\sin\\frac{\\pi}{2}\\right),\\quad \\left(\\frac{z_1}{z_2}\\right)^2 = 9\\left(\\cos\\frac{\\pi}{3}+i\\sin\\frac{\\pi}{3}\\right)"},
+            {"label": "c", "prompt_en": "Write (z1/z2)^3 in algebraic form.",
+             "answer_latex": "\\left(\\frac{z_1}{z_2}\\right)^3 = 27i"}
+          ]
+        },
+        {
+          "id": "IV",
+          "title_km": "គណនាអាំងតេក្រាល",
+          "title_en": "Compute the integrals",
+          "engine": {"topic": "integral", "question_type": "definite_integral",
+                      "note": "Generic definite-integral solver; no curated-bank wiring needed (matches how integrals are treated elsewhere in this repo)."},
+          "questions": [
+            {"label": "I", "prompt_latex": "I=\\int_1^2 (2-x+x^2)\\,dx", "answer_latex": "I=\\frac{17}{6}"},
+            {"label": "J", "prompt_latex": "J=\\int_0^{\\pi/4} \\left(\\cos 2x - \\frac12\\cos 4x\\right)dx", "answer_latex": "J=\\frac{1}{2}"},
+            {"label": "K", "prompt_latex": "K=\\int_2^3 \\left(3x-2+\\frac{1}{x-1}\\right)dx", "answer_latex": "K=\\frac{11}{2}+\\ln 2"}
+          ]
+        },
+        {
+          "id": "V",
+          "title_km": "វិចលនិងធរណីមាត្រវិភាគ",
+          "title_en": "3D vectors and a conic",
+          "given_latex": "A(1,2,3),\\ B(3,0,1),\\ C(-1,0,1),\\ D(2,1,2)",
+          "engine_a": {"topic": "past_exam", "question_type": "2018_q5_vectors",
+                        "note": "Raw vector/point answers aren't a shape the existing vectors_space topic's ops return (they return a scalar magnitude/dot/area); graded via the new 'vector' answer_kind added to engine/core/grading.py."},
+          "questions_a": [
+            {"label": "1", "prompt_en": "Find AB, AC, AD, BC.",
+             "answer_latex": "\\overrightarrow{AB}=(2,-2,-2),\\ \\overrightarrow{AC}=(-2,-2,-2),\\ \\overrightarrow{AD}=(1,-1,-1),\\ \\overrightarrow{BC}=(-4,0,0)"},
+            {"label": "2", "prompt_en": "Show A, B, C are not collinear.",
+             "answer_latex": "\\overrightarrow{AB}\\times\\overrightarrow{AC} = (0,8,-8) \\neq \\vec 0"},
+            {"label": "3", "prompt_en": "Show n=(0,1,-1) is a normal vector of plane ABC.",
+             "answer_latex": "\\vec n\\cdot\\overrightarrow{AB}=0,\\quad \\vec n\\cdot\\overrightarrow{AC}=0"}
+          ],
+          "given_latex_b": "(2x+3y)^2 = 12(xy+3)",
+          "engine_b": {"topic": "past_exam", "question_type": "2018_q5_conic",
+                        "note": "This equation's own algebra cancels every cross/linear term once expanded (a centered, axis-aligned ellipse) -- a bespoke reduction, not the general parabola/ellipse/hyperbola classifier already owned by the 'conics' topic."},
+          "questions_b": [
+            {"label": "1", "prompt_en": "Reduce to standard form; find a, b.",
+             "answer_latex": "\\frac{x^2}{9}+\\frac{y^2}{4}=1,\\quad a=3,\\ b=2"},
+            {"label": "2", "prompt_en": "Find the two vertices.", "answer_latex": "V_1(-3,0),\\ V_2(3,0)"}
+          ]
+        },
+        {
+          "id": "VI",
+          "title_km": "សមីការឌីផេរង់ស្យែល",
+          "title_en": "Differential equation",
+          "given_latex": "(E):\\ y''+4y' = 5y,\\quad y(0)=3,\\ y'(0)=-3",
+          "engine": {"topic": "differential_equations", "question_type": "solve_ode",
+                      "params": {"kind": "second_order_homogeneous_constant_coeff", "b": 4, "c": -5,
+                                  "ics": {"x0": 0, "y0": 3, "yp0": -3}},
+                      "note": "Existing topic already supports this kind + initial conditions verbatim."},
+          "questions": [
+            {"label": "a", "prompt_en": "Solve (E) (general solution).",
+             "answer_latex": "y = Ae^{x}+Be^{-5x},\\quad A,B\\in\\mathbb{R}"},
+            {"label": "b", "prompt_en": "Find the particular solution given y(0)=3, y'(0)=-3.",
+             "answer_latex": "y = 2e^{x}+e^{-5x}"}
+          ]
+        },
+        {
+          "id": "VII",
+          "title_km": "អនុគមន៍",
+          "title_en": "Function study",
+          "given_latex": "f(x) = -x+4+\\ln\\!\\left(\\frac{x+1}{x-1}\\right),\\quad x>1",
+          "engine": {"topic": "past_exam", "question_type": "2018_q7",
+                      "note": "The exam restricts the domain to (1,+oo) by fiat (the expression's own natural domain is (-oo,-1) U (1,oo)); the existing functions topic derives domain purely from the expression and doesn't support an external restriction, and doesn't support a polynomial-plus-log expr shape for its monotonicity/position machinery."},
+          "questions": [
+            {"label": "k", "prompt_en": "Limits of f at 1+ and +oo.",
+             "answer_latex": "\\lim_{x\\to1^+}f(x)=+\\infty,\\quad \\lim_{x\\to+\\infty}f(x)=-\\infty"},
+            {"label": "kh", "prompt_en": "Show f'(x); show f is decreasing on (1,+oo); build the variation table.",
+             "answer_latex": "f'(x) = \\frac{-(x^2+1)}{(x+1)(x-1)} < 0 \\text{ on } (1,+\\infty)"},
+            {"label": "got.1", "prompt_en": "Show d1: y=-x+4 is an asymptote of C as x->+oo.",
+             "answer_latex": "d_1:\\ y=-x+4"},
+            {"label": "got.2", "prompt_en": "Show (x+1)/(x-1)>1 on (1,+oo); deduce the position of C relative to d1.",
+             "answer_latex": "\\text{C lies above } d_1 \\text{ on all of } (1,+\\infty)"},
+            {"label": "gn", "prompt_en": "Find the point where the tangent d2 has slope -5/3; write d2's equation.",
+             "answer_latex": "(x_0,y_0)=(2,\\,2+\\ln3),\\quad d_2:\\ y=-\\frac{5}{3}x+\\frac{16}{3}+\\ln3"},
+            {"label": "ng", "prompt_en": "Sketch C with d1 and d2 (ln3~1.1; C crosses the x-axis near (4.5,0)).",
+             "answer_latex": "\\text{(sketch — not machine-graded)}"}
+          ]
+        }
+      ]
+    }
+  ]
+}

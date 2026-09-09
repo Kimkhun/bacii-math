@@ -16,11 +16,15 @@ export default function Navbar() {
         </Link>
         {user && (
           <div className="flex items-center gap-4 text-sm">
+            <Link href="/profile" className="text-slate-600 hover:text-slate-900">Profile</Link>
             <Link href="/practice" className="text-slate-600 hover:text-slate-900">Practice</Link>
+            <Link href="/exam" className="text-slate-600 hover:text-slate-900">Exam mode</Link>
             <Link href="/history" className="text-slate-600 hover:text-slate-900">History</Link>
             <Link href="/stats" className="text-slate-600 hover:text-slate-900">Stats</Link>
             <Link href="/formulas" className="text-slate-600 hover:text-slate-900">Formulas</Link>
-            <Link href="/admin" className="text-slate-600 hover:text-slate-900">Admin</Link>
+            {user.is_admin && (
+              <Link href="/admin" className="text-slate-600 hover:text-slate-900">Admin</Link>
+            )}
           </div>
         )}
         <div className="ml-auto flex items-center gap-3 text-sm">

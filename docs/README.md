@@ -11,6 +11,7 @@
 | `exam-data.md` | The limits exam bank + integral extraction sets, verify scripts, container-mount caveats, the formula catalog files |
 | `sounds-and-streaks.md` | Web Audio grade sounds, rising-pitch combo, streak persistence, when each sound fires |
 | `topic-probability.md` | Probability topic: structure-first solvers + user-owned Khmer scenario catalog (built, from real exam problems) |
+| `skill-progress.md` | Student profile: the per-skill mastery tracker, the 0-100 level formula, topic roll-up, and the practice-suggestion rules |
 
 ## How-to docs (extending)
 

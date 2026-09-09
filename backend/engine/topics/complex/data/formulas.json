@@ -1,0 +1,101 @@
+{
+  "complex_addition": {
+    "name_en": "Add complex numbers",
+    "name_km": "",
+    "weight": 1,
+    "group": "complex",
+    "latex": "(a+bi)+(c+di) = (a+c)+(b+d)i",
+    "formulas": []
+  },
+  "complex_subtraction": {
+    "name_en": "Subtract complex numbers",
+    "name_km": "",
+    "weight": 1,
+    "group": "complex",
+    "latex": "(a+bi)-(c+di) = (a-c)+(b-d)i",
+    "formulas": []
+  },
+  "complex_multiplication": {
+    "name_en": "Multiply complex numbers",
+    "name_km": "",
+    "weight": 2,
+    "group": "complex",
+    "latex": "(a+bi)(c+di) = (ac-bd)+(ad+bc)i",
+    "formulas": [
+      "i^2=-1"
+    ]
+  },
+  "complex_division": {
+    "name_en": "Divide complex numbers",
+    "name_km": "",
+    "weight": 2,
+    "group": "complex",
+    "latex": "\\frac{z_1}{z_2} = \\frac{z_1\\bar{z_2}}{|z_2|^2}",
+    "formulas": [
+      "\\bar{z}=a-bi",
+      "z\\bar{z}=a^2+b^2"
+    ]
+  },
+  "binomial_expansion_i_squared": {
+    "name_en": "Expand a power using i² = −1",
+    "name_km": "",
+    "weight": 2,
+    "group": "complex",
+    "latex": "(a+bi)^n = \\sum_k \\binom{n}{k}a^{n-k}(bi)^k",
+    "formulas": [
+      "i^2=-1",
+      "i^3=-i",
+      "i^4=1"
+    ]
+  },
+  "trig_form_conversion": {
+    "name_en": "Convert to trigonometric form",
+    "name_km": "",
+    "weight": 2,
+    "group": "complex",
+    "latex": "z = r(\\cos\\theta + i\\sin\\theta),\\ r=|z|,\\ \\theta=\\arg z",
+    "formulas": []
+  },
+  "trig_to_algebraic": {
+    "name_en": "Back to algebraic form",
+    "name_km": "",
+    "weight": 1,
+    "group": "complex",
+    "latex": "r(\\cos\\theta+i\\sin\\theta) = r\\cos\\theta + i\\,r\\sin\\theta",
+    "formulas": []
+  },
+  "de_moivre_formula": {
+    "name_en": "De Moivre's formula",
+    "name_km": "",
+    "weight": 3,
+    "group": "complex",
+    "latex": "\\left[r(\\cos\\theta+i\\sin\\theta)\\right]^n = r^n(\\cos n\\theta + i\\sin n\\theta)",
+    "formulas": []
+  },
+  "de_moivre": {
+    "name_en": "De Moivre's formula",
+    "name_km": "",
+    "weight": 3,
+    "group": "complex",
+    "latex": "\\left[r(\\cos\\theta+i\\sin\\theta)\\right]^n = r^n(\\cos n\\theta + i\\sin n\\theta)",
+    "formulas": []
+  },
+  "angle_reduction_mod_2pi": {
+    "name_en": "Reduce an angle modulo 2π",
+    "name_km": "",
+    "weight": 1,
+    "group": "complex",
+    "latex": "\\theta \\equiv \\theta - 2k\\pi \\pmod{2\\pi}",
+    "formulas": []
+  },
+  "nth_root_formula": {
+    "name_en": "n-th roots of a complex number",
+    "name_km": "",
+    "weight": 3,
+    "group": "complex",
+    "latex": "z_k = \\sqrt[n]{r}\\left(\\cos\\frac{\\theta+2k\\pi}{n} + i\\sin\\frac{\\theta+2k\\pi}{n}\\right)",
+    "formulas": [
+      "k = 0, 1, \\ldots, n-1"
+    ]
+  }
+}

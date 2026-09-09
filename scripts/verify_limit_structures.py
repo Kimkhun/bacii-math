@@ -5,8 +5,8 @@ Unlike integrals, most limit techniques are tied to a specific algebraic
 identity rather than free coefficients, so there is no single parameterized
 "shape" per technique. Instead this script verifies:
 
-  1. Every curated BAC II limit exercise (backend/data/limits/*.json) maps to
-     a technique in `structures.LIMIT_TECHNIQUES`, and SymPy re-solving it
+  1. Every curated BAC II limit exercise (engine/topics/limit/data/curated/*.json)
+     maps to a technique in `structures.LIMIT_TECHNIQUES`, and SymPy re-solving it
      matches the recorded `answer_latex` (one broken source exercise, an
      implicit "find a" ask rather than a plain limit, is excluded).
   2. Every parameterizable technique's generator sampler produces a valid,
@@ -29,9 +29,10 @@ sys.path.insert(0, os.path.abspath(BACKEND))
 
 from sympy import N, latex, nsimplify, simplify  # noqa: E402
 
-from engine import generator, grader, solver, structures  # noqa: E402
-from engine.generator.limits import generate_limit_for_technique  # noqa: E402
-from engine.solver.limits import _solve_limit  # noqa: E402
+from engine import generator, grader, solver  # noqa: E402
+from engine.topics.limit import structures  # noqa: E402
+from engine.topics.limit.generator import generate_limit_for_technique  # noqa: E402
+from engine.topics.limit.solver import _solve_limit  # noqa: E402
 
 EXCLUDED = {
     "2024b": "implicit 'find a' ask (lim ... = 1, find a) rather than a plain limit — doesn't round-trip through parse_latex",
@@ -44,7 +45,7 @@ def _excluded_techniques():
     counts as having a (documented) source instead of failing the coverage
     check."""
     out = {}
-    for fpath in sorted(glob.glob(os.path.join(BACKEND, "data", "limits", "*.json"))):
+    for fpath in sorted(glob.glob(os.path.join(BACKEND, "engine", "topics", "limit", "data", "curated", "*.json"))):
         try:
             data = json.load(open(fpath, encoding="utf-8"))
         except (OSError, json.JSONDecodeError):

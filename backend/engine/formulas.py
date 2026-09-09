@@ -142,25 +142,24 @@ _FORMULA_REGISTRY_BUILTIN = {
 
 # --- catalog overlays (editable content, loaded from JSON) ---
 
+import glob
 import json
 import os
 
-_CATALOG_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "formulas")
+_TOPICS_DIR = os.path.join(os.path.dirname(__file__), "topics")
 
 
 def _load_catalog_overlays():
-    """Load backend/data/formulas/*.json and merge each entry over the built-in
-    registry. This is where formula content (names, translations, LaTeX, the
-    per-technique formula lists) lives so it can be edited without touching
-    Python. Malformed files/entries are skipped; built-ins remain the fallback."""
+    """Load each topic's engine/topics/<topic>/data/formulas.json (where
+    present) and merge every entry over the built-in registry. This is where
+    formula content (names, translations, LaTeX, the per-technique formula
+    lists) lives so it can be edited without touching Python. Malformed
+    files/entries are skipped; built-ins remain the fallback."""
     merged = {}
-    try:
-        files = sorted(f for f in os.listdir(_CATALOG_DIR) if f.endswith(".json"))
-    except OSError:
-        files = []
-    for fname in files:
+    fpaths = sorted(glob.glob(os.path.join(_TOPICS_DIR, "*", "data", "formulas.json")))
+    for fpath in fpaths:
         try:
-            with open(os.path.join(_CATALOG_DIR, fname), encoding="utf-8") as f:
+            with open(fpath, encoding="utf-8") as f:
                 data = json.load(f)
         except (OSError, json.JSONDecodeError):
             continue

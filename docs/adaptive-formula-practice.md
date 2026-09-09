@@ -15,7 +15,7 @@ sprint later.
 - **Variant forcing** — `generator.generate(..., variant=...)` can force a
   specific variant (e.g. `u_substitution`, `by_parts`, `split`). Used by the
   admin `/templates` inventory only; the engine is already capable.
-- Formula registry (`backend/data/formulas/*.json` + built-ins) with
+- Formula registry (each topic's `backend/engine/topics/<topic>/data/formulas.json` + built-ins) with
   `name_en`/`name_km`/`latex`/`weight` per technique id.
 
 ## The gaps this plan closes

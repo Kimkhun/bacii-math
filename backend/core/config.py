@@ -12,6 +12,12 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7
 
+    # Seeded on startup as the one admin account (upserted by email each boot,
+    # so rotating ADMIN_PASSWORD in .env re-hashes and takes effect on the next
+    # restart). Leave both blank to skip seeding entirely.
+    admin_email: str = ""
+    admin_password: str = ""
+
     gemini_project: str = ""
     gemini_location: str = "global"
     gemini_model: str = "gemini-3.5-flash"

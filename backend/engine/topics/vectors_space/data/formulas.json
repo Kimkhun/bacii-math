@@ -1,0 +1,35 @@
+{
+  "vector_ops": {
+    "name_en": "Vector operations in space",
+    "name_km": "",
+    "weight": 1,
+    "group": "vectors_space",
+    "latex": "\\overrightarrow{AB} = (x_B-x_A,\\ y_B-y_A,\\ z_B-z_A)",
+    "formulas": [
+      "|\\vec u| = \\sqrt{x^2+y^2+z^2}",
+      "AB = |\\overrightarrow{AB}|"
+    ]
+  },
+  "dot_product": {
+    "name_en": "Dot product",
+    "name_km": "",
+    "weight": 1,
+    "group": "vectors_space",
+    "latex": "\\vec u\\cdot\\vec v = x_1x_2 + y_1y_2 + z_1z_2",
+    "formulas": [
+      "\\vec u\\cdot\\vec v = |\\vec u||\\vec v|\\cos\\theta",
+      "\\vec u\\perp\\vec v \\iff \\vec u\\cdot\\vec v = 0"
+    ]
+  },
+  "cross_product": {
+    "name_en": "Cross product",
+    "name_km": "",
+    "weight": 2,
+    "group": "vectors_space",
+    "latex": "\\vec u\\times\\vec v = (y_1z_2-z_1y_2,\\ z_1x_2-x_1z_2,\\ x_1y_2-y_1x_2)",
+    "formulas": [
+      "|\\vec u\\times\\vec v| = |\\vec u||\\vec v|\\sin\\theta",
+      "\\text{area}(ABC) = \\tfrac12\\left|\\overrightarrow{AB}\\times\\overrightarrow{AC}\\right|"
+    ]
+  }
+}

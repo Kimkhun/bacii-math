@@ -17,7 +17,8 @@ import zlib
 BACKEND = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "backend")
 sys.path.insert(0, os.path.abspath(BACKEND))
 
-from engine import grader, structures  # noqa: E402  (sympy-only deps)
+from engine import grader  # noqa: E402  (sympy-only deps)
+from engine.topics.integral import structures  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from integrals_part1 import PART1, PART2  # noqa: E402

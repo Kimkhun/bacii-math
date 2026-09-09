@@ -2,8 +2,8 @@ fastapi
 uvicorn[standard]
 sympy
 # Must match the antlr grammar version sympy.parsing.latex.parse_latex was generated against (4.11 for
-# sympy 1.14.x) — a version mismatch raises ImportError, which structures.py's curated-limit loader
-# silently swallows, so a bump to `sympy` above needs a matching bump here too.
+# sympy 1.14.x) — a version mismatch raises ImportError, which engine/topics/limit/structures.py's
+# curated-limit loader silently swallows, so a bump to `sympy` above needs a matching bump here too.
 antlr4-python3-runtime==4.11
 requests
 google-genai

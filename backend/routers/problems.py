@@ -4,9 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import services
-from core.deps import get_current_user, get_db
+from core.deps import get_current_admin_user, get_current_user, get_db
 from models import User
-from schemas import ExplainRequest, GenerateRequest, GradeGraphRequest, GradeRequest, ReplayRequest, SaveProgressRequest
+from schemas import (
+    ExamSubmitRequest, ExplainRequest, GenerateRequest, GradeGraphRequest, GradeRequest, ReplayRequest,
+    SaveProgressRequest,
+)
 
 router = APIRouter(prefix="/problems", tags=["problems"])
 me_router = APIRouter(tags=["history"])
@@ -52,6 +55,16 @@ async def grade_graph(
     db: AsyncSession = Depends(get_db),
 ):
     return await services.grade_graph_drawing(db, user, req.question_id, req.strokes_thumb)
+
+
+@router.get("/exam/{exam_id}")
+async def get_exam(exam_id: str, user: User = Depends(get_current_user)):
+    return await services.get_exam(exam_id)
+
+
+@router.post("/exam/{exam_id}/submit")
+async def submit_exam(exam_id: str, req: ExamSubmitRequest, user: User = Depends(get_current_user)):
+    return await services.submit_exam(exam_id, req.answers)
 
 
 @router.post("/explain")
@@ -138,28 +151,28 @@ async def formulas(user: User = Depends(get_current_user), db: AsyncSession = De
 
 
 @me_router.get("/templates")
-async def templates(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def templates(user: User = Depends(get_current_admin_user), db: AsyncSession = Depends(get_db)):
     return await services.get_template_inventory()
 
 
 @me_router.get("/templates/structures")
 async def template_structures(
     topic: str | None = None,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     return await services.get_template_structures(topic=topic)
 
 
 @me_router.get("/templates/summary")
-async def template_summary(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def template_summary(user: User = Depends(get_current_admin_user), db: AsyncSession = Depends(get_db)):
     return await services.get_template_summary()
 
 
 @me_router.post("/templates/structures/regenerate")
 async def regenerate_template_structure(
     req: dict,
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     structure_id = req.get("structure_id")

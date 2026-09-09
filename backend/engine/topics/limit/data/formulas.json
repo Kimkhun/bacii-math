@@ -1,0 +1,155 @@
+{
+  "factoring_0_0": {
+    "name_en": "Factor a 0/0 indeterminate form",
+    "name_km": "",
+    "weight": 1,
+    "group": "limit",
+    "latex": "\\lim_{x\\to a}\\frac{(x-a)P(x)}{(x-a)Q(x)} = \\lim_{x\\to a}\\frac{P(x)}{Q(x)}",
+    "formulas": [
+      "x^2-a^2=(x-a)(x+a)",
+      "x^3-a^3=(x-a)(x^2+ax+a^2)"
+    ]
+  },
+  "rational_function_infinity": {
+    "name_en": "Rational function at infinity",
+    "name_km": "",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\lim_{x\\to\\infty}\\frac{a_nx^n+\\cdots}{b_mx^m+\\cdots}",
+    "formulas": [
+      "n=m \\Rightarrow \\frac{a_n}{b_m}",
+      "n<m \\Rightarrow 0",
+      "n>m \\Rightarrow \\pm\\infty"
+    ]
+  },
+  "sinc_standard_limit": {
+    "name_en": "Standard limit sin(x)/x",
+    "name_km": "",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\lim_{x\\to 0}\\frac{\\sin x}{x} = 1",
+    "formulas": [
+      "\\lim_{x\\to 0}\\frac{\\sin kx}{kx}=1",
+      "\\lim_{x\\to 0}\\frac{\\tan x}{x}=1",
+      "\\lim_{x\\to 0}\\frac{1-\\cos x}{x^2}=\\frac{1}{2}"
+    ]
+  },
+  "exponential_standard_limit": {
+    "name_en": "Standard limit (eˣ−1)/x",
+    "name_km": "",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\lim_{x\\to 0}\\frac{e^{x}-1}{x} = 1",
+    "formulas": [
+      "\\lim_{x\\to 0}\\frac{e^{ax}-1}{ax}=1",
+      "\\lim_{x\\to 0}\\frac{\\ln(1+x)}{x}=1"
+    ]
+  },
+  "rationalization_conjugate_finite": {
+    "name_en": "Rationalise with the conjugate",
+    "name_km": "",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\frac{\\sqrt{A}-B}{C}\\cdot\\frac{\\sqrt{A}+B}{\\sqrt{A}+B} = \\frac{A-B^2}{C(\\sqrt{A}+B)}",
+    "formulas": [
+      "(\\sqrt{A}-B)(\\sqrt{A}+B) = A-B^2"
+    ]
+  },
+  "conjugate_infinity": {
+    "name_en": "Conjugate trick at infinity",
+    "name_km": "",
+    "weight": 3,
+    "group": "limit",
+    "latex": "\\sqrt{A}-B = \\frac{A-B^2}{\\sqrt{A}+B}",
+    "formulas": [
+      "\\lim_{x\\to\\infty}\\left(\\sqrt{a^2x^2+bx+c}-(ax+d)\\right)=\\frac{b-2ad}{2a}"
+    ]
+  },
+  "trig_identity_0_0": {
+    "name_en": "Trig identity on a 0/0 form",
+    "name_km": "",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\sin^2 x + \\cos^2 x = 1",
+    "formulas": [
+      "1-\\cos 2x = 2\\sin^2 x",
+      "\\sin 2x = 2\\sin x\\cos x"
+    ]
+  },
+  "angle_addition_0_0": {
+    "name_en": "Angle-addition identity",
+    "name_km": "",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\sin(a\\pm b) = \\sin a\\cos b \\pm \\cos a\\sin b",
+    "formulas": [
+      "\\cos(a\\pm b)=\\cos a\\cos b \\mp \\sin a\\sin b",
+      "\\sin x-\\sqrt3\\cos x = 2\\sin\\left(x-\\frac{\\pi}{3}\\right)"
+    ]
+  },
+  "rationalization_sinc_combo": {
+    "name_en": "Conjugate + sin(x)/x combined",
+    "name_km": "",
+    "weight": 3,
+    "group": "limit",
+    "latex": "\\lim_{x\\to 0}\\frac{\\sqrt{a+x}-\\sqrt{a-x}}{\\sin kx}",
+    "formulas": [
+      "\\frac{\\sqrt{A}-\\sqrt{B}}{C}=\\frac{A-B}{C(\\sqrt{A}+\\sqrt{B})}",
+      "\\lim_{x\\to 0}\\frac{\\sin kx}{kx}=1"
+    ]
+  },
+  "exponential_sinc_combo": {
+    "name_en": "Exponential + sin(x)/x combined",
+    "name_km": "",
+    "weight": 3,
+    "group": "limit",
+    "latex": "\\lim_{x\\to 0}\\frac{(e^{ax}+e^{-ax})\\sin^2 kx}{2x^2}",
+    "formulas": [
+      "\\lim_{x\\to 0}\\frac{\\sin kx}{kx}=1",
+      "e^{0}=1"
+    ]
+  },
+  "half_angle_sinc_combo": {
+    "name_en": "Half-angle + sin(x)/x combined",
+    "name_km": "",
+    "weight": 3,
+    "group": "limit",
+    "latex": "1-\\cos mx = 2\\sin^2\\frac{mx}{2}",
+    "formulas": [
+      "\\lim_{x\\to 0}\\frac{1-\\cos mx}{x^2}=\\frac{m^2}{2}",
+      "\\lim_{x\\to 0}\\frac{\\sin kx}{kx}=1"
+    ]
+  },
+  "log_limit_infinity": {
+    "name_en": "Logarithmic limit at infinity",
+    "name_km": "",
+    "weight": 3,
+    "group": "limit",
+    "latex": "\\lim_{x\\to\\infty} x\\ln\\left(1+\\frac{k}{x}\\right) = k",
+    "formulas": [
+      "\\ln a-\\ln b=\\ln\\frac{a}{b}",
+      "\\lim_{t\\to 0}\\frac{\\ln(1+t)}{t}=1"
+    ]
+  },
+  "log_limit_zero": {
+    "name_en": "Logarithmic limit at 0",
+    "name_km": "",
+    "weight": 3,
+    "group": "limit",
+    "latex": "\\lim_{x\\to 0}\\frac{\\ln(1+x)}{x} = 1",
+    "formulas": [
+      "\\ln(1+x)\\sim x \\text{ as } x\\to 0"
+    ]
+  },
+  "indeterminate_one_infinity": {
+    "name_en": "Indeterminate form 1^∞",
+    "name_km": "",
+    "weight": 3,
+    "group": "limit",
+    "latex": "\\lim_{x\\to\\infty}\\left(1+\\frac{k}{x}\\right)^{x} = e^{k}",
+    "formulas": [
+      "u^{v}=e^{v\\ln u}",
+      "\\lim_{t\\to 0}(1+t)^{1/t}=e"
+    ]
+  }
+}

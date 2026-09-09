@@ -1,0 +1,47 @@
+[
+  {
+    "question_type": "2018_q1",
+    "exam_id": "2018",
+    "label": "Question I — probability/counting",
+    "difficulty": "hard",
+    "params": {"white": 2, "red": 4, "blue": 4, "draw": 3},
+    "prompt": "A box has 2 white, 4 red, and 4 blue balls. Draw 3 balls simultaneously at random. A: all 3 red. B: at least 2 blue. C: all 3 different colors. Find P(A), P(B), P(C).",
+    "prompt_latex": "\\text{A box has 2 white, 4 red, 4 blue balls. Draw 3 at random.}\\\\A:\\text{ all 3 red}\\quad B:\\text{ at least 2 blue}\\quad C:\\text{ all different colors}"
+  },
+  {
+    "question_type": "2018_q3",
+    "exam_id": "2018",
+    "label": "Question III — complex numbers",
+    "difficulty": "hard",
+    "params": {"z1_re": "3", "z1_im": "3*sqrt(3)", "z2_re": "sqrt(3)", "z2_im": "1"},
+    "prompt": "z1 = 3 + 3i*sqrt(3), z2 = sqrt(3) + i. Compute z1*z2, z1/z2; write z1*z2 and (z1/z2)^2 in trig form; write (z1/z2)^3 in algebraic form.",
+    "prompt_latex": "z_1 = 3+3i\\sqrt3,\\ z_2=\\sqrt3+i"
+  },
+  {
+    "question_type": "2018_q5_vectors",
+    "exam_id": "2018",
+    "label": "Question V(a) — 3D vectors",
+    "difficulty": "hard",
+    "params": {"A": [1, 2, 3], "B": [3, 0, 1], "C": [-1, 0, 1], "D": [2, 1, 2], "n": [0, 1, -1]},
+    "prompt": "A(1,2,3), B(3,0,1), C(-1,0,1), D(2,1,2). Find AB, AC, AD, BC. Show A,B,C are not collinear. Verify n=(0,1,-1) is normal to plane ABC.",
+    "prompt_latex": "A(1,2,3),\\ B(3,0,1),\\ C(-1,0,1),\\ D(2,1,2)"
+  },
+  {
+    "question_type": "2018_q5_conic",
+    "exam_id": "2018",
+    "label": "Question V(b) — conic",
+    "difficulty": "hard",
+    "params": {"expr": "(2*x+3*y)**2 - 12*(x*y+3)"},
+    "prompt": "Reduce (2x+3y)^2 = 12(xy+3) to standard form; find a, b and the two vertices.",
+    "prompt_latex": "(2x+3y)^2 = 12(xy+3)"
+  },
+  {
+    "question_type": "2018_q7",
+    "exam_id": "2018",
+    "label": "Question VII — function study",
+    "difficulty": "hard",
+    "params": {"expr": "-x+4+log((x+1)/(x-1))", "domain_lo": "1", "tangent_slope": "-5/3"},
+    "prompt": "f(x) = -x+4+ln((x+1)/(x-1)), domain (1,+oo). Limits at 1+ and +oo; show f decreasing; find the oblique asymptote d1 and the tangent d2 with slope -5/3.",
+    "prompt_latex": "f(x) = -x+4+\\ln\\!\\left(\\frac{x+1}{x-1}\\right),\\quad x>1"
+  }
+]
