@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Canvas, { CanvasHandle, CanvasTool, PEN_WIDTHS } from "@/components/Canvas";
 import MathText from "@/components/MathText";
 import MathKeypad from "@/components/MathKeypad";
 import { api, SandboxGradeResult, SandboxSolveResult, TemplateSummary } from "@/lib/api";
@@ -40,6 +41,11 @@ export default function AdminSandbox({ summary }: { summary: TemplateSummary | n
   const [newKey, setNewKey] = useState("");
 
   const [lines, setLines] = useState("");
+
+  const canvasRef = useRef<CanvasHandle | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [tool, setToolState] = useState<CanvasTool>("pen");
+  const [detectBusy, setDetectBusy] = useState(false);
 
   const [sampleBusy, setSampleBusy] = useState(false);
   const [solveBusy, setSolveBusy] = useState(false);
@@ -130,6 +136,59 @@ export default function AdminSandbox({ summary }: { summary: TemplateSummary | n
       setError(err instanceof Error ? err.message : "Grade failed");
     } finally {
       setGradeBusy(false);
+    }
+  };
+
+  // --- handwriting canvas: pen input, pasted/uploaded images, and OCR into
+  // the "Test grading" lines box, mirroring practice/page.tsx's flow but in
+  // a small embedded (non-fullscreen) box instead of a fullscreen canvas.
+  const selectTool = (t: CanvasTool) => {
+    setToolState(t);
+    canvasRef.current?.setTool(t);
+  };
+
+  const onFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      canvasRef.current?.loadImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Canvas's own paste listener only runs when fullscreen — this box isn't,
+  // so pasting an image onto it needs its own window-level listener.
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA)$/.test(target.tagName)) return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (!item.type.startsWith("image/")) continue;
+        const file = item.getAsFile();
+        if (file) onFile(file);
+        break;
+      }
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, []);
+
+  const recognizeHandwriting = async () => {
+    const image = canvasRef.current?.getImageBase64();
+    if (!image) {
+      setError("Draw or paste something on the canvas first.");
+      return;
+    }
+    setDetectBusy(true);
+    setError("");
+    try {
+      const det = await api.detect(image);
+      setLines(det.lines.join("\n"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Handwriting recognition failed");
+    } finally {
+      setDetectBusy(false);
     }
   };
 
@@ -367,8 +426,81 @@ export default function AdminSandbox({ summary }: { summary: TemplateSummary | n
 
         <section className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
           <h2 className="text-sm font-semibold text-slate-900 mb-3">
-            Test grading <span className="text-slate-400 font-normal">— paste fake student work, one asserted line per row</span>
+            Test grading <span className="text-slate-400 font-normal">— write it out, paste/upload a photo, or type lines directly</span>
           </h2>
+
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            {(["pen", "eraser", "select"] as CanvasTool[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => selectTool(t)}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium capitalize ${
+                  tool === t ? "bg-slate-900 text-white" : "border border-slate-300 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+            <div className="w-px h-5 bg-slate-200 mx-1" />
+            {Object.entries(PEN_WIDTHS).map(([name, w]) => (
+              <button
+                key={name}
+                onClick={() => canvasRef.current?.setPenWidth(w)}
+                title={`${name} pen`}
+                className="w-7 h-7 rounded-md border border-slate-300 text-slate-500 hover:bg-slate-50 flex items-center justify-center"
+              >
+                <span className="rounded-full bg-slate-700" style={{ width: Math.min(w, 12), height: Math.min(w, 12) }} />
+              </button>
+            ))}
+            <div className="w-px h-5 bg-slate-200 mx-1" />
+            <button
+              onClick={() => canvasRef.current?.undo()}
+              className="px-2.5 py-1 rounded-md text-xs font-medium border border-slate-300 text-slate-600 hover:bg-slate-50"
+            >
+              Undo
+            </button>
+            <button
+              onClick={() => canvasRef.current?.redo()}
+              className="px-2.5 py-1 rounded-md text-xs font-medium border border-slate-300 text-slate-600 hover:bg-slate-50"
+            >
+              Redo
+            </button>
+            <button
+              onClick={() => canvasRef.current?.clear()}
+              className="px-2.5 py-1 rounded-md text-xs font-medium border border-slate-300 text-slate-600 hover:bg-slate-50"
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-2.5 py-1 rounded-md text-xs font-medium border border-slate-300 text-slate-600 hover:bg-slate-50"
+            >
+              Upload image
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onFile(file);
+                e.target.value = "";
+              }}
+            />
+            <span className="text-[11px] text-slate-400">or paste (Ctrl/Cmd+V) an image anywhere on the page</span>
+          </div>
+
+          <Canvas ref={canvasRef} width={760} height={280} onToolAutoSwitch={setToolState} />
+
+          <button
+            onClick={recognizeHandwriting}
+            disabled={detectBusy}
+            className="mt-2 px-3 py-1.5 rounded-md text-sm font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {detectBusy ? "Reading…" : "Recognize handwriting → fill lines below"}
+          </button>
+
           <textarea
             data-field="lines"
             value={lines}
