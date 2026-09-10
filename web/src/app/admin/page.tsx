@@ -154,7 +154,7 @@ export default function AdminPage() {
               </div>
             )}
 
-            {tab === "sandbox" && <AdminSandbox summary={summary} />}
+            {tab === "sandbox" && <AdminSandbox summary={summary} onExit={() => setTab("overview")} />}
 
             {tab === "overview" && (
               <>
