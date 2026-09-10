@@ -207,17 +207,28 @@ def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUES
     the not-yet-claimed lines; a "judged" step (a structured final answer)
     is graded by trying `grade`/`grade_part` on each not-yet-claimed line in
     turn, so it still benefits from those judges' own tolerant parsing.
+
+    A student who combines several checkpoints into one condensed line
+    (writing `|z| = sqrt(144+25)` straight to the answer instead of separate
+    `a^2 = 144` / `b^2 = 25` lines) still has every earlier checkpoint in
+    that same item implied by whichever later one a line DID match — the
+    later value couldn't have been reached without them. So after the literal
+    per-step matching pass, any of an item's checkpoints that sit before its
+    own last actually-matched checkpoint are credited too, even with no line
+    of their own — mirrors `analyze_work`'s own forward-matching leniency
+    (a line is allowed to satisfy a checkpoint further ahead than the next
+    expected one) instead of contradicting it with a stricter, line-per-value
+    rubric. A checkpoint AFTER the last real match earns nothing — it must
+    still be independently demonstrated, not merely implied by a later one
+    that was never written.
+
     Returns {"earned", "possible", "breakdown"} — earned/possible are exact
     Fractions; never an LLM judgment call."""
     rubric = build_rubric(topic, question_type, params, question_points)
     work = [ln.strip() for ln in lines if ln.strip()]
     used = [False] * len(work)
-    breakdown = []
-    earned = Fraction(0)
-    possible = Fraction(0)
-    for step in rubric:
-        possible += step["points"]
-        matched = None
+    matched_line_idx = [None] * len(rubric)
+    for idx, step in enumerate(rubric):
         for i, raw in enumerate(work):
             if used[i]:
                 continue
@@ -226,17 +237,43 @@ def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUES
             else:
                 ok = _judged_step_matches(topic, question_type, params, step, raw, tolerance)
             if ok:
-                matched = i
+                matched_line_idx[idx] = i
+                used[i] = True
                 break
-        if matched is not None:
-            used[matched] = True
+
+    item_step_indices = {}
+    for idx, step in enumerate(rubric):
+        item_step_indices.setdefault(step["item"], []).append(idx)
+    implied = set()
+    for idxs in item_step_indices.values():
+        last_matched_pos = max(
+            (pos for pos, idx in enumerate(idxs) if matched_line_idx[idx] is not None),
+            default=None,
+        )
+        if last_matched_pos is not None:
+            for pos in range(last_matched_pos):
+                idx = idxs[pos]
+                if matched_line_idx[idx] is None:
+                    implied.add(idx)
+
+    breakdown = []
+    earned = Fraction(0)
+    possible = Fraction(0)
+    for idx, step in enumerate(rubric):
+        possible += step["points"]
+        matched = matched_line_idx[idx]
+        credit = matched is not None or idx in implied
+        if credit:
             earned += step["points"]
-        breakdown.append({
+        entry = {
             "item": step["item"], "label": step["label"],
-            "points_earned": step["points"] if matched is not None else Fraction(0),
+            "points_earned": step["points"] if credit else Fraction(0),
             "points_possible": step["points"],
             "matched_line": work[matched] if matched is not None else None,
-        })
+        }
+        if idx in implied:
+            entry["implied"] = True
+        breakdown.append(entry)
     return {"earned": earned, "possible": possible, "breakdown": breakdown}
 
 
