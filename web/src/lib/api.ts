@@ -448,6 +448,63 @@ export interface TemplateSummary {
   }[];
 }
 
+// --- admin sandbox ----------------------------------------------------------
+
+export interface SandboxSample {
+  params: Record<string, unknown>;
+  prompt: string | null;
+  prompt_latex: string | null;
+}
+
+export interface SandboxCheckpoint {
+  label: string;
+  value: string;
+  formula: string | null;
+}
+
+export interface SandboxSolveResult {
+  answer_exact: string;
+  answer_decimal: number | string | null;
+  answer_latex: string;
+  steps: { title: string; detail: string; formula: string | null }[];
+  formula_tags: string[];
+  checkpoints: SandboxCheckpoint[];
+  parts?: { label: string; answer_exact: string; answer_latex: string; answer_kind: string | null }[];
+  params_used: Record<string, unknown>;
+}
+
+export interface SandboxLineResult {
+  line: number;
+  text: string;
+  checked: boolean;
+  correct?: boolean;
+  matches?: string;
+  formula?: string | null;
+  expected?: string;
+  reason?: string;
+}
+
+export interface SandboxRubricStep {
+  item: string;
+  label: string;
+  points_earned: number;
+  points_possible: number;
+  matched_line: string | null;
+  implied?: boolean;
+}
+
+export interface SandboxGradeResult {
+  step_check: {
+    line_results: SandboxLineResult[];
+    first_error_line: number | null;
+    formula_breakdown: { label: string; formula: string | null; reached: boolean }[];
+  };
+  rubric_score?: { earned: number; possible: number; breakdown: SandboxRubricStep[] };
+  rubric_error?: string;
+  graph_check?: unknown;
+  graph_check_error?: string;
+}
+
 export interface Stats {
   total_attempts: number;
   correct: number;
@@ -680,6 +737,14 @@ export const api = {
   templateStructures: (topic?: string) =>
     request<TemplateStructures>(`/templates/structures${topic ? `?topic=${topic}` : ""}`),
   templateSummary: () => request<TemplateSummary>("/templates/summary"),
+  sandboxSample: (topic: string, question_type: string, difficulty = "medium") =>
+    request<SandboxSample>(
+      `/sandbox/sample?topic=${encodeURIComponent(topic)}&question_type=${encodeURIComponent(question_type)}&difficulty=${difficulty}`
+    ),
+  sandboxSolve: (topic: string, question_type: string, params: Record<string, unknown>) =>
+    request<SandboxSolveResult>("/sandbox/solve", { method: "POST", body: { topic, question_type, params } }),
+  sandboxGrade: (topic: string, question_type: string, params: Record<string, unknown>, lines: string) =>
+    request<SandboxGradeResult>("/sandbox/grade", { method: "POST", body: { topic, question_type, params, lines } }),
   gradeGraph: (question_id: string, strokes_thumb: string) =>
     request<GraphGradeResult>("/problems/grade-graph", {
       method: "POST",

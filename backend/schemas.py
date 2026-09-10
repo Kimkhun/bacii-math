@@ -57,6 +57,19 @@ class GradeRequest(BaseModel):
     strokes_thumb: str | None = None
 
 
+class SandboxSolveRequest(BaseModel):
+    topic: str
+    question_type: str
+    params: dict = {}
+
+
+class SandboxGradeRequest(BaseModel):
+    topic: str
+    question_type: str
+    params: dict = {}
+    lines: str = ""
+
+
 class GradeGraphRequest(BaseModel):
     question_id: uuid.UUID
     strokes_thumb: str

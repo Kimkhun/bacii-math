@@ -1191,6 +1191,144 @@ def _fractions_to_float(obj):
     return obj
 
 
+# ---------------------------------------------------------------------------
+# Admin sandbox: run solve()/analyze_work()/score_work() directly against
+# hand-entered params, for debugging a topic/template/formula without going
+# through question generation or persisting a Question/Attempt row.
+# ---------------------------------------------------------------------------
+
+# Keys that are names/enums, never a math expression — coercing these through
+# `parse_answer` would either mangle them (a var name like "x" parses fine
+# but "e" would silently become Euler's number) or just fail after wasting a
+# parse attempt, so they're passed through untouched.
+_SANDBOX_STRING_KEYS = {
+    "var", "operation", "op", "formula_name", "kind", "unknown", "fn_name",
+    "ask", "variant", "structure", "technique", "curated_technique", "wanted",
+    "want", "id", "source_id",
+}
+
+
+def _sandbox_coerce(value, key: str | None = None):
+    """Turn one admin-entered sandbox param value into what a solver expects:
+    numbers/expressions typed as text (from the calculator keypad) become
+    SymPy objects via the same tolerant parser the grader uses on student
+    handwriting; known enum/name keys and already-structured values
+    (numbers, lists, dicts) pass through as-is."""
+    if isinstance(value, str):
+        if key in _SANDBOX_STRING_KEYS:
+            return value
+        try:
+            return grader.parse_answer(value)
+        except Exception:
+            return value
+    if isinstance(value, dict):
+        return {k: _sandbox_coerce(v, k) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_sandbox_coerce(v, key) for v in value]
+    return value
+
+
+def _sandbox_coerce_params(params: dict) -> dict:
+    return {k: _sandbox_coerce(v, k) for k, v in (params or {}).items()}
+
+
+async def sandbox_param_sample(topic: str, question_type: str, difficulty: str = "medium") -> dict:
+    """A real generated problem's params for this topic/question_type, as a
+    starting point the admin can edit rather than guessing the expected
+    shape from scratch — there's no separate param schema anywhere in the
+    engine, so a live sample is the only accurate source."""
+    if topic not in generator.TOPICS:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"unknown topic: {topic}")
+    if question_type not in solver.QUESTION_TYPES_BY_TOPIC.get(topic, ()):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"unknown question_type: {question_type}")
+    try:
+        problem = await generator.generate(
+            topic, difficulty, seed=random.randint(0, 0xFFFFFFFF),
+            question_type=question_type, generation_mode="templates",
+        )
+    except Exception as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"couldn't generate a sample: {e}")
+    return {
+        "params": _fractions_to_float(_stringify_sympy(problem.get("params") or {})),
+        "prompt": problem.get("prompt"),
+        "prompt_latex": problem.get("prompt_latex"),
+    }
+
+
+def _stringify_sympy(obj):
+    """JSON-safe mirror of an admin-sample params dict — SymPy objects (a
+    generated `expr`, coefficients that came back as `Rational`, ...) become
+    plain strings the admin can re-edit in the sandbox form and that
+    `_sandbox_coerce` can parse straight back."""
+    try:
+        from sympy import Basic
+    except ImportError:  # pragma: no cover - sympy always available here
+        Basic = ()
+    if isinstance(obj, Basic):
+        return str(obj)
+    if isinstance(obj, dict):
+        return {k: _stringify_sympy(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_stringify_sympy(v) for v in obj]
+    return obj
+
+
+def sandbox_solve(topic: str, question_type: str, params: dict) -> dict:
+    if topic not in generator.TOPICS:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"unknown topic: {topic}")
+    if question_type not in solver.QUESTION_TYPES_BY_TOPIC.get(topic, ()):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"unknown question_type: {question_type}")
+    coerced = _sandbox_coerce_params(params)
+    try:
+        solution = solver.solve(topic, question_type, coerced)
+    except Exception as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"solve() failed: {e}")
+    out = solver.serialize(solution)
+    out["formula_tags"] = solution.get("formula_tags", [])
+    out["checkpoints"] = [
+        {"label": cp.get("label"), "value": str(cp.get("value")), "formula": cp.get("formula")}
+        for cp in (solution.get("checkpoints") or [])
+    ]
+    if solution.get("parts"):
+        out["parts"] = [
+            {
+                "label": p.get("label"),
+                "answer_exact": str(p.get("answer_exact")),
+                "answer_latex": p.get("answer_latex"),
+                "answer_kind": p.get("answer_kind"),
+            }
+            for p in solution["parts"]
+        ]
+    out["params_used"] = _fractions_to_float(_stringify_sympy(coerced))
+    return out
+
+
+def sandbox_grade(topic: str, question_type: str, params: dict, lines: list[str]) -> dict:
+    if topic not in generator.TOPICS:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"unknown topic: {topic}")
+    if question_type not in solver.QUESTION_TYPES_BY_TOPIC.get(topic, ()):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"unknown question_type: {question_type}")
+    coerced = _sandbox_coerce_params(params)
+    work = [ln for ln in lines if ln.strip()]
+    try:
+        step_check = grader.analyze_work(topic, question_type, coerced, work)
+    except Exception as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"analyze_work() failed: {e}")
+    result: dict = {"step_check": step_check}
+    if topic != "functions":
+        try:
+            rubric_result = score_work(topic, question_type, coerced, work, question_points=10)
+            result["rubric_score"] = _fractions_to_float(rubric_result)
+        except Exception as e:
+            result["rubric_error"] = str(e)
+    else:
+        try:
+            result["graph_check"] = grader.grade_graph_check(coerced, work)
+        except Exception as e:
+            result["graph_check_error"] = str(e)
+    return result
+
+
 async def submit_exam(exam_id: str, answers: dict[str, str]) -> dict:
     _load_exam(exam_id)  # 404s on an unknown exam_id before grading
     params_by_question = _EXAM_PARAMS.get(exam_id, {})

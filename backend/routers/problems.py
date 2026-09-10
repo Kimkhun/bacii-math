@@ -8,7 +8,7 @@ from core.deps import get_current_admin_user, get_current_user, get_db
 from models import User
 from schemas import (
     ExamSubmitRequest, ExplainRequest, GenerateRequest, GradeGraphRequest, GradeRequest, ReplayRequest,
-    SaveProgressRequest,
+    SandboxGradeRequest, SandboxSolveRequest, SaveProgressRequest,
 )
 
 router = APIRouter(prefix="/problems", tags=["problems"])
@@ -179,3 +179,29 @@ async def regenerate_template_structure(
     if not structure_id:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "structure_id is required")
     return await services.regenerate_template_structure(structure_id)
+
+
+@me_router.get("/sandbox/sample")
+async def sandbox_sample(
+    topic: str,
+    question_type: str,
+    difficulty: str = "medium",
+    user: User = Depends(get_current_admin_user),
+):
+    return await services.sandbox_param_sample(topic, question_type, difficulty)
+
+
+@me_router.post("/sandbox/solve")
+async def sandbox_solve(
+    req: SandboxSolveRequest,
+    user: User = Depends(get_current_admin_user),
+):
+    return services.sandbox_solve(req.topic, req.question_type, req.params)
+
+
+@me_router.post("/sandbox/grade")
+async def sandbox_grade(
+    req: SandboxGradeRequest,
+    user: User = Depends(get_current_admin_user),
+):
+    return services.sandbox_grade(req.topic, req.question_type, req.params, req.lines.split("\n"))
