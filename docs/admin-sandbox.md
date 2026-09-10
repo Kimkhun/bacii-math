@@ -83,26 +83,41 @@ Click **Solve** to run `solve(topic, question_type, params)` and see:
   text was interpreted the way you intended (e.g. that `pi/3` really
   became the SymPy value `π/3`, not a literal string).
 
+## The canvas and the tools panel
+
+The sandbox canvas is the **same fullscreen canvas the student practice
+page uses** — full drawing room, not a small embedded box. All of the
+sandbox's other controls (template picker, params editor, keypad, solve
+output, the grading tester) live in a panel on the right that you can
+toggle with **Hide tools / Show tools** in the top bar, so you can clear
+the whole screen for writing and bring the panel back when you need it.
+
+A floating toolbar stays pinned to the bottom of the screen regardless of
+whether the panel is shown: Pen/Eraser/Select, pen width, Undo/Redo/Clear,
+**Upload image**, zoom −/+, and **Recognize → fill lines**. Click **←
+Admin** in the top bar to leave the sandbox and return to the rest of the
+admin dashboard.
+
 ## 4. Test grading
 
-This section checks how the grader reacts to a specific piece of written
-work, using the params currently in the editor.
+This section (in the tools panel) checks how the grader reacts to a
+specific piece of written work, using the params currently in the editor.
 
 **Get the text three ways:**
 
 - **Type it** directly into the lines box, one asserted fact per line —
   exactly how a student's OCR'd lines would look.
-- **Draw it** with the Pen tool on the small canvas (Eraser/Select tools,
-  pen width, Undo/Redo/Clear all work the same as the practice canvas).
+- **Draw it** with the Pen tool on the canvas (Eraser/Select tools, pen
+  width, Undo/Redo/Clear all work the same as the practice canvas).
 - **Paste or upload a photo** of a written solution — paste an image
-  anywhere on the page (Ctrl/Cmd+V) or use **Upload image**; it's placed
-  onto the canvas as a movable/resizable image.
+  anywhere on the page (Ctrl/Cmd+V) or use **Upload image** in the bottom
+  toolbar; it's placed onto the canvas as a movable/resizable image.
 
-Once you've drawn/pasted something, click **Recognize handwriting → fill
-lines below** to run it through the real OCR pipeline (`/vision/detect`,
-Gemini vision by default) and fill the lines box with the recognized text —
-review/edit it before grading, same as a student could correct a
-misread line.
+Once you've drawn/pasted something, click **Recognize → fill lines** (in
+the bottom toolbar) to run it through the real OCR pipeline
+(`/vision/detect`, Gemini vision by default) and fill the lines box with
+the recognized text — review/edit it before grading, same as a student
+could correct a misread line.
 
 Click **Grade** to run:
 
