@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Procedural Audio Engine for Paper Writing and Tablet Screen Friction.
  *
  * Layers 4 physical acoustic elements onto a stable warm baseline:
@@ -33,6 +33,8 @@ class DrawingAudioEngine {
   private lastDirection: number = 0;
   private stillnessTimer: NodeJS.Timeout | null = null;
   private accumulatedDist: number = 0;
+  private wobblePhase: number = 0; // Slow sinusoidal filter modulation to break monotony
+  private eraserWobblePhase: number = 0;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -136,7 +138,7 @@ class DrawingAudioEngine {
       filter.frequency.setValueAtTime(3200, now);
       filter.Q.setValueAtTime(1.1, now);
 
-      const tapVol = 0.07 * (0.6 + 0.4 * effectivePressure);
+      const tapVol = 0.12 * (0.6 + 0.4 * effectivePressure);
       gain.gain.setValueAtTime(tapVol, now);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.008);
     } else {
@@ -216,6 +218,8 @@ class DrawingAudioEngine {
     this.smoothedVelocity = 0;
     this.lastDirection = 0;
     this.accumulatedDist = 0;
+    this.wobblePhase = 0;
+    this.eraserWobblePhase = 0;
 
     const ctx = this.ctx;
     const now = ctx.currentTime;
@@ -245,7 +249,7 @@ class DrawingAudioEngine {
 
       this.gritBandpass.type = "bandpass";
       this.gritBandpass.frequency.setValueAtTime(2700, now);
-      this.gritBandpass.Q.setValueAtTime(1.6, now);
+      this.gritBandpass.Q.setValueAtTime(0.4, now); // Wide bandwidth — papery, not resonant
 
       this.bodyBandpass.type = "bandpass";
       this.bodyBandpass.frequency.setValueAtTime(850, now);
@@ -257,7 +261,7 @@ class DrawingAudioEngine {
 
       this.gritBandpass.type = "bandpass";
       this.gritBandpass.frequency.setValueAtTime(400, now);
-      this.gritBandpass.Q.setValueAtTime(1.1, now);
+      this.gritBandpass.Q.setValueAtTime(0.3, now); // Very wide — soft rubbery shush, no resonance
 
       this.bodyBandpass.type = "bandpass";
       this.bodyBandpass.frequency.setValueAtTime(260, now);
@@ -325,16 +329,22 @@ class DrawingAudioEngine {
       this.gainNode.gain.setTargetAtTime(targetGain, audioTime, 0.025);
 
       if (this.gritBandpass) {
-        const targetFreq = 2300 + speedFactor * 1100;
-        this.gritBandpass.frequency.setTargetAtTime(targetFreq, audioTime, 0.03);
+        // Speed shifts pitch up; wobblePhase adds slow organic drift ±250Hz
+        this.wobblePhase += dist * 0.06;
+        const wobble = Math.sin(this.wobblePhase) * 250;
+        const targetFreq = 2300 + speedFactor * 1100 + wobble;
+        this.gritBandpass.frequency.setTargetAtTime(targetFreq, audioTime, 0.05);
       }
     } else {
       const targetGain = Math.max(0.0001, speedFactor * 0.32);
       this.gainNode.gain.setTargetAtTime(targetGain, audioTime, 0.03);
 
       if (this.gritBandpass) {
-        const targetFreq = 380 + speedFactor * 260;
-        this.gritBandpass.frequency.setTargetAtTime(targetFreq, audioTime, 0.04);
+        // Slower wobble than pen — softer, more gradual rubber-drag texture
+        this.eraserWobblePhase += dist * 0.03;
+        const wobble = Math.sin(this.eraserWobblePhase) * 120;
+        const targetFreq = 380 + speedFactor * 260 + wobble;
+        this.gritBandpass.frequency.setTargetAtTime(targetFreq, audioTime, 0.06);
       }
     }
 
