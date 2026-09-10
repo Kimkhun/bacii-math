@@ -382,8 +382,12 @@ const Canvas = forwardRef<
     const lastTapRef = useRef<{ t: number; x: number; y: number }>({ t: 0, x: 0, y: 0 });
     const onToolAutoSwitchRef = useRef<((t: CanvasTool) => void) | undefined>(undefined);
     onToolAutoSwitchRef.current = onToolAutoSwitch;
+    // Last known pointer position (client coords) — used to place a pasted
+    // image where the cursor is, rather than always dead-center.
+    const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
 
     const updateCursor = (clientX: number, clientY: number) => {
+      lastPointerRef.current = { x: clientX, y: clientY };
       const el = cursorElRef.current;
       if (!el) return;
       // Select tool: show a real cursor that reflects move / resize / anchor
@@ -821,13 +825,31 @@ const Canvas = forwardRef<
       // otherwise latch "on" forever and every future click would pan instead
       // of draw — with no error to explain why the pen "stopped working".
       const onBlur = () => setSpaceHeld(false);
+      const onPaste = (e: ClipboardEvent) => {
+        if (isTextInput(e.target)) return;
+        const items = e.clipboardData?.items;
+        if (!items) return;
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (!item.type.startsWith("image/")) continue;
+          const file = item.getAsFile();
+          if (!file) continue;
+          e.preventDefault();
+          const reader = new FileReader();
+          reader.onload = () => placePastedImageRef.current(reader.result as string);
+          reader.readAsDataURL(file);
+          break;
+        }
+      };
       window.addEventListener("keydown", onKeyDown);
       window.addEventListener("keyup", onKeyUp);
       window.addEventListener("blur", onBlur);
+      window.addEventListener("paste", onPaste);
       return () => {
         window.removeEventListener("keydown", onKeyDown);
         window.removeEventListener("keyup", onKeyUp);
         window.removeEventListener("blur", onBlur);
+        window.removeEventListener("paste", onPaste);
       };
     }, [fullscreen]);
 
@@ -881,6 +903,8 @@ const Canvas = forwardRef<
           }
         } else if (s.kind === "ellipse") {
           s.cx += dx;
+        } else if (s.kind === "image") {
+          s.x += dx;
         }
         // "raster" strokes (restored old work) stay pinned at their original
         // (0,0) origin — they're a flattened snapshot of the page as it was,
@@ -903,6 +927,8 @@ const Canvas = forwardRef<
           }
         } else if (s.kind === "ellipse") {
           s.cx += dx;
+        } else if (s.kind === "image") {
+          s.x += dx;
         }
       }
       if (gridRef.current) {
@@ -938,18 +964,19 @@ const Canvas = forwardRef<
       const growRight = W - p.x <= GROW_THRESHOLD && W < MAX_WIDTH ? Math.min(GROW_CHUNK, MAX_WIDTH - W) : 0;
       let growLeft = !growRight && p.x <= GROW_THRESHOLD && W < MAX_WIDTH ? Math.min(GROW_CHUNK, MAX_WIDTH - W) : 0;
 
-      if (growLeft && drawing.current) {
+      if (growLeft && (drawing.current || editingRef.current)) {
         // Growing left means shifting every existing point (including the
-        // stroke currently being drawn) AND scrolling the viewport to
-        // compensate — doing both while a pointer is actively down changes
-        // the DOM/layout under it mid-gesture, which iOS Safari (and others)
-        // can respond to by cancelling the touch/pen sequence outright. That's
-        // exactly what "writing near the left edge drags me to the middle,
-        // then the pen stops drawing until I lift it" was: the shift raced
-        // ahead of the pen's own next point (producing the stray jump-line),
-        // and the resulting scroll cancelled the pointer stream (silently
-        // killing the rest of that stroke). Deferring to pointerup avoids
-        // both — nothing is lost, ink drawn past the current left edge in the
+        // stroke currently being drawn, or the shape/image currently being
+        // dragged) AND scrolling the viewport to compensate — doing both
+        // while a pointer is actively down changes the DOM/layout under it
+        // mid-gesture, which iOS Safari (and others) can respond to by
+        // cancelling the touch/pen sequence outright. That's exactly what
+        // "writing near the left edge drags me to the middle, then the pen
+        // stops drawing until I lift it" was: the shift raced ahead of the
+        // pen's own next point (producing the stray jump-line), and the
+        // resulting scroll cancelled the pointer stream (silently killing the
+        // rest of that stroke). Deferring to pointerup avoids both — nothing
+        // is lost, ink (or a dragged image) past the current left edge in the
         // meantime just isn't visible until the deferred grow lands.
         pendingGrowLeftRef.current = Math.max(pendingGrowLeftRef.current, growLeft);
         growLeft = 0;
@@ -967,6 +994,51 @@ const Canvas = forwardRef<
       if (growH) setCanvasHeight((h) => Math.min(MAX_HEIGHT, h + growH));
       if (growRight || growLeft) setCanvasWidth((w) => Math.min(MAX_WIDTH, w + (growRight || growLeft)));
     };
+
+    // Places a clipboard-pasted image centered on the last known pointer
+    // position (falling back to the canvas center when nothing was tracked
+    // yet, e.g. paste via keyboard shortcut with no prior mouse move) and
+    // grows the page the same way drawing/dragging near an edge does — a
+    // paste dropped near the bottom or a side edge shouldn't get clipped.
+    const placePastedImage = (dataUrl: string) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = W - 64;
+        const maxH = H - 64;
+        const scale = Math.min(1, maxW / img.naturalWidth, maxH / img.naturalHeight);
+        const w = img.naturalWidth * scale;
+        const h = img.naturalHeight * scale;
+        const rect = canvasRef.current?.getBoundingClientRect();
+        const lp = lastPointerRef.current;
+        let cx = W / 2;
+        let cy = H / 2;
+        if (rect && lp && rect.width > 0 && rect.height > 0) {
+          cx = ((lp.x - rect.left) / rect.width) * W;
+          cy = ((lp.y - rect.top) / rect.height) * H;
+        }
+        const x = cx - w / 2;
+        const y = cy - h / 2;
+        const stroke: ImageStroke = { kind: "image", src: dataUrl, x, y, w, h };
+        imageCacheRef.current.set(dataUrl, img);
+        strokesRef.current.push(stroke);
+        redoStackRef.current = [];
+        selectedRef.current = strokesRef.current.length - 1;
+        hoverIndexRef.current = null;
+        editingRef.current = null;
+        redraw();
+        onChange?.();
+        // Grow toward whichever edge the paste landed near, same as an
+        // in-progress stroke would (checked at both corners of the image).
+        maybeGrow({ x, y });
+        maybeGrow({ x: x + w, y: y + h });
+      };
+      img.src = dataUrl;
+    };
+    // The paste listener below is registered once (see its effect's deps);
+    // route through a ref so it always calls the latest closure instead of
+    // one frozen with the W/H/refs from whatever render first mounted it.
+    const placePastedImageRef = useRef(placePastedImage);
+    placePastedImageRef.current = placePastedImage;
 
     const beginPan = (e: React.PointerEvent) => {
       panningRef.current = true;
@@ -1472,6 +1544,9 @@ const Canvas = forwardRef<
       }
       redraw();
       e.preventDefault();
+      // Dragging a shape/image (not just drawing ink) toward the edge should
+      // grow the page the same way an in-progress stroke does.
+      if (ed.mode === "move") maybeGrow(p);
     };
 
     const handleSelectDown = (e: React.PointerEvent) => {
@@ -1794,6 +1869,13 @@ const Canvas = forwardRef<
         editSnapshotRef.current = null;
         onChange?.();
         redraw();
+        // Now that the drag has ended, apply any left-growth that got
+        // deferred while it was in progress (see maybeGrow).
+        if (pendingGrowLeftRef.current > 0 && !growingRef.current) {
+          const growLeft = pendingGrowLeftRef.current;
+          pendingGrowLeftRef.current = 0;
+          applyGrowLeft(growLeft);
+        }
         return;
       }
 

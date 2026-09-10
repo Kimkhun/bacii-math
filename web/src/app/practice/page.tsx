@@ -634,7 +634,11 @@ function PracticeInner() {
     if (!headerRef.current) return;
     const update = () => {
       if (headerRef.current) {
-        setHeaderHeight(headerRef.current.offsetHeight + 14);
+        // getBoundingClientRect().bottom (not offsetHeight) so this stays
+        // correct regardless of where the header itself sits in the
+        // viewport — it's fixed below the sticky Navbar (top-14), not at
+        // the very top, so its rendered bottom edge already bakes that in.
+        setHeaderHeight(headerRef.current.getBoundingClientRect().bottom + 14);
       }
     };
     update();
@@ -1713,7 +1717,7 @@ function PracticeInner() {
         {/* Question bar: Preamble + Section Exercise + Sub-steps */}
         <div
           ref={headerRef}
-          className="fixed inset-x-0 top-0 z-10 bg-white border-b border-[#e4e2db] flex flex-col pl-7 pr-6 pb-2.5 pt-[max(0.75rem,env(safe-area-inset-top))] shadow-sm"
+          className="fixed inset-x-0 top-14 z-10 bg-white border-b border-[#e4e2db] flex flex-col pl-7 pr-6 pb-2.5 pt-[max(0.75rem,env(safe-area-inset-top))] shadow-sm"
         >
           <div className="flex items-start justify-between gap-3 w-full">
             <div className="flex items-center gap-2.5 min-w-0 flex-1">

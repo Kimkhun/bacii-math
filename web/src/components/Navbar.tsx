@@ -9,8 +9,8 @@ export default function Navbar() {
   const router = useRouter();
 
   return (
-    <nav className="bg-white border-b border-slate-200">
-      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-6">
+    <nav className="sticky top-0 z-[100] bg-white border-b border-slate-200 h-14">
+      <div className="max-w-5xl mx-auto px-4 h-full flex items-center gap-6">
         <Link href="/" className="font-bold text-lg text-slate-900">
           BACII Math
         </Link>
