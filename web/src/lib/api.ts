@@ -741,6 +741,10 @@ export const api = {
     request<SandboxSample>(
       `/sandbox/sample?topic=${encodeURIComponent(topic)}&question_type=${encodeURIComponent(question_type)}&difficulty=${difficulty}`
     ),
+  sandboxStructureSample: (topic: string, question_type: string, structure_id: string) =>
+    request<SandboxSample>(
+      `/sandbox/structure-sample?topic=${encodeURIComponent(topic)}&question_type=${encodeURIComponent(question_type)}&structure_id=${encodeURIComponent(structure_id)}`
+    ),
   sandboxSolve: (topic: string, question_type: string, params: Record<string, unknown>) =>
     request<SandboxSolveResult>("/sandbox/solve", { method: "POST", body: { topic, question_type, params } }),
   sandboxGrade: (topic: string, question_type: string, params: Record<string, unknown>, lines: string) =>

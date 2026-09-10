@@ -191,6 +191,16 @@ async def sandbox_sample(
     return await services.sandbox_param_sample(topic, question_type, difficulty)
 
 
+@me_router.get("/sandbox/structure-sample")
+async def sandbox_structure_sample(
+    topic: str,
+    question_type: str,
+    structure_id: str,
+    user: User = Depends(get_current_admin_user),
+):
+    return await services.sandbox_structure_sample(topic, question_type, structure_id)
+
+
 @me_router.post("/sandbox/solve")
 async def sandbox_solve(
     req: SandboxSolveRequest,

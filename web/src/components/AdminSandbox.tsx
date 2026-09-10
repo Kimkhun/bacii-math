@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Canvas, { CanvasHandle, CanvasTool, PEN_WIDTHS } from "@/components/Canvas";
 import MathText from "@/components/MathText";
 import MathKeypad from "@/components/MathKeypad";
-import { api, SandboxGradeResult, SandboxSolveResult, TemplateSummary } from "@/lib/api";
+import { api, SandboxGradeResult, SandboxSolveResult, TemplateStructure, TemplateSummary } from "@/lib/api";
 
 type FocusableField = HTMLInputElement | HTMLTextAreaElement;
 
@@ -36,7 +36,10 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
   const [topic, setTopic] = useState(topics[0]?.topic ?? "complex");
   const questionTypes = topics.find((t) => t.topic === topic)?.question_types ?? [];
   const [questionType, setQuestionType] = useState(questionTypes[0]?.question_type ?? "");
-  const [difficulty, setDifficulty] = useState("medium");
+
+  const [structures, setStructures] = useState<TemplateStructure[]>([]);
+  const [structuresBusy, setStructuresBusy] = useState(false);
+  const [selectedStructureId, setSelectedStructureId] = useState<string | null>(null);
 
   const [paramKeys, setParamKeys] = useState<string[]>([]);
   const [params, setParams] = useState<Record<string, string>>({});
@@ -67,6 +70,7 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
     setTopic(tp);
     const first = qtOptionsFor(tp)[0]?.question_type ?? "";
     setQuestionType(first);
+    setSelectedStructureId(null);
     setParamKeys([]);
     setParams({});
     setSolveResult(null);
@@ -74,20 +78,53 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
     setPrompt(null);
   };
 
-  const loadSample = async () => {
+  const onQuestionTypeChange = (qt: string) => {
+    setQuestionType(qt);
+    setSelectedStructureId(null);
+    setParamKeys([]);
+    setParams({});
+    setSolveResult(null);
+    setGradeResult(null);
+    setPrompt(null);
+  };
+
+  // Structures come from the same catalog the Templates tab uses (one entry
+  // per template/technique, with a human-readable pattern), fetched once per
+  // topic and filtered client-side by question type.
+  useEffect(() => {
+    if (!topic) return;
+    setStructuresBusy(true);
+    setStructures([]);
+    api
+      .templateStructures(topic)
+      .then((res) => {
+        const forTopic = res.topics.find((t) => t.topic === topic);
+        setStructures((forTopic?.question_types ?? []).flatMap((qt) => qt.structures));
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load templates"))
+      .finally(() => setStructuresBusy(false));
+  }, [topic]);
+
+  const structuresForType = useMemo(
+    () => structures.filter((s) => s.question_type === questionType),
+    [structures, questionType]
+  );
+
+  const loadStructure = async (structureId: string) => {
     if (!topic || !questionType) return;
     setSampleBusy(true);
     setError("");
     try {
-      const sample = await api.sandboxSample(topic, questionType, difficulty);
+      const sample = await api.sandboxStructureSample(topic, questionType, structureId);
       const keys = Object.keys(sample.params);
       setParamKeys(keys);
       setParams(Object.fromEntries(keys.map((k) => [k, stringifyParam(sample.params[k])])));
       setPrompt({ text: sample.prompt, latex: sample.prompt_latex });
+      setSelectedStructureId(structureId);
       setSolveResult(null);
       setGradeResult(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load sample");
+      setError(err instanceof Error ? err.message : "Failed to load template sample");
     } finally {
       setSampleBusy(false);
     }
@@ -392,7 +429,7 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
                   </select>
                   <select
                     value={questionType}
-                    onChange={(e) => setQuestionType(e.target.value)}
+                    onChange={(e) => onQuestionTypeChange(e.target.value)}
                     className="px-2.5 py-1.5 border border-slate-300 rounded-md text-sm capitalize"
                   >
                     {questionTypes.map((qt) => (
@@ -401,25 +438,48 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
                       </option>
                     ))}
                   </select>
-                  <select
-                    value={difficulty}
-                    onChange={(e) => setDifficulty(e.target.value)}
-                    className="px-2.5 py-1.5 border border-slate-300 rounded-md text-sm capitalize"
-                  >
-                    {["easy", "medium", "hard"].map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={loadSample}
-                    disabled={sampleBusy || !questionType}
-                    className="px-3 py-1.5 rounded-md text-sm font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    {sampleBusy ? "Loading…" : "Load sample params"}
-                  </button>
                 </div>
+
+                <div className="mt-2 max-h-64 overflow-y-auto border border-slate-200 rounded-md divide-y divide-slate-100">
+                  {structuresBusy && <p className="text-sm text-slate-400 p-2">Loading templates…</p>}
+                  {!structuresBusy && structuresForType.length === 0 && (
+                    <p className="text-sm text-slate-400 p-2">No templates found for this question type.</p>
+                  )}
+                  {structuresForType.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => loadStructure(s.id)}
+                      disabled={sampleBusy}
+                      className={`w-full text-left px-2.5 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50 ${
+                        selectedStructureId === s.id ? "bg-slate-100" : "bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 capitalize text-[10px]">
+                          {s.difficulty}
+                        </span>
+                        <code className="text-slate-400 truncate">{s.id}</code>
+                      </div>
+                      {s.pattern_latex ? (
+                        <MathText text={`\\(${s.pattern_latex}\\)`} className="text-slate-800" />
+                      ) : (
+                        <span className="text-slate-700 font-mono">{s.pattern}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {selectedStructureId && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <button
+                      onClick={() => loadStructure(selectedStructureId)}
+                      disabled={sampleBusy}
+                      className="px-3 py-1.5 rounded-md text-sm font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      {sampleBusy ? "Rerolling…" : "Reroll (same template)"}
+                    </button>
+                  </div>
+                )}
                 {prompt?.latex && (
                   <div className="mt-3 text-sm text-slate-700 bg-slate-50 rounded p-2 overflow-x-auto">
                     <MathText text={`\\(${prompt.latex}\\)`} />
