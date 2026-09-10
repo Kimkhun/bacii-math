@@ -10,6 +10,7 @@ import DisambiguationCard, { DisambiguationCandidate } from "@/components/Disamb
 import FunctionGraph from "@/components/FunctionGraph";
 import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, Skill, StrokeDoc } from "@/lib/api";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
+import { drawingAudio } from "@/lib/audioEngine";
 
 const CURSIVE = "'Caveat', 'Segoe Script', cursive";
 
@@ -96,6 +97,12 @@ function getCleanLines(raw: string): string[] {
   return raw.split("\n").map((s) => latexToMixedText(s.trim())).filter(Boolean);
 }
 
+interface SectionGroup {
+  key: string;
+  label: string;
+  partIndices: number[];
+}
+
 function parseFullProblem(
   rawPrompt: string | null | undefined,
   sections: SectionGroup[]
@@ -106,21 +113,45 @@ function parseFullProblem(
 
   let preamble: string | null = null;
   let qLines = lines;
-  if (!/^(?:1|១)[.\s]/.test(lines[0])) {
+
+  // A line is a question line if it starts with a marker like "1.", "1)", "A:", "A.", "ក.", "(1)", "(A)", etc.
+  const isQuestionMarker = (l: string) =>
+    /^(?:[0-9]+|[១-៩]+|[A-Za-z]|[ក-អ])(?::|\.|\)|\s)/.test(l.trim()) ||
+    /^\([0-9a-zA-Zក-អ]+\)/.test(l.trim());
+
+  if (!isQuestionMarker(lines[0])) {
     preamble = lines[0];
     qLines = lines.slice(1);
   }
 
   const items = qLines.map((line, idx) => {
-    const match = line.match(/^(?:([0-9]+)|([១-៩]))[.\s]/);
-    let secKey = String(idx + 1);
-    if (match) {
-      if (match[1]) secKey = match[1];
-      else if (match[2]) {
-        const k = Object.entries(KM_DIGITS).find(([_, v]) => v === match[2]);
+    const trimmed = line.trim();
+    const letterMatch = trimmed.match(/^(?:\(?([A-Za-z])(?:\)|:|\.|\s)|([A-Za-z])(?::|\.|\)|\s))/);
+    const kmLetterMatch = trimmed.match(/^(?:\(?([ក-អ])(?:\)|:|\.|\s)|([ក-អ])(?::|\.|\)|\s))/);
+    const numMatch = trimmed.match(/^(?:\(?([0-9]+)(?:\)|:|\.|\s)|([0-9]+)(?::|\.|\)|\s)|([១-៩]+)(?::|\.|\)|\s))/);
+
+    let secKey = sections[idx]?.key ?? String(idx + 1);
+
+    if (letterMatch) {
+      secKey = (letterMatch[1] || letterMatch[2]).toUpperCase();
+    } else if (kmLetterMatch) {
+      secKey = kmLetterMatch[1] || kmLetterMatch[2];
+    } else if (numMatch) {
+      if (numMatch[1] || numMatch[2]) {
+        secKey = numMatch[1] || numMatch[2];
+      } else if (numMatch[3]) {
+        const k = Object.entries(KM_DIGITS).find(([_, v]) => v === numMatch[3]);
         if (k) secKey = k[0];
+        else secKey = numMatch[3];
       }
     }
+
+    // Match against known section keys (case-insensitive)
+    const matched = sections.find((s) => s.key.toLowerCase() === secKey.toLowerCase());
+    if (matched) {
+      secKey = matched.key;
+    }
+
     return {
       key: secKey,
       text: line,
@@ -506,6 +537,9 @@ function PracticeInner() {
   const [question, setQuestion] = useState<Question | null>(null);
   const [partIndex, setPartIndex] = useState(0);
   const [exerciseDone, setExerciseDone] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(drawingAudio.enabled);
+  const [soundVolume, setSoundVolume] = useState(drawingAudio.volume);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Practice config (defaults until the student picks something and generates).
   const [mode, setMode] = useState("templates");
@@ -2520,6 +2554,15 @@ function PracticeInner() {
           </span>
           <div className="w-full border-t border-[#e4e2db] my-1" />
           <button
+            onClick={() => setShowSettings((s) => !s)}
+            title="Canvas & Audio Settings"
+            className={`w-7 h-7 stylus:w-9 stylus:h-9 rounded flex items-center justify-center text-xs transition-colors ${
+              showSettings ? "bg-[#23272e] text-white shadow-sm" : "text-[#6b6558] hover:bg-[#faf9f6]"
+            }`}
+          >
+            ⚙️
+          </button>
+          <button
             onClick={() => setDebug((d) => !d)}
             title="Toggle debug panel"
             className={`w-7 h-7 stylus:w-9 stylus:h-9 rounded text-[10px] font-bold ${
@@ -2529,6 +2572,115 @@ function PracticeInner() {
             DBG
           </button>
         </div>
+
+        {/* Canvas & Audio Settings Popover */}
+        {showSettings && (
+          <div className="fixed left-16 top-1/2 -translate-y-1/2 z-30 w-72 bg-white/95 backdrop-blur-md border border-[#e4e2db] rounded-xl shadow-xl p-4 text-xs space-y-4 pointer-events-auto animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-[#f0eee6] pb-2">
+              <span className="font-semibold text-[#23272e] flex items-center gap-1.5">
+                <span>⚙️</span> Canvas Settings
+              </span>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="w-5 h-5 rounded flex items-center justify-center text-[#a8a296] hover:text-[#23272e] hover:bg-[#faf9f6]"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Audio Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-[#464033]">Friction Audio</span>
+                <button
+                  onClick={() => {
+                    const next = drawingAudio.toggle();
+                    setSoundEnabled(next);
+                  }}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${
+                    soundEnabled
+                      ? "bg-amber-100 text-amber-900 border border-amber-300"
+                      : "bg-gray-100 text-gray-500 border border-gray-200"
+                  }`}
+                >
+                  {soundEnabled ? "🔊 ON" : "🔇 MUTED"}
+                </button>
+              </div>
+
+              {/* Volume Slider */}
+              <div className="space-y-1.5 bg-[#fdfcf8] p-2.5 rounded-lg border border-[#eeece2]">
+                <div className="flex items-center justify-between text-[11px] text-[#6b6558]">
+                  <span className="flex items-center gap-1">
+                    {soundVolume === 0 || !soundEnabled ? "🔇" : soundVolume < 0.5 ? "🔉" : "🔊"}
+                    Volume
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    {Math.round(soundVolume * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={Math.round(soundVolume * 100)}
+                  onChange={(e) => {
+                    const newVol = Number(e.target.value) / 100;
+                    setSoundVolume(newVol);
+                    drawingAudio.volume = newVol;
+                    if (newVol > 0 && !soundEnabled) {
+                      drawingAudio.enabled = true;
+                      setSoundEnabled(true);
+                    }
+                  }}
+                  className="w-full accent-[#23272e] cursor-pointer"
+                />
+              </div>
+
+              {/* Audio Test Button */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    drawingAudio.start("pen", 100, 100);
+                    let step = 0;
+                    const iv = setInterval(() => {
+                      step++;
+                      drawingAudio.move(100 + step * 8, 100 + Math.sin(step) * 15, 0.7);
+                      if (step > 15) {
+                        clearInterval(iv);
+                        drawingAudio.stop();
+                      }
+                    }, 25);
+                  }}
+                  className="flex-1 py-1.5 px-2 bg-[#f4f2ec] hover:bg-[#eae7df] rounded border border-[#dddad1] text-[11px] font-medium text-[#464033] transition-colors"
+                >
+                  ✏️ Test Pencil
+                </button>
+                <button
+                  onClick={() => drawingAudio.playSuccessChime()}
+                  className="flex-1 py-1.5 px-2 bg-[#f4f2ec] hover:bg-[#eae7df] rounded border border-[#dddad1] text-[11px] font-medium text-[#464033] transition-colors"
+                >
+                  🔔 Test Chime
+                </button>
+              </div>
+            </div>
+
+            {/* Extensible Future Settings */}
+            <div className="border-t border-[#f0eee6] pt-3 space-y-2">
+              <span className="text-[11px] font-medium text-[#a8a296] uppercase tracking-wider block">
+                Input & Stylus
+              </span>
+              <div className="flex items-center justify-between text-[11px] text-[#6b6558]">
+                <span>Palm Rejection</span>
+                <span className="text-emerald-600 font-medium">✓ Active</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-[#6b6558]">
+                <span>Pressure Sensitivity</span>
+                <span className="text-emerald-600 font-medium">✓ Enabled</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={onFile} />
 

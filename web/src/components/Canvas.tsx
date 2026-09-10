@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, ReactNode, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
+import { drawingAudio } from "@/lib/audioEngine";
 
 export type CanvasTool = "pen" | "eraser" | "ruler" | "axes" | "curve" | "ellipse" | "select";
 
@@ -1690,6 +1691,11 @@ const Canvas = forwardRef<
       const p = getPos(e.clientX, e.clientY, e.pressure);
       const width = toolRef.current === "eraser" ? eraserWidthRef.current : penWidthRef.current;
       redoStackRef.current = [];
+      if (toolRef.current === "eraser") {
+        drawingAudio.start("eraser", p.x, p.y, e.pressure);
+      } else {
+        drawingAudio.start("pen", p.x, p.y, e.pressure);
+      }
       if (toolRef.current === "ruler") {
         const sp = snapToGrid(p);
         strokesRef.current.push({
@@ -1853,6 +1859,7 @@ const Canvas = forwardRef<
       }
       requestRedraw();
       maybeGrow(p);
+      drawingAudio.move(p.x, p.y, e.pressure);
     };
 
     const end = (e: React.PointerEvent) => {
@@ -1897,6 +1904,7 @@ const Canvas = forwardRef<
       if (!drawing.current || e.pointerId !== drawingPointerIdRef.current) return;
       drawing.current = false;
       drawingPointerIdRef.current = null;
+      drawingAudio.stop();
       onChange?.();
 
       // A freshly-drawn curve/ellipse stays selected with handles showing, and
