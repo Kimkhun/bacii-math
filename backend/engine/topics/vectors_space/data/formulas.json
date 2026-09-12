@@ -1,7 +1,7 @@
 {
   "vector_ops": {
     "name_en": "Vector operations in space",
-    "name_km": "",
+    "name_km": "ប្រមាណវិធីលើវិចទ័រក្នុងលំហ",
     "weight": 1,
     "group": "vectors_space",
     "latex": "\\overrightarrow{AB} = (x_B-x_A,\\ y_B-y_A,\\ z_B-z_A)",
@@ -12,7 +12,7 @@
   },
   "dot_product": {
     "name_en": "Dot product",
-    "name_km": "",
+    "name_km": "ផលគុណស្កាលែនៃពីរវិចទ័រ",
     "weight": 1,
     "group": "vectors_space",
     "latex": "\\vec u\\cdot\\vec v = x_1x_2 + y_1y_2 + z_1z_2",
@@ -23,7 +23,7 @@
   },
   "cross_product": {
     "name_en": "Cross product",
-    "name_km": "",
+    "name_km": "ផលគុណវិចទ័រនៃពីរវិចទ័រ",
     "weight": 2,
     "group": "vectors_space",
     "latex": "\\vec u\\times\\vec v = (y_1z_2-z_1y_2,\\ z_1x_2-x_1z_2,\\ x_1y_2-y_1x_2)",

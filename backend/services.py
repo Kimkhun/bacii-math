@@ -120,13 +120,13 @@ async def recreate_question(db: AsyncSession, user, question_id) -> dict:
     return await persist_problem(db, problem)
 
 
-def _steps_text(question: Question) -> str:
+def _steps_text(question: Question, lang: str = "en") -> str:
     solution = solver.solve(question.topic, question.question_type, question.spec)
-    return explainer.build_text(question.topic, question.question_type, question.spec, solution)
+    return explainer.build_text(question.topic, question.question_type, question.spec, solution, lang=lang)
 
 
-async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, steps_text=None, allow_gemini=None, context=None) -> dict:
-    steps_text = steps_text or _steps_text(question)
+async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, steps_text=None, allow_gemini=None, context=None, lang: str = "en") -> dict:
+    steps_text = steps_text or _steps_text(question, lang=lang)
     content = steps_text
     provider = "deterministic"
     intervened = False
@@ -137,14 +137,14 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
         # change alters the steps, stale narrations must never be served for
         # questions with the same params.
         steps_digest = hashlib.sha1(steps_text.encode("utf-8")).hexdigest()[:12]
-        key = f"explain:{question.topic}:{question.question_type}:{spec_key}:{steps_digest}"
+        key = f"explain:{question.topic}:{question.question_type}:{spec_key}:{lang}:{steps_digest}"
         cached = await cache.get_explanation(key)
         if cached:
             content, provider, intervened = cached, "gemini", True
         else:
             if allow_gemini is None:
                 allow_gemini = await cache.allow_gemini(str(user.id))
-            text, got_provider = await llm.narrate(steps_text, allow_gemini=allow_gemini, context=context, user_id=user.id)
+            text, got_provider = await llm.narrate(steps_text, allow_gemini=allow_gemini, context=context, user_id=user.id, lang=lang)
             if text:
                 content, provider, intervened = text, got_provider, True
                 if got_provider == "gemini":
@@ -161,7 +161,7 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
     return {"content": content, "provider": provider, "intervened": intervened, "trigger": trigger}
 
 
-async def grade_question(db, user, question_id, user_answer, work_text=None, lines_boxes=None, part=None, hints_used=0, strokes=None, strokes_thumb=None) -> dict:
+async def grade_question(db, user, question_id, user_answer, work_text=None, lines_boxes=None, part=None, hints_used=0, strokes=None, strokes_thumb=None, lang: str = "en") -> dict:
     question = await db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
@@ -258,7 +258,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
             pass
 
     if not result["correct"]:
-        steps_text = _steps_text(question)
+        steps_text = _steps_text(question, lang=lang)
         context = {
             "question_text": question.prompt,
             "part": result.get("part") if is_multi else None,
@@ -267,14 +267,15 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
         }
         resp["explanation"] = await _build_explanation(
             db, user, question, attempt.id, "incorrect", use_ai=True, steps_text=steps_text,
-            allow_gemini=allowed, context=context,
+            allow_gemini=allowed, context=context, lang=lang,
         )
         if work_text and not _work_usable(step_check):
-            resp["work_check"] = {"content": WORK_UNREADABLE_MSG, "provider": "system"}
+            unread_msg = "មិនអាចអានជំហានសរសេរដៃរបស់អ្នកបានច្បាស់លាស់។ សូមសាកល្បងសរសេរម្តងទៀត។" if lang == "km" else WORK_UNREADABLE_MSG
+            resp["work_check"] = {"content": unread_msg, "provider": "system"}
         else:
             check, provider = await llm.check_work(
                 question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
-                allow_gemini=allowed, step_check=step_check,
+                allow_gemini=allowed, step_check=step_check, lang=lang, user_id=user.id,
             )
             if check:
                 resp["work_check"] = {"content": check, "provider": provider}
@@ -288,6 +289,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
             allow_gemini=allowed,
             step_check=step_check,
             user_id=user.id,
+            lang=lang,
         )
         if rubric_tip:
             resp["teacher_feedback"] = {"content": rubric_tip, "provider": provider}
@@ -331,11 +333,11 @@ async def grade_graph_drawing(db, user, question_id, strokes_thumb: str) -> dict
 
 
 
-async def explain_question(db, user, question_id, user_answer=None, work_text=None) -> dict:
+async def explain_question(db, user, question_id, user_answer=None, work_text=None, lang: str = "en") -> dict:
     question = await db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
-    steps_text = _steps_text(question)
+    steps_text = _steps_text(question, lang=lang)
     context = {"question_text": question.prompt, "part": None, "user_answer": user_answer, "expected": None}
     if user_answer:
         spec = question.spec or {}
@@ -347,7 +349,7 @@ async def explain_question(db, user, question_id, user_answer=None, work_text=No
                 if _re.match(rf"^\s*{_re.escape(lab)}\s*[:=]", user_answer.strip()):
                     context["part"] = lab
                     break
-    result = await _build_explanation(db, user, question, None, "manual", use_ai=True, steps_text=steps_text, context=context)
+    result = await _build_explanation(db, user, question, None, "manual", use_ai=True, steps_text=steps_text, context=context, lang=lang)
     rows = await db.execute(select(Step).where(Step.question_id == question.id).order_by(Step.step_order))
     result["steps"] = [
         {"step_order": s.step_order, "title": s.title, "detail": s.detail, "formula": s.formula}
@@ -369,7 +371,7 @@ async def explain_question(db, user, question_id, user_answer=None, work_text=No
         else:
             check, provider = await llm.check_work(
                 question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
-                allow_gemini=allowed, step_check=step_check,
+                allow_gemini=allowed, step_check=step_check, lang=lang, user_id=user.id,
             )
             if check:
                 result["work_check"] = {"content": check, "provider": provider}

@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import MathText from "@/components/MathText";
 import { api, Attempt } from "@/lib/api";
+import { useLanguage } from "@/context/LanguageContext";
+import { QUESTION_TYPE_LABELS } from "@/lib/i18n";
 
 export default function HistoryPage() {
+  const { lang, t } = useLanguage();
   const router = useRouter();
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [error, setError] = useState("");
@@ -30,15 +33,33 @@ export default function HistoryPage() {
   const missedFormulas = (a: Attempt) =>
     (a.formula_breakdown ?? []).filter((f) => !f.reached);
 
+  const getTopicLabel = (topic: string) => {
+    const key = `topic_${topic}` as const;
+    try {
+      return t(key as any) || topic.replace(/_/g, " ");
+    } catch {
+      return topic.replace(/_/g, " ");
+    }
+  };
+
+  const getDiffLabel = (diff: string) => {
+    const key = `diff_${diff}` as const;
+    try {
+      return t(key as any) || diff;
+    } catch {
+      return diff;
+    }
+  };
+
   return (
     <AuthGuard>
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-slate-900 mb-6">History</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-6">{t("history_title")}</h1>
         {error && <p className="text-sm text-red-600">{error}</p>}
         {busy ? (
-          <p className="text-slate-500">Loading...</p>
+          <p className="text-slate-500">{t("history_loading")}</p>
         ) : attempts.length === 0 ? (
-          <p className="text-slate-500">No attempts yet — head to Practice.</p>
+          <p className="text-slate-500">{t("history_no_attempts")}</p>
         ) : (
           <div className="space-y-4">
             {attempts.map((a) => {
@@ -53,22 +74,22 @@ export default function HistoryPage() {
                 >
                   <div className="flex flex-wrap items-center gap-2 mb-2 text-xs text-slate-500">
                     <span className="px-2 py-0.5 rounded bg-slate-100 capitalize">
-                      {a.topic.replace("_", " ")}
+                      {getTopicLabel(a.topic)}
                     </span>
                     <span className="px-2 py-0.5 rounded bg-slate-100">
-                      {a.question_type.replace("_", " ")}
+                      {QUESTION_TYPE_LABELS[a.question_type]?.[lang] ?? a.question_type.replace(/_/g, " ")}
                     </span>
-                    <span className="px-2 py-0.5 rounded bg-slate-100">{a.difficulty}</span>
+                    <span className="px-2 py-0.5 rounded bg-slate-100">{getDiffLabel(a.difficulty)}</span>
                     <span
                       className={`px-2 py-0.5 rounded ${
                         a.correct ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {a.correct ? "Correct" : "Wrong"}
+                      {a.correct ? t("verdict_correct") : t("verdict_incorrect")}
                     </span>
                     {!!a.hints_used && (
                       <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-700">
-                        {a.hints_used} hint{a.hints_used === 1 ? "" : "s"} used
+                        {a.hints_used} {lang === "km" ? "ជំនួយ" : `hint${a.hints_used === 1 ? "" : "s"} used`}
                       </span>
                     )}
                     <span className="ml-auto">{new Date(a.created_at).toLocaleString()}</span>
@@ -84,12 +105,12 @@ export default function HistoryPage() {
 
                   <div className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
                     <div className="text-slate-600">
-                      <span className="text-slate-400">Your answer:</span>{" "}
+                      <span className="text-slate-400">{t("verdict_you")}:</span>{" "}
                       <MathText text={`\\(${a.user_answer}\\)`} className="inline" />
                     </div>
                     {!a.correct && (
                       <div className="text-slate-600">
-                        <span className="text-slate-400">Expected:</span>{" "}
+                        <span className="text-slate-400">{t("label_expected")}:</span>{" "}
                         <MathText text={`\\(${a.expected_answer}\\)`} className="inline" />
                       </div>
                     )}
@@ -105,7 +126,7 @@ export default function HistoryPage() {
 
                   {missed.length > 0 && (
                     <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                      <span className="text-slate-400">Missed formulas:</span>
+                      <span className="text-slate-400">{lang === "km" ? "រូបមន្តខ្វះចន្លោះ:" : "Missed formulas:"}</span>
                       {missed.map((f, i) => (
                         <span
                           key={`${f.formula}-${i}`}
@@ -125,7 +146,7 @@ export default function HistoryPage() {
                       }}
                       className="px-3 py-1.5 rounded-md bg-slate-900 text-white text-xs font-medium hover:bg-slate-700"
                     >
-                      Review
+                      {lang === "km" ? "ពិនិត្យឡើងវិញ" : "Review"}
                     </button>
                   </div>
                 </div>

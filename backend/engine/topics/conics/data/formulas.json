@@ -1,7 +1,7 @@
 {
   "conic_classification": {
     "name_en": "Classify a conic by completing the square",
-    "name_km": "",
+    "name_km": "កំណត់ប្រភេទ និងលក្ខណៈកោនិក",
     "weight": 2,
     "group": "conics",
     "latex": "Ax^2+By^2+Cx+Dy+E = 0",

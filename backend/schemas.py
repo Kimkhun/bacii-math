@@ -44,6 +44,9 @@ class GenerateRequest(BaseModel):
     # (factoring_0_0, conjugate_infinity, ...) or a probability scenario id.
     # Ignored by topics/question_types that don't have this extra axis.
     variant: str | None = None
+    # No `lang` here: generation is language-neutral (SymPy builds the problem,
+    # the web client renders the statement in the student's language). Grading
+    # and explanation do take `lang` because those produce prose.
 
 
 class GradeRequest(BaseModel):
@@ -55,6 +58,7 @@ class GradeRequest(BaseModel):
     hints_used: int = 0
     strokes: dict | None = None
     strokes_thumb: str | None = None
+    lang: str = "en"
 
 
 class SandboxSolveRequest(BaseModel):
@@ -79,6 +83,7 @@ class ExplainRequest(BaseModel):
     question_id: uuid.UUID
     user_answer: str | None = None
     work_text: str | None = None
+    lang: str = "en"
 
 
 class ReplayRequest(BaseModel):

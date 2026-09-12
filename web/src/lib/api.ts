@@ -700,14 +700,15 @@ export const api = {
     part?: string,
     hints_used?: number,
     strokes?: StrokeDoc | null,
-    strokes_thumb?: string | null
+    strokes_thumb?: string | null,
+    lang?: string
   ) =>
     request<GradeResult>("/problems/grade", {
       method: "POST",
-      body: { question_id, user_answer, work_text, lines_boxes, part, hints_used, strokes, strokes_thumb },
+      body: { question_id, user_answer, work_text, lines_boxes, part, hints_used, strokes, strokes_thumb, lang },
     }),
-  explain: (question_id: string, user_answer?: string, work_text?: string) =>
-    request<Explanation>("/problems/explain", { method: "POST", body: { question_id, user_answer, work_text } }),
+  explain: (question_id: string, user_answer?: string, work_text?: string, lang?: string) =>
+    request<Explanation>("/problems/explain", { method: "POST", body: { question_id, user_answer, work_text, lang } }),
   saveProgress: (
     question_id: string,
     part?: string,
