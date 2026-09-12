@@ -1,7 +1,7 @@
 {
   "compute_derivative": {
     "name_en": "Differentiation rules",
-    "name_km": "",
+    "name_km": "គណនាដេរីវេនៃអនុគមន៍",
     "weight": 2,
     "group": "derivatives",
     "latex": "(uv)' = u'v + uv',\\quad \\left(\\frac{u}{v}\\right)' = \\frac{u'v-uv'}{v^2}",

@@ -1,7 +1,7 @@
 {
   "first_order_linear_homogeneous_constant": {
     "name_en": "First-order linear homogeneous ODE (constant coefficient)",
-    "name_km": "",
+    "name_km": "សមីការឌីផេរ៉ង់ស្យែលលីនេអ៊ែរលំដាប់១ អូម៉ូសែនមេគុណថេរ",
     "latex": "y' + ay = 0 \\implies y = Ae^{-ax}",
     "weight": 1,
     "group": "differential_equations",
@@ -13,7 +13,7 @@
   },
   "first_order_linear_homogeneous_variable": {
     "name_en": "First-order linear homogeneous ODE (variable coefficient)",
-    "name_km": "",
+    "name_km": "សមីការឌីផេរ៉ង់ស្យែលលីនេអ៊ែរលំដាប់១ អូម៉ូសែនមេគុណអថេរ",
     "latex": "y' + p(x)y = 0 \\implies y = Ae^{-\\int p(x)\\,dx}",
     "weight": 2,
     "group": "differential_equations",
@@ -26,7 +26,7 @@
   },
   "first_order_linear_nonhomogeneous": {
     "name_en": "First-order linear non-homogeneous ODE",
-    "name_km": "",
+    "name_km": "សមីការឌីផេរ៉ង់ស្យែលលីនេអ៊ែរលំដាប់១ មិនអូម៉ូសែន",
     "latex": "y' + ay = f(x) \\implies y = y_c + y_p",
     "weight": 2,
     "group": "differential_equations",
@@ -39,7 +39,7 @@
   },
   "second_order_linear_homogeneous_constant": {
     "name_en": "Second-order linear homogeneous ODE (constant coefficients)",
-    "name_km": "",
+    "name_km": "សមីការឌីផេរ៉ង់ស្យែលលីនេអ៊ែរលំដាប់២ អូម៉ូសែនមេគុណថេរ",
     "latex": "ay'' + by' + cy = 0",
     "weight": 2,
     "group": "differential_equations",
@@ -53,7 +53,7 @@
   },
   "second_order_linear_nonhomogeneous": {
     "name_en": "Second-order linear non-homogeneous ODE",
-    "name_km": "",
+    "name_km": "សមីការឌីផេរ៉ង់ស្យែលលីនេអ៊ែរលំដាប់២ មិនអូម៉ូសែន",
     "latex": "ay'' + by' + cy = p(x) \\implies y = y_c + y_p",
     "weight": 3,
     "group": "differential_equations",
@@ -66,7 +66,7 @@
   },
   "undetermined_coefficients_particular_solution": {
     "name_en": "Method of undetermined coefficients (particular solution table)",
-    "name_km": "",
+    "name_km": "ដំណោះស្រាយដោយឡែកតាមវិធីមេគុណមិនទាន់កំណត់",
     "latex": "p(x) = ke^{\\alpha x} \\implies y_p = Ae^{\\alpha x} \\ (\\lambda \\neq \\alpha)",
     "weight": 2,
     "group": "differential_equations",
@@ -87,7 +87,7 @@
   },
   "solve_ode": {
     "name_en": "Solve a differential equation",
-    "name_km": "",
+    "name_km": "ដោះស្រាយសមីការឌីផេរ៉ង់ស្យែល",
     "weight": 2,
     "group": "differential_equations",
     "latex": "y' + ay = 0 \\Rightarrow y = Ce^{-ax}",

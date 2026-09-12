@@ -1,7 +1,7 @@
 {
   "continuity_at_point": {
     "name_en": "Continuity at a point",
-    "name_km": "",
+    "name_km": "ភាពជាប់នៃអនុគមន៍ត្រង់ចំណុចមួយ",
     "weight": 2,
     "group": "continuity",
     "latex": "\\lim_{x\\to a^-}f(x) = \\lim_{x\\to a^+}f(x) = f(a)",

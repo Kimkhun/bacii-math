@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function SignupPage() {
+  const { lang, t } = useLanguage();
   const { signup } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -21,7 +23,7 @@ export default function SignupPage() {
       await signup(email, password);
       router.push("/practice");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Signup failed");
+      setError(err instanceof Error ? err.message : (lang === "km" ? "ការចុះឈ្មោះមិនបានជោគជ័យ" : "Signup failed"));
     } finally {
       setBusy(false);
     }
@@ -29,10 +31,10 @@ export default function SignupPage() {
 
   return (
     <div className="max-w-sm mx-auto px-4 py-16">
-      <h1 className="text-2xl font-bold text-center text-slate-900">Create account</h1>
+      <h1 className="text-2xl font-bold text-center text-slate-900">{t("btn_create_account")}</h1>
       <form onSubmit={submit} className="mt-6 bg-white border border-slate-200 rounded-lg p-6 space-y-4 shadow-sm">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Email</label>
+          <label className="block text-sm font-medium text-slate-700">{lang === "km" ? "អ៊ីមែល" : "Email"}</label>
           <input
             type="email"
             value={email}
@@ -42,7 +44,7 @@ export default function SignupPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Password</label>
+          <label className="block text-sm font-medium text-slate-700">{lang === "km" ? "ពាក្យសម្ងាត់" : "Password"}</label>
           <input
             type="password"
             value={password}
@@ -58,10 +60,13 @@ export default function SignupPage() {
           disabled={busy}
           className="w-full px-4 py-2 rounded-md bg-slate-900 text-white font-medium hover:bg-slate-700 disabled:opacity-50"
         >
-          {busy ? "Creating..." : "Sign up"}
+          {busy ? (lang === "km" ? "កំពុងបង្កើត..." : "Creating...") : t("nav_signup")}
         </button>
         <p className="text-sm text-slate-500 text-center">
-          Have an account? <Link href="/login" className="text-slate-900 underline">Log in</Link>
+          {lang === "km" ? "មានគណនីរួចហើយ? " : "Have an account? "}
+          <Link href="/login" className="text-slate-900 underline">
+            {t("nav_login")}
+          </Link>
         </p>
       </form>
     </div>

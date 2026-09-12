@@ -44,7 +44,7 @@ async def grade(
 ):
     return await services.grade_question(
         db, user, req.question_id, req.user_answer, req.work_text, req.lines_boxes, req.part, req.hints_used,
-        req.strokes, req.strokes_thumb
+        req.strokes, req.strokes_thumb, lang=req.lang
     )
 
 
@@ -73,7 +73,7 @@ async def explain(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await services.explain_question(db, user, req.question_id, req.user_answer, req.work_text)
+    return await services.explain_question(db, user, req.question_id, req.user_answer, req.work_text, lang=req.lang)
 
 
 @router.post("/progress/save")

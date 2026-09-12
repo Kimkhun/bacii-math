@@ -1,7 +1,7 @@
 {
   "factoring_0_0": {
     "name_en": "Factor a 0/0 indeterminate form",
-    "name_km": "",
+    "name_km": "ដាក់ជាផលគុណកត្តារាងមិនកំណត់ 0/0",
     "weight": 1,
     "group": "limit",
     "latex": "\\lim_{x\\to a}\\frac{(x-a)P(x)}{(x-a)Q(x)} = \\lim_{x\\to a}\\frac{P(x)}{Q(x)}",
@@ -12,7 +12,7 @@
   },
   "rational_function_infinity": {
     "name_en": "Rational function at infinity",
-    "name_km": "",
+    "name_km": "លីមីតអនុគមន៍សនិទាននៅអនន្ត",
     "weight": 2,
     "group": "limit",
     "latex": "\\lim_{x\\to\\infty}\\frac{a_nx^n+\\cdots}{b_mx^m+\\cdots}",
@@ -24,7 +24,7 @@
   },
   "sinc_standard_limit": {
     "name_en": "Standard limit sin(x)/x",
-    "name_km": "",
+    "name_km": "លីមីតគំរូ sin(x)/x = 1",
     "weight": 2,
     "group": "limit",
     "latex": "\\lim_{x\\to 0}\\frac{\\sin x}{x} = 1",
@@ -36,7 +36,7 @@
   },
   "exponential_standard_limit": {
     "name_en": "Standard limit (eˣ−1)/x",
-    "name_km": "",
+    "name_km": "លីមីតគំរូ (eˣ-1)/x = 1",
     "weight": 2,
     "group": "limit",
     "latex": "\\lim_{x\\to 0}\\frac{e^{x}-1}{x} = 1",
@@ -47,7 +47,7 @@
   },
   "rationalization_conjugate_finite": {
     "name_en": "Rationalise with the conjugate",
-    "name_km": "",
+    "name_km": "គុណកន្សោមឆ្លាស់បំបាត់រ៉ាឌីកាល់",
     "weight": 2,
     "group": "limit",
     "latex": "\\frac{\\sqrt{A}-B}{C}\\cdot\\frac{\\sqrt{A}+B}{\\sqrt{A}+B} = \\frac{A-B^2}{C(\\sqrt{A}+B)}",
@@ -57,7 +57,7 @@
   },
   "conjugate_infinity": {
     "name_en": "Conjugate trick at infinity",
-    "name_km": "",
+    "name_km": "គុណកន្សោមឆ្លាស់នៅអនន្ត",
     "weight": 3,
     "group": "limit",
     "latex": "\\sqrt{A}-B = \\frac{A-B^2}{\\sqrt{A}+B}",
@@ -67,7 +67,7 @@
   },
   "trig_identity_0_0": {
     "name_en": "Trig identity on a 0/0 form",
-    "name_km": "",
+    "name_km": "រូបមន្តត្រីកោណមាត្ររាងមិនកំណត់ 0/0",
     "weight": 2,
     "group": "limit",
     "latex": "\\sin^2 x + \\cos^2 x = 1",
@@ -78,7 +78,7 @@
   },
   "angle_addition_0_0": {
     "name_en": "Angle-addition identity",
-    "name_km": "",
+    "name_km": "រូបមន្តបូកមុំត្រីកោណមាត្រ 0/0",
     "weight": 2,
     "group": "limit",
     "latex": "\\sin(a\\pm b) = \\sin a\\cos b \\pm \\cos a\\sin b",
@@ -89,7 +89,7 @@
   },
   "rationalization_sinc_combo": {
     "name_en": "Conjugate + sin(x)/x combined",
-    "name_km": "",
+    "name_km": "កន្សោមឆ្លាស់ និង sinc ចម្រុះ",
     "weight": 3,
     "group": "limit",
     "latex": "\\lim_{x\\to 0}\\frac{\\sqrt{a+x}-\\sqrt{a-x}}{\\sin kx}",
@@ -100,7 +100,7 @@
   },
   "exponential_sinc_combo": {
     "name_en": "Exponential + sin(x)/x combined",
-    "name_km": "",
+    "name_km": "អិចស្បូណង់ស្យែល និង sinc ចម្រុះ",
     "weight": 3,
     "group": "limit",
     "latex": "\\lim_{x\\to 0}\\frac{(e^{ax}+e^{-ax})\\sin^2 kx}{2x^2}",
@@ -111,7 +111,7 @@
   },
   "half_angle_sinc_combo": {
     "name_en": "Half-angle + sin(x)/x combined",
-    "name_km": "",
+    "name_km": "រូបមន្តកន្លះមុំ និង sinc ចម្រុះ",
     "weight": 3,
     "group": "limit",
     "latex": "1-\\cos mx = 2\\sin^2\\frac{mx}{2}",
@@ -122,7 +122,7 @@
   },
   "log_limit_infinity": {
     "name_en": "Logarithmic limit at infinity",
-    "name_km": "",
+    "name_km": "លីមីតលោការីតនៅអនន្ត",
     "weight": 3,
     "group": "limit",
     "latex": "\\lim_{x\\to\\infty} x\\ln\\left(1+\\frac{k}{x}\\right) = k",
@@ -133,7 +133,7 @@
   },
   "log_limit_zero": {
     "name_en": "Logarithmic limit at 0",
-    "name_km": "",
+    "name_km": "លីមីតលោការីតត្រង់សូន្យ",
     "weight": 3,
     "group": "limit",
     "latex": "\\lim_{x\\to 0}\\frac{\\ln(1+x)}{x} = 1",
@@ -143,7 +143,7 @@
   },
   "indeterminate_one_infinity": {
     "name_en": "Indeterminate form 1^∞",
-    "name_km": "",
+    "name_km": "លីមីតរាងមិនកំណត់ 1^∞",
     "weight": 3,
     "group": "limit",
     "latex": "\\lim_{x\\to\\infty}\\left(1+\\frac{k}{x}\\right)^{x} = e^{k}",
