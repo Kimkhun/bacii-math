@@ -155,3 +155,25 @@ class StudySession(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+class ApiUsageLog(Base):
+    """Tracks token consumption, latency, and estimated USD cost across LLM/Vision calls."""
+
+    __tablename__ = "api_usage_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
+    endpoint: Mapped[str] = mapped_column(String(50), index=True)  # "ocr", "narration", "graph_grade", "correction", "problem_proposal"
+    provider: Mapped[str] = mapped_column(String(30))              # "gemini", "ollama"
+    model_name: Mapped[str] = mapped_column(String(50))            # "gemini-3.5-flash", "qwen2.5:3b", etc.
+
+    prompt_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    completion_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    total_tokens: Mapped[int] = mapped_column(Integer, default=0)
+
+    estimated_cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    latency_ms: Mapped[int] = mapped_column(Integer, default=0)
+    success: Mapped[bool] = mapped_column(Boolean, default=True)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)

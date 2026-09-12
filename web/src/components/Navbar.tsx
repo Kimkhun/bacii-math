@@ -23,7 +23,10 @@ export default function Navbar() {
             <Link href="/stats" className="text-slate-600 hover:text-slate-900">Stats</Link>
             <Link href="/formulas" className="text-slate-600 hover:text-slate-900">Formulas</Link>
             {user.is_admin && (
-              <Link href="/admin" className="text-slate-600 hover:text-slate-900">Admin</Link>
+              <>
+                <Link href="/admin" className="text-slate-600 hover:text-slate-900">Admin</Link>
+                <Link href="/admin/costs" className="text-emerald-600 hover:text-emerald-800 font-medium">Costs & AI</Link>
+              </>
             )}
           </div>
         )}

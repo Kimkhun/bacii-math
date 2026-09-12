@@ -14,6 +14,10 @@ from google.oauth2 import service_account
 
 from core.config import settings
 
+import time
+from cache import get_system_model_settings
+from .pricing import record_api_usage
+
 from .formulas import resolve_formula
 
 _client = None
@@ -56,7 +60,12 @@ async def _gemini_generate(
     json_mode: bool = False,
     response_schema: dict | None = None,
     tools: list | None = None,
+    endpoint: str = "narration",
+    user_id: any = None,
 ) -> any:
+    sys_models = await get_system_model_settings()
+    model = sys_models.get("text_model") or settings.gemini_model
+
     if tools is not None:
         config = types.GenerateContentConfig(tools=tools, temperature=0.1)
     elif response_schema is not None:
@@ -65,25 +74,69 @@ async def _gemini_generate(
         )
     else:
         config = types.GenerateContentConfig(response_mime_type="application/json") if json_mode else None
-    resp = await asyncio.wait_for(
-        _gemini_client().aio.models.generate_content(
-            model=settings.gemini_model, contents=prompt, config=config
-        ),
-        timeout=settings.gemini_timeout_seconds,
-    )
-    if tools is not None:
-        return resp
-    return resp.text
+
+    t0 = time.perf_counter()
+    try:
+        resp = await asyncio.wait_for(
+            _gemini_client().aio.models.generate_content(
+                model=model, contents=prompt, config=config
+            ),
+            timeout=settings.gemini_timeout_seconds,
+        )
+        latency_ms = int((time.perf_counter() - t0) * 1000)
+
+        # Extract real token usage
+        prompt_tokens = 0
+        completion_tokens = 0
+        if hasattr(resp, "usage_metadata") and resp.usage_metadata:
+            prompt_tokens = getattr(resp.usage_metadata, "prompt_token_count", 0) or 0
+            completion_tokens = getattr(resp.usage_metadata, "candidates_token_count", 0) or 0
+        else:
+            # Fallback estimation if metadata missing (~4 chars per token)
+            prompt_tokens = max(1, len(prompt) // 4)
+            resp_text = resp.text if hasattr(resp, "text") and resp.text else ""
+            completion_tokens = max(1, len(resp_text) // 4)
+
+        record_api_usage(
+            user_id=user_id,
+            endpoint=endpoint,
+            provider="gemini",
+            model_name=model,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            latency_ms=latency_ms,
+            success=True,
+        )
+
+        if tools is not None:
+            return resp
+        return resp.text
+    except Exception as exc:
+        latency_ms = int((time.perf_counter() - t0) * 1000)
+        record_api_usage(
+            user_id=user_id,
+            endpoint=endpoint,
+            provider="gemini",
+            model_name=model,
+            prompt_tokens=len(prompt) // 4,
+            completion_tokens=0,
+            latency_ms=latency_ms,
+            success=False,
+            error_message=str(exc),
+        )
+        raise
 
 
-async def gemini_vision_generate(prompt: str, image_bytes: bytes, mime_type: str = "image/png") -> str | None:
-    """Best-effort Gemini vision call for handwriting OCR.
-
-    Uses the same Vertex service account as the text/explanation calls, so the
-    normal Gemini quota applies (Vertex API, not the consumer free tier).
-    Returns None on any error so callers can fall back to Ollama.
-    """
-    model = settings.gemini_vision_model or settings.gemini_model
+async def gemini_vision_generate(
+    prompt: str,
+    image_bytes: bytes,
+    mime_type: str = "image/png",
+    user_id: any = None,
+) -> str | None:
+    """Best-effort Gemini vision call for handwriting OCR."""
+    sys_models = await get_system_model_settings()
+    model = sys_models.get("vision_model") or settings.gemini_vision_model or settings.gemini_model
+    t0 = time.perf_counter()
     try:
         resp = await asyncio.wait_for(
             _gemini_client().aio.models.generate_content(
@@ -96,31 +149,98 @@ async def gemini_vision_generate(prompt: str, image_bytes: bytes, mime_type: str
             ),
             timeout=settings.gemini_timeout_seconds,
         )
+        latency_ms = int((time.perf_counter() - t0) * 1000)
+
+        prompt_tokens = 0
+        completion_tokens = 0
+        if hasattr(resp, "usage_metadata") and resp.usage_metadata:
+            prompt_tokens = getattr(resp.usage_metadata, "prompt_token_count", 0) or 0
+            completion_tokens = getattr(resp.usage_metadata, "candidates_token_count", 0) or 0
+        else:
+            # 1 image = 258 tokens standard + text
+            prompt_tokens = 258 + (len(prompt) // 4)
+            completion_tokens = len(resp.text or "") // 4
+
+        record_api_usage(
+            user_id=user_id,
+            endpoint="ocr",
+            provider="gemini",
+            model_name=model,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            latency_ms=latency_ms,
+            success=True,
+        )
         return resp.text
-    except Exception:
+    except Exception as exc:
+        latency_ms = int((time.perf_counter() - t0) * 1000)
+        record_api_usage(
+            user_id=user_id,
+            endpoint="ocr",
+            provider="gemini",
+            model_name=model,
+            prompt_tokens=258 + (len(prompt) // 4),
+            completion_tokens=0,
+            latency_ms=latency_ms,
+            success=False,
+            error_message=str(exc),
+        )
         return None
 
 
-async def _ollama_generate(prompt: str) -> str:
-    async with httpx.AsyncClient(timeout=120) as client:
-        resp = await client.post(
-            settings.ollama_url,
-            json={"model": settings.text_model, "prompt": prompt, "stream": False},
+async def _ollama_generate(prompt: str, endpoint: str = "narration", user_id: any = None) -> str:
+    t0 = time.perf_counter()
+    try:
+        async with httpx.AsyncClient(timeout=120) as client:
+            resp = await client.post(
+                settings.ollama_url,
+                json={"model": settings.text_model, "prompt": prompt, "stream": False},
+            )
+            resp.raise_for_status()
+            text = resp.json().get("response", "").strip()
+            latency_ms = int((time.perf_counter() - t0) * 1000)
+            record_api_usage(
+                user_id=user_id,
+                endpoint=endpoint,
+                provider="ollama",
+                model_name=settings.text_model,
+                prompt_tokens=len(prompt) // 4,
+                completion_tokens=len(text) // 4,
+                latency_ms=latency_ms,
+                success=True,
+            )
+            return text
+    except Exception as exc:
+        latency_ms = int((time.perf_counter() - t0) * 1000)
+        record_api_usage(
+            user_id=user_id,
+            endpoint=endpoint,
+            provider="ollama",
+            model_name=settings.text_model,
+            prompt_tokens=len(prompt) // 4,
+            completion_tokens=0,
+            latency_ms=latency_ms,
+            success=False,
+            error_message=str(exc),
         )
-        resp.raise_for_status()
-        return resp.json().get("response", "").strip()
+        raise
 
 
-async def _generate_with_fallback(prompt: str, allow_gemini: bool = True) -> tuple[str | None, str | None]:
+async def _generate_with_fallback(
+    prompt: str,
+    allow_gemini: bool = True,
+    endpoint: str = "narration",
+    user_id: any = None,
+) -> tuple[str | None, str | None]:
     if allow_gemini:
         try:
-            text = (await _gemini_generate(prompt)).strip()
+            text = (await _gemini_generate(prompt, endpoint=endpoint, user_id=user_id)).strip()
             if text:
                 return text, "gemini"
         except Exception:
             pass
     try:
-        text = (await _ollama_generate(prompt)).strip()
+        text = (await _ollama_generate(prompt, endpoint=endpoint, user_id=user_id)).strip()
         if text:
             return text, "ollama"
     except Exception:
@@ -128,7 +248,12 @@ async def _generate_with_fallback(prompt: str, allow_gemini: bool = True) -> tup
     return None, None
 
 
-async def narrate(steps_text: str, allow_gemini: bool = True, context: dict | None = None) -> tuple[str | None, str | None]:
+async def narrate(
+    steps_text: str,
+    allow_gemini: bool = True,
+    context: dict | None = None,
+    user_id: any = None,
+) -> tuple[str | None, str | None]:
     prompt = (
         "Explain the solution below in a concise, no-nonsense style.\n"
         "For each step write ONE short line: the key computation and its result. "
@@ -154,7 +279,7 @@ async def narrate(steps_text: str, allow_gemini: bool = True, context: dict | No
             "for that part, then explain the solution. Never invent math beyond the "
             "steps below.\n\n" + prompt
         )
-    return await _generate_with_fallback(prompt, allow_gemini)
+    return await _generate_with_fallback(prompt, allow_gemini, endpoint="narration", user_id=user_id)
 
 
 # Structured-output schema for the Khmer reference solution. Every mathematical
@@ -217,7 +342,7 @@ _KM_PART_TOOL_DECL = types.FunctionDeclaration(
 )
 
 
-async def _narrate_single_part(part_fact: dict) -> dict | None:
+async def _narrate_single_part(part_fact: dict, user_id: any = None) -> dict | None:
     prompt = (
         "You are an expert Cambodian Bac II mathematics grader and teacher writing the official exam solution key (អត្រាកំណែផ្លូវការ).\n"
         f"Part Data (verified by SymPy):\n{json.dumps(part_fact, ensure_ascii=False)}\n\n"
@@ -233,7 +358,7 @@ async def _narrate_single_part(part_fact: dict) -> dict | None:
     )
     try:
         tool = types.Tool(function_declarations=[_KM_PART_TOOL_DECL])
-        resp = await _gemini_generate(prompt, tools=[tool])
+        resp = await _gemini_generate(prompt, tools=[tool], endpoint="km_solution", user_id=user_id)
         if hasattr(resp, "function_calls") and resp.function_calls:
             for call in resp.function_calls:
                 if call.name == "submit_part_solution":
@@ -254,7 +379,7 @@ async def _narrate_single_part(part_fact: dict) -> dict | None:
         return None
 
 
-async def narrate_km_solution(facts: dict) -> dict | None:
+async def narrate_km_solution(facts: dict, user_id: any = None) -> dict | None:
     """Generate a school-style Khmer reference solution from SymPy-locked facts using Gemini tool calling.
 
     Processes sub-parts concurrently so even long 5-10 part function studies return quickly
@@ -262,7 +387,7 @@ async def narrate_km_solution(facts: dict) -> dict | None:
     parts = facts.get("parts", [])
     if not parts:
         return None
-    results = await asyncio.gather(*(_narrate_single_part(p) for p in parts))
+    results = await asyncio.gather(*(_narrate_single_part(p, user_id=user_id) for p in parts))
     valid_parts = [r for r in results if r is not None]
     if not valid_parts:
         return None
@@ -344,7 +469,7 @@ async def check_work(
         "- Mention what the student got right, if anything.\n"
         "Be concise: max 6 lines. No greeting, no closing, no markdown."
     )
-    return await _generate_with_fallback(prompt, allow_gemini)
+    return await _generate_with_fallback(prompt, allow_gemini, endpoint="correction", user_id=user_id)
 
 
 async def check_rubric_feedback(
@@ -354,6 +479,7 @@ async def check_rubric_feedback(
     is_correct: bool,
     allow_gemini: bool = True,
     step_check: dict | None = None,
+    user_id: any = None,
 ) -> tuple[str | None, str | None]:
     """Generate authentic Khmer teacher commentary on the student's solution presentation
     and exam technique according to official Bac II grading rubrics."""
@@ -373,10 +499,10 @@ async def check_rubric_feedback(
         "- Wrap all mathematical expressions in $...$.\n"
         "- Do NOT include English words. Keep it concise, helpful, and encouraging."
     )
-    return await _generate_with_fallback(prompt, allow_gemini)
+    return await _generate_with_fallback(prompt, allow_gemini, endpoint="rubric_feedback", user_id=user_id)
 
 
-async def propose_problem(topic: str, difficulty: str) -> dict | None:
+async def propose_problem(topic: str, difficulty: str, user_id: any = None) -> dict | None:
     prompt = (
         "You generate practice problems for a high-school math app. "
         f"Generate one {topic} problem at {difficulty} difficulty. "
@@ -387,7 +513,7 @@ async def propose_problem(topic: str, difficulty: str) -> dict | None:
         '"a": <int>, "b": <int>}'
     )
     try:
-        text = await _gemini_generate(prompt, json_mode=True)
+        text = await _gemini_generate(prompt, json_mode=True, endpoint="problem_proposal", user_id=user_id)
         data = json.loads(text)
         return {
             "question_type": str(data["question_type"]),

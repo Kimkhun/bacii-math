@@ -144,7 +144,7 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
         else:
             if allow_gemini is None:
                 allow_gemini = await cache.allow_gemini(str(user.id))
-            text, got_provider = await llm.narrate(steps_text, allow_gemini=allow_gemini, context=context)
+            text, got_provider = await llm.narrate(steps_text, allow_gemini=allow_gemini, context=context, user_id=user.id)
             if text:
                 content, provider, intervened = text, got_provider, True
                 if got_provider == "gemini":
@@ -287,43 +287,27 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
             is_correct=result["correct"],
             allow_gemini=allowed,
             step_check=step_check,
+            user_id=user.id,
         )
         if rubric_tip:
             resp["teacher_feedback"] = {"content": rubric_tip, "provider": provider}
 
     # Update the hidden skill trackers behind the student's profile. Runs on
     # every attempt (right or wrong) — a correct answer is exactly as much
-    # evidence as a wrong one.
-    await record_skill_progress(db, user, question, attempt, at=datetime.now(timezone.utc))
-
-    # Auto-save progress: every grade updates the exercise's session so long
-    # multi-part exercises can be resumed without an explicit button.
-    if is_multi:
-        if result.get("part"):
-            session = await _upsert_session(
-                db, user, question.id, result["part"],
-                correct=result["correct"], typed=user_answer,
-                work_text=work_text, lines_boxes=lines_boxes,
-                strokes=strokes, strokes_thumb=strokes_thumb,
-            )
-        else:
-            session = await _upsert_session(db, user, question.id)
-            for v in result.get("parts") or []:
-                _merge_part_state(session, v["label"], correct=v["correct"])
-        if result["correct"] and result.get("all_complete"):
-            session.status = "completed"
-
-    await db.commit()
+    # evidence of mastery as a wrong one is of need.
+    await record_attempt_skills(
+        db, user, question,
+        correct=result["correct"],
+        step_check=step_check,
+    )
     return resp
 
 
-async def grade_graph_drawing(db, user, question_id, strokes_thumb) -> dict:
+async def grade_graph_drawing(db, user, question_id, strokes_thumb: str) -> dict:
     """Grade a student's hand-drawn graph against the reference using Gemini vision."""
     question = await db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
-    if question.topic != "functions":
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Graph grading only available for function exercises")
 
     spec = question.spec or {}
     graph = spec.get("graph")
@@ -334,15 +318,17 @@ async def grade_graph_drawing(db, user, question_id, strokes_thumb) -> dict:
     if not allowed:
         return {"error": "rate_limited", "message": "Too many requests. Try again later."}
 
-    result = await graph_grader.grade_graph(
+    result = await graph_grader.grade_student_graph(
         graph=graph,
         function_expr=spec.get("function_expr", ""),
         exercise_text=question.prompt,
         student_thumb=strokes_thumb,
+        user_id=user.id,
     )
     if result is None:
         return {"error": "gemini_failed", "message": "Graph grading unavailable. Try again later."}
     return result
+
 
 
 async def explain_question(db, user, question_id, user_answer=None, work_text=None) -> dict:

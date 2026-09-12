@@ -28,6 +28,6 @@ async def detect(
     if not data:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "empty image")
     try:
-        return await vision.detect_math(data)
+        return await vision.detect_math(data, user_id=user.id)
     except Exception as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"vision detection failed: {exc}")

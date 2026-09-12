@@ -251,9 +251,9 @@ async def _ollama_generate(image_b64: str) -> str:
         return resp.json().get("response", "").strip()
 
 
-async def _gemini_generate(image_b64: str) -> str | None:
+async def _gemini_generate(image_b64: str, user_id: any = None) -> str | None:
     image_bytes = base64.b64decode(image_b64)
-    return await llm.gemini_vision_generate(PROMPT, image_bytes)
+    return await llm.gemini_vision_generate(PROMPT, image_bytes, user_id=user_id)
 
 
 def _finalize(parsed: dict, provider: str, crop: dict | None = None) -> dict:
@@ -294,28 +294,32 @@ def _finalize(parsed: dict, provider: str, crop: dict | None = None) -> dict:
     )
 
     parsed["provider"] = provider
+    parsed["crop"] = crop
     return parsed
 
 
-async def detect_math(data: bytes) -> dict:
+async def detect_math(data: bytes, user_id: any = None) -> dict:
     with Image.open(io.BytesIO(data)) as raw:
         processed, crop = _preprocess(raw.convert("RGB"))
         buf = io.BytesIO()
         processed.save(buf, format="PNG")
         image_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
 
+    sys_models = await get_system_model_settings()
+    vision_provider = sys_models.get("vision_provider") or settings.vision_provider
+
     raw_response: str | None = None
     provider = "ollama"
 
-    if settings.vision_provider == "gemini":
-        raw_response = await _gemini_generate(image_b64)
+    if vision_provider == "gemini":
+        raw_response = await _gemini_generate(image_b64, user_id=user_id)
         provider = "gemini"
-    elif settings.vision_provider == "fallback":
+    elif vision_provider == "fallback":
         try:
             raw_response = await _ollama_generate(image_b64)
             provider = "ollama"
         except Exception:
-            raw_response = await _gemini_generate(image_b64)
+            raw_response = await _gemini_generate(image_b64, user_id=user_id)
             provider = "gemini"
     else:
         raw_response = await _ollama_generate(image_b64)

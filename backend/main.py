@@ -6,7 +6,7 @@ from core import security
 from core.config import settings
 from db import SessionLocal
 from models import User
-from routers import auth, problems, profile, vision
+from routers import admin, auth, problems, profile, vision
 
 app = FastAPI(title="BACII Math Engine", version="0.2.0")
 
@@ -48,6 +48,7 @@ app.include_router(problems.router)
 app.include_router(problems.me_router)
 app.include_router(profile.router)
 app.include_router(vision.router)
+app.include_router(admin.router)
 
 
 @app.get("/health")

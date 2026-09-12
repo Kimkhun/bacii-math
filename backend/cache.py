@@ -50,3 +50,24 @@ async def allow_gemini(user_id: str) -> bool:
     if count == 1:
         await r.expire(key, 60)
     return count <= settings.gemini_rate_limit_per_minute
+
+
+async def get_system_model_settings() -> dict:
+    """Read dynamic model settings from Redis with fallbacks to environment variables."""
+    r = _get_client()
+    text_model = await r.get("system:model:text") or settings.gemini_model
+    vision_model = await r.get("system:model:vision") or settings.gemini_vision_model or settings.gemini_model
+    vision_provider = await r.get("system:model:vision_provider") or settings.vision_provider
+    return {
+        "text_model": text_model,
+        "vision_model": vision_model,
+        "vision_provider": vision_provider,
+    }
+
+
+async def set_system_model_settings(text_model: str, vision_model: str, vision_provider: str) -> None:
+    """Update dynamic model configuration in Redis across all backend workers."""
+    r = _get_client()
+    await r.set("system:model:text", text_model)
+    await r.set("system:model:vision", vision_model)
+    await r.set("system:model:vision_provider", vision_provider)

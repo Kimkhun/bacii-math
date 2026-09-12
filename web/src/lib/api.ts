@@ -696,4 +696,70 @@ export const api = {
       method: "POST",
       body: { structure_id },
     }),
+  adminModelSettings: () => request<{ text_model: string; vision_model: string; vision_provider: string }>("/admin/model-settings"),
+  updateAdminModelSettings: (settings: { text_model: string; vision_model: string; vision_provider: string }) =>
+    request<{ status: string; settings: any }>("/admin/model-settings", {
+      method: "POST",
+      body: settings,
+    }),
+  adminCostSummary: (days: number = 30) => request<AdminCostSummary>(`/admin/costs/summary?days=${days}`),
+  adminUserCosts: (days: number = 30, endpoint?: string) =>
+    request<AdminUserCost[]>(`/admin/costs/users?days=${days}${endpoint ? `&endpoint=${endpoint}` : ""}`),
+  adminUsageLogs: (limit: number = 50, endpoint?: string) =>
+    request<AdminUsageLog[]>(`/admin/costs/logs?limit=${limit}${endpoint ? `&endpoint=${endpoint}` : ""}`),
 };
+
+export interface AdminCostSummary {
+  timeframe_days: number;
+  today: {
+    calls: number;
+    total_tokens: number;
+    cost_usd: number;
+  };
+  period: {
+    calls: number;
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+    cost_usd: number;
+    avg_latency_ms: number;
+  };
+  by_endpoint: Array<{
+    endpoint: string;
+    calls: number;
+    total_tokens: number;
+    cost_usd: number;
+  }>;
+  by_model: Array<{
+    model_name: string;
+    calls: number;
+    total_tokens: number;
+    cost_usd: number;
+  }>;
+}
+
+export interface AdminUserCost {
+  user_id: string;
+  email: string;
+  total_calls: number;
+  total_tokens: number;
+  total_cost_usd: number;
+  last_active: string | null;
+}
+
+export interface AdminUsageLog {
+  id: string;
+  user_id: string | null;
+  email: string;
+  endpoint: string;
+  provider: string;
+  model_name: string;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  estimated_cost_usd: number;
+  latency_ms: number;
+  success: boolean;
+  error_message: string | null;
+  created_at: string;
+}
