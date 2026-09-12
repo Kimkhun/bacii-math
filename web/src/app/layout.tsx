@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
@@ -39,12 +40,29 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/*
+          Runs before first paint so the document language (and with it font
+          selection and screen-reader pronunciation) is the student's own from
+          the very first frame. React state still starts at the server-rendered
+          "en" and resolves during hydration — doing the same for the rendered
+          strings would mean rendering the whole app client-only, which would
+          cost the public pages their static HTML.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var l=localStorage.getItem("bacii_lang");if(l==="km"||l==="en"){document.documentElement.lang=l}}catch(e){}`,
+          }}
+        />
+      </head>
       <body>
-        <AuthProvider>
-          <Navbar />
-          <main className="min-h-screen">{children}</main>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <Navbar />
+            <main className="min-h-screen">{children}</main>
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

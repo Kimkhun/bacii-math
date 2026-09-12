@@ -1,7 +1,7 @@
 {
   "laplace_rule": {
     "name_en": "Laplace's rule",
-    "name_km": "",
+    "name_km": "ច្បាប់ឡាផ្លាស (ចំនួនករណីស្រប/ចំនួនករណីអាច)",
     "latex": "P(A) = \\frac{n(A)}{n(\\Omega)}",
     "weight": 1,
     "group": "probability",
@@ -11,7 +11,7 @@
   },
   "combination_rule": {
     "name_en": "Combination (n choose k)",
-    "name_km": "",
+    "name_km": "រូបមន្តបន្សំ C(n, p)",
     "latex": "C(n,k) = \\frac{n!}{k!(n-k)!}",
     "weight": 1,
     "group": "probability",
@@ -21,7 +21,7 @@
   },
   "hypergeometric_rule": {
     "name_en": "Hypergeometric probability (sampling without replacement)",
-    "name_km": "",
+    "name_km": "ច្បាប់ប្រូបាប៊ីលីតេអុីពែរហ្សេអូម៉េទ្រិច",
     "latex": "P = \\frac{C(w,a)\\,C(b,k-a)}{C(w+b,k)}",
     "weight": 2,
     "group": "probability",
@@ -33,7 +33,7 @@
   },
   "product_rule": {
     "name_en": "Product rule for independent draws",
-    "name_km": "",
+    "name_km": "គោលការណ៍ផលគុណប្រូបាប៊ីលីតេ",
     "latex": "P(A\\cap B) = P(A)\\,P(B)",
     "weight": 1,
     "group": "probability",
@@ -43,7 +43,7 @@
   },
   "binomial_rule": {
     "name_en": "Binomial probability (exactly k successes)",
-    "name_km": "",
+    "name_km": "ច្បាប់ទ្វេធា P(X=k)",
     "latex": "P(X=k) = C(n,k)\\,p^k(1-p)^{n-k}",
     "weight": 2,
     "group": "probability",
@@ -53,7 +53,7 @@
   },
   "union_rule": {
     "name_en": "Probability of a union",
-    "name_km": "",
+    "name_km": "រូបមន្តប្រជុំប្រូបាប៊ីលីតេ P(A∪B)",
     "latex": "P(A\\cup B) = P(A) + P(B) - P(A\\cap B)",
     "weight": 2,
     "group": "probability",
@@ -63,7 +63,7 @@
   },
   "conditional_rule": {
     "name_en": "Conditional probability",
-    "name_km": "",
+    "name_km": "ប្រូបាប៊ីលីតេមានលក្ខខណ្ឌ P(A|B)",
     "latex": "P(A\\mid B) = \\frac{P(A\\cap B)}{P(B)}",
     "weight": 2,
     "group": "probability",
@@ -73,7 +73,7 @@
   },
   "complement_rule": {
     "name_en": "Complement rule",
-    "name_km": "",
+    "name_km": "ប្រូបាប៊ីលីតេព្រឹត្តិការណ៍ផ្ទុយ P(A')",
     "latex": "P(A^c) = 1 - P(A)",
     "weight": 1,
     "group": "probability",
@@ -83,7 +83,7 @@
   },
   "counting": {
     "name_en": "Counting: permutations & combinations",
-    "name_km": "",
+    "name_km": "វិភាគបន្សំ និងតម្រៀប",
     "weight": 1,
     "group": "probability",
     "latex": "C(n,r)=\\binom{n}{r}=\\frac{n!}{r!(n-r)!},\\quad P(n,r)=A_n^r=\\frac{n!}{(n-r)!}",

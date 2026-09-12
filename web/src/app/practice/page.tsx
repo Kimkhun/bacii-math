@@ -11,6 +11,8 @@ import FunctionGraph from "@/components/FunctionGraph";
 import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, Skill, StrokeDoc } from "@/lib/api";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
 import { drawingAudio } from "@/lib/audioEngine";
+import { useLanguage } from "@/context/LanguageContext";
+import { formatLocalizedPrompt, QUESTION_TYPE_LABELS } from "@/lib/i18n";
 
 const CURSIVE = "'Caveat', 'Segoe Script', cursive";
 
@@ -538,6 +540,7 @@ export default function PracticePage() {
 const TOOLBAR_POS_KEY = "bacii:toolbarPos";
 
 function PracticeInner() {
+  const { lang, t } = useLanguage();
   const canvasRefs = useRef<(CanvasHandle | null)[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const pendingDetectRef = useRef<DetectResult | null>(null);
@@ -1256,7 +1259,7 @@ function PracticeInner() {
         strokes && JSON.stringify(strokes).length <= 500_000 ? strokes : null;
       const res = await api.grade(
         question.id, answer, work, finalDet.lines_boxes, currentPart ?? undefined, hintLevel,
-        strokesToSend, strokesThumb,
+        strokesToSend, strokesThumb, lang
       );
       setResult(res);
       const nowDone = res.correct && res.all_complete;
@@ -1610,7 +1613,7 @@ function PracticeInner() {
     if (!question) return;
     setBusy(true);
     try {
-      const exp = await api.explain(question.id, detected ?? undefined, workText ?? undefined);
+      const exp = await api.explain(question.id, detected ?? undefined, workText ?? undefined, lang);
       setExplanation(exp);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Explain failed");
@@ -1657,19 +1660,19 @@ function PracticeInner() {
             className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto"
             style={{ top: headerHeight + 8 }}
           >
-            <span>Reviewing a past attempt — your writing is restored, draw on it or start fresh.</span>
+            <span>{t("practice_reviewing_banner")}</span>
             <button
               onClick={replayReview}
               disabled={busy}
               className="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-xs font-medium"
             >
-              Do the same exercise again
+              {t("practice_replay")}
             </button>
             <button
               onClick={exitReview}
               className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-medium"
             >
-              Exit review
+              {t("practice_exit_review")}
             </button>
           </div>
         )}
@@ -1679,19 +1682,19 @@ function PracticeInner() {
             style={{ top: headerHeight + 8 }}
           >
             <span>
-              Practicing: <span className="font-semibold">{practicingSkill.label}</span>
+              {t("practice_practicing")}: <span className="font-semibold">{practicingSkill.label}</span>
             </span>
             <Link
               href="/profile"
               className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-medium"
             >
-              Back to profile
+              {t("practice_back_to_profile")}
             </Link>
             <button
               onClick={() => setPracticingSkill(null)}
               className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-medium"
             >
-              Dismiss
+              {t("practice_dismiss")}
             </button>
           </div>
         )}
@@ -1701,13 +1704,13 @@ function PracticeInner() {
             style={{ top: headerHeight + 8 }}
           >
             <span>
-              Practicing: <span className="font-semibold capitalize">{practicingFormula.name}</span>
+              {t("practice_practicing")}: <span className="font-semibold capitalize">{practicingFormula.name}</span>
             </span>
             <button
               onClick={() => setPracticingFormula(null)}
               className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-medium"
             >
-              Dismiss
+              {t("practice_dismiss")}
             </button>
           </div>
         )}
@@ -1775,62 +1778,75 @@ function PracticeInner() {
         >
           <div className="flex items-start justify-between gap-3 w-full">
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              {question ? (
-                <div className="flex flex-col gap-1.5 min-w-0 flex-1">
-                  {sections.length > 0 ? (() => {
-                    const { preamble, items } = parseFullProblem(
-                      question.prompt_latex || question.prompt,
-                      sections
-                    );
-                    const activeKey = currentSection?.key ?? "1";
-                    return (
-                      <div className="space-y-1.5 min-w-0 max-h-[32vh] overflow-y-auto pr-1">
-                        {preamble && (
-                          <div className="text-[13px] text-[#475569] font-medium leading-relaxed pb-0.5 border-b border-[#f1f0ea]">
-                            <MathText text={preamble} />
+              {question ? (() => {
+                const locPrompt = formatLocalizedPrompt(
+                  question.topic,
+                  question.question_type,
+                  question.params,
+                  question.prompt,
+                  question.prompt_latex,
+                  lang,
+                  question.z_display
+                );
+                const displayLatex = locPrompt.promptLatex;
+                const displayText = locPrompt.prompt;
+                return (
+                  <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                    {sections.length > 0 ? (() => {
+                      const { preamble, items } = parseFullProblem(
+                        displayLatex || displayText,
+                        sections
+                      );
+                      const activeKey = currentSection?.key ?? "1";
+                      return (
+                        <div className="space-y-1.5 min-w-0 max-h-[32vh] overflow-y-auto pr-1">
+                          {preamble && (
+                            <div className="text-[13px] text-[#475569] font-medium leading-relaxed pb-0.5 border-b border-[#f1f0ea]">
+                              <MathText text={preamble} />
+                            </div>
+                          )}
+                          <div className="space-y-1">
+                            {items.map((item, i) => {
+                              const isActive = item.key === activeKey;
+                              return (
+                                <div
+                                  key={`${item.key}-${i}`}
+                                  onClick={() => {
+                                    const sec = sections.find((s) => s.key === item.key);
+                                    if (sec) {
+                                      const target =
+                                        sec.partIndices.find((idx) => !resultByPart[idx]?.correct) ??
+                                        sec.partIndices[0];
+                                      setActivePart(target);
+                                    }
+                                  }}
+                                  className={`cursor-pointer transition-all rounded px-2.5 py-1 ${
+                                    isActive
+                                      ? "bg-amber-50 text-[#0f172a] font-semibold text-[14px] border-l-[3px] border-amber-500 shadow-sm"
+                                      : "text-[#64748b] text-[12.5px] opacity-75 hover:opacity-100 hover:bg-[#faf9f6]"
+                                  }`}
+                                >
+                                  <MathText text={item.text} />
+                                </div>
+                              );
+                            })}
                           </div>
-                        )}
-                        <div className="space-y-1">
-                          {items.map((item, i) => {
-                            const isActive = item.key === activeKey;
-                            return (
-                              <div
-                                key={`${item.key}-${i}`}
-                                onClick={() => {
-                                  const sec = sections.find((s) => s.key === item.key);
-                                  if (sec) {
-                                    const target =
-                                      sec.partIndices.find((idx) => !resultByPart[idx]?.correct) ??
-                                      sec.partIndices[0];
-                                    setActivePart(target);
-                                  }
-                                }}
-                                className={`cursor-pointer transition-all rounded px-2.5 py-1 ${
-                                  isActive
-                                    ? "bg-amber-50 text-[#0f172a] font-semibold text-[14px] border-l-[3px] border-amber-500 shadow-sm"
-                                    : "text-[#64748b] text-[12.5px] opacity-75 hover:opacity-100 hover:bg-[#faf9f6]"
-                                }`}
-                              >
-                                <MathText text={item.text} />
-                              </div>
-                            );
-                          })}
                         </div>
+                      );
+                    })() : displayLatex ? (
+                      <div className="text-[#23272e] font-medium text-sm sm:text-base leading-relaxed min-w-0">
+                        <MathText text={`\\(${displayLatex}\\)`} className="text-[#23272e]" />
                       </div>
-                    );
-                  })() : question.prompt_latex ? (
-                    <div className="text-[#23272e] font-medium text-sm sm:text-base leading-relaxed min-w-0">
-                      <MathText text={`\\(${question.prompt_latex}\\)`} className="text-[#23272e]" />
-                    </div>
-                  ) : (
-                    <div className="text-[#23272e] font-medium text-sm sm:text-base leading-relaxed min-w-0">
-                      <span className="font-medium text-[#23272e]">{question.prompt}</span>
-                    </div>
-                  )}
-                </div>
-              ) : (
+                    ) : (
+                      <div className="text-[#23272e] font-medium text-sm sm:text-base leading-relaxed min-w-0">
+                        <MathText text={displayText} className="font-medium text-[#23272e]" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })() : (
                 <span className="text-[#8a857b] text-sm">
-                  សូមជ្រើសរើសប្រធានបទ និងកម្រិត រួចចុច &quot;New question&quot;។
+                  {t("prompt_select_guide")}
                 </span>
               )}
             </div>
@@ -1842,29 +1858,29 @@ function PracticeInner() {
                   value={topic}
                   onChange={(e) => changeTopic(e.target.value)}
                   className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
-                  title="Topic"
+                  title={t("label_topic")}
                 >
-                  <option value="complex">Complex numbers</option>
-                  <option value="limit">Limits</option>
-                  <option value="integral">Integrals</option>
-                  <option value="probability">Probability</option>
-                  <option value="functions">Functions</option>
-                  <option value="continuity">Continuity</option>
-                  <option value="derivatives">Derivatives</option>
-                  <option value="differential_equations">Differential equations</option>
-                  <option value="vectors_space">Vectors in space</option>
-                  <option value="conics">Conics</option>
+                  <option value="complex">{t("topic_complex")}</option>
+                  <option value="limit">{t("topic_limit")}</option>
+                  <option value="integral">{t("topic_integral")}</option>
+                  <option value="probability">{t("topic_probability")}</option>
+                  <option value="functions">{t("topic_functions")}</option>
+                  <option value="continuity">{t("topic_continuity")}</option>
+                  <option value="derivatives">{t("topic_derivatives")}</option>
+                  <option value="differential_equations">{t("topic_differential_equations")}</option>
+                  <option value="vectors_space">{t("topic_vectors_space")}</option>
+                  <option value="conics">{t("topic_conics")}</option>
                 </select>
                 <select
                   value={questionType}
                   onChange={(e) => changeQuestionType(e.target.value)}
                   className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
-                  title="Question type"
+                  title={t("label_question_type")}
                 >
-                  <option value="any">Any type</option>
-                  {TYPE_OPTIONS[topic].map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
+                  <option value="any">{t("qtype_any")}</option>
+                  {TYPE_OPTIONS[topic].map((top) => (
+                    <option key={top.value} value={top.value}>
+                      {QUESTION_TYPE_LABELS[top.value]?.[lang] ?? top.label}
                     </option>
                   ))}
                 </select>
@@ -1872,21 +1888,21 @@ function PracticeInner() {
                   value={difficulty}
                   onChange={(e) => changeDifficulty(e.target.value)}
                   className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
-                  title="Difficulty"
+                  title={t("label_difficulty")}
                 >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
+                  <option value="easy">{t("diff_easy")}</option>
+                  <option value="medium">{t("diff_medium")}</option>
+                  <option value="hard">{t("diff_hard")}</option>
                 </select>
                 {topic === "complex" && (
                   <select
                     value={mode}
                     onChange={(e) => changeMode(e.target.value)}
                     className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
-                    title="Generation mode"
+                    title={t("label_mode")}
                   >
-                    <option value="templates">Templates</option>
-                    <option value="gemini">Gemini</option>
+                    <option value="templates">{t("mode_templates")}</option>
+                    <option value="gemini">{t("mode_gemini")}</option>
                   </select>
                 )}
               </>
@@ -1894,7 +1910,7 @@ function PracticeInner() {
             {streak > 0 && (
               <span
                 className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-xs font-semibold whitespace-nowrap"
-                title="Consecutive correct answers"
+                title={t("label_consecutive_correct")}
               >
                 🔥 {streak}
               </span>
@@ -1907,7 +1923,7 @@ function PracticeInner() {
             {sessions && sessions.length > 0 && !reviewMode && (
               <details className="relative">
                 <summary className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
-                  Saved ({sessions.length})
+                  {t("btn_saved")} ({sessions.length})
                 </summary>
                 <div className="absolute right-0 top-full mt-1.5 w-72 max-h-64 overflow-y-auto bg-white border border-[#e4e2db] rounded-lg shadow-lg p-2 space-y-1.5 z-40">
                   {sessions.map((s) => (
@@ -1920,7 +1936,7 @@ function PracticeInner() {
                           {(s.question?.prompt ?? "").split("\n")[0]}
                         </div>
                         <div className="text-[11px] text-[#8a857b]">
-                          {s.question?.question_type.replace("_", " ")} · {s.parts_done}/{s.parts_total} parts
+                          {QUESTION_TYPE_LABELS[s.question?.question_type ?? ""]?.[lang] ?? s.question?.question_type.replace("_", " ")} · {s.parts_done}/{s.parts_total}
                           {s.status === "completed" ? " · done" : ""}
                         </div>
                       </div>
@@ -1930,13 +1946,13 @@ function PracticeInner() {
                           disabled={busy}
                           className="px-2.5 py-1 rounded-md bg-[#23272e] text-white text-xs font-medium hover:bg-[#31363f]"
                         >
-                          Resume
+                          {t("action_resume")}
                         </button>
                         <button
                           onClick={() => deleteSession(s.id)}
                           disabled={busy}
                           className="px-2 py-1 rounded-md border border-[#dddad1] text-xs text-[#8a857b] hover:bg-white"
-                          title="Delete saved progress"
+                          title={t("tip_delete_progress")}
                         >
                           ✕
                         </button>
@@ -1950,17 +1966,17 @@ function PracticeInner() {
               onClick={saveProgressNow}
               disabled={busy || !question}
               className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
-              title="Save progress for later"
+              title={t("tip_save_progress")}
             >
-              Save
+              {t("action_save")}
             </button>
             <button
               onClick={newQuestion}
               disabled={busy}
               className="px-[15px] py-2 stylus:px-5 stylus:py-3 rounded-[7px] bg-[#23272e] text-white text-[12.5px] font-semibold hover:bg-[#31363f] disabled:opacity-50"
-              title="Generate a new question"
+              title={t("tip_new_question")}
             >
-              {busy ? "Working..." : "New question"}
+              {busy ? t("btn_generating") : t("btn_new_question")}
             </button>
           </div>
         </div>
@@ -2019,10 +2035,10 @@ function PracticeInner() {
             >
               <div className="font-bold text-[#23272e]">
                 {exerciseDone
-                  ? "Exercise complete!"
+                  ? t("verdict_complete")
                   : result.correct
-                  ? `Part ${result.part ?? ""} correct`
-                  : "Incorrect"}
+                  ? `${t("label_part")} ${result.part ?? ""} ${t("verdict_correct")}`
+                  : t("verdict_incorrect")}
               </div>
               {exerciseDone && (
                 <button
@@ -2030,7 +2046,7 @@ function PracticeInner() {
                   disabled={busy}
                   className="mt-2 w-full px-3 py-2 rounded-lg bg-[#23272e] text-white text-xs font-semibold hover:bg-[#31363f] disabled:opacity-50"
                 >
-                  {busy ? "Working..." : "Next question →"}
+                  {busy ? t("btn_generating") : t("action_next_question")}
                 </button>
               )}
               {sections.length > 0 ? (
@@ -2083,12 +2099,12 @@ function PracticeInner() {
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-semibold">
-                          {pv.correct ? "✓" : "✗"} {pv.correct ? "Correct" : "Needs revision"}
+                          {pv.correct ? "✓" : "✗"} {pv.correct ? t("verdict_correct") : t("verdict_needs_revision")}
                         </span>
                         <span className="text-xs">
-                          {pv.given ? `you: ${pv.given} · ` : ""}
-                          {pv.correct ? "" : `expected ${pv.expected}`}
-                          {!pv.correct && !pv.given ? "(unanswered)" : ""}
+                          {pv.given ? `${t("verdict_you")}: ${pv.given} · ` : ""}
+                          {pv.correct ? "" : `${t("verdict_expected")} ${pv.expected}`}
+                          {!pv.correct && !pv.given ? ` ${t("verdict_unanswered")}` : ""}
                         </span>
                       </div>
                       {pv.note && (
@@ -2100,15 +2116,15 @@ function PracticeInner() {
               ) : (
                 !result.correct && (
                   <div className="mt-1 text-sm text-[#3f3c35]">
-                    Expected: <span className="font-medium">{result.expected}</span>
+                    {t("label_expected")}: <span className="font-medium">{result.expected}</span>
                   </div>
                 )
               )}
-              <div className="mt-1 text-xs text-[#8a857b]">Reason: {result.reason}</div>
+              <div className="mt-1 text-xs text-[#8a857b]">{t("label_reason")}: {result.reason}</div>
               {result.rubric_score && (
                 <div className="mt-2 rounded-md border border-[#e4e2db] bg-[#faf9f6] p-2.5">
                   <div className="flex items-center justify-between text-xs font-semibold text-[#3f3c35]">
-                    <span>Step-by-step score</span>
+                    <span>{t("label_step_score")}</span>
                     <span>
                       {result.rubric_score.earned.toFixed(1)} / {result.rubric_score.possible.toFixed(0)}
                     </span>
@@ -2130,7 +2146,7 @@ function PracticeInner() {
                 <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 shadow-sm">
                   <div className="flex items-center gap-1.5 font-semibold text-amber-800 mb-1">
                     <span>👨‍🏫</span>
-                    <span>ការណែនាំពីលោកគ្រូ (Teacher's Exam Rubric Tip)</span>
+                    <span>{t("label_teacher_tip")}</span>
                   </div>
                   <MathText text={result.teacher_feedback.content} className="whitespace-pre-wrap font-sans" />
                 </div>
@@ -2147,19 +2163,19 @@ function PracticeInner() {
                       href={`/practice?formula=${fumbled}`}
                       className="mt-2 inline-block px-2.5 py-1 rounded-md bg-[#23272e] text-white text-xs font-medium hover:bg-[#31363f]"
                     >
-                      Practice: {fumbled.replaceAll("_", " ")}
+                      {t("formulas_practice")}: {fumbled.replaceAll("_", " ")}
                     </Link>
                   );
                 })()}
               {result.graph && (
                 <div className="mt-3 border-t border-[#e4e2db] pt-2">
                   <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
-                    Reference graph — compare with your drawing
+                    {t("label_ref_graph_compare")}
                   </div>
                   <FunctionGraph graph={result.graph} />
                   {result.graph_check && (
                     <div className="mt-2 text-xs">
-                      <div className="text-[#8a857b]">Labels your drawing includes:</div>
+                      <div className="text-[#8a857b]">{t("label_ref_graph")}:</div>
                       <div className="mt-0.5 flex flex-wrap gap-x-2">
                         {result.graph_check.items.map((it) => (
                           <span
@@ -2172,8 +2188,7 @@ function PracticeInner() {
                       </div>
                       {result.graph_check.found < result.graph_check.total && (
                         <div className="mt-1 text-[#8a857b] text-[11px]">
-                          Missing labels aren't counted wrong — add them and redraw to match the
-                          reference curve.
+                          {t("label_missing_labels_note")}
                         </div>
                       )}
                     </div>
@@ -2181,7 +2196,7 @@ function PracticeInner() {
                   {graphGrade && !graphGrade.error && (
                     <div className="mt-3 border-t border-[#e4e2db] pt-2">
                       <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
-                        Graph Drawing Assessment
+                        {t("label_graph_assessment")}
                       </div>
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className={`text-lg font-bold ${graphGrade.score! >= 80 ? "text-emerald-700" : graphGrade.score! >= 60 ? "text-amber-600" : "text-red-600"}`}>
@@ -2190,22 +2205,22 @@ function PracticeInner() {
                         <div className="flex gap-1.5 text-xs">
                           {graphGrade.curve_correct !== undefined && (
                             <span className={graphGrade.curve_correct ? "text-emerald-700" : "text-red-600"}>
-                              Curve {graphGrade.curve_correct ? "✓" : "✗"}
+                              {t("label_curve")} {graphGrade.curve_correct ? "✓" : "✗"}
                             </span>
                           )}
                           {graphGrade.asymptotes_correct !== undefined && (
                             <span className={graphGrade.asymptotes_correct ? "text-emerald-700" : "text-red-600"}>
-                              Asymptotes {graphGrade.asymptotes_correct ? "✓" : "✗"}
+                              {t("label_asymptotes")} {graphGrade.asymptotes_correct ? "✓" : "✗"}
                             </span>
                           )}
                           {graphGrade.tangent_correct !== null && graphGrade.tangent_correct !== undefined && (
                             <span className={graphGrade.tangent_correct ? "text-emerald-700" : "text-red-600"}>
-                              Tangent {graphGrade.tangent_correct ? "✓" : "✗"}
+                              {t("label_tangent")} {graphGrade.tangent_correct ? "✓" : "✗"}
                             </span>
                           )}
                           {graphGrade.points_correct !== undefined && (
                             <span className={graphGrade.points_correct ? "text-emerald-700" : "text-red-600"}>
-                              Points {graphGrade.points_correct ? "✓" : "✗"}
+                              {t("label_points")} {graphGrade.points_correct ? "✓" : "✗"}
                             </span>
                           )}
                         </div>
@@ -2234,7 +2249,7 @@ function PracticeInner() {
             <div className="bg-white/90 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md p-3">
               {workText && workText.split("\n").length > 1 && (
                 <div className="mb-2 pb-2 border-b border-[#e4e2db]">
-                  <div className="text-xs text-[#8a857b] uppercase font-medium">Your work</div>
+                  <div className="text-xs text-[#8a857b] uppercase font-medium">{t("label_your_work")}</div>
                   <div className="mt-1 text-sm space-y-0.5">
                     {workText.split("\n").map((line, idx) => {
                       const lineNo = idx + 1;
@@ -2260,10 +2275,10 @@ function PracticeInner() {
                 <div className="text-sm leading-relaxed">
                   {explanation.steps?.length ? (
                     <div className="space-y-1.5 mb-2">
-                      <div className="text-xs font-medium text-[#8a857b] uppercase">Solution</div>
+                      <div className="text-xs font-medium text-[#8a857b] uppercase">{t("label_solution")}</div>
                       {explanation.steps.slice(0, hintLevel || explanation.steps.length).map((s) => (
                         <div key={s.step_order} className="flex gap-1.5">
-                          <span className="font-medium text-[#23272e] whitespace-nowrap">Step {s.step_order}:</span>
+                          <span className="font-medium text-[#23272e] whitespace-nowrap">{t("label_step")} {s.step_order}:</span>
                           <MathText text={s.detail} className="text-[#3f3c35]" />
                         </div>
                       ))}
@@ -2276,26 +2291,26 @@ function PracticeInner() {
                     <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 shadow-sm">
                       <div className="flex items-center gap-1.5 font-semibold text-amber-800 mb-1">
                         <span>👨‍🏫</span>
-                        <span>ការណែនាំពីលោកគ្រូ (Teacher's Exam Rubric Tip)</span>
+                        <span>{t("label_teacher_tip")}</span>
                       </div>
                       <MathText text={explanation.teacher_feedback.content} className="whitespace-pre-wrap font-sans" />
                     </div>
                   )}
                   {explanation.work_check?.content && (
                     <div className="mt-3 border-t border-[#e4e2db] pt-2">
-                      <div className="text-xs font-medium text-[#8a857b] uppercase">Your work check</div>
+                      <div className="text-xs font-medium text-[#8a857b] uppercase">{t("label_work_check")}</div>
                       <MathText text={explanation.work_check.content} className="mt-1 whitespace-pre-wrap" />
                     </div>
                   )}
                   {explanation.graph && (
                     <div className="mt-3 border-t border-[#e4e2db] pt-2">
                       <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
-                        Reference graph
+                        {t("label_ref_graph")}
                       </div>
                       <FunctionGraph graph={explanation.graph} />
                       {explanation.graph_check && (
                         <div className="mt-2 text-xs">
-                          <div className="text-[#8a857b]">Labels your drawing includes:</div>
+                          <div className="text-[#8a857b]">{t("label_ref_graph")}:</div>
                           <div className="mt-0.5 flex flex-wrap gap-x-2">
                             {explanation.graph_check.items.map((it) => (
                               <span
@@ -2335,7 +2350,7 @@ function PracticeInner() {
             onPointerMove={moveToolbarDrag}
             onPointerUp={endToolbarDrag}
             onPointerCancel={endToolbarDrag}
-            title="Drag to move"
+            title={t("tip_drag_move")}
             className="self-stretch flex flex-col flex-wrap items-center justify-center gap-[3px] px-1.5 cursor-grab active:cursor-grabbing touch-none"
           >
             {Array.from({ length: 6 }).map((_, i) => (
@@ -2346,74 +2361,74 @@ function PracticeInner() {
             <div className="flex items-center gap-0.5 bg-[#f1f0ec] rounded-[9px] p-[3px]">
               <button
                 onClick={() => selectTool("pen")}
-                title="Pen (P)"
+                title={t("tip_pen")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "pen"
                     ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
                     : "text-[#7a756a] font-normal"
                 }`}
               >
-                Pen
+                {t("tool_pen")}
               </button>
               <button
                 onClick={() => selectTool("eraser")}
-                title="Eraser (E)"
+                title={t("tip_eraser")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "eraser"
                     ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
                     : "text-[#7a756a] font-normal"
                 }`}
               >
-                Eraser
+                {t("tool_eraser")}
               </button>
               <button
                 onClick={() => selectTool("ruler")}
-                title="Straight line / ruler (R)"
+                title={t("tip_line")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "ruler"
                     ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
                     : "text-[#7a756a] font-normal"
                 }`}
               >
-                Line
+                {t("tool_line")}
               </button>
               <button
                 onClick={() => selectTool("curve")}
-                title="Curve — drag to bend a smooth line (C)"
+                title={t("tip_curve")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "curve"
                     ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
                     : "text-[#7a756a] font-normal"
                 }`}
               >
-                Curve
+                {t("tool_curve")}
               </button>
               <button
                 onClick={() => selectTool("ellipse")}
-                title="Ellipse — drag corner-to-corner (O)"
+                title={t("tip_ellipse")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "ellipse"
                     ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
                     : "text-[#7a756a] font-normal"
                 }`}
               >
-                Ellipse
+                {t("tool_ellipse")}
               </button>
               <button
                 onClick={() => selectTool("select")}
-                title="Select / move — click a shape to grab its points, drag to reshape (V)"
+                title={t("tip_select")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "select"
                     ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
                     : "text-[#7a756a] font-normal"
                 }`}
               >
-                Select
+                {t("tool_select")}
               </button>
             </div>
             <button
               onClick={selectAxes}
-              title="Coordinate axes (G): select to spawn, tap the page to move the origin, use scale/Δ to resize"
+              title={t("tip_axes")}
               className={`px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border text-[12.5px] font-medium ${
                 tool === "axes" && gridOn
                   ? "border-[#23272e] bg-[#23272e] text-white"
@@ -2422,11 +2437,11 @@ function PracticeInner() {
                   : "border-[#e4e2db] text-[#6b6558] hover:bg-[#faf9f6]"
               }`}
             >
-              {tool === "axes" && gridOn ? "Axes ✓" : "Axes"}
+              {tool === "axes" && gridOn ? `${t("tool_axes")} ✓` : t("tool_axes")}
             </button>
             {tool === "axes" && gridOn && (
               <>
-                <div className="flex items-center gap-1.5 rounded-[7px] border border-[#e4e2db] px-2 py-1.5 text-[12px] text-[#6b6558]" title="Zoom: pixels per unit">
+                <div className="flex items-center gap-1.5 rounded-[7px] border border-[#e4e2db] px-2 py-1.5 text-[12px] text-[#6b6558]" title={t("tip_zoom_unit")}>
                   <span>scale</span>
                   <input
                     type="number"
@@ -2436,7 +2451,7 @@ function PracticeInner() {
                     value={gridScale}
                     onChange={(e) => changeGridScale(Number(e.target.value))}
                     className="w-12 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
-                    aria-label="Grid scale (px per unit)"
+                    aria-label={t("aria_grid_scale")}
                   />
                 </div>
                 <div className="flex items-center gap-1.5 rounded-[7px] border border-[#e4e2db] px-2 py-1.5 text-[12px] text-[#6b6558]">
@@ -2449,7 +2464,7 @@ function PracticeInner() {
                     value={gridStep.x}
                     onChange={(e) => changeGridStep("x", Number(e.target.value))}
                     className="w-11 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
-                    aria-label="Grid x step"
+                    aria-label={t("aria_grid_x")}
                   />
                   <span>Δy</span>
                   <input
@@ -2460,7 +2475,7 @@ function PracticeInner() {
                     value={gridStep.y}
                     onChange={(e) => changeGridStep("y", Number(e.target.value))}
                     className="w-11 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
-                    aria-label="Grid y step"
+                    aria-label={t("aria_grid_y")}
                   />
                 </div>
                 {question?.params?.graph && (
@@ -2477,9 +2492,9 @@ function PracticeInner() {
                       }
                     }}
                     className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6]"
-                    title="Re-fit the grid to the exercise's reference window"
+                    title={t("tip_refit")}
                   >
-                    Fit
+                    {t("tool_fit")}
                   </button>
                 )}
               </>
@@ -2489,14 +2504,14 @@ function PracticeInner() {
               disabled={!canUndo}
               className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
             >
-              Undo
+              {t("btn_undo")}
             </button>
             <button
               onClick={redo}
               disabled={!canRedo}
               className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
             >
-              Redo
+              {t("btn_redo")}
             </button>
             <div className="w-px h-[26px] bg-[#e4e2db]" />
             <button
@@ -2511,34 +2526,34 @@ function PracticeInner() {
               }}
               className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#9a9488] hover:bg-[#faf9f6]"
             >
-              Clear
+              {t("btn_clear")}
             </button>
             <button
               onClick={showHint}
               disabled={busy || !question}
               className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
             >
-              {explanation?.steps?.length && hintLevel >= explanation.steps.length ? "All hints shown" : "Hint"}
+              {explanation?.steps?.length && hintLevel >= explanation.steps.length ? t("tool_all_hints") : t("tool_hint")}
             </button>
             <button
               onClick={uploadImage}
               className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6]"
             >
-              Upload
+              {t("tool_upload")}
             </button>
             <div className="flex items-center rounded-[7px] border border-[#dddad1] overflow-hidden text-xs">
-              <button onClick={zoomOut} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-[#faf9f6] text-[#6b6558]" title="Zoom out">
+              <button onClick={zoomOut} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-[#faf9f6] text-[#6b6558]" title={t("tip_zoom_out")}>
                 −
               </button>
               <span className="px-1.5 min-w-[2.5rem] text-center text-[#8a857b]">{Math.round(zoom * 100)}%</span>
-              <button onClick={zoomIn} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-[#faf9f6] text-[#6b6558]" title="Zoom in">
+              <button onClick={zoomIn} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-[#faf9f6] text-[#6b6558]" title={t("tip_zoom_in")}>
                 +
               </button>
             </div>
             <input
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
-              placeholder="or type answer"
+              placeholder={t("placeholder_type_answer")}
               className="w-28 px-3 py-2.5 stylus:py-3 border border-[#dddad1] rounded-[7px] text-xs placeholder:text-[#a8a296]"
             />
             {!busy && !skipAnim && (marks?.length || linePops?.length) ? (
@@ -2549,9 +2564,9 @@ function PracticeInner() {
                   setSkipAnim(true);
                 }}
                 className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6]"
-                title="Show the final result without waiting for the line-by-line check"
+                title={t("tip_skip_check")}
               >
-                Skip
+                {t("tool_skip")}
               </button>
             ) : null}
             <button
@@ -2559,7 +2574,7 @@ function PracticeInner() {
               disabled={busy}
               className="px-[15px] py-2.5 stylus:px-6 stylus:py-3.5 rounded-[7px] bg-[#23272e] text-white text-[12.5px] font-medium hover:bg-[#31363f] disabled:opacity-50"
             >
-              {busy ? "Working..." : "Check my work"}
+              {busy ? t("btn_checking") : t("tool_check_work")}
             </button>
           </div>
         </div>
@@ -2579,7 +2594,7 @@ function PracticeInner() {
                 : selectPenWidth(Number(e.target.value))
             }
             className="w-6 h-24 stylus:w-10 stylus:h-32 accent-[#23272e] [writing-mode:vertical-lr] [direction:rtl] cursor-pointer"
-            aria-label="Size"
+            aria-label={t("aria_size")}
           />
           <span className="text-[10px] text-[#a8a296]">{tool === "eraser" ? 10 : 1}</span>
           <span className="text-xs font-semibold text-[#6b6558] tabular-nums">
@@ -2588,7 +2603,7 @@ function PracticeInner() {
           <div className="w-full border-t border-[#e4e2db] my-1" />
           <button
             onClick={() => setShowSettings((s) => !s)}
-            title="Canvas & Audio Settings"
+            title={t("tip_settings")}
             className={`w-7 h-7 stylus:w-9 stylus:h-9 rounded flex items-center justify-center text-xs transition-colors ${
               showSettings ? "bg-[#23272e] text-white shadow-sm" : "text-[#6b6558] hover:bg-[#faf9f6]"
             }`}
@@ -2597,7 +2612,7 @@ function PracticeInner() {
           </button>
           <button
             onClick={() => setDebug((d) => !d)}
-            title="Toggle debug panel"
+            title={t("tip_debug")}
             className={`w-7 h-7 stylus:w-9 stylus:h-9 rounded text-[10px] font-bold ${
               debug ? "bg-[#23272e] text-white" : "text-[#a8a296] hover:bg-[#faf9f6]"
             }`}
@@ -2624,7 +2639,7 @@ function PracticeInner() {
             {/* Audio Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-[#464033]">Friction Audio</span>
+                <span className="font-medium text-[#464033]">{t("set_friction_audio")}</span>
                 <button
                   onClick={() => {
                     const next = drawingAudio.toggle();
@@ -2704,11 +2719,11 @@ function PracticeInner() {
                 Input & Stylus
               </span>
               <div className="flex items-center justify-between text-[11px] text-[#6b6558]">
-                <span>Palm Rejection</span>
+                <span>{t("set_palm_rejection")}</span>
                 <span className="text-emerald-600 font-medium">✓ Active</span>
               </div>
               <div className="flex items-center justify-between text-[11px] text-[#6b6558]">
-                <span>Pressure Sensitivity</span>
+                <span>{t("set_pressure_sensitivity")}</span>
                 <span className="text-emerald-600 font-medium">✓ Enabled</span>
               </div>
             </div>

@@ -217,6 +217,31 @@ LIMIT_TECHNIQUES = {
 }
 
 
+# Symbolic slot-form template per technique — the limit analogue of integral's
+# ``build_pattern_latex`` (``\int a x^2 + b x + c\,dx``). Limit techniques don't
+# expose a machine-fillable slot pattern (the samplers emit concrete instances),
+# so these are authored to mirror each sampler / curated family faithfully:
+# coefficients as slot letters, the indeterminate form the technique resolves.
+# Rendered in the admin template card's header, just like integral's pattern.
+TEMPLATE_LATEX = {
+    "direct_substitution": r"\lim_{x \to a} \dfrac{P(x)}{Q(x)}",
+    "factoring_0_0": r"\lim_{x \to c} \dfrac{a x^{2} + b x + d}{e x^{2} + f x + g}\ \left(\tfrac{0}{0}\right)",
+    "rationalization_conjugate_finite": r"\lim_{x \to a} \dfrac{x^{n} - a^{n}}{\sqrt{x + c} - d}",
+    "trig_identity_0_0": r"\lim_{x \to a} \dfrac{\sin^{2} x - 1}{\sin x + 1}",
+    "sinc_standard_limit": r"\lim_{x \to 0} \dfrac{c\,\sin(k x)}{x}",
+    "angle_addition_0_0": r"\lim_{x \to a} \dfrac{a\sin x + b\cos x}{p x + q}\ \left(\tfrac{0}{0}\right)",
+    "rationalization_sinc_combo": r"\lim_{x \to 0} \dfrac{\sqrt{a + x} - \sqrt{a - x}}{\sin(k x)}",
+    "exponential_sinc_combo": r"\lim_{x \to 0} \dfrac{\left(e^{a x} + e^{-a x}\right)\sin^{2}(k x)}{2 x^{2}}",
+    "half_angle_sinc_combo": r"\lim_{x \to 0} \dfrac{\sin(k x)\,\left(1 - \cos(m x)\right)}{x^{3}}",
+    "exponential_standard_limit": r"\lim_{x \to 0} \dfrac{e^{a x} - 1}{e^{b x} - 1}",
+    "conjugate_infinity": r"\lim_{x \to +\infty} \left(\sqrt{k^{2} x^{2} + b x + c} - (k x + d)\right)",
+    "log_limit_infinity": r"\lim_{x \to +\infty} c\,x\left(\ln(x + k) - \ln x\right)",
+    "rational_function_infinity": r"\lim_{x \to +\infty} \dfrac{a x^{2} + b x}{c x^{2} + d}",
+    "log_limit_zero": r"\lim_{x \to 0^{+}} x\,\ln x",
+    "indeterminate_one_infinity": r"\lim_{x \to a} f(x)^{g(x)}\ \left(1^{\infty}\right)",
+}
+
+
 def all_limit_techniques():
     return dict(LIMIT_TECHNIQUES)
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import MathText from "@/components/MathText";
 import { api, FormulaSkill, Profile, Skill, Suggestion, TopicProgress } from "@/lib/api";
+import { useLanguage } from "@/context/LanguageContext";
 
 // One colour scale for every bar on the page, so a 40 always looks like a 40
 // whether it's the headline, a topic, or a single technique.
@@ -14,14 +15,6 @@ function levelColor(level: number) {
   if (level >= 30) return { bar: "bg-amber-500", text: "text-amber-700", soft: "bg-amber-50" };
   return { bar: "bg-red-500", text: "text-red-700", soft: "bg-red-50" };
 }
-
-const STATUS_LABEL: Record<Skill["status"], string> = {
-  untouched: "Not tried",
-  learning: "Learning",
-  shaky: "Shaky",
-  solid: "Solid",
-  mastered: "Mastered",
-};
 
 const SUGGESTION_STYLE: Record<Suggestion["kind"], { label: string; className: string }> = {
   weak_skill: { label: "Weak spot", className: "bg-red-100 text-red-700 border-red-200" },
@@ -51,6 +44,7 @@ function pct(v: number) {
 
 /** Last 14 days, gaps filled, as a small accuracy strip. */
 function ActivityStrip({ activity }: { activity: Profile["activity"] }) {
+  const { lang } = useLanguage();
   const days = useMemo(() => {
     const byDate = new Map(activity.map((a) => [a.date, a]));
     const out: { date: string; attempts: number; correct: number }[] = [];
@@ -76,7 +70,7 @@ function ActivityStrip({ activity }: { activity: Profile["activity"] }) {
         {days.map((d) => (
           <div
             key={d.date}
-            title={`${d.date}: ${d.correct}/${d.attempts} right`}
+            title={`${d.date}: ${d.correct}/${d.attempts} ${lang === "km" ? "ត្រូវ" : "right"}`}
             className="flex-1 flex flex-col justify-end gap-px"
           >
             {d.attempts > 0 ? (
@@ -97,20 +91,22 @@ function ActivityStrip({ activity }: { activity: Profile["activity"] }) {
         ))}
       </div>
       <div className="mt-1 flex justify-between text-[11px] text-slate-400">
-        <span>14 days ago</span>
-        <span>Today</span>
+        <span>{lang === "km" ? "១៤ ថ្ងៃមុន" : "14 days ago"}</span>
+        <span>{lang === "km" ? "ថ្ងៃនេះ" : "Today"}</span>
       </div>
     </div>
   );
 }
 
 function SuggestionCard({ s }: { s: Suggestion }) {
+  const { t } = useLanguage();
   const style = SUGGESTION_STYLE[s.kind] ?? SUGGESTION_STYLE.new_skill;
+  const sugLabel = t((`sug_${s.kind}`) as any) || style.label;
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <span className={`px-2 py-0.5 rounded text-[11px] font-medium border ${style.className}`}>
-          {style.label}
+          {sugLabel}
         </span>
         {s.topic_label && <span className="text-[11px] text-slate-400">{s.topic_label}</span>}
       </div>
@@ -123,7 +119,7 @@ function SuggestionCard({ s }: { s: Suggestion }) {
           href={`/practice?skill=${encodeURIComponent(s.skill_key)}`}
           className="mt-1 self-start px-3 py-1.5 rounded-md bg-slate-900 text-white text-xs font-medium hover:bg-slate-700"
         >
-          Practise this
+          {t("formulas_practice")}
         </Link>
       )}
     </div>
@@ -131,8 +127,11 @@ function SuggestionCard({ s }: { s: Suggestion }) {
 }
 
 function SkillRow({ s }: { s: Skill }) {
+  const { lang, t } = useLanguage();
   const { text } = levelColor(s.level);
   const untouched = s.evidence <= 0;
+  const statusLabel = t((`status_${s.status}`) as any) || s.status;
+
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 border-t border-slate-100">
       <div className="flex-1 min-w-0">
@@ -145,17 +144,17 @@ function SkillRow({ s }: { s: Skill }) {
         <Bar level={s.level} className="mt-1.5" />
       </div>
       <div className="w-24 text-right text-xs text-slate-500 shrink-0">
-        {untouched ? "—" : `${s.correct}/${s.attempts} right`}
+        {untouched ? "—" : `${s.correct}/${s.attempts} ${lang === "km" ? "ត្រូវ" : "right"}`}
       </div>
       <div className={`w-16 text-right text-sm font-semibold shrink-0 ${untouched ? "text-slate-300" : text}`}>
         {untouched ? "–" : Math.round(s.level)}
       </div>
-      <div className="w-20 text-right text-[11px] text-slate-400 shrink-0">{STATUS_LABEL[s.status]}</div>
+      <div className="w-20 text-right text-[11px] text-slate-400 shrink-0">{statusLabel}</div>
       <Link
         href={`/practice?skill=${encodeURIComponent(s.key)}`}
         className="shrink-0 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium hover:bg-slate-200"
       >
-        Practise
+        {t("formulas_practice")}
       </Link>
     </div>
   );
@@ -172,22 +171,31 @@ function TopicCard({
   open: boolean;
   onToggle: () => void;
 }) {
+  const { lang, t } = useLanguage();
   const { text } = levelColor(topic.score);
+  const topicLabel = t((`topic_${topic.topic}`) as any) || topic.label;
+
   return (
     <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
       <button onClick={onToggle} className="w-full text-left px-4 py-3 hover:bg-slate-50">
         <div className="flex items-center gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-900 text-sm">{topic.label}</span>
+              <span className="font-semibold text-slate-900 text-sm">{topicLabel}</span>
               {!topic.practice && (
-                <span className="text-[11px] text-slate-400">(not counted in your level)</span>
+                <span className="text-[11px] text-slate-400">
+                  {lang === "km" ? "(មិនគិតក្នុងពិន្ទុរួម)" : "(not counted in your level)"}
+                </span>
               )}
             </div>
             <Bar level={topic.score} className="mt-2" />
             <div className="mt-1.5 text-xs text-slate-500">
               {topic.engaged
-                ? `${topic.skills_practised} of ${topic.skills_total} exercise types practised · ${topic.correct}/${topic.attempts} right · ${pct(topic.coverage)} of the topic proven`
+                ? lang === "km"
+                  ? `${topic.skills_practised}/${topic.skills_total} ប្រភេទលំហាត់បានអនុវត្ត · ត្រូវ ${topic.correct}/${topic.attempts} · បានឆ្លងកាត់ ${pct(topic.coverage)} នៃមេរៀន`
+                  : `${topic.skills_practised} of ${topic.skills_total} exercise types practised · ${topic.correct}/${topic.attempts} right · ${pct(topic.coverage)} of the topic proven`
+                : lang === "km"
+                ? `មិនទាន់ចាប់ផ្ដើម — មាន ${topic.skills_total} ប្រភេទលំហាត់រង់ចាំ`
                 : `Not started — ${topic.skills_total} exercise types waiting`}
             </div>
           </div>
@@ -212,21 +220,27 @@ function TopicCard({
 }
 
 function FormulaTable({ formulas }: { formulas: FormulaSkill[] }) {
+  const { lang, t } = useLanguage();
+
   return (
     <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-slate-100">
-        <h2 className="font-semibold text-slate-900 text-sm">Steps you keep missing</h2>
+        <h2 className="font-semibold text-slate-900 text-sm">
+          {lang === "km" ? "ជំហាន និងរូបមន្តដែលនៅខ្វះចន្លោះ" : "Steps you keep missing"}
+        </h2>
         <p className="text-xs text-slate-500 mt-0.5">
-          Individual formulas the step-checker watched in your written work — finer than an exercise type.
+          {lang === "km"
+            ? "រូបមន្តជាក់លាក់ដែលម៉ាស៊ីនពិនិត្យជំហានបានកត់សម្គាល់ក្នុងកិច្ចការរបស់អ្នក។"
+            : "Individual formulas the step-checker watched in your written work — finer than an exercise type."}
         </p>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[560px]">
           <thead className="bg-slate-50 text-left text-slate-500">
             <tr>
-              <th className="px-4 py-2 font-medium">Formula</th>
-              <th className="px-4 py-2 font-medium">Reached</th>
-              <th className="px-4 py-2 font-medium">Level</th>
+              <th className="px-4 py-2 font-medium">{t("stats_formula")}</th>
+              <th className="px-4 py-2 font-medium">{lang === "km" ? "សម្រេចបាន" : "Reached"}</th>
+              <th className="px-4 py-2 font-medium">{t("profile_skill_level")}</th>
               <th className="px-4 py-2" />
             </tr>
           </thead>
@@ -253,7 +267,7 @@ function FormulaTable({ formulas }: { formulas: FormulaSkill[] }) {
                         href={`/practice?skill=${encodeURIComponent(f.skill_key)}`}
                         className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium hover:bg-slate-200 whitespace-nowrap"
                       >
-                        Practise
+                        {t("formulas_practice")}
                       </Link>
                     )}
                   </td>
@@ -304,6 +318,7 @@ export default function ProfilePage() {
     [profile]
   );
 
+  const { lang, t } = useLanguage();
   const level = profile?.level;
   const color = levelColor(level?.score ?? 0);
   const visibleTopics = (profile?.topics ?? []).filter((t) => showAllTopics || t.engaged);
@@ -312,15 +327,15 @@ export default function ProfilePage() {
     <AuthGuard>
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-baseline justify-between mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Your profile</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("profile_title")}</h1>
           {profile && <span className="text-sm text-slate-500">{profile.user.email}</span>}
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
         {busy ? (
-          <p className="text-slate-500">Loading...</p>
+          <p className="text-slate-500">{lang === "km" ? "កំពុងផ្ទុកទិន្នន័យ..." : "Loading..."}</p>
         ) : !profile || !level ? (
-          <p className="text-slate-500">Nothing yet.</p>
+          <p className="text-slate-500">{lang === "km" ? "មិនទាន់មានទិន្នន័យនៅឡើយទេ។" : "Nothing yet."}</p>
         ) : (
           <div className="space-y-6">
             {/* Headline skill level */}
@@ -328,7 +343,7 @@ export default function ProfilePage() {
               <div className="flex flex-wrap items-end gap-6">
                 <div>
                   <div className="text-xs uppercase tracking-wide text-slate-400 font-medium">
-                    Skill level
+                    {t("profile_skill_level")}
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className={`text-5xl font-bold ${color.text}`}>
@@ -340,10 +355,10 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex-1 min-w-[240px]">
                   <Bar level={level.score} className="h-3" />
-                  <p className="mt-2 text-xs text-slate-500">
-                    How well you do the exercise types you&apos;ve practised, weighted by how much
-                    you&apos;ve proven. Getting harder exercises right raises it; wrong answers and
-                    long gaps lower it.
+                  <p className="mt-2 text-xs text-slate-500 leading-relaxed">
+                    {lang === "km"
+                      ? "កម្រិតសមត្ថភាពលើប្រភេទលំហាត់ដែលអ្នកបានហ្វឹកហាត់។ ការឆ្លើយត្រូវលើលំហាត់កម្រិតពិបាកជួយបង្កើនពិន្ទុ រីឯចម្លើយខុស ឬការខកខានយូរអាចធ្វើឱ្យពិន្ទុថយចុះ។"
+                      : "How well you do the exercise types you've practised, weighted by how much you've proven. Getting harder exercises right raises it; wrong answers and long gaps lower it."}
                   </p>
                 </div>
               </div>
@@ -351,28 +366,30 @@ export default function ProfilePage() {
               <div className="mt-5 grid gap-4 grid-cols-2 sm:grid-cols-4 border-t border-slate-100 pt-4">
                 <div>
                   <div className="text-xl font-semibold text-slate-900">{level.attempts}</div>
-                  <div className="text-xs text-slate-500">Exercises answered</div>
+                  <div className="text-xs text-slate-500">{lang === "km" ? "លំហាត់បានឆ្លើយ" : "Exercises answered"}</div>
                 </div>
                 <div>
                   <div className="text-xl font-semibold text-emerald-600">{pct(level.accuracy)}</div>
-                  <div className="text-xs text-slate-500">Accuracy</div>
+                  <div className="text-xs text-slate-500">{t("stats_accuracy")}</div>
                 </div>
                 <div>
                   <div className="text-xl font-semibold text-slate-900">
                     {level.topics_started}/{level.topics_total}
                   </div>
-                  <div className="text-xs text-slate-500">Topics started</div>
+                  <div className="text-xs text-slate-500">{lang === "km" ? "ប្រធានបទបានចាប់ផ្ដើម" : "Topics started"}</div>
                 </div>
                 <div>
                   <div className="text-xl font-semibold text-slate-900">{pct(level.coverage)}</div>
                   <div className="text-xs text-slate-500">
-                    Syllabus proven ({level.practised}/{level.total} types)
+                    {lang === "km"
+                      ? `កម្រិតគ្របដណ្ដប់ (${level.practised}/${level.total} ប្រភេទ)`
+                      : `Syllabus proven (${level.practised}/${level.total} types)`}
                   </div>
                 </div>
               </div>
 
               <div className="mt-5 border-t border-slate-100 pt-4">
-                <div className="text-xs text-slate-500 mb-1.5">Recent activity</div>
+                <div className="text-xs text-slate-500 mb-1.5">{t("profile_accuracy_14d")}</div>
                 <ActivityStrip activity={profile.activity} />
               </div>
             </div>
@@ -380,7 +397,7 @@ export default function ProfilePage() {
             {/* What to practise next */}
             {profile.suggestions.length > 0 && (
               <div>
-                <h2 className="font-semibold text-slate-900 mb-3">What to practise next</h2>
+                <h2 className="font-semibold text-slate-900 mb-3">{t("profile_suggestions")}</h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {profile.suggestions.map((s, i) => (
                     <SuggestionCard key={`${s.kind}-${s.skill_key ?? s.formula ?? i}`} s={s} />
@@ -392,31 +409,33 @@ export default function ProfilePage() {
             {/* Topic progress */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-semibold text-slate-900">Progress by topic</h2>
+                <h2 className="font-semibold text-slate-900">{t("profile_topics")}</h2>
                 <button
                   onClick={() => setShowAllTopics((v) => !v)}
                   className="text-xs text-slate-500 hover:text-slate-900"
                 >
-                  {showAllTopics ? "Show started only" : "Show all topics"}
+                  {showAllTopics
+                    ? (lang === "km" ? "បង្ហាញតែដែលបានចាប់ផ្ដើម" : "Show started only")
+                    : (lang === "km" ? "បង្ហាញគ្រប់ប្រធានបទ" : "Show all topics")}
                 </button>
               </div>
               <div className="space-y-2">
-                {visibleTopics.map((t) => (
+                {visibleTopics.map((tItem) => (
                   <TopicCard
-                    key={t.topic}
-                    topic={t}
-                    skills={skillsByTopic[t.topic] ?? []}
-                    open={!!openTopics[t.topic]}
-                    onToggle={() => setOpenTopics((o) => ({ ...o, [t.topic]: !o[t.topic] }))}
+                    key={tItem.topic}
+                    topic={tItem}
+                    skills={skillsByTopic[tItem.topic] ?? []}
+                    open={!!openTopics[tItem.topic]}
+                    onToggle={() => setOpenTopics((o) => ({ ...o, [tItem.topic]: !o[tItem.topic] }))}
                   />
                 ))}
                 {visibleTopics.length === 0 && (
                   <p className="text-sm text-slate-500">
-                    No topics started yet —{" "}
+                    {lang === "km" ? "មិនទាន់មានប្រធានបទបានចាប់ផ្ដើមទេ — " : "No topics started yet — "}
                     <Link href="/practice" className="text-slate-900 underline">
-                      answer a few exercises
+                      {lang === "km" ? "សូមចូលទៅអនុវត្តលំហាត់មួយចំនួន" : "answer a few exercises"}
                     </Link>{" "}
-                    and this fills in.
+                    {lang === "km" ? "ដើម្បីទទួលបានការវាយតម្លៃ។" : "and this fills in."}
                   </p>
                 )}
               </div>

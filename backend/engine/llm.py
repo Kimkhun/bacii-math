@@ -253,7 +253,31 @@ async def narrate(
     allow_gemini: bool = True,
     context: dict | None = None,
     user_id: any = None,
+    lang: str = "en",
 ) -> tuple[str | None, str | None]:
+    if lang == "km":
+        prompt = (
+            "You are an expert Cambodian Bac II mathematics teacher writing official step-by-step solutions (អត្រាកំណែផ្លូវការ).\n"
+            "Explain the solution below in a concise, authentic Cambodian Grade 12 Bac II exam style.\n"
+            "For each step write ONE short line: the key computation and its result. At most one sentence per step.\n"
+            "The explanation MUST be 100% in authentic Khmer with NO English words.\n"
+            "Follow the given steps exactly; do not invent new math.\n"
+            "Write EVERY mathematical expression as LaTeX wrapped in $...$ (e.g. គេបាន $\\lim_{x\\to 2} \\frac{x^2-4}{x-2} = 4$).\n"
+            "Use standard Cambodian Bac II connectors: គេមាន, គេបាន, នាំឱ្យ, ដូចនេះ.\n"
+            "No greeting, no closing, no markdown headings. Just the math, step by step.\n\n"
+            f"{steps_text}"
+        )
+        if context and context.get("user_answer"):
+            part = context.get("part")
+            expected = context.get("expected")
+            part_str = f" សំណួរផ្នែក {part}" if part else ""
+            expected_note = f" ហើយតម្លៃត្រឹមត្រូវគឺ '{expected}'" if expected else ""
+            prompt = (
+                f"បរិបទ៖ សិស្សបានឆ្លើយ{part_str} នូវ '{context['user_answer']}'{expected_note}។\n"
+                "សូមបញ្ជាក់មួយបន្ទាត់ខ្លីអំពីចម្លើយរបស់សិស្ស រួចពន្យល់ដំណោះស្រាយត្រឹមត្រូវជាភាសាខ្មែរ។\n\n" + prompt
+            )
+        return await _generate_with_fallback(prompt, allow_gemini, endpoint="narration", user_id=user_id)
+
     prompt = (
         "Explain the solution below in a concise, no-nonsense style.\n"
         "For each step write ONE short line: the key computation and its result. "
@@ -441,7 +465,26 @@ async def check_work(
     answer: str,
     allow_gemini: bool = True,
     step_check: dict | None = None,
+    lang: str = "en",
+    user_id: any = None,
 ) -> tuple[str | None, str | None]:
+    if lang == "km":
+        prompt = (
+            "You are an expert Cambodian Bac II mathematics teacher checking a student's handwritten work line by line.\n\n"
+            f"QUESTION: {question_text}\n\n"
+            f"STUDENT'S WORK (transcribed from handwriting):\n{user_work}\n\n"
+            f"CORRECT SOLUTION (អត្រាកំណែផ្លូវការ):\n{steps_text}\n\n"
+            f"CORRECT ANSWER: {answer}\n"
+            f"{_step_check_summary(step_check)}\n"
+            "RULES:\n"
+            "- Respond 100% in authentic Khmer with NO English words.\n"
+            "- Wrap all mathematical expressions in $...$.\n"
+            "- Check the student's work step by step: if it is completely correct, praise their presentation.\n"
+            "- If there is a mistake, point out which line is wrong, why, and how to write it correctly according to the Bac II rubric.\n"
+            "- Be concise: max 5 lines. No markdown headings."
+        )
+        return await _generate_with_fallback(prompt, allow_gemini, endpoint="correction", user_id=user_id)
+
     prompt = (
         "You are a math teacher checking a student's handwritten work line by line.\n\n"
         f"QUESTION: {question_text}\n\n"
@@ -480,10 +523,27 @@ async def check_rubric_feedback(
     allow_gemini: bool = True,
     step_check: dict | None = None,
     user_id: any = None,
+    lang: str = "en",
 ) -> tuple[str | None, str | None]:
-    """Generate authentic Khmer teacher commentary on the student's solution presentation
-    and exam technique according to official Bac II grading rubrics."""
+    """Generate teacher commentary on the student's solution presentation and exam
+    technique according to official Bac II grading rubrics.
+
+    The reference key is always the Khmer one (it is the official BAC II wording),
+    but the commentary itself follows the student's chosen language.
+    """
     status_str = "ត្រឹមត្រូវ (Correct)" if is_correct else "មិនទាន់ត្រឹមត្រូវ (Incorrect)"
+    if lang == "km":
+        language_rules = (
+            "- Write your response 100% in authentic Khmer.\n"
+            "- If their answer is correct, praise their accuracy and give a quick tip on presentation (e.g. remember to write domain conditions, mention question references like 'តាមសំណួរ...', or include units like ឯកតាផ្ទៃ).\n"
+            "- Do NOT include English words. Keep it concise, helpful, and encouraging."
+        )
+    else:
+        language_rules = (
+            "- Write your response 100% in English, even though the key below is in Khmer.\n"
+            "- If their answer is correct, praise their accuracy and give a quick tip on presentation (e.g. remember to state domain conditions, refer back to the question, or include units).\n"
+            "- Keep it concise, helpful, and encouraging."
+        )
     prompt = (
         "You are an expert Cambodian Bac II mathematics teacher and national exam grader reviewing a student's answer.\n"
         f"QUESTION: {question_text}\n\n"
@@ -492,12 +552,10 @@ async def check_rubric_feedback(
         f"SYMPY VERDICT: {status_str}\n"
         f"{_step_check_summary(step_check)}\n\n"
         "RULES:\n"
-        "- Write your response 100% in authentic Khmer.\n"
         "- Give 2 to 3 concise, friendly, and constructive sentences offering actionable teacher feedback on their presentation according to the Bac II grading rubric (អត្រាកំណែ).\n"
-        "- If their answer is correct, praise their accuracy and give a quick tip on presentation (e.g. remember to write domain conditions, mention question references like 'តាមសំណួរ...', or include units like ឯកតាផ្ទៃ).\n"
         "- If their answer is incorrect, pinpoint where they went off track and how to write it properly according to the official key.\n"
         "- Wrap all mathematical expressions in $...$.\n"
-        "- Do NOT include English words. Keep it concise, helpful, and encouraging."
+        f"{language_rules}"
     )
     return await _generate_with_fallback(prompt, allow_gemini, endpoint="rubric_feedback", user_id=user_id)
 

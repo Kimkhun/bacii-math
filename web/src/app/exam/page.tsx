@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import MathText from "@/components/MathText";
 import { api, Exam, ExamResult } from "@/lib/api";
+import { useLanguage } from "@/context/LanguageContext";
 
 const EXAM_ID = "2018";
 
@@ -14,6 +15,7 @@ function formatClock(seconds: number): string {
 }
 
 function ExamPageInner() {
+  const { lang, t } = useLanguage();
   const [exam, setExam] = useState<Exam | null>(null);
   const [error, setError] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -83,19 +85,17 @@ function ExamPageInner() {
   if (!started) {
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">BAC II Mathematics — {exam.exam_date}</h1>
-        <p className="text-slate-600 mb-1">Duration: {exam.duration_minutes} minutes</p>
-        <p className="text-slate-600 mb-6">Total: {exam.total_points} points across {exam.sections.length} sections</p>
-        <p className="text-slate-600 mb-6">
-          The whole exam is shown at once, exactly as in the real test booklet. Work through every
-          section, writing your steps for each question, then submit once at the end to be graded
-          against the full 125-point rubric — just like a real exam.
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">{t("exam_title")} — {exam.exam_date}</h1>
+        <p className="text-slate-600 mb-1">{t("exam_duration")}: {exam.duration_minutes} {lang === "km" ? "នាទី" : "minutes"}</p>
+        <p className="text-slate-600 mb-6">{t("exam_total_points")}: {exam.total_points} {t("exam_pts")} ({exam.sections.length} {lang === "km" ? "ផ្នែក" : "sections"})</p>
+        <p className="text-slate-600 mb-6 leading-relaxed">
+          {t("exam_intro")}
         </p>
         <button
           onClick={() => setStarted(true)}
           className="px-5 py-2.5 rounded-md bg-slate-900 text-white font-medium hover:bg-slate-700"
         >
-          Start exam
+          {t("btn_start_exam")}
         </button>
       </div>
     );
@@ -104,7 +104,7 @@ function ExamPageInner() {
   return (
     <div className="max-w-3xl mx-auto p-6 pb-24">
       <div className="sticky top-0 z-10 bg-[#faf9f6]/95 backdrop-blur border-b border-[#e5e1d8] -mx-6 px-6 py-3 mb-6 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-slate-900">BAC II Mathematics — {exam.exam_date}</h1>
+        <h1 className="text-lg font-bold text-slate-900">{t("exam_title")} — {exam.exam_date}</h1>
         {secondsLeft !== null && !result && (
           <div
             className={`font-mono text-lg font-semibold ${secondsLeft < 600 ? "text-red-600" : "text-slate-700"}`}
@@ -114,7 +114,7 @@ function ExamPageInner() {
         )}
         {result && totalGraded && (
           <div className="font-semibold text-slate-900">
-            Score: {totalGraded.earned.toFixed(1)} / {totalGraded.possible.toFixed(0)}
+            {t("exam_score")}: {totalGraded.earned.toFixed(1)} / {totalGraded.possible.toFixed(0)} {t("exam_pts")}
           </div>
         )}
       </div>
@@ -124,22 +124,25 @@ function ExamPageInner() {
       <div className="space-y-8">
         {exam.sections.map((section, idx) => {
           const qResult = result?.per_question[String(idx + 1)];
+          const sectionTitle = (lang === "km" && section.title_km) ? section.title_km : (section.title_en ?? `Part ${section.id}`);
+          const sectionGiven = (lang === "km" && section.given_km) ? section.given_km : section.given_en;
+
           return (
             <div key={section.id} className="bg-white border border-[#e5e1d8] rounded-lg p-5">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="font-semibold text-slate-900">
-                  Question {section.id} — {section.title_en}
+                  {t("exam_question")} {section.id} — {sectionTitle}
                 </h2>
                 {qResult && (
                   <span className="text-sm font-medium text-slate-600">
-                    {qResult.earned.toFixed(1)} / {qResult.possible.toFixed(0)} pts
+                    {qResult.earned.toFixed(1)} / {qResult.possible.toFixed(0)} {t("exam_pts")}
                   </span>
                 )}
               </div>
 
-              {(section.given_en || section.given_latex) && (
+              {(sectionGiven || section.given_latex) && (
                 <div className="text-sm text-slate-700 mb-3">
-                  {section.given_en && <MathText text={section.given_en} />}
+                  {sectionGiven && <MathText text={sectionGiven} />}
                   {section.given_latex && <MathText text={`$${section.given_latex}$`} className="block mt-1" />}
                 </div>
               )}
@@ -151,7 +154,9 @@ function ExamPageInner() {
                     {q.prompt_en && <MathText text={q.prompt_en} />}
                     {q.prompt_latex && <MathText text={`$${q.prompt_latex}$`} />}
                     {!q.gradable && (
-                      <span className="ml-2 text-xs text-slate-400 italic">(self-check only)</span>
+                      <span className="ml-2 text-xs text-slate-400 italic">
+                        {lang === "km" ? "(សម្រាប់ផ្ទៀងផ្ទាត់ខ្លួនឯង)" : "(self-check only)"}
+                      </span>
                     )}
                   </li>
                 ))}
@@ -163,7 +168,7 @@ function ExamPageInner() {
                   setAnswers((prev) => ({ ...prev, [String(idx + 1)]: e.target.value }))
                 }
                 disabled={!!result}
-                placeholder="Write your work here, one fact/step per line…"
+                placeholder={lang === "km" ? "សូមសរសេរជំហានដោះស្រាយនៅទីនេះ មួយបន្ទាត់ម្តងៗ..." : "Write your work here, one fact/step per line…"}
                 rows={5}
                 className="w-full border border-[#dddad1] rounded-md p-2.5 text-sm font-mono disabled:bg-slate-50 disabled:text-slate-500"
               />
@@ -190,7 +195,7 @@ function ExamPageInner() {
             disabled={submitting}
             className="px-6 py-3 rounded-md bg-slate-900 text-white font-semibold hover:bg-slate-700 disabled:opacity-50"
           >
-            {submitting ? "Grading…" : "Submit exam"}
+            {submitting ? t("btn_checking") : t("btn_submit_exam")}
           </button>
         </div>
       )}

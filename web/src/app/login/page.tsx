@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function LoginPage() {
+  const { lang, t } = useLanguage();
   const { login } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -21,7 +23,7 @@ export default function LoginPage() {
       await login(email, password);
       router.push("/practice");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : (lang === "km" ? "ការចូលមិនបានជោគជ័យ" : "Login failed"));
     } finally {
       setBusy(false);
     }
@@ -29,10 +31,10 @@ export default function LoginPage() {
 
   return (
     <div className="max-w-sm mx-auto px-4 py-16">
-      <h1 className="text-2xl font-bold text-center text-slate-900">Log in</h1>
+      <h1 className="text-2xl font-bold text-center text-slate-900">{t("nav_login")}</h1>
       <form onSubmit={submit} className="mt-6 bg-white border border-slate-200 rounded-lg p-6 space-y-4 shadow-sm">
         <div>
-          <label className="block text-sm font-medium text-slate-700">Email</label>
+          <label className="block text-sm font-medium text-slate-700">{lang === "km" ? "អ៊ីមែល" : "Email"}</label>
           <input
             type="email"
             value={email}
@@ -42,7 +44,7 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700">Password</label>
+          <label className="block text-sm font-medium text-slate-700">{lang === "km" ? "ពាក្យសម្ងាត់" : "Password"}</label>
           <input
             type="password"
             value={password}
@@ -57,10 +59,13 @@ export default function LoginPage() {
           disabled={busy}
           className="w-full px-4 py-2 rounded-md bg-slate-900 text-white font-medium hover:bg-slate-700 disabled:opacity-50"
         >
-          {busy ? "Logging in..." : "Log in"}
+          {busy ? (lang === "km" ? "កំពុងចូល..." : "Logging in...") : t("nav_login")}
         </button>
         <p className="text-sm text-slate-500 text-center">
-          No account? <Link href="/signup" className="text-slate-900 underline">Sign up</Link>
+          {lang === "km" ? "មិនទាន់មានគណនី? " : "No account? "}
+          <Link href="/signup" className="text-slate-900 underline">
+            {t("nav_signup")}
+          </Link>
         </p>
       </form>
     </div>

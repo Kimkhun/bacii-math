@@ -12,6 +12,7 @@
 | `sounds-and-streaks.md` | Web Audio grade sounds, rising-pitch combo, streak persistence, when each sound fires |
 | `topic-probability.md` | Probability topic: structure-first solvers + user-owned Khmer scenario catalog (built, from real exam problems) |
 | `skill-progress.md` | Student profile: the per-skill mastery tracker, the 0-100 level formula, topic roll-up, and the practice-suggestion rules |
+| `khmer-language-mode.md` | Khmer/English mode: what is localized on the client vs the server, the "never lose information" rule for translated statements, the Khmer step-title chain, language-keyed explanation caching, and the checklist for adding a topic or string |
 
 ## How-to docs (extending)
 
