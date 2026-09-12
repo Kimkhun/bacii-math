@@ -414,6 +414,7 @@ export interface TemplateStructure {
   difficulty: string;
   pattern: string;
   pattern_latex: string | null;
+  technique?: string | null;
   sample_prompt: string;
   sample_prompt_latex: string | null;
   sample_answer: string;

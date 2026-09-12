@@ -302,20 +302,29 @@ export default function AdminPage() {
                                     <p>{st.pattern}</p>
                                   )}
                                 </div>
-                                <div className="mt-2 text-sm text-slate-700 overflow-x-auto">
-                                  {st.sample_prompt_latex ? (
-                                    <MathText text={`\\(${st.sample_prompt_latex}\\)`} />
-                                  ) : (
-                                    <p className="whitespace-pre-line">{st.sample_prompt}</p>
-                                  )}
-                                  <div className="mt-1 text-slate-600">
-                                    <span className="text-slate-400">Answer:</span>{" "}
-                                    <MathText
-                                      text={`\\(${st.sample_answer_latex ?? st.sample_answer}\\)`}
-                                      className="inline"
-                                    />
+                                {st.technique && (
+                                  <p className="mt-2 text-xs text-slate-500 leading-snug">
+                                    {st.technique}
+                                  </p>
+                                )}
+                                {(st.sample_prompt_latex || st.sample_prompt) && (
+                                  <div className="mt-2 text-sm text-slate-700 overflow-x-auto">
+                                    {st.sample_prompt_latex ? (
+                                      <MathText text={`\\(${st.sample_prompt_latex}\\)`} />
+                                    ) : (
+                                      <p className="whitespace-pre-line">{st.sample_prompt}</p>
+                                    )}
+                                    {(st.sample_answer_latex || st.sample_answer) && (
+                                      <div className="mt-1 text-slate-600">
+                                        <span className="text-slate-400">Answer:</span>{" "}
+                                        <MathText
+                                          text={`\\(${st.sample_answer_latex ?? st.sample_answer}\\)`}
+                                          className="inline"
+                                        />
+                                      </div>
+                                    )}
                                   </div>
-                                </div>
+                                )}
                                 {st.parts && st.parts.length > 0 && (
                                   <div className="mt-3 border-t border-slate-200 pt-2 space-y-2">
                                     <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">

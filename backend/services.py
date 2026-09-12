@@ -16,7 +16,7 @@ from sympy import latex
 
 import cache
 from engine import explainer, formulas, generator, grader, llm, solver
-from engine.core import coaching, mastery, skills
+from engine.core import coaching, mastery, skills, template_shapes
 from engine.core.rubric import score_work
 from engine.topics.past_exam.rubric import mark_full_exam
 from engine.topics.functions import graph_grader
@@ -718,6 +718,12 @@ _STRUCT_PATTERNS = {
     ("complex", "imaginary_part"): r"\operatorname{Im}(a + bi)",
     ("limit", "limit"): r"\lim_{x \to a} f(x)",
     ("functions", "study"): r"g(x) = \ln\left(\frac{ax+b}{cx+d}\right)",
+    ("continuity", "check_continuity"): r"f(x) = \begin{cases} g(x) & x < a \\ h(x) & x \geq a \end{cases}",
+    ("derivatives", "compute_derivative"): r"y' = \frac{d}{dx}\, f(x)",
+    ("differential_equations", "solve_ode"): r"a\,y'' + b\,y' + c\,y = 0",
+    ("vectors_space", "vector_ops"): r"\overrightarrow{AB},\ \lvert \overrightarrow{AB} \rvert,\ \vec{u} \cdot \vec{v}",
+    ("conics", "classify_conic"): r"A x^{2} + B y^{2} + C x + D y + E = 0",
+    ("probability", "counting"): r"\binom{n}{k},\ P(n,k),\ n!",
 }
 
 _integral_structure_payload = None
@@ -785,18 +791,19 @@ def _build_limit_structure_payload() -> dict:
         source_labels = [it["id"] for it in curated]
         entry = {
             "id": technique,
-            "technique": technique,
+            # The technique's plain-language description sits under the template,
+            # the way the shape topics show their technique line.
+            "technique": meta["description"],
             "question_type": "limit",
             "difficulty": meta["difficulty"],
             "parameterizable": meta["parameterizable"],
             "description": meta["description"],
-            # Limit techniques don't share one symbolic shape the way e.g.
-            # integral's "ax^2+bx+c" family does — a solving-technique
-            # description is the closest equivalent to what the pattern box
-            # shows for other topics, and (unlike sample_prompt) it's the
-            # same for every instance of the technique, not one example.
+            # Header shows the symbolic slot-form template — the limit analogue
+            # of integral's "\\int a x^2 + b x + c\\,dx" — so the card reads like
+            # the integral cards. Falls back to the description text if a
+            # technique has no authored template.
             "pattern": meta["description"],
-            "pattern_latex": None,
+            "pattern_latex": limit_structures.TEMPLATE_LATEX.get(technique),
             "source_labels": source_labels,
         }
         if meta["parameterizable"]:
@@ -813,8 +820,16 @@ def _build_limit_structure_payload() -> dict:
             })
         elif curated:
             example = curated[0]
+            point = example["point"]
+            point_latex = r"+\infty" if str(point) == "oo" else latex(point)
+            expr_latex = latex(example["expr"])
             entry.update({
-                "sample_prompt": f"\\(\\lim_{{x \\to {latex(example['point'])}}} {latex(example['expr'])}\\)",
+                # Render the concrete curated example as LaTeX (frontend wraps
+                # sample_prompt_latex in \\( \\)). Previously this was stuffed
+                # into sample_prompt as a raw \\(...\\) string, which the admin
+                # card printed verbatim instead of rendering as math.
+                "sample_prompt": f"lim(x -> {point}) of {example['expr']}",
+                "sample_prompt_latex": rf"\lim_{{x \to {point_latex}}} {expr_latex}",
                 "sample_answer": example["answer_latex"],
                 "sample_answer_latex": example["answer_latex"],
                 "formula_tags": [technique],
@@ -843,6 +858,8 @@ async def _build_topic_structure_payload(topic: str) -> dict:
         payload = _build_integral_structure_payload()
     elif topic == "limit":
         payload = _build_limit_structure_payload()
+    elif topic in template_shapes.CURATED_SHAPE_TOPICS:
+        payload = _build_curated_shape_payload(topic)
     else:
         payload = await _build_generic_topic_payload(topic)
     total_structures = sum(len(qt.get("structures", [])) for qt in payload.get("question_types", []))
@@ -895,6 +912,21 @@ def _render_km_solution(km: dict | None) -> str | None:
             lines.append(f"ចម្លើយ៖ {part['answer_khmer']}")
         blocks.append("\n\n".join(lines))
     return "\n\n".join(blocks)
+
+
+def _build_curated_shape_payload(topic: str) -> dict:
+    """Template cards for the curated-replay topics (derivatives, continuity,
+    conics, vectors_space, differential_equations): one card per exercise shape
+    with the coefficients abstracted into slot letters, rather than one card per
+    concrete curated exercise. See ``engine/core/template_shapes.py``."""
+    by_qt: dict[str, list] = {}
+    for shape in template_shapes.shapes_for(topic):
+        by_qt.setdefault(shape["question_type"], []).append(shape)
+    question_types = [
+        {"question_type": qt, "structures": shapes}
+        for qt, shapes in by_qt.items()
+    ]
+    return {"topic": topic, "question_types": question_types}
 
 
 async def _build_generic_topic_payload(topic: str) -> dict:
@@ -960,7 +992,7 @@ async def _build_generic_topic_payload(topic: str) -> dict:
         else:
             for diff in ("easy", "medium", "hard"):
                 variants = [None]
-                if topic == "probability":
+                if topic == "probability" and qt == "probability":
                     variants = list(scenarios.VARIANT_BY_DIFFICULTY.get(diff, ()))
                 for variant in variants:
                     try:
@@ -1067,11 +1099,18 @@ def _topic_structure_summary(topic: str) -> dict:
         }
 
     if topic == "probability":
-        count = sum(len(scenarios.VARIANT_BY_DIFFICULTY.get(d, ())) for d in ("easy", "medium", "hard"))
+        # probability: one card per scenario variant; counting: one per difficulty
+        # (mirrors _build_generic_topic_payload, which only fans probability out
+        # across scenario variants — counting stays one card per difficulty).
+        prob_count = sum(len(scenarios.VARIANT_BY_DIFFICULTY.get(d, ())) for d in ("easy", "medium", "hard"))
+        counting_count = len(("easy", "medium", "hard"))
         return {
             "topic": topic,
-            "question_types": [{"question_type": "probability", "count": count}],
-            "structure_count": count,
+            "question_types": [
+                {"question_type": "probability", "count": prob_count},
+                {"question_type": "counting", "count": counting_count},
+            ],
+            "structure_count": prob_count + counting_count,
             "difficulties": ["easy", "medium", "hard"],
             "curated": 0,
         }
@@ -1085,6 +1124,21 @@ def _topic_structure_summary(topic: str) -> dict:
             "structure_count": len(items),
             "difficulties": sorted(diffs),
             "curated": len(items),
+        }
+
+    if topic in template_shapes.CURATED_SHAPE_TOPICS:
+        shapes = template_shapes.shapes_for(topic)
+        by_qt: dict[str, int] = {}
+        diffs: set = set()
+        for s in shapes:
+            by_qt[s["question_type"]] = by_qt.get(s["question_type"], 0) + 1
+            diffs.add(s.get("difficulty"))
+        return {
+            "topic": topic,
+            "question_types": [{"question_type": qt, "count": n} for qt, n in by_qt.items()],
+            "structure_count": len(shapes),
+            "difficulties": sorted(d for d in diffs if d),
+            "curated": len(shapes),
         }
 
     # complex: one card per (question type, difficulty), curated labels empty.

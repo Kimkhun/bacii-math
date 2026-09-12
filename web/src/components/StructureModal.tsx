@@ -54,6 +54,7 @@ type Structure = {
   id: string;
   pattern?: string | null;
   pattern_latex?: string | null;
+  technique?: string | null;
   sample_prompt?: string | null;
   sample_prompt_latex?: string | null;
   sample_answer?: string | null;
@@ -483,6 +484,11 @@ export default function StructureModal({
                 <p>{structure.pattern}</p>
               )}
             </div>
+            {structure.technique && (
+              <div className="mt-2 text-sm text-slate-600 leading-relaxed">
+                {structure.technique}
+              </div>
+            )}
             {prompt && (
               <div className="mt-2 text-base text-slate-800 leading-relaxed">
                 {promptIsLatex ? (
