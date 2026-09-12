@@ -251,6 +251,58 @@ def _is_point_label(lhs: str) -> bool:
 
 _LEADING_NUMBER_RE = _re.compile(r"^\s*(-?\d+(?:\.\d+)?)\b")
 
+_PARAM_CLAUSE_RE = _re.compile(
+    r"([A-Za-z]\w*)\s*=\s*(.*?)(?=(?:,\s*)?[A-Za-z]\w*\s*=|$)"
+)
+
+def _is_param_restatement(text: str, params: dict, given_expr) -> bool:
+    """A line of several '<var> = <value>' clauses — comma-separated
+    ('z = 12-9i, a = 12, b = -9') or just whitespace-separated, as OCR often
+    renders a multi-clause line without punctuation ('z = 12+5i    a = 12
+    b = 5') — that just restates the problem's own given parameters is a
+    restatement, not an assertion, even though its *last* clause alone (the
+    only part `analyze_work`'s rpartition-on-"=" sees) looks like a bare
+    numeric claim ('b = 5') that would otherwise be checked against whatever
+    checkpoint comes next.
+
+    `_PARAM_CLAUSE_RE` scans for `name = value` pairs anywhere in the text,
+    each value running lazily up to the next `name =` (comma or not) or the
+    end of the string — so it needs no separator between clauses at all.
+    This can't misfire on a genuine computed line like 'a^2 = 144, b^2 = 81':
+    the regex only starts a match at a bare identifier immediately followed
+    by '=', and 'a^2'/'b^2' have a '^2' in between, so no clause is found
+    there and this function returns False before ever reaching the per-clause
+    checks below. Every discovered clause must be a single `name = value`
+    pair matching either the topic's `given` (for 'z') or a same-named entry
+    in `params` — a clause that fails to parse, or whose var isn't a known
+    given, aborts the whole check so a line isn't skipped on a partial
+    coincidence."""
+    clauses = [
+        (m.group(1), m.group(2).strip())
+        for m in _PARAM_CLAUSE_RE.finditer(text)
+        if m.group(2).strip()
+    ]
+    if len(clauses) < 2:
+        return False
+    for name, val_str in clauses:
+        try:
+            val = parse_answer(val_str)
+        except Exception:
+            return False
+        if name.lower() in ("z", "zbar", "z_bar") and given_expr is not None:
+            if simplify(val - given_expr) != 0:
+                return False
+            continue
+        if name not in params:
+            return False
+        try:
+            pval = parse_answer(str(params[name]))
+            if simplify(val - pval) != 0 and not _numeric_close(val, pval, _DEFAULT_TOL):
+                return False
+        except Exception:
+            return False
+    return True
+
 def _is_var_point_declaration(lhs: str, value_str: str, var_name: str) -> bool:
     """A line whose math content is just '<var> = <number>' ('Step 1: substitute
     x = 0 directly', with prose in English, Khmer, or any other language around
@@ -810,6 +862,10 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
         # checkpoint, so skip it rather than flag it wrong.
         if _CONTINUOUS_RE.search(text) or _DISCONTINUOUS_RE.search(text):
             line_results.append({"line": i, "text": raw, "checked": False, "reason": "conclusion"})
+            continue
+
+        if _is_param_restatement(text, params, given_expr):
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
             continue
 
         had_equals = "=" in text

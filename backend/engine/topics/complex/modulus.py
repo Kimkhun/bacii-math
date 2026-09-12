@@ -37,6 +37,8 @@ def _solve_modulus(a, b):
         "answer_exact": r,
         "answer_decimal": float(N(r, 8)),
         "answer_latex": latex(r),
+        "given": z_sym,
+        "given_expressions": [sqrt(az**2 + bz**2)],
         "steps": steps,
         "formula_tags": _formula_tags(steps),
         "checkpoints": [

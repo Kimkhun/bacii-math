@@ -42,6 +42,17 @@ const MARKS_STYLE = `
   }
 `;
 
+// Forces every staggered mark/line-pop to render immediately instead of
+// waiting out its baked-in `animation-delay` (see MARK_STAGGER_MS) — the
+// !important rules win over the inline delay/duration each node was built
+// with, without needing to rebuild those already-constructed nodes.
+const SKIP_ANIM_STYLE = `
+  .mark-pop, .line-grow {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+  }
+`;
+
 // Per-line verdicts in page order, for scheduling the reveal sounds.
 function markEvents(det: DetectResult, res: GradeResult): { correct: boolean }[] {
   const check = res.step_check;
@@ -565,6 +576,8 @@ function PracticeInner() {
   const [ambiguityResolved, setAmbiguityResolved] = useState<Record<number, DisambiguationCandidate>>({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [skipAnim, setSkipAnim] = useState(false);
+  const soundTimeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [debug, setDebug] = useState(false);
   const [tool, setTool] = useState<CanvasTool>("pen");
   const [penWidth, setPenWidth] = useState<number>(PEN_WIDTHS.medium);
@@ -1295,12 +1308,17 @@ function PracticeInner() {
       // depend on them. When wrong: correct lines ding (rising from 0), only the
       // first wrong line thuds, and a final victory ping lands on the stamp.
       const events = nextMarks ? markEvents(finalDet, res) : [];
+      soundTimeouts.current.forEach(clearTimeout);
+      soundTimeouts.current = [];
+      const schedule = (fn: () => void, delay: number) => {
+        soundTimeouts.current.push(setTimeout(fn, delay));
+      };
       if (events.length) {
         if (res.correct) {
           events.forEach((_, i) => {
-            setTimeout(() => playMarkSound(true, Math.max(newStreak - 1, 0) + i), i * MARK_STAGGER_MS);
+            schedule(() => playMarkSound(true, Math.max(newStreak - 1, 0) + i), i * MARK_STAGGER_MS);
           });
-          setTimeout(
+          schedule(
             () => playMarkSound(true, Math.max(newStreak - 1, 0) + events.length),
             events.length * MARK_STAGGER_MS
           );
@@ -1310,11 +1328,11 @@ function PracticeInner() {
           events.forEach((e, i) => {
             const delay = i * MARK_STAGGER_MS;
             if (e.correct) {
-              setTimeout(() => playMarkSound(true, correctSeen), delay);
+              schedule(() => playMarkSound(true, correctSeen), delay);
               correctSeen += 1;
             } else if (!thudPlayed) {
               thudPlayed = true;
-              setTimeout(() => playMarkSound(false, 0), delay);
+              schedule(() => playMarkSound(false, 0), delay);
             }
           });
         }
@@ -1339,6 +1357,7 @@ function PracticeInner() {
     setGraphGrade(null);
     setMarks(null);
     setLinePops(null);
+    setSkipAnim(false);
     setBusy(true);
 
     // A "draw the graph" part has no numeric answer — checking it runs the
@@ -1693,6 +1712,7 @@ function PracticeInner() {
           </div>
         )}
         <style>{MARKS_STYLE}</style>
+        {skipAnim && <style>{SKIP_ANIM_STYLE}</style>}
 
         {sections.length > 0 ? (
           sections.map((sec, sIdx) => {
@@ -2521,6 +2541,19 @@ function PracticeInner() {
               placeholder="or type answer"
               className="w-28 px-3 py-2.5 stylus:py-3 border border-[#dddad1] rounded-[7px] text-xs placeholder:text-[#a8a296]"
             />
+            {!busy && !skipAnim && (marks?.length || linePops?.length) ? (
+              <button
+                onClick={() => {
+                  soundTimeouts.current.forEach(clearTimeout);
+                  soundTimeouts.current = [];
+                  setSkipAnim(true);
+                }}
+                className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6]"
+                title="Show the final result without waiting for the line-by-line check"
+              >
+                Skip
+              </button>
+            ) : null}
             <button
               onClick={check}
               disabled={busy}

@@ -22,6 +22,7 @@ def _solve_conjugate(a, b):
         "answer_exact": c,
         "answer_decimal": str(c),
         "answer_latex": latex(c),
+        "given": a + b * I,
         "steps": steps,
         "formula_tags": _formula_tags(steps),
         "checkpoints": [{"label": "conjugate", "value": c, "formula": "sign_flip"}],

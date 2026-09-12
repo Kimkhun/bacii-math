@@ -30,6 +30,7 @@ def _solve_argument(a, b):
         "answer_exact": theta,
         "answer_decimal": float(N(theta, 8)),
         "answer_latex": latex(theta),
+        "given": a + b * I,
         "steps": steps,
         "formula_tags": _formula_tags(steps),
         "checkpoints": checkpoints,
