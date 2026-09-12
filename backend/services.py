@@ -16,7 +16,7 @@ from sympy import latex
 
 import cache
 from engine import explainer, formulas, generator, grader, llm, solver
-from engine.core import coaching, mastery, skills, template_shapes
+from engine.core import coaching, lessons, mastery, skills, template_shapes
 from engine.core.rubric import score_work
 from engine.topics.past_exam.rubric import mark_full_exam
 from engine.topics.functions import graph_grader
@@ -1739,6 +1739,7 @@ def _skill_view(meta: dict, row: SkillState | None, now) -> dict:
         "status": mastery.status(est),
         "band": mastery.band(est["level"]),
         "weak_formulas": [],
+        "has_lesson": lessons.has_lesson(meta["key"]),
     }
 
 

@@ -4,12 +4,12 @@ Thin HTTP layer over `services.get_profile` / `services.rebuild_skill_states`,
 following the same shape as the other `me_router` endpoints (unprefixed paths,
 current-user scoped).
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import services
 from core.deps import get_current_user, get_db
-from engine.core import skills
+from engine.core import lessons, skills
 from models import User
 
 router = APIRouter(tags=["profile"])
@@ -33,3 +33,16 @@ async def skill_catalog(user: User = Depends(get_current_user)):
     """The full skill taxonomy — every practisable exercise type per topic,
     independent of any one student's progress."""
     return {"topics": skills.practice_topics(), "labels": skills.TOPIC_LABELS, "skills": skills.SKILLS}
+
+
+@router.get("/lessons")
+async def lesson(skill: str, user: User = Depends(get_current_user)):
+    """The authored lesson for one skill (``?skill=complex/modulus``).
+
+    Static, human-written teaching content — the same for every student and
+    never LLM-generated — so it needs no per-user data. 404 when the skill has
+    no lesson yet (only complex numbers are covered for now)."""
+    payload = lessons.get_lesson(skill)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="No lesson for this skill")
+    return payload

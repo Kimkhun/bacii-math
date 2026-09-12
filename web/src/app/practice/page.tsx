@@ -8,6 +8,7 @@ import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, FULL_W, LineSnapshot
 import MathText from "@/components/MathText";
 import DisambiguationCard, { DisambiguationCandidate } from "@/components/DisambiguationCard";
 import FunctionGraph from "@/components/FunctionGraph";
+import LessonModal from "@/components/LessonModal";
 import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, Skill, StrokeDoc } from "@/lib/api";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
 import { drawingAudio } from "@/lib/audioEngine";
@@ -598,6 +599,9 @@ function PracticeInner() {
   const [reviewMode, setReviewMode] = useState(false);
   const [practicingFormula, setPracticingFormula] = useState<{ id: string; name: string } | null>(null);
   const [practicingSkill, setPracticingSkill] = useState<{ key: string; label: string } | null>(null);
+  // Lesson pop-up toggle: the on/off "Lesson" button on the canvas page shows
+  // the same authored lesson (LessonModal) that the profile's Topic Mastery uses.
+  const [showLesson, setShowLesson] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -676,6 +680,23 @@ function PracticeInner() {
 
   const currentSection = sections[activeSectionIndex] ?? null;
   const currentPartObj = question?.params?.parts?.[partIndex] ?? null;
+
+  // Skill key of the loaded question, if it has an authored lesson. Only complex
+  // numbers have lessons for now (variantless, so the key is complex/<type>);
+  // when a topic without lessons is loaded this is null and no button shows.
+  const lessonSkillKey = useMemo(
+    () => (question && question.topic === "complex" ? `complex/${question.question_type}` : null),
+    [question]
+  );
+  const lessonLabel =
+    practicingSkill?.label ??
+    (question ? QUESTION_TYPE_LABELS[question.question_type]?.[lang] ?? question.question_type.replaceAll("_", " ") : "");
+
+  // Close the pop-up whenever the loaded skill changes, so it never lingers
+  // showing the previous exercise's lesson after "New question".
+  useEffect(() => {
+    setShowLesson(false);
+  }, [lessonSkillKey]);
 
   const headerRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(88);
@@ -1852,6 +1873,21 @@ function PracticeInner() {
             </div>
 
           <div className="flex items-center gap-3.5 shrink-0">
+            {lessonSkillKey && (
+              <button
+                onClick={() => setShowLesson((v) => !v)}
+                aria-pressed={showLesson}
+                title={t("lesson")}
+                className={`flex items-center gap-1.5 px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border text-[12.5px] font-medium transition ${
+                  showLesson
+                    ? "border-sky-400 bg-sky-500 text-white shadow-sm"
+                    : "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100"
+                }`}
+              >
+                <span aria-hidden>📖</span>
+                <span>{t("lesson")}</span>
+              </button>
+            )}
             {!reviewMode && (
               <>
                 <select
@@ -2815,6 +2851,13 @@ function PracticeInner() {
               )}
             </div>
           </div>
+        )}
+        {showLesson && lessonSkillKey && (
+          <LessonModal
+            skillKey={lessonSkillKey}
+            fallbackLabel={lessonLabel}
+            onClose={() => setShowLesson(false)}
+          />
         )}
       </div>
     </AuthGuard>

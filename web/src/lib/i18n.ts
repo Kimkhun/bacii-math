@@ -98,6 +98,12 @@ export interface Translations {
   formulas_weight: string;
   formulas_practice: string;
   formulas_loading: string;
+  lesson: string;
+  lesson_loading: string;
+  lesson_worked_examples: string;
+  lesson_key_formulas: string;
+  lesson_answer: string;
+  lesson_none: string;
 
   // Exam Page
   exam_title: string;
@@ -309,6 +315,12 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     formulas_weight: "weight",
     formulas_practice: "Practice",
     formulas_loading: "Loading formulas…",
+    lesson: "Lesson",
+    lesson_loading: "Loading lesson…",
+    lesson_worked_examples: "Worked examples",
+    lesson_key_formulas: "Key formulas",
+    lesson_answer: "Answer",
+    lesson_none: "No lesson available for this exercise yet.",
 
     exam_title: "BAC II Mathematics",
     exam_duration: "Duration",
@@ -511,6 +523,12 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     formulas_weight: "ទម្ងន់ពិន្ទុ",
     formulas_practice: "អនុវត្ត",
     formulas_loading: "កំពុងផ្ទុកតារាងរូបមន្ត...",
+    lesson: "មេរៀន",
+    lesson_loading: "កំពុងផ្ទុកមេរៀន...",
+    lesson_worked_examples: "ឧទាហរណ៍ដំណោះស្រាយ",
+    lesson_key_formulas: "រូបមន្តសំខាន់",
+    lesson_answer: "ចម្លើយ",
+    lesson_none: "មិនទាន់មានមេរៀនសម្រាប់លំហាត់នេះនៅឡើយទេ។",
 
     exam_title: "វិញ្ញាសាគណិតវិទ្យា — បាក់ឌុប",
     exam_duration: "រយៈពេល",
