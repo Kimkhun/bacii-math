@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import AdminGuard from "@/components/AdminGuard";
+import AdminSandbox from "@/components/AdminSandbox";
 import FunctionGraph from "@/components/FunctionGraph";
 import MathText from "@/components/MathText";
 import StructureModal from "@/components/StructureModal";
 import { api, FormulaCatalog, TemplateStructure, TemplateStructures, TemplateSummary } from "@/lib/api";
 
-type Tab = "overview" | "formulas" | "templates";
+type Tab = "overview" | "formulas" | "templates" | "sandbox";
 type TopicStructures = NonNullable<TemplateStructures["topics"]>[number];
 
 // Backend question_km strings use $...$ math markers; KaTeX auto-render here
@@ -122,7 +123,7 @@ export default function AdminPage() {
         ) : (
           <>
             <div className="flex items-center gap-2 mb-3">
-              {(["overview", "formulas", "templates"] as Tab[]).map((t) => (
+              {(["overview", "formulas", "templates", "sandbox"] as Tab[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
@@ -130,26 +131,30 @@ export default function AdminPage() {
                     tab === t ? "bg-slate-900 text-white" : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  {t === "overview" ? "Overview" : t === "formulas" ? "Formulas" : "Templates"}
+                  {t === "overview" ? "Overview" : t === "formulas" ? "Formulas" : t === "templates" ? "Templates" : "Sandbox"}
                 </button>
               ))}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 mb-6">
-              {topics.map((tp) => (
-                <button
-                  key={tp}
-                  onClick={() => setTopicFilter(tp)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                    topicFilter === tp
-                      ? "bg-slate-900 text-white"
-                      : "bg-white border border-slate-300 text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  {tp === "all" ? "All topics" : tp.replace("_", " ")}
-                </button>
-              ))}
-            </div>
+            {tab !== "sandbox" && (
+              <div className="flex flex-wrap items-center gap-2 mb-6">
+                {topics.map((tp) => (
+                  <button
+                    key={tp}
+                    onClick={() => setTopicFilter(tp)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium ${
+                      topicFilter === tp
+                        ? "bg-slate-900 text-white"
+                        : "bg-white border border-slate-300 text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {tp === "all" ? "All topics" : tp.replace("_", " ")}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {tab === "sandbox" && <AdminSandbox summary={summary} onExit={() => setTab("overview")} />}
 
             {tab === "overview" && (
               <>
