@@ -1,0 +1,126 @@
+{
+  "order_1": {
+    "title_en": "First derivative y'",
+    "title_km": "ដេរីវេទីមួយ y'",
+    "summary_en": "The first derivative represents the instantaneous rate of change or the slope of the tangent line to the curve $y = f(x)$ at any given point.",
+    "summary_km": "ដេរីវេទីមួយតំណាងឱ្យអត្រាបម្រែបម្រួលខណៈ ឬមេគុណប្រាប់ទិសនៃបន្ទាត់ប៉ះទៅនឹងខ្សែកោង $y = f(x)$ ត្រង់ចំណុចណាមួយ។",
+    "formulas": [
+      { "latex": "(x^n)' = n x^{n-1}", "note_en": "Power rule for any real power n.", "note_km": "រូបមន្តស្វ័យគុណសម្រាប់គ្រប់ចំនួនពិត n។" },
+      { "latex": "(u v)' = u'v + u v'", "note_en": "Product rule.", "note_km": "ដេរីវេនៃផលគុណពីរអនុគមន៍។" },
+      { "latex": "\\left(\\frac{u}{v}\\right)' = \\frac{u'v - u v'}{v^2}", "note_en": "Quotient rule (v ≠ 0).", "note_km": "ដេរីវេនៃផលចែកពីរអនុគមន៍ (v ≠ 0)។" },
+      { "latex": "\\left[f(g(x))\\right]' = f'(g(x)) \\cdot g'(x)", "note_en": "Chain rule for composite functions.", "note_km": "រូបមន្តដេរីវេនៃអនុគមន៍បណ្តាក់។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Key rules to master",
+        "heading_km": "ក្បួនសំខាន់ដែលត្រូវចងចាំ",
+        "body_en": "Recognize outer and inner functions. For exponentials: $(e^u)' = u' e^u$. For logarithms: $(\\ln u)' = \\frac{u'}{u}$. For polynomials: $(x^n)' = n x^{n-1}$.",
+        "body_km": "សម្គាល់អនុគមន៍ក្រៅ និងអនុគមន៍ក្នុង។ សម្រាប់អិចស្បូណង់ស្យែល៖ $(e^u)' = u' e^u$។ សម្រាប់លោការីត៖ $(\\ln u)' = \\frac{u'}{u}$។ សម្រាប់ពហុធា៖ $(x^n)' = n x^{n-1}$។"
+      },
+      {
+        "heading_en": "Common pitfall",
+        "heading_km": "កំហុសញឹកញាប់",
+        "body_en": "When using the quotient rule $\\left(\\frac{u}{v}\\right)'$, remember that the numerator is $u'v - uv'$ (minus sign, not plus), and do not forget the denominator $v^2$.",
+        "body_km": "នៅពេលប្រើរូបមន្តផលចែក $\\left(\\frac{u}{v}\\right)'$ ត្រូវចាំថាភាគយកគឺ $u'v - uv'$ (សញ្ញាដក មិនមែនសញ្ញាបូកទេ) ហើយកុំភ្លេចភាគបែង $v^2$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $y'$ for $y = (2x + 1) e^x$.",
+        "prompt_km": "គណនា $y'$ នៃ $y = (2x + 1) e^x$។",
+        "steps": [
+          {
+            "text_en": "Identify the product $u = 2x + 1$ and $v = e^x$. Compute $u' = 2$ and $v' = e^x$.",
+            "text_km": "កំណត់ផលគុណ $u = 2x + 1$ និង $v = e^x$។ គណនា $u' = 2$ និង $v' = e^x$។",
+            "latex": "u' = 2, \\quad v' = e^x"
+          },
+          {
+            "text_en": "Apply the product rule: $y' = u'v + uv'$.",
+            "text_km": "អនុវត្តរូបមន្តផលគុណ៖ $y' = u'v + uv'$។",
+            "latex": "y' = 2 e^x + (2x + 1) e^x = (2x + 3) e^x"
+          }
+        ],
+        "answer_latex": "y' = (2x + 3)e^x"
+      },
+      {
+        "prompt_en": "Find $y'$ for $y = \\ln(x^2 + 1)$.",
+        "prompt_km": "គណនា $y'$ នៃ $y = \\ln(x^2 + 1)$។",
+        "steps": [
+          {
+            "text_en": "Use the chain rule for $\\ln(u)$ where $u = x^2 + 1$.",
+            "text_km": "ប្រើរូបមន្តដេរីវេនៃអនុគមន៍បណ្តាក់ $\\ln(u)$ ដែល $u = x^2 + 1$។",
+            "latex": "u' = (x^2 + 1)' = 2x"
+          },
+          {
+            "text_en": "Apply $(\\ln u)' = \\frac{u'}{u}$.",
+            "text_km": "អនុវត្ត $(\\ln u)' = \\frac{u'}{u}$។",
+            "latex": "y' = \\frac{u'}{u} = \\frac{2x}{x^2 + 1}"
+          }
+        ],
+        "answer_latex": "y' = \\frac{2x}{x^2 + 1}"
+      }
+    ]
+  },
+  "order_2": {
+    "title_en": "Second derivative y''",
+    "title_km": "ដេរីវេទីពីរ y''",
+    "summary_en": "The second derivative is the derivative of the first derivative $y'' = (y')'$. It determines the concavity of the curve and locates inflection points.",
+    "summary_km": "ដេរីវេទីពីរគឺជាដេរីវេនៃដេរីវេទីមួយ $y'' = (y')'$។ វាត្រូវបានប្រើដើម្បីសិក្សាភាពផត ភាពប៉ោង និងចំណុចរបត់នៃខ្សែកោង។",
+    "formulas": [
+      { "latex": "y'' = \\frac{d^2y}{dx^2} = (y')'", "note_en": "Differentiate y' with respect to x.", "note_km": "ធ្វើដេរីវេលើកទីពីរទៅលើ y' ធៀបនឹង x។" },
+      { "latex": "y'' > 0 \\implies \\text{concave up}", "note_en": "Curve curves upwards.", "note_km": "ខ្សែកោងបែរភាពប៉ោងទៅលើ (ផត)។" },
+      { "latex": "y'' < 0 \\implies \\text{concave down}", "note_en": "Curve curves downwards.", "note_km": "ខ្សែកោងបែរភាពប៉ោងទៅក្រោម។" },
+      { "latex": "y'' = 0 \\text{ with sign change} \\implies \\text{inflection point}", "note_en": "Point where concavity changes.", "note_km": "ចំណុចដែលខ្សែកោងប្តូរភាពប៉ោង-ផត ជាចំណុចរបត់។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Procedure",
+        "heading_km": "របៀបអនុវត្ត",
+        "body_en": "1) Calculate the first derivative $y'$ carefully and simplify it completely. 2) Differentiate the resulting expression $y'$ a second time using standard differentiation rules.",
+        "body_km": "១) គណនាដេរីវេទីមួយ $y'$ ឱ្យបានត្រឹមត្រូវ រួចសម្រួលវាឱ្យខ្លីបំផុត។ ២) ធ្វើដេរីវេលើកន្សោមលទ្ធផល $y'$ នោះម្តងទៀតដោយប្រើរូបមន្តដេរីវេធម្មតា។"
+      },
+      {
+        "heading_en": "Simplification tip",
+        "heading_km": "គន្លឹះសម្រួល",
+        "body_en": "Always factor out common terms (like $e^x$ or common binomial factors) from $y'$ before computing $y''$. This drastically simplifies applying the product or quotient rule.",
+        "body_km": "តែងតែដាក់កត្តារួម (ដូចជា $e^x$ ឬកន្សោមដូចគ្នា) ជាកត្តានៃ $y'$ មុនពេលបន្តគណនា $y''$។ ការធ្វើបែបនេះជួយឱ្យការអនុវត្តរូបមន្តផលគុណ ឬផលចែកកាន់តែងាយ។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $y''$ for $y = x^3 - 3x^2 + 2$.",
+        "prompt_km": "គណនា $y''$ នៃ $y = x^3 - 3x^2 + 2$។",
+        "steps": [
+          {
+            "text_en": "Find the first derivative $y'$.",
+            "text_km": "រកដេរីវេទីមួយ $y'$។",
+            "latex": "y' = (x^3 - 3x^2 + 2)' = 3x^2 - 6x"
+          },
+          {
+            "text_en": "Differentiate $y'$ to obtain $y''$.",
+            "text_km": "ធ្វើដេរីវេ $y'$ ដើម្បីទទួលបាន $y''$។",
+            "latex": "y'' = (3x^2 - 6x)' = 6x - 6"
+          }
+        ],
+        "answer_latex": "y'' = 6x - 6"
+      },
+      {
+        "prompt_en": "Find $y''$ for $y = x e^x$.",
+        "prompt_km": "គណនា $y''$ នៃ $y = x e^x$។",
+        "steps": [
+          {
+            "text_en": "Compute first derivative $y'$.",
+            "text_km": "គណនាដេរីវេទីមួយ $y'$។",
+            "latex": "y' = (x)' e^x + x (e^x)' = e^x + x e^x = (x + 1)e^x"
+          },
+          {
+            "text_en": "Compute second derivative $y''$.",
+            "text_km": "គណនាដេរីវេទីពីរ $y''$។",
+            "latex": "y'' = (x + 1)' e^x + (x + 1)(e^x)' = e^x + (x + 1)e^x = (x + 2)e^x"
+          }
+        ],
+        "answer_latex": "y'' = (x + 2)e^x"
+      }
+    ]
+  }
+}

@@ -1,0 +1,359 @@
+{
+  "direct_substitution": {
+    "title_en": "Direct substitution",
+    "title_km": "ជំនួសតម្លៃដោយផ្ទាល់",
+    "summary_en": "When a function is continuous at $x = a$, evaluate the limit simply by substituting $x = a$ directly into the expression.",
+    "summary_km": "នៅពេលដែលអនុគមន៍ជាប់ត្រង់ $x = a$ យើងអាចគណនាលីមីតដោយគ្រាន់តែជំនួសតម្លៃ $x = a$ ចូលក្នុងកន្សោមដោយផ្ទាល់។",
+    "formulas": [
+      { "latex": "\\lim_{x \\to a} f(x) = f(a)", "note_en": "Valid whenever f(a) is determinate.", "note_km": "ពិតជានិច្ចនៅពេល f(a) ជាតម្លៃកំណត់។" }
+    ],
+    "sections": [
+      { "heading_en": "Rule of thumb", "heading_km": "គោលការណ៍ចម្បង", "body_en": "Always try direct substitution first. If you get a finite real number, you are done. If you get an indeterminate form like $\\frac{0}{0}$ or $\\frac{\\infty}{\\infty}$, apply an algebraic or trigonometric simplification.", "body_km": "តែងតែសាកល្បងជំនួសតម្លៃដោយផ្ទាល់ជាមុន។ ប្រសិនបើទទួលបានចំនួនពិត នោះជាលទ្ធផល។ ប្រសិនបើជួបរាងមិនកំណត់ដូចជា $\\frac{0}{0}$ ឬ $\\frac{\\infty}{\\infty}$ ត្រូវបន្តប្រើវិធីសាស្ត្រពីជគណិត ឬត្រីកោណមាត្រ។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to 2} (x^2 + 3x - 1)$.",
+        "prompt_km": "គណនា $\\lim_{x \\to 2} (x^2 + 3x - 1)$។",
+        "steps": [
+          { "text_en": "Substitute $x = 2$ directly into the polynomial.", "text_km": "ជំនួស $x = 2$ ចូលក្នុងពហុធាដោយផ្ទាល់។", "latex": "2^2 + 3(2) - 1 = 4 + 6 - 1" }
+        ],
+        "answer_latex": "\\lim_{x \\to 2}(x^2 + 3x - 1) = 9"
+      }
+    ]
+  },
+  "factoring_0_0": {
+    "title_en": "Factoring 0/0 indeterminate form",
+    "title_km": "ដាក់ជាផលគុណកត្តារាងមិនកំណត់ 0/0",
+    "summary_en": "When direct substitution yields $\\frac{0}{0}$ in a rational fraction, $(x - a)$ is a common root. Factor $(x - a)$ out of both numerator and denominator, cancel it, and evaluate.",
+    "summary_km": "នៅពេលជំនួសតម្លៃទទួលបានរាងមិនកំណត់ $\\frac{0}{0}$ ក្នុងប្រភាគសនិទាន នោះ $(x - a)$ ជាកត្តារួមនៃភាគយក និងភាគបែង។ ត្រូវដាក់ $(x - a)$ ជាកត្តា រួចសម្រួលវាចេញ។",
+    "formulas": [
+      { "latex": "x^2 - a^2 = (x - a)(x + a)", "note_en": "Difference of two squares.", "note_km": "ផលដកការេពីរតួ។" },
+      { "latex": "x^3 - a^3 = (x - a)(x^2 + ax + a^2)", "note_en": "Difference of two cubes.", "note_km": "ផលដកគូបពីរតួ។" }
+    ],
+    "sections": [
+      { "heading_en": "Step-by-step strategy", "heading_km": "យុទ្ធសាស្ត្រដោះស្រាយ", "body_en": "1) Confirm the form $\\frac{0}{0}$. 2) Factor both numerator and denominator so $(x - a)$ appears. 3) Cancel the common $(x - a)$ factor. 4) Substitute $x = a$ into the simplified expression.", "body_km": "១) ផ្ទៀងផ្ទាត់រាង $\\frac{0}{0}$។ ២) ដាក់ភាគយកនិងភាគបែងជាផលគុណកត្តាដែលមាន $(x - a)$។ ៣) សម្រួលកត្តា $(x - a)$ ចោល។ ៤) ជំនួស $x = a$ ចូលក្នុងកន្សោមដែលនៅសល់។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to 3} \\frac{x^2 - 9}{x - 3}$.",
+        "prompt_km": "គណនា $\\lim_{x \\to 3} \\frac{x^2 - 9}{x - 3}$។",
+        "steps": [
+          { "text_en": "Direct substitution gives $\\frac{0}{0}$. Factor the numerator.", "text_km": "ជំនួសដោយផ្ទាល់បាន $\\frac{0}{0}$។ ដាក់ភាគយកជាផលគុណកត្តា។", "latex": "x^2 - 9 = (x - 3)(x + 3)" },
+          { "text_en": "Cancel $(x - 3)$ and evaluate.", "text_km": "សម្រួល $(x - 3)$ រួចគណនាតម្លៃ។", "latex": "\\lim_{x \\to 3} \\frac{(x - 3)(x + 3)}{x - 3} = \\lim_{x \\to 3}(x + 3) = 6" }
+        ],
+        "answer_latex": "\\lim_{x \\to 3} \\frac{x^2 - 9}{x - 3} = 6"
+      }
+    ]
+  },
+  "rationalization_conjugate_finite": {
+    "title_en": "Conjugate rationalisation (finite point)",
+    "title_km": "គុណកន្សោមឆ្លាស់បំបាត់រ៉ាឌីកាល់ (ត្រង់ចំណុចកំណត់)",
+    "summary_en": "For $\\frac{0}{0}$ limits involving square roots, multiply both numerator and denominator by the radical conjugate to clear the root and reveal the vanishing $(x - a)$ factor.",
+    "summary_km": "សម្រាប់លីមីតរាង $\\frac{0}{0}$ ដែលមានរ៉ាឌីកាល់ (ឬសការេ) ត្រូវគុណភាគយក និងភាគបែងនឹងកន្សោមឆ្លាស់ដើម្បីបំបាត់រ៉ាឌីកាល់ រួចទាញកត្តា $(x - a)$ សម្រួលចោល។",
+    "formulas": [
+      { "latex": "(\\sqrt{A} - B)(\\sqrt{A} + B) = A - B^2", "note_en": "Difference of squares clears the square root.", "note_km": "ផលដកការេបំបាត់រ៉ាឌីកាល់។" },
+      { "latex": "(\\sqrt{A} - \\sqrt{B})(\\sqrt{A} + \\sqrt{B}) = A - B", "note_en": "Conjugate for two square roots.", "note_km": "កន្សោមឆ្លាស់សម្រាប់ផលដកឬសពីរ។" }
+    ],
+    "sections": [
+      { "heading_en": "Method", "heading_km": "វិធីសាស្ត្រ", "body_en": "Multiply top and bottom by the conjugate of the radical expression. Expand the conjugate product using $(u - v)(u + v) = u^2 - v^2$. Keep the other part factored so $(x - a)$ can easily be cancelled.", "body_km": "គុណភាគយក និងភាគបែងនឹងកន្សោមឆ្លាស់។ ពន្លាតផ្នែកដែលគុណកន្សោមឆ្លាស់តាមរូបមន្ត $(u - v)(u + v) = u^2 - v^2$។ រក្សាទុកផ្នែកម្ខាងទៀតជាផលគុណកត្តាដើម្បីងាយស្រួលសម្រួល $(x - a)$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to 4} \\frac{\\sqrt{x} - 2}{x - 4}$.",
+        "prompt_km": "គណនា $\\lim_{x \\to 4} \\frac{\\sqrt{x} - 2}{x - 4}$។",
+        "steps": [
+          { "text_en": "Multiply numerator and denominator by $(\\sqrt{x} + 2)$.", "text_km": "គុណភាគយក និងភាគបែងនឹង $(\\sqrt{x} + 2)$។", "latex": "\\frac{(\\sqrt{x}-2)(\\sqrt{x}+2)}{(x-4)(\\sqrt{x}+2)} = \\frac{x-4}{(x-4)(\\sqrt{x}+2)}" },
+          { "text_en": "Cancel $(x - 4)$ and substitute $x = 4$.", "text_km": "សម្រួល $(x - 4)$ រួចជំនួស $x = 4$។", "latex": "\\lim_{x \\to 4} \\frac{1}{\\sqrt{x}+2} = \\frac{1}{2+2} = \\frac{1}{4}" }
+        ],
+        "answer_latex": "\\lim_{x \\to 4} \\frac{\\sqrt{x}-2}{x-4} = \\frac{1}{4}"
+      }
+    ]
+  },
+  "trig_identity_0_0": {
+    "title_en": "Trigonometric identity on 0/0 form",
+    "title_km": "រូបមន្តត្រីកោណមាត្រលើរាងមិនកំណត់ 0/0",
+    "summary_en": "Use fundamental trigonometric identities (such as $\\sin^2 x + \\cos^2 x = 1$ or double-angle formulas) to factor expressions and cancel terms causing $\\frac{0}{0}$.",
+    "summary_km": "ប្រើរូបមន្តត្រីកោណមាត្រគ្រឹះ (ដូចជា $\\sin^2 x + \\cos^2 x = 1$ ឬរូបមន្តមុំឌុប) ដើម្បីបំប្លែង និងសម្រួលកត្តាដែលធ្វើឱ្យកើតរាង $\\frac{0}{0}$។",
+    "formulas": [
+      { "latex": "\\sin^2 x + \\cos^2 x = 1 \\iff 1 - \\sin^2 x = \\cos^2 x", "note_en": "Pythagorean identity.", "note_km": "រូបមន្តពីតាហ្គោរត្រីកោណមាត្រ។" },
+      { "latex": "1 - \\cos 2x = 2\\sin^2 x", "note_en": "Power-reduction identity.", "note_km": "រូបមន្តបន្ថយស្វ័យគុណ។" }
+    ],
+    "sections": [
+      { "heading_en": "Idea", "heading_km": "គំនិតសំខាន់", "body_en": "Transform sums or differences into products using trig identities so that the factor causing $\\frac{0}{0}$ can be factored out and cancelled.", "body_km": "បំប្លែងផលបូក ឬផលដកនៃអនុគមន៍ត្រីកោណមាត្រទៅជាផលគុណ ដើម្បីងាយស្រួលសម្រួលកត្តាដែលនាំឱ្យកើតរាង $\\frac{0}{0}$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to \\frac{\\pi}{2}} \\frac{1 - \\sin x}{\\cos^2 x}$.",
+        "prompt_km": "គណនា $\\lim_{x \\to \\frac{\\pi}{2}} \\frac{1 - \\sin x}{\\cos^2 x}$។",
+        "steps": [
+          { "text_en": "Rewrite $\\cos^2 x$ as $1 - \\sin^2 x = (1 - \\sin x)(1 + \\sin x)$.", "text_km": "សរសេរ $\\cos^2 x$ ជា $1 - \\sin^2 x = (1 - \\sin x)(1 + \\sin x)$។", "latex": "\\frac{1 - \\sin x}{\\cos^2 x} = \\frac{1 - \\sin x}{(1 - \\sin x)(1 + \\sin x)}" },
+          { "text_en": "Cancel $(1 - \\sin x)$ and substitute $x = \\frac{\\pi}{2}$.", "text_km": "សម្រួល $(1 - \\sin x)$ រួចជំនួស $x = \\frac{\\pi}{2}$។", "latex": "\\lim_{x \\to \\frac{\\pi}{2}} \\frac{1}{1 + \\sin x} = \\frac{1}{1 + 1} = \\frac{1}{2}" }
+        ],
+        "answer_latex": "\\lim_{x \\to \\frac{\\pi}{2}}\\frac{1 - \\sin x}{\\cos^2 x} = \\frac{1}{2}"
+      }
+    ]
+  },
+  "sinc_standard_limit": {
+    "title_en": "Standard limit sin(x)/x",
+    "title_km": "លីមីតគំរូ sin(x)/x = 1",
+    "summary_en": "The foundational trigonometric limit is $\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1$. Balance coefficients so that the argument of sine matches the denominator exactly.",
+    "summary_km": "លីមីតត្រីកោណមាត្រគ្រឹះគឺ $\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1$។ ត្រូវតម្រូវមេគុណឱ្យកន្សោមក្នុង $\\sin$ ដូចគ្នានឹងភាគបែង។",
+    "formulas": [
+      { "latex": "\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1", "note_en": "Standard trigonometric limit.", "note_km": "លីមីតគំរូត្រីកោណមាត្រ។" },
+      { "latex": "\\lim_{x \\to 0} \\frac{\\sin(k x)}{x} = k", "note_en": "Scaled argument rule.", "note_km": "លីមីតពង្រីកមេគុណ k។" },
+      { "latex": "\\lim_{u \\to 0} \\frac{\\tan u}{u} = 1", "note_en": "Tangent standard limit.", "note_km": "លីមីតគំរូតង់សង់។" }
+    ],
+    "sections": [
+      { "heading_en": "Balancing trick", "heading_km": "គន្លឹះតម្រូវមេគុណ", "body_en": "To compute $\\frac{\\sin(kx)}{x}$, multiply the denominator by $k$ and multiply the entire fraction by $k$: $k \\cdot \\frac{\\sin(kx)}{kx} \\to k \\cdot 1 = k$.", "body_km": "ដើម្បីគណនា $\\frac{\\sin(kx)}{x}$ ត្រូវគុណភាគបែងនឹង $k$ ហើយគុណកន្សោមទាំងមូលនឹង $k$៖ $k \\cdot \\frac{\\sin(kx)}{kx} \\to k \\cdot 1 = k$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to 0} \\frac{\\sin(5x)}{2x}$.",
+        "prompt_km": "គណនា $\\lim_{x \\to 0} \\frac{\\sin(5x)}{2x}$។",
+        "steps": [
+          { "text_en": "Isolate coefficients: $\\frac{5}{2} \\cdot \\frac{\\sin(5x)}{5x}$.", "text_km": "ផ្តាច់មេគុណ៖ $\\frac{5}{2} \\cdot \\frac{\\sin(5x)}{5x}$។", "latex": "\\frac{\\sin(5x)}{2x} = \\frac{5}{2} \\cdot \\frac{\\sin(5x)}{5x}" },
+          { "text_en": "Apply $\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1$ with $u = 5x$.", "text_km": "អនុវត្ត $\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1$ ដែល $u = 5x$។", "latex": "\\frac{5}{2} \\cdot 1 = \\frac{5}{2}" }
+        ],
+        "answer_latex": "\\lim_{x \\to 0}\\frac{\\sin(5x)}{2x} = \\frac{5}{2}"
+      }
+    ]
+  },
+  "angle_addition_0_0": {
+    "title_en": "Angle-addition identity",
+    "title_km": "រូបមន្តបូកមុំត្រីកោណមាត្រ",
+    "summary_en": "Rewrite linear combinations $a\\sin x + b\\cos x$ into $R\\sin(x + \\varphi)$ using angle-addition identities to resolve $\\frac{0}{0}$ limits as $x$ approaches a special angle.",
+    "summary_km": "បំប្លែងទម្រង់លីនេអ៊ែរ $a\\sin x + b\\cos x$ ទៅជា $R\\sin(x + \\varphi)$ ដោយប្រើរូបមន្តបូកមុំ ដើម្បីគណនាលីមីត $\\frac{0}{0}$ នៅពេល $x$ ខិតជិតមុំពិសេស។",
+    "formulas": [
+      { "latex": "a\\sin x + b\\cos x = R\\sin(x + \\varphi), \\quad R = \\sqrt{a^2 + b^2}", "note_en": "Harmonic addition formula.", "note_km": "រូបមន្តបំប្លែងផលបូកត្រីកោណមាត្រ។" },
+      { "latex": "\\sin(A - B) = \\sin A\\cos B - \\cos A\\sin B", "note_en": "Sine difference identity.", "note_km": "រូបមន្តផលដកស៊ីនុស។" }
+    ],
+    "sections": [
+      { "heading_en": "When to use", "heading_km": "ពេលណាត្រូវប្រើ", "body_en": "Use this when a limit approaches $\\frac{\\pi}{3}$, $\\frac{\\pi}{6}$, or $\\frac{\\pi}{4}$ and contains an expression like $\\sin x - \\sqrt{3}\\cos x$. Factoring out $R = 2$ yields $2\\sin\\left(x - \\frac{\\pi}{3}\\right)$.", "body_km": "ប្រើនៅពេលលីមីត $x$ ខិតជិត $\\frac{\\pi}{3}$, $\\frac{\\pi}{6}$ ឬ $\\frac{\\pi}{4}$ ហើយមានកន្សោមដូចជា $\\sin x - \\sqrt{3}\\cos x$។ ការទាញ $R = 2$ នាំឱ្យបាន $2\\sin\\left(x - \\frac{\\pi}{3}\\right)$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to \\frac{\\pi}{3}} \\frac{\\sin x - \\sqrt{3}\\cos x}{x - \\frac{\\pi}{3}}$.",
+        "prompt_km": "គណនា $\\lim_{x \\to \\frac{\\pi}{3}} \\frac{\\sin x - \\sqrt{3}\\cos x}{x - \\frac{\\pi}{3}}$។",
+        "steps": [
+          { "text_en": "Rewrite numerator: $2\\left(\\frac{1}{2}\\sin x - \\frac{\\sqrt{3}}{2}\\cos x\\right) = 2\\sin\\left(x - \\frac{\\pi}{3}\\right)$.", "text_km": "សរសេរភាគយកឡើងវិញ៖ $2\\left(\\frac{1}{2}\\sin x - \\frac{\\sqrt{3}}{2}\\cos x\\right) = 2\\sin\\left(x - \\frac{\\pi}{3}\\right)$។", "latex": "\\sin x - \\sqrt{3}\\cos x = 2\\sin\\left(x - \\frac{\\pi}{3}\\right)" },
+          { "text_en": "Let $u = x - \\frac{\\pi}{3}$. As $x \\to \\frac{\\pi}{3}$, $u \\to 0$.", "text_km": "តាង $u = x - \\frac{\\pi}{3}$។ កាលណា $x \\to \\frac{\\pi}{3}$ នោះ $u \\to 0$។", "latex": "\\lim_{u \\to 0} 2 \\cdot \\frac{\\sin u}{u} = 2 \\cdot 1 = 2" }
+        ],
+        "answer_latex": "\\lim_{x \\to \\frac{\\pi}{3}} \\frac{\\sin x - \\sqrt{3}\\cos x}{x - \\frac{\\pi}{3}} = 2"
+      }
+    ]
+  },
+  "rationalization_sinc_combo": {
+    "title_en": "Conjugate + sin(x)/x combo",
+    "title_km": "កន្សោមឆ្លាស់ និង sinc ចម្រុះ",
+    "summary_en": "Combines square-root conjugate rationalisation with the standard sinc limit $\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1$ to eliminate a $\\frac{0}{0}$ indeterminate form.",
+    "summary_km": "រួមបញ្ចូលការគុណកន្សោមឆ្លាស់បំបាត់រ៉ាឌីកាល់ ជាមួយលីមីតគំរូ $\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1$ ដើម្បីបំបាត់រាងមិនកំណត់ $\\frac{0}{0}$។",
+    "formulas": [
+      { "latex": "\\frac{\\sqrt{A} - \\sqrt{B}}{\\sin(k x)} = \\frac{A - B}{\\sin(k x)(\\sqrt{A} + \\sqrt{B})}", "note_en": "Conjugate expansion on numerator.", "note_km": "ពន្លាតកន្សោមឆ្លាស់លើភាគយក។" },
+      { "latex": "\\lim_{x \\to 0} \\frac{x}{\\sin(k x)} = \\frac{1}{k}", "note_en": "Reciprocal sinc limit.", "note_km": "លីមីតបញ្ច្រាសនៃ sinc។" }
+    ],
+    "sections": [
+      { "heading_en": "Execution", "heading_km": "វិធីអនុវត្ត", "body_en": "1) Multiply numerator and denominator by the conjugate of the radical numerator. 2) Simplify the numerator into an algebraic factor of $x$. 3) Group $x$ with $\\sin(kx)$ to evaluate $\\frac{x}{\\sin(kx)} \\to \\frac{1}{k}$.", "body_km": "១) គុណភាគយកនិងភាគបែងនឹងកន្សោមឆ្លាស់នៃរ៉ាឌីកាល់។ ២) សម្រួលភាគយកឱ្យចេញកត្តា $x$។ ៣) ផ្គុំ $x$ ជាមួយ $\\sin(kx)$ ដើម្បីគណនា $\\frac{x}{\\sin(kx)} \\to \\frac{1}{k}$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to 0} \\frac{\\sqrt{1 + x} - \\sqrt{1 - x}}{\\sin(2x)}$.",
+        "prompt_km": "គណនា $\\lim_{x \\to 0} \\frac{\\sqrt{1 + x} - \\sqrt{1 - x}}{\\sin(2x)}$។",
+        "steps": [
+          { "text_en": "Multiply numerator and denominator by $(\\sqrt{1+x} + \\sqrt{1-x})$.", "text_km": "គុណភាគយកនិងភាគបែងនឹង $(\\sqrt{1+x} + \\sqrt{1-x})$។", "latex": "\\frac{(1+x) - (1-x)}{\\sin(2x)(\\sqrt{1+x}+\\sqrt{1-x})} = \\frac{2x}{\\sin(2x)(\\sqrt{1+x}+\\sqrt{1-x})}" },
+          { "text_en": "Separate $\\frac{2x}{\\sin(2x)}$ and evaluate.", "text_km": "ផ្តាច់ $\\frac{2x}{\\sin(2x)}$ រួចគណនាតម្លៃ។", "latex": "\\lim_{x \\to 0} \\frac{2x}{\\sin(2x)} \\cdot \\frac{1}{\\sqrt{1+x}+\\sqrt{1-x}} = 1 \\cdot \\frac{1}{1+1} = \\frac{1}{2}" }
+        ],
+        "answer_latex": "\\lim_{x \\to 0}\\frac{\\sqrt{1+x}-\\sqrt{1-x}}{\\sin(2x)} = \\frac{1}{2}"
+      }
+    ]
+  },
+  "exponential_sinc_combo": {
+    "title_en": "Exponential + sin(x)/x combo",
+    "title_km": "អិចស្បូណង់ស្យែល និង sinc ចម្រុះ",
+    "summary_en": "Exercises combining continuous exponential factors like $e^{ax} + e^{-ax}$ with squared sinc factors $\\left(\\frac{\\sin(kx)}{x}\\right)^2 \\to k^2$.",
+    "summary_km": "លំហាត់ដែលផ្សំរវាងកត្តាអិចស្បូណង់ស្យែលជាប់ដូចជា $e^{ax} + e^{-ax}$ ជាមួយកត្តា sinc ការេ $\\left(\\frac{\\sin(kx)}{x}\\right)^2 \\to k^2$។",
+    "formulas": [
+      { "latex": "\\lim_{x \\to 0} \\left(\\frac{\\sin(k x)}{x}\\right)^2 = k^2", "note_en": "Squared sinc limit.", "note_km": "លីមីត sinc លើកជាការេ។" },
+      { "latex": "\\lim_{x \\to 0} \\left(e^{a x} + e^{-a x}\\right) = 1 + 1 = 2", "note_en": "Exponential continuous factor.", "note_km": "កត្តាអិចស្បូណង់ស្យែលជាប់។" }
+    ],
+    "sections": [
+      { "heading_en": "Strategy", "heading_km": "យុទ្ធសាស្ត្រ", "body_en": "Split the limit into a product of two factors: the continuous factor which evaluates by direct substitution, and the indeterminate factor evaluated via $\\left(\\frac{\\sin(kx)}{x}\\right)^2$.", "body_km": "បំបែកលីមីតជាពីរផ្នែក៖ ផ្នែកជាប់ដែលជំនួសតម្លៃដោយផ្ទាល់បាន និងផ្នែករាងមិនកំណត់ដែលគណនាតាម $\\left(\\frac{\\sin(kx)}{x}\\right)^2$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to 0} \\frac{(e^x + e^{-x})\\sin^2(3x)}{2x^2}$.",
+        "prompt_km": "គណនា $\\lim_{x \\to 0} \\frac{(e^x + e^{-x})\\sin^2(3x)}{2x^2}$។",
+        "steps": [
+          { "text_en": "Separate into continuous factor and $\\mathrm{sinc}^2$ factor.", "text_km": "បំបែកជាកត្តាជាប់ និងកត្តា $\\mathrm{sinc}^2$។", "latex": "\\lim_{x \\to 0}\\frac{e^x + e^{-x}}{2} \\cdot \\left(\\frac{\\sin 3x}{x}\\right)^2" },
+          { "text_en": "Substitute $x = 0$ in first factor and apply limit to second.", "text_km": "ជំនួស $x = 0$ ក្នុងកត្តាទីមួយ និងគណនាលីមីតកត្តាទីពីរ។", "latex": "\\frac{1 + 1}{2} \\cdot (3)^2 = 1 \\cdot 9 = 9" }
+        ],
+        "answer_latex": "\\lim_{x \\to 0}\\frac{(e^x + e^{-x})\\sin^2(3x)}{2x^2} = 9"
+      }
+    ]
+  },
+  "half_angle_sinc_combo": {
+    "title_en": "Half-angle + sin(x)/x combo",
+    "title_km": "រូបមន្តកន្លះមុំ និង sinc ចម្រុះ",
+    "summary_en": "Resolves limits with $1 - \\cos(mx)$ by applying the half-angle identity $1 - \\cos(mx) = 2\\sin^2\\left(\\frac{mx}{2}\\right)$ or standard limit $\\lim_{u \\to 0} \\frac{1 - \\cos u}{u^2} = \\frac{1}{2}$.",
+    "summary_km": "ដោះស្រាយលីមីតដែលមាន $1 - \\cos(mx)$ ដោយប្រើរូបមន្តកន្លះមុំ $1 - \\cos(mx) = 2\\sin^2\\left(\\frac{mx}{2}\\right)$ ឬលីមីតគំរូ $\\lim_{u \\to 0} \\frac{1 - \\cos u}{u^2} = \\frac{1}{2}$។",
+    "formulas": [
+      { "latex": "1 - \\cos(m x) = 2\\sin^2\\left(\\frac{m x}{2}\\right)", "note_en": "Half-angle identity.", "note_km": "រូបមន្តកន្លះមុំ។" },
+      { "latex": "\\lim_{x \\to 0} \\frac{1 - \\cos(m x)}{x^2} = \\frac{m^2}{2}", "note_en": "Standard cosine limit.", "note_km": "លីមីតគំរូកូស៊ីនុស។" }
+    ],
+    "sections": [
+      { "heading_en": "Key takeaway", "heading_km": "ចំណុចគន្លឹះ", "body_en": "Whenever $1 - \\cos(mx)$ is divided by $x^2$, convert it to $2\\sin^2\\left(\\frac{mx}{2}\\right)$ or apply the standard limit $\\lim_{x \\to 0} \\frac{1 - \\cos(mx)}{x^2} = \\frac{m^2}{2}$.", "body_km": "កាលណាមាន $1 - \\cos(mx)$ ចែកនឹង $x^2$ ត្រូវបំប្លែងវាទៅជា $2\\sin^2\\left(\\frac{mx}{2}\\right)$ ឬប្រើលីមីតគំរូ $\\lim_{x \\to 0} \\frac{1 - \\cos(mx)}{x^2} = \\frac{m^2}{2}$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to 0} \\frac{1 - \\cos(4x)}{x^2}$.",
+        "prompt_km": "គណនា $\\lim_{x \\to 0} \\frac{1 - \\cos(4x)}{x^2}$។",
+        "steps": [
+          { "text_en": "Apply the standard formula with $m = 4$.", "text_km": "អនុវត្តរូបមន្តគំរូជាមួយ $m = 4$។", "latex": "\\lim_{x \\to 0}\\frac{1 - \\cos(4x)}{x^2} = \\frac{4^2}{2} = \\frac{16}{2} = 8" }
+        ],
+        "answer_latex": "\\lim_{x \\to 0}\\frac{1 - \\cos(4x)}{x^2} = 8"
+      }
+    ]
+  },
+  "exponential_standard_limit": {
+    "title_en": "Standard limit (eˣ - 1)/x",
+    "title_km": "លីមីតគំរូ (eˣ - 1)/x = 1",
+    "summary_en": "The standard limit for exponential indeterminate forms as $x \\to 0$ is $\\lim_{u \\to 0} \\frac{e^u - 1}{u} = 1$.",
+    "summary_km": "លីមីតគំរូសម្រាប់រាងមិនកំណត់អិចស្បូណង់ស្យែលកាលណា $x \\to 0$ គឺ $\\lim_{u \\to 0} \\frac{e^u - 1}{u} = 1$។",
+    "formulas": [
+      { "latex": "\\lim_{u \\to 0} \\frac{e^u - 1}{u} = 1", "note_en": "Fundamental exponential limit.", "note_km": "លីមីតគ្រឹះអិចស្បូណង់ស្យែល។" },
+      { "latex": "\\lim_{x \\to 0} \\frac{e^{a x} - 1}{x} = a", "note_en": "Scaled exponent rule.", "note_km": "លីមីតពង្រីកមេគុណ a។" },
+      { "latex": "\\lim_{x \\to 0} \\frac{e^{a x} - 1}{e^{b x} - 1} = \\frac{a}{b}", "note_en": "Quotient of exponential terms (b ≠ 0).", "note_km": "ផលចែកនៃអិចស្បូណង់ស្យែល (b ≠ 0)។" }
+    ],
+    "sections": [
+      { "heading_en": "Division technique", "heading_km": "វិធីចែក x", "body_en": "For fractions like $\\frac{e^{ax} - 1}{e^{bx} - 1}$, divide both numerator and denominator by $x$ to create two standard limits: $\\frac{\\frac{e^{ax}-1}{x}}{\\frac{e^{bx}-1}{x}} \\to \\frac{a}{b}$.", "body_km": "សម្រាប់ប្រភាគដូចជា $\\frac{e^{ax} - 1}{e^{bx} - 1}$ ត្រូវចែកភាគយកនិងភាគបែងនឹង $x$ ដើម្បីបង្កើតលីមីតគំរូពីរ៖ $\\frac{\\frac{e^{ax}-1}{x}}{\\frac{e^{bx}-1}{x}} \\to \\frac{a}{b}$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to 0} \\frac{e^{3x} - 1}{e^{5x} - 1}$.",
+        "prompt_km": "គណនា $\\lim_{x \\to 0} \\frac{e^{3x} - 1}{e^{5x} - 1}$។",
+        "steps": [
+          { "text_en": "Divide numerator and denominator by $x$.", "text_km": "ចែកភាគយក និងភាគបែងនឹង $x$។", "latex": "\\frac{\\frac{e^{3x}-1}{x}}{\\frac{e^{5x}-1}{x}}" },
+          { "text_en": "Evaluate limits of numerator and denominator.", "text_km": "គណនាលីមីតភាគយក និងភាគបែង។", "latex": "\\frac{3}{5}" }
+        ],
+        "answer_latex": "\\lim_{x \\to 0}\\frac{e^{3x}-1}{e^{5x}-1} = \\frac{3}{5}"
+      }
+    ]
+  },
+  "conjugate_infinity": {
+    "title_en": "Conjugate at infinity (∞ - ∞)",
+    "title_km": "គុណកន្សោមឆ្លាស់នៅអនន្ត (∞ - ∞)",
+    "summary_en": "When a difference of radicals produces $\\infty - \\infty$ as $x \\to +\\infty$, multiply and divide by the conjugate to transform the difference into an $\\frac{\\infty}{\\infty}$ rational form, then factor out $x$.",
+    "summary_km": "នៅពេលផលដករ៉ាឌីកាល់បង្កើតរាងមិនកំណត់ $\\infty - \\infty$ កាលណា $x \\to +\\infty$ ត្រូវគុណនិងចែកនឹងកន្សោមឆ្លាស់ ដើម្បីបំប្លែងទៅជារាង $\\frac{\\infty}{\\infty}$ រួចទាញ $x$ ជាកត្តារួម។",
+    "formulas": [
+      { "latex": "\\sqrt{A} - B = \\frac{A - B^2}{\\sqrt{A} + B}", "note_en": "Conjugate rationalisation formula.", "note_km": "រូបមន្តកន្សោមឆ្លាស់បំបាត់រ៉ាឌីកាល់។" },
+      { "latex": "\\sqrt{x^2} = |x| = x \\quad (x > 0)", "note_en": "Factoring x out of square root.", "note_km": "ទាញ x ចេញពីរ៉ាឌីកាល់សម្រាប់ x > 0។" }
+    ],
+    "sections": [
+      { "heading_en": "Procedure", "heading_km": "ជំហានអនុវត្ត", "body_en": "1) Multiply and divide by the conjugate. 2) In the numerator, expand and cancel dominant $x^2$ terms. 3) In the denominator, factor $x$ out of the square root. 4) Divide numerator and denominator by $x$.", "body_km": "១) គុណនិងចែកនឹងកន្សោមឆ្លាស់។ ២) ក្នុងភាគយក ពន្លាតនិងសម្រួលតួ $x^2$។ ៣) ក្នុងភាគបែង ទាញ $x$ ចេញពីក្រោមរ៉ាឌីកាល់។ ៤) ចែកភាគយកនិងភាគបែងនឹង $x$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to +\\infty} (\\sqrt{x^2 + 4x} - x)$.",
+        "prompt_km": "គណនា $\\lim_{x \\to +\\infty} (\\sqrt{x^2 + 4x} - x)$។",
+        "steps": [
+          { "text_en": "Multiply and divide by conjugate $(\\sqrt{x^2 + 4x} + x)$.", "text_km": "គុណនិងចែកនឹងកន្សោមឆ្លាស់ $(\\sqrt{x^2 + 4x} + x)$។", "latex": "\\frac{(x^2 + 4x) - x^2}{\\sqrt{x^2 + 4x} + x} = \\frac{4x}{\\sqrt{x^2(1 + 4/x)} + x}" },
+          { "text_en": "Factor out $x$ from the denominator and simplify.", "text_km": "ទាញ $x$ ចេញពីភាគបែង រួចសម្រួល។", "latex": "\\lim_{x \\to +\\infty} \\frac{4x}{x(\\sqrt{1 + 4/x} + 1)} = \\frac{4}{\\sqrt{1} + 1} = 2" }
+        ],
+        "answer_latex": "\\lim_{x \\to +\\infty}(\\sqrt{x^2 + 4x} - x) = 2"
+      }
+    ]
+  },
+  "log_limit_infinity": {
+    "title_en": "Logarithmic limit at infinity",
+    "title_km": "លីមីតលោការីតនៅអនន្ត",
+    "summary_en": "Combine logarithmic terms using $\\ln A - \\ln B = \\ln\\left(\\frac{A}{B}\\right)$, then use the standard limit $\\lim_{u \\to 0} \\frac{\\ln(1 + u)}{u} = 1$.",
+    "summary_km": "បូកបញ្ចូលតួលោការីតតាមរូបមន្ត $\\ln A - \\ln B = \\ln\\left(\\frac{A}{B}\\right)$ រួចប្រើលីមីតគំរូ $\\lim_{u \\to 0} \\frac{\\ln(1 + u)}{u} = 1$។",
+    "formulas": [
+      { "latex": "\\ln A - \\ln B = \\ln\\left(\\frac{A}{B}\\right)", "note_en": "Logarithm quotient law.", "note_km": "លក្ខណៈផលចែកលោការីត។" },
+      { "latex": "\\lim_{u \\to 0} \\frac{\\ln(1 + u)}{u} = 1", "note_en": "Fundamental log limit.", "note_km": "លីមីតគ្រឹះលោការីត។" }
+    ],
+    "sections": [
+      { "heading_en": "Key technique", "heading_km": "បច្ចេកទេសគន្លឹះ", "body_en": "Rewrite $x \\cdot \\ln\\left(\\frac{x+k}{x}\\right)$ as $x \\cdot \\ln\\left(1 + \\frac{k}{x}\\right) = k \\cdot \\frac{\\ln(1 + k/x)}{k/x}$. As $x \\to +\\infty$, $\\frac{k}{x} \\to 0$, so the limit evaluates to $k \\cdot 1 = k$.", "body_km": "សរសេរ $x \\cdot \\ln\\left(\\frac{x+k}{x}\\right)$ ជា $x \\cdot \\ln\\left(1 + \\frac{k}{x}\\right) = k \\cdot \\frac{\\ln(1 + k/x)}{k/x}$។ កាលណា $x \\to +\\infty$ នោះ $\\frac{k}{x} \\to 0$ នាំឱ្យលីមីតស្មើ $k \\cdot 1 = k$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to +\\infty} x [\\ln(x + 2) - \\ln x]$.",
+        "prompt_km": "គណនា $\\lim_{x \\to +\\infty} x [\\ln(x + 2) - \\ln x]$។",
+        "steps": [
+          { "text_en": "Combine logarithms: $\\ln\\left(\\frac{x+2}{x}\\right) = \\ln\\left(1 + \\frac{2}{x}\\right)$.", "text_km": "បញ្ចូលលោការីត៖ $\\ln\\left(\\frac{x+2}{x}\\right) = \\ln\\left(1 + \\frac{2}{x}\\right)$។", "latex": "x \\ln\\left(1 + \\frac{2}{x}\\right) = 2 \\cdot \\frac{\\ln(1 + 2/x)}{2/x}" },
+          { "text_en": "Let $u = \\frac{2}{x} \\to 0$ as $x \\to +\\infty$.", "text_km": "តាង $u = \\frac{2}{x} \\to 0$ កាលណា $x \\to +\\infty$។", "latex": "2 \\cdot 1 = 2" }
+        ],
+        "answer_latex": "\\lim_{x \\to +\\infty} x[\\ln(x+2) - \\ln x] = 2"
+      }
+    ]
+  },
+  "rational_function_infinity": {
+    "title_en": "Rational function at infinity",
+    "title_km": "លីមីតអនុគមន៍សនិទាននៅអនន្ត",
+    "summary_en": "For limits of polynomial fractions $\\frac{P(x)}{Q(x)}$ as $x \\to \\pm\\infty$, the limit is determined by the ratio of the highest-degree terms.",
+    "summary_km": "សម្រាប់លីមីតនៃប្រភាគពហុធា $\\frac{P(x)}{Q(x)}$ កាលណា $x \\to \\pm\\infty$ លីមីតត្រូវបានកំណត់ទាំងស្រុងដោយផលធៀបនៃតួដឺក្រេខ្ពស់បំផុត។",
+    "formulas": [
+      { "latex": "\\lim_{x \\to \\infty} \\frac{a_n x^n + \\dots}{b_m x^m + \\dots} = \\lim_{x \\to \\infty} \\frac{a_n x^n}{b_m x^m}", "note_en": "Dominant term rule.", "note_km": "ក្បួនតួមានដឺក្រេខ្ពស់ជាងគេ។" },
+      { "latex": "n = m \\implies \\frac{a_n}{b_m}, \\quad n < m \\implies 0, \\quad n > m \\implies \\pm\\infty", "note_en": "Degree comparison outcomes.", "note_km": "លទ្ធផលប្រៀបធៀបដឺក្រេ។" }
+    ],
+    "sections": [
+      { "heading_en": "Fast method", "heading_km": "វិធីគណនារហ័ស", "body_en": "Factor out the highest power of $x$ from both numerator and denominator and simplify. Terms of the form $\\frac{c}{x^k}$ vanish to $0$ as $x \\to \\infty$.", "body_km": "ទាញស្វ័យគុណខ្ពស់បំផុតនៃ $x$ ជាកត្តារួមទាំងភាគយកនិងភាគបែង រួចសម្រួលចោល។ តួដែលមានទម្រង់ $\\frac{c}{x^k}$ ខិតទៅរក $0$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to +\\infty} \\frac{3x^2 + 5x}{2x^2 - 7}$.",
+        "prompt_km": "គណនា $\\lim_{x \\to +\\infty} \\frac{3x^2 + 5x}{2x^2 - 7}$។",
+        "steps": [
+          { "text_en": "Divide numerator and denominator by $x^2$.", "text_km": "ចែកភាគយក និងភាគបែងនឹង $x^2$។", "latex": "\\lim_{x \\to +\\infty} \\frac{3 + \\frac{5}{x}}{2 - \\frac{7}{x^2}}" },
+          { "text_en": "As $x \\to +\\infty$, $\\frac{5}{x} \\to 0$ and $\\frac{7}{x^2} \\to 0$.", "text_km": "កាលណា $x \\to +\\infty$ នោះ $\\frac{5}{x} \\to 0$ និង $\\frac{7}{x^2} \\to 0$។", "latex": "\\frac{3 + 0}{2 - 0} = \\frac{3}{2}" }
+        ],
+        "answer_latex": "\\lim_{x \\to +\\infty} \\frac{3x^2 + 5x}{2x^2 - 7} = \\frac{3}{2}"
+      }
+    ]
+  },
+  "log_limit_zero": {
+    "title_en": "Logarithmic limit at 0",
+    "title_km": "លីមីតលោការីតត្រង់សូន្យ",
+    "summary_en": "Resolves indeterminate limits as $x \\to 0^+$ involving logarithms, such as $\\lim_{x \\to 0^+} x^p \\ln x = 0$ ($p > 0$) and $\\lim_{x \\to 0} \\frac{\\ln(1 + x)}{x} = 1$.",
+    "summary_km": "ដោះស្រាយលីមីតកាលណា $x \\to 0^+$ ដែលមានលោការីត ដូចជាលីមីតគំរូ $\\lim_{x \\to 0^+} x^p \\ln x = 0$ ($p > 0$) និង $\\lim_{x \\to 0} \\frac{\\ln(1 + x)}{x} = 1$។",
+    "formulas": [
+      { "latex": "\\lim_{x \\to 0^+} x^p \\ln x = 0 \\quad (p > 0)", "note_en": "Power dominates logarithm.", "note_km": "ស្វ័យគុណឈ្នះលោការីត។" },
+      { "latex": "\\lim_{x \\to 0} \\frac{\\ln(1 + x)}{x} = 1", "note_en": "Standard linear approximation limit.", "note_km": "លីមីតគំរូលោការីតត្រង់ 0។" }
+    ],
+    "sections": [
+      { "heading_en": "Concept", "heading_km": "គំនិតគ្រឹះ", "body_en": "Although $\\ln x \\to -\\infty$ as $x \\to 0^+$, any positive power of $x$ approaches $0$ much faster, pulling the entire product to $0$.", "body_km": "ទោះបីជា $\\ln x \\to -\\infty$ កាលណា $x \\to 0^+$ ក៏ដោយ ក៏គ្រប់ស្វ័យគុណវិជ្ជមាននៃ $x$ ខិតជិត $0$ លឿនជាងច្រើន ដែលទាញផលគុណទាំងមូលឱ្យស្មើ $0$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to 0^+} x \\ln x$.",
+        "prompt_km": "គណនា $\\lim_{x \\to 0^+} x \\ln x$។",
+        "steps": [
+          { "text_en": "Apply the standard growth limit: $x^1$ dominates $\\ln x$.", "text_km": "អនុវត្តលីមីតគំរូ៖ ស្វ័យគុណ $x^1$ ឈ្នះ $\\ln x$។", "latex": "\\lim_{x \\to 0^+} x\\ln x = 0" }
+        ],
+        "answer_latex": "\\lim_{x \\to 0^+} x\\ln x = 0"
+      }
+    ]
+  },
+  "indeterminate_one_infinity": {
+    "title_en": "Indeterminate form 1^∞",
+    "title_km": "រាងមិនកំណត់ 1^∞",
+    "summary_en": "Limits of the form $f(x)^{g(x)}$ where $f(x) \\to 1$ and $g(x) \\to \\infty$ evaluate to $e^L$, where $L = \\lim [g(x) \\cdot (f(x) - 1)]$.",
+    "summary_km": "លីមីតរាង $f(x)^{g(x)}$ ដែល $f(x) \\to 1$ និង $g(x) \\to \\infty$ គណនាឃើញ $e^L$ ដែល $L = \\lim [g(x) \\cdot (f(x) - 1)]$។",
+    "formulas": [
+      { "latex": "\\lim_{x \\to \\infty} \\left(1 + \\frac{1}{x}\\right)^x = e", "note_en": "Definition of Euler's number e.", "note_km": "និយមន័យនៃចំនួនអយល័រ e។" },
+      { "latex": "\\lim_{x \\to a} f(x)^{g(x)} = e^{\\lim_{x \\to a} g(x)(f(x) - 1)}", "note_en": "General 1^∞ evaluation formula.", "note_km": "រូបមន្តទូទៅសម្រាប់រាង 1^∞។" }
+    ],
+    "sections": [
+      { "heading_en": "Standard shortcut", "heading_km": "រូបមន្តកាត់", "body_en": "Rewrite $\\left[1 + u(x)\\right]^{\\frac{1}{u(x)}} \\to e$ as $u(x) \\to 0$. Group powers so that the exponent becomes $\\frac{1}{u(x)} \\cdot \\left[g(x) \\cdot u(x)\\right]$.", "body_km": "សរសេរទម្រង់ $\\left[1 + u(x)\\right]^{\\frac{1}{u(x)}} \\to e$ កាលណា $u(x) \\to 0$។ តម្រូវនិទស្សន្តឱ្យមាន $\\frac{1}{u(x)} \\cdot \\left[g(x) \\cdot u(x)\\right]$។" }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\lim_{x \\to +\\infty} \\left(1 + \\frac{3}{x}\\right)^x$.",
+        "prompt_km": "គណនា $\\lim_{x \\to +\\infty} \\left(1 + \\frac{3}{x}\\right)^x$។",
+        "steps": [
+          { "text_en": "Form is $1^\\infty$. Rewrite the exponent as $\\frac{x}{3} \\cdot 3$.", "text_km": "ជារាង $1^\\infty$។ សរសេរនិទស្សន្តជា $\\frac{x}{3} \\cdot 3$។", "latex": "\\lim_{x \\to +\\infty} \\left[\\left(1 + \\frac{3}{x}\\right)^{x/3}\\right]^3 = e^3" }
+        ],
+        "answer_latex": "\\lim_{x \\to +\\infty} \\left(1 + \\frac{3}{x}\\right)^x = e^3"
+      }
+    ]
+  }
+}

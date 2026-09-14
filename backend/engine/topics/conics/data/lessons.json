@@ -1,0 +1,357 @@
+{
+  "vertex_x": {
+    "title_en": "Conic: Vertex x-coordinate",
+    "title_km": "កោនិក៖ អាប់ស៊ីសនៃកំពូល (vertex x)",
+    "summary_en": "The $x$-coordinate of the vertex $h$ of a parabola or conic is found by completing the square into canonical form $(y - k)^2 = 4p(x - h)$ or $(x - h)^2 = 4p(y - k)$.",
+    "summary_km": "អាប់ស៊ីសនៃកំពូល $h$ នៃប៉ារ៉ាបូលត្រូវបានរកឃើញដោយការបំពេញជាការេពេញទៅជាទម្រង់កាណូនិច $(y - k)^2 = 4p(x - h)$ ឬ $(x - h)^2 = 4p(y - k)$។",
+    "formulas": [
+      { "latex": "(y - k)^2 = 4p(x - h) \\implies \\text{Vertex } V(h, k)", "note_en": "Horizontal parabola vertex.", "note_km": "កំពូលប៉ារ៉ាបូលដេក។" },
+      { "latex": "(x - h)^2 = 4p(y - k) \\implies \\text{Vertex } V(h, k)", "note_en": "Vertical parabola vertex.", "note_km": "កំពូលប៉ារ៉ាបូលឈរ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Method",
+        "heading_km": "វិធីសាស្ត្រ",
+        "body_en": "Complete the square on the squared variable term to express the equation in canonical form, then read off $h$ from the $(x - h)$ term.",
+        "body_km": "បំពេញជាការេពេញលើអថេរដែលមានស្វ័យគុណពីរ ដើម្បីសរសេរជាទម្រង់កាណូនិច រួចទាញយកតម្លៃ $h$ ពីតួ $(x - h)$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find the vertex $x$-coordinate for the parabola $y^2 - 4y - 8x + 12 = 0$.",
+        "prompt_km": "រកអាប់ស៊ីសកំពូល $x$ នៃប៉ារ៉ាបូល $y^2 - 4y - 8x + 12 = 0$។",
+        "steps": [
+          {
+            "text_en": "Complete the square on $y$: $(y - 2)^2 - 4 - 8x + 12 = 0$.",
+            "text_km": "បំពេញជាការេលើ $y$៖ $(y - 2)^2 - 4 - 8x + 12 = 0$។",
+            "latex": "(y - 2)^2 = 8x - 8 = 8(x - 1)"
+          },
+          {
+            "text_en": "Read off $h$ from $8(x - 1)$: $h = 1$.",
+            "text_km": "ទាញយក $h$ ពី $8(x - 1)$៖ $h = 1$។",
+            "latex": "h = 1"
+          }
+        ],
+        "answer_latex": "x_V = 1"
+      }
+    ]
+  },
+  "vertex_y": {
+    "title_en": "Conic: Vertex y-coordinate",
+    "title_km": "កោនិក៖ អ័រដោនេនៃកំពូល (vertex y)",
+    "summary_en": "The $y$-coordinate of the vertex $k$ is determined from the canonical form $(y - k)^2 = 4p(x - h)$ or $(x - h)^2 = 4p(y - k)$.",
+    "summary_km": "អ័រដោនេនៃកំពូល $k$ ត្រូវបានកំណត់ចេញពីទម្រង់កាណូនិច $(y - k)^2 = 4p(x - h)$ ឬ $(x - h)^2 = 4p(y - k)$។",
+    "formulas": [
+      { "latex": "(y - k)^2 = 4p(x - h) \\implies k = y_V", "note_en": "Vertex y-coordinate.", "note_km": "អ័រដោនេកំពូលប៉ារ៉ាបូល។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Step",
+        "heading_km": "ជំហាន",
+        "body_en": "Complete the square on the quadratic terms to read $k$ from $(y - k)$.",
+        "body_km": "បំពេញជាការេពេញលើតួដឺក្រេទីពីរដើម្បីទាញយកតម្លៃ $k$ ពី $(y - k)$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find the vertex $y$-coordinate for $(y - 3)^2 = 4(x + 1)$.",
+        "prompt_km": "រកអ័រដោនេកំពូល $y$ នៃ $(y - 3)^2 = 4(x + 1)$។",
+        "steps": [
+          {
+            "text_en": "Compare with canonical form $(y - k)^2 = 4p(x - h)$.",
+            "text_km": "ផ្ទឹមជាមួយទម្រង់កាណូនិច $(y - k)^2 = 4p(x - h)$។",
+            "latex": "k = 3"
+          }
+        ],
+        "answer_latex": "y_V = 3"
+      }
+    ]
+  },
+  "focus_x": {
+    "title_en": "Conic: Focus x-coordinate",
+    "title_km": "កោនិក៖ អាប់ស៊ីសនៃកំណុំ (focus x)",
+    "summary_en": "For a horizontal parabola $(y - k)^2 = 4p(x - h)$, the focus is $F(h + p, k)$. For an ellipse with horizontal major axis, $F(h \\pm c, k)$.",
+    "summary_km": "សម្រាប់ប៉ារ៉ាបូលដេក $(y - k)^2 = 4p(x - h)$ កំណុំគឺ $F(h + p, k)$។ សម្រាប់អេលីបដែលមានអ័ក្សធំដេក កំណុំគឺ $F(h \\pm c, k)$។",
+    "formulas": [
+      { "latex": "(y - k)^2 = 4p(x - h) \\implies F(h + p, k)", "note_en": "Parabola focus formula.", "note_km": "រូបមន្តកំណុំប៉ារ៉ាបូល។" },
+      { "latex": "\\frac{(x-h)^2}{a^2} + \\frac{(y-k)^2}{b^2} = 1 \\implies F(h \\pm c, k), \\ c = \\sqrt{a^2 - b^2}", "note_en": "Ellipse horizontal foci.", "note_km": "កំណុំអេលីបដេក។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Procedure",
+        "heading_km": "វិធីអនុវត្ត",
+        "body_en": "1) Find vertex/centre $(h, k)$. 2) Calculate the focal parameter $p$ or focal distance $c$. 3) Add $p$ (or $\\pm c$) to the $x$-coordinate.",
+        "body_km": "១) រកកំពូល ឬផ្ចិត $(h, k)$។ ២) គណនាប៉ារ៉ាម៉ែត្រកំណុំ $p$ ឬចម្ងាយកំណុំ $c$។ ៣) បូក $p$ (ឬ $\\pm c$) ទៅលើអាប់ស៊ីស $x$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find the focus $x$-coordinate of $(y - 1)^2 = 8(x - 2)$.",
+        "prompt_km": "រកអាប់ស៊ីសកំណុំ $x$ នៃ $(y - 1)^2 = 8(x - 2)$។",
+        "steps": [
+          {
+            "text_en": "Here $h = 2$, $k = 1$, and $4p = 8 \\implies p = 2$.",
+            "text_km": "ត្រង់នេះ $h = 2$, $k = 1$, និង $4p = 8 \\implies p = 2$។",
+            "latex": "p = 2"
+          },
+          {
+            "text_en": "Compute focus $x_F = h + p = 2 + 2 = 4$.",
+            "text_km": "គណនាអាប់ស៊ីសកំណុំ $x_F = h + p = 2 + 2 = 4$។",
+            "latex": "x_F = 4"
+          }
+        ],
+        "answer_latex": "x_F = 4"
+      }
+    ]
+  },
+  "focus_y": {
+    "title_en": "Conic: Focus y-coordinate",
+    "title_km": "កោនិក៖ អ័រដោនេនៃកំណុំ (focus y)",
+    "summary_en": "For a vertical parabola $(x - h)^2 = 4p(y - k)$, the focus is $F(h, k + p)$.",
+    "summary_km": "សម្រាប់ប៉ារ៉ាបូលឈរ $(x - h)^2 = 4p(y - k)$ កំណុំគឺ $F(h, k + p)$។",
+    "formulas": [
+      { "latex": "(x - h)^2 = 4p(y - k) \\implies F(h, k + p)", "note_en": "Vertical parabola focus formula.", "note_km": "រូបមន្តកំណុំប៉ារ៉ាបូលឈរ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Method",
+        "heading_km": "វិធីសាស្ត្រ",
+        "body_en": "Determine $k$ and $p$ from the equation, then add $p$ to $k$.",
+        "body_km": "កំណត់តម្លៃ $k$ និង $p$ ពីសមីការ រួចបូក $p$ ទៅលើ $k$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find the focus $y$-coordinate of $(x - 3)^2 = 12(y - 1)$.",
+        "prompt_km": "រកអ័រដោនេកំណុំ $y$ នៃ $(x - 3)^2 = 12(y - 1)$។",
+        "steps": [
+          {
+            "text_en": "Here $k = 1$ and $4p = 12 \\implies p = 3$. Focus is $k + p = 1 + 3 = 4$.",
+            "text_km": "ត្រង់នេះ $k = 1$ និង $4p = 12 \\implies p = 3$។ កំណុំគឺ $k + p = 1 + 3 = 4$។",
+            "latex": "y_F = 1 + 3 = 4"
+          }
+        ],
+        "answer_latex": "y_F = 4"
+      }
+    ]
+  },
+  "p": {
+    "title_en": "Conic: Focal parameter p",
+    "title_km": "កោនិក៖ ប៉ារ៉ាម៉ែត្រកំណុំ p",
+    "summary_en": "The focal parameter $p$ is the directed distance from the vertex to the focus in a parabola, found from $4p = \\text{coefficient of the linear term}$.",
+    "summary_km": "ប៉ារ៉ាម៉ែត្រកំណុំ $p$ គឺជាចម្ងាយពីកំពូលទៅកំណុំនៃប៉ារ៉ាបូល ដែលរកបានតាមរយៈ $4p = \\text{មេគុណនៃតួដឺក្រេ១}$។",
+    "formulas": [
+      { "latex": "4p = \\text{coefficient of } (x - h) \\text{ or } (y - k) \\implies p = \\frac{4p}{4}", "note_en": "Solving for focal parameter p.", "note_km": "ដោះស្រាយរកតម្លៃប៉ារ៉ាម៉ែត្រ p។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Identification",
+        "heading_km": "ការសម្គាល់",
+        "body_en": "After completing the square, the coefficient multiplying the non-squared linear binomial is $4p$. Divide that coefficient by 4.",
+        "body_km": "បន្ទាប់ពីបំពេញជាការេពេញ មេគុណដែលគុណនឹងតួដឺក្រេ១ គឺ $4p$។ ចែកមេគុណនោះនឹង 4 ដើម្បីបាន $p$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find the focal parameter $p$ for $(y - 2)^2 = 16(x - 5)$.",
+        "prompt_km": "រកតម្លៃប៉ារ៉ាម៉ែត្រកំណុំ $p$ នៃ $(y - 2)^2 = 16(x - 5)$។",
+        "steps": [
+          {
+            "text_en": "Set $4p = 16 \\implies p = 4$.",
+            "text_km": "ឱ្យ $4p = 16 \\implies p = 4$។",
+            "latex": "4p = 16 \\implies p = 4"
+          }
+        ],
+        "answer_latex": "p = 4"
+      }
+    ]
+  },
+  "directrix": {
+    "title_en": "Conic: Directrix",
+    "title_km": "កោនិក៖ បន្ទាត់ប្រាប់ទិស (directrix)",
+    "summary_en": "The directrix of a parabola is the line perpendicular to the axis of symmetry, at distance $p$ on the opposite side of the vertex from the focus.",
+    "summary_km": "បន្ទាត់ប្រាប់ទិសនៃប៉ារ៉ាបូល គឺជាបន្ទាត់កែងនឹងអ័ក្សឆ្លុះ នៅចម្ងាយ $p$ ពីកំពូល ផ្ទុយពីទិសដៅកំណុំ។",
+    "formulas": [
+      { "latex": "(y - k)^2 = 4p(x - h) \\implies x = h - p", "note_en": "Directrix of horizontal parabola.", "note_km": "បន្ទាត់ប្រាប់ទិសនៃប៉ារ៉ាបូលដេក។" },
+      { "latex": "(x - h)^2 = 4p(y - k) \\implies y = k - p", "note_en": "Directrix of vertical parabola.", "note_km": "បន្ទាត់ប្រាប់ទិសនៃប៉ារ៉ាបូលឈរ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Formula",
+        "heading_km": "រូបមន្ត",
+        "body_en": "For a horizontal parabola, the directrix is the vertical line $x = h - p$.",
+        "body_km": "សម្រាប់ប៉ារ៉ាបូលដេក បន្ទាត់ប្រាប់ទិសគឺជាបន្ទាត់ឈរ $x = h - p$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find the directrix for $(y - 4)^2 = 8(x - 3)$.",
+        "prompt_km": "រកសមីការបន្ទាត់ប្រាប់ទិសនៃ $(y - 4)^2 = 8(x - 3)$។",
+        "steps": [
+          {
+            "text_en": "Here $h = 3$ and $4p = 8 \\implies p = 2$.",
+            "text_km": "ត្រង់នេះ $h = 3$ និង $4p = 8 \\implies p = 2$។",
+            "latex": "x = h - p = 3 - 2 = 1"
+          }
+        ],
+        "answer_latex": "x = 1"
+      }
+    ]
+  },
+  "center_x": {
+    "title_en": "Conic: Centre x-coordinate",
+    "title_km": "កោនិក៖ អាប់ស៊ីសនៃផ្ចិត (centre x)",
+    "summary_en": "The $x$-coordinate of the centre $I(h, k)$ of an ellipse or hyperbola is the value of $h$ in $\\frac{(x - h)^2}{a^2} \\pm \\frac{(y - k)^2}{b^2} = 1$.",
+    "summary_km": "អាប់ស៊ីសនៃផ្ចិត $I(h, k)$ នៃអេលីប ឬអ៊ីពែរបូល គឺជាតម្លៃ $h$ ក្នុងសមីការ $\\frac{(x - h)^2}{a^2} \\pm \\frac{(y - k)^2}{b^2} = 1$។",
+    "formulas": [
+      { "latex": "\\frac{(x - h)^2}{a^2} + \\frac{(y - k)^2}{b^2} = 1 \\implies I(h, k)", "note_en": "Ellipse centre.", "note_km": "ផ្ចិតអេលីប។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Method",
+        "heading_km": "វិធីសាស្ត្រ",
+        "body_en": "Group $x$-terms and complete the square: $A(x - h)^2$. The centre $x$-coordinate is $h$.",
+        "body_km": "ប្រមូលផ្តុំតួ $x$ រួចបំពេញជាការេពេញ $A(x - h)^2$។ អាប់ស៊ីសផ្ចិតគឺ $h$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find the centre $x$-coordinate of $\\frac{(x - 5)^2}{9} + \\frac{(y + 2)^2}{4} = 1$.",
+        "prompt_km": "រកអាប់ស៊ីសផ្ចិត $x$ នៃ $\\frac{(x - 5)^2}{9} + \\frac{(y + 2)^2}{4} = 1$។",
+        "steps": [
+          {
+            "text_en": "Read $h$ directly from $(x - 5)$: $h = 5$.",
+            "text_km": "ទាញតម្លៃ $h$ ពី $(x - 5)$៖ $h = 5$។",
+            "latex": "h = 5"
+          }
+        ],
+        "answer_latex": "x_I = 5"
+      }
+    ]
+  },
+  "center_y": {
+    "title_en": "Conic: Centre y-coordinate",
+    "title_km": "កោនិក៖ អ័រដោនេនៃផ្ចិត (centre y)",
+    "summary_en": "The $y$-coordinate of the centre $I(h, k)$ of an ellipse or hyperbola is the value of $k$ in $\\frac{(x - h)^2}{a^2} \\pm \\frac{(y - k)^2}{b^2} = 1$.",
+    "summary_km": "អ័រដោនេនៃផ្ចិត $I(h, k)$ នៃអេលីប ឬអ៊ីពែរបូល គឺជាតម្លៃ $k$ ក្នុងសមីការ $\\frac{(x - h)^2}{a^2} \\pm \\frac{(y - k)^2}{b^2} = 1$។",
+    "formulas": [
+      { "latex": "\\frac{(x - h)^2}{a^2} + \\frac{(y - k)^2}{b^2} = 1 \\implies k = y_I", "note_en": "Centre y-coordinate.", "note_km": "អ័រដោនេផ្ចិតអេលីប។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Method",
+        "heading_km": "វិធីសាស្ត្រ",
+        "body_en": "Group $y$-terms and complete the square: $B(y - k)^2$. The centre $y$-coordinate is $k$.",
+        "body_km": "ប្រមូលផ្តុំតួ $y$ រួចបំពេញជាការេពេញ $B(y - k)^2$។ អ័រដោនេផ្ចិតគឺ $k$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find the centre $y$-coordinate of $\\frac{(x - 1)^2}{16} + \\frac{(y - 4)^2}{25} = 1$.",
+        "prompt_km": "រកអ័រដោនេផ្ចិត $y$ នៃ $\\frac{(x - 1)^2}{16} + \\frac{(y - 4)^2}{25} = 1$។",
+        "steps": [
+          {
+            "text_en": "Read $k$ from $(y - 4)$: $k = 4$.",
+            "text_km": "ទាញតម្លៃ $k$ ពី $(y - 4)$៖ $k = 4$។",
+            "latex": "k = 4"
+          }
+        ],
+        "answer_latex": "y_I = 4"
+      }
+    ]
+  },
+  "a": {
+    "title_en": "Conic: Semi-major / Transverse axis length a",
+    "title_km": "កោនិក៖ ប្រវែងកន្លះអ័ក្សធំ a",
+    "summary_en": "In an ellipse, $a$ is the length of the semi-major axis ($a > b$). In a hyperbola, $a$ is the semi-transverse axis under the positive term.",
+    "summary_km": "ក្នុងអេលីប $a$ ជាប្រវែងកន្លះអ័ក្សធំ ($a > b$)។ ក្នុងអ៊ីពែរបូល $a$ ជាកន្លះអ័ក្សទទឹងដែលនៅក្រោមតួវិជ្ជមាន។",
+    "formulas": [
+      { "latex": "a = \\sqrt{a^2}", "note_en": "Axis length parameter.", "note_km": "ប្រវែងកន្លះអ័ក្ស a។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Identification",
+        "heading_km": "ការសម្គាល់",
+        "body_en": "For an ellipse $\\frac{(x-h)^2}{A} + \\frac{(y-k)^2}{B} = 1$, $a = \\sqrt{\\max(A, B)}$.",
+        "body_km": "សម្រាប់អេលីប $a = \\sqrt{\\max(A, B)}$ គឺជាឬសការេនៃភាគបែងដែលធំជាង។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $a$ for the ellipse $\\frac{(x - 2)^2}{25} + \\frac{(y + 1)^2}{9} = 1$.",
+        "prompt_km": "រកតម្លៃ $a$ នៃអេលីប $\\frac{(x - 2)^2}{25} + \\frac{(y + 1)^2}{9} = 1$។",
+        "steps": [
+          {
+            "text_en": "The larger denominator is $a^2 = 25 \\implies a = 5$.",
+            "text_km": "ភាគបែងធំជាងគឺ $a^2 = 25 \\implies a = 5$។",
+            "latex": "a = \\sqrt{25} = 5"
+          }
+        ],
+        "answer_latex": "a = 5"
+      }
+    ]
+  },
+  "b": {
+    "title_en": "Conic: Semi-minor / Conjugate axis length b",
+    "title_km": "កោនិក៖ ប្រវែងកន្លះអ័ក្សតូច b",
+    "summary_en": "In an ellipse, $b$ is the length of the semi-minor axis ($b < a$). In a hyperbola, $b$ is the semi-conjugate axis under the negative term.",
+    "summary_km": "ក្នុងអេលីប $b$ ជាប្រវែងកន្លះអ័ក្សតូច ($b < a$)។ ក្នុងអ៊ីពែរបូល $b$ ជាកន្លះអ័ក្សឆ្លាស់ក្រោមតួអវិជ្ជមាន។",
+    "formulas": [
+      { "latex": "b = \\sqrt{b^2}", "note_en": "Semi-minor axis length.", "note_km": "ប្រវែងកន្លះអ័ក្សតូច b។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Formula",
+        "heading_km": "រូបមន្ត",
+        "body_en": "For an ellipse $\\frac{(x-h)^2}{A} + \\frac{(y-k)^2}{B} = 1$, $b = \\sqrt{\\min(A, B)}$.",
+        "body_km": "សម្រាប់អេលីប $b = \\sqrt{\\min(A, B)}$ គឺជាឬសការេនៃភាគបែងដែលតូចជាង។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $b$ for the ellipse $\\frac{(x - 1)^2}{16} + \\frac{(y - 3)^2}{4} = 1$.",
+        "prompt_km": "រកតម្លៃ $b$ នៃអេលីប $\\frac{(x - 1)^2}{16} + \\frac{(y - 3)^2}{4} = 1$។",
+        "steps": [
+          {
+            "text_en": "The smaller denominator is $b^2 = 4 \\implies b = 2$.",
+            "text_km": "ភាគបែងតូចជាងគឺ $b^2 = 4 \\implies b = 2$។",
+            "latex": "b = \\sqrt{4} = 2"
+          }
+        ],
+        "answer_latex": "b = 2"
+      }
+    ]
+  },
+  "c": {
+    "title_en": "Conic: Focal distance c",
+    "title_km": "កោនិក៖ ចម្ងាយកំណុំ c",
+    "summary_en": "The distance from the centre to each focus is $c$. For an ellipse, $c^2 = a^2 - b^2$. For a hyperbola, $c^2 = a^2 + b^2$.",
+    "summary_km": "ចម្ងាយពីផ្ចិតទៅកំណុំនីមួយៗគឺ $c$។ សម្រាប់អេលីប $c^2 = a^2 - b^2$។ សម្រាប់អ៊ីពែរបូល $c^2 = a^2 + b^2$។",
+    "formulas": [
+      { "latex": "c = \\sqrt{a^2 - b^2} \\quad (\\text{ellipse})", "note_en": "Focal distance of an ellipse.", "note_km": "ចម្ងាយកំណុំអេលីប។" },
+      { "latex": "c = \\sqrt{a^2 + b^2} \\quad (\\text{hyperbola})", "note_en": "Focal distance of a hyperbola.", "note_km": "ចម្ងាយកំណុំអ៊ីពែរបូល។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Key distinction",
+        "heading_km": "ចំណុចខុសគ្នា",
+        "body_en": "In an ellipse, $a$ is the largest parameter ($a > c > 0$), so $c^2 = a^2 - b^2$. In a hyperbola, $c$ is the largest parameter ($c > a$), so $c^2 = a^2 + b^2$.",
+        "body_km": "ក្នុងអេលីប $a$ ធំជាងគេ ($a > c > 0$) ដូច្នេះ $c^2 = a^2 - b^2$។ ក្នុងអ៊ីពែរបូល $c$ ធំជាងគេ ($c > a$) ដូច្នេះ $c^2 = a^2 + b^2$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find the focal distance $c$ for the ellipse $\\frac{x^2}{25} + \\frac{y^2}{9} = 1$.",
+        "prompt_km": "រកចម្ងាយកំណុំ $c$ នៃអេលីប $\\frac{x^2}{25} + \\frac{y^2}{9} = 1$។",
+        "steps": [
+          {
+            "text_en": "Here $a^2 = 25$ and $b^2 = 9$. Compute $c^2 = 25 - 9 = 16$.",
+            "text_km": "ត្រង់នេះ $a^2 = 25$ និង $b^2 = 9$។ គណនា $c^2 = 25 - 9 = 16$។",
+            "latex": "c = \\sqrt{25 - 9} = \\sqrt{16} = 4"
+          }
+        ],
+        "answer_latex": "c = 4"
+      }
+    ]
+  }
+}

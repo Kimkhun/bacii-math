@@ -1,0 +1,84 @@
+{
+  "check_at_point": {
+    "title_en": "Continuity at a point",
+    "title_km": "ភាពជាប់ត្រង់ចំណុចមួយ",
+    "summary_en": "A function $f(x)$ is continuous at $x = x_0$ if and only if the left-hand limit, the right-hand limit, and the function value $f(x_0)$ all exist and are equal.",
+    "summary_km": "អនុគមន៍ $f(x)$ ជាប់ត្រង់ $x = x_0$ លុះត្រាតែលីមីតខាងឆ្វេង លីមីតខាងស្តាំ និងតម្លៃអនុគមន៍ $f(x_0)$ មានតម្លៃស្មើគ្នា។",
+    "formulas": [
+      { "latex": "\\lim_{x \\to x_0^-} f(x) = \\lim_{x \\to x_0^+} f(x) = f(x_0)", "note_en": "Three-way condition for continuity at a point.", "note_km": "លក្ខខណ្ឌទាំងបីនៃភាពជាប់ត្រង់ចំណុចមួយ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Verification steps",
+        "heading_km": "ជំហានផ្ទៀងផ្ទាត់",
+        "body_en": "1) Compute the left-hand limit $\\lim_{x \\to x_0^-} f(x)$. 2) Compute the right-hand limit $\\lim_{x \\to x_0^+} f(x)$. 3) Evaluate the value $f(x_0)$. 4) Conclude continuous if all three agree, or discontinuous if any two differ.",
+        "body_km": "១) គណនាលីមីតខាងឆ្វេង $\\lim_{x \\to x_0^-} f(x)$។ ២) គណនាលីមីតខាងស្តាំ $\\lim_{x \\to x_0^+} f(x)$។ ៣) គណនាតម្លៃអនុគមន៍ $f(x_0)$។ ៤) សន្និដ្ឋានថាជាប់ប្រសិនបើតម្លៃទាំងបីស្មើគ្នា ឬដាច់ប្រសិនបើតម្លៃខុសគ្នា។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Check the continuity of $f(x)$ at $x = 1$ where $f(x) = x^2 + 1$ for $x < 1$ and $f(x) = 2x$ for $x \\ge 1$.",
+        "prompt_km": "សិក្សាភាពជាប់នៃ $f(x)$ ត្រង់ $x = 1$ ដែល $f(x) = x^2 + 1$ សម្រាប់ $x < 1$ និង $f(x) = 2x$ សម្រាប់ $x \\ge 1$។",
+        "steps": [
+          {
+            "text_en": "Calculate left-hand limit as $x \\to 1^-$.",
+            "text_km": "គណនាលីមីតខាងឆ្វេងកាលណា $x \\to 1^-$។",
+            "latex": "\\lim_{x \\to 1^-} f(x) = \\lim_{x \\to 1^-}(x^2 + 1) = 1^2 + 1 = 2"
+          },
+          {
+            "text_en": "Calculate right-hand limit and function value at $x = 1$.",
+            "text_km": "គណនាលីមីតខាងស្តាំ និងតម្លៃអនុគមន៍ត្រង់ $x = 1$។",
+            "latex": "\\lim_{x \\to 1^+} f(x) = \\lim_{x \\to 1^+}(2x) = 2(1) = 2, \\quad f(1) = 2(1) = 2"
+          },
+          {
+            "text_en": "Compare the three values: $\\lim_{x \\to 1^-} f(x) = \\lim_{x \\to 1^+} f(x) = f(1) = 2$.",
+            "text_km": "ប្រៀបធៀបតម្លៃទាំងបី៖ $\\lim_{x \\to 1^-} f(x) = \\lim_{x \\to 1^+} f(x) = f(1) = 2$។",
+            "latex": ""
+          }
+        ],
+        "answer_latex": "f(x) \\text{ is continuous at } x = 1"
+      }
+    ]
+  },
+  "find_parameter": {
+    "title_en": "Find parameter for continuity",
+    "title_km": "រកប៉ារ៉ាម៉ែត្រដើម្បីឱ្យអនុគមន៍ជាប់",
+    "summary_en": "To find an unknown constant $m$ or $k$ that makes $f(x)$ continuous at $x_0$, equate the one-sided limits to $f(x_0)$ and solve the resulting algebraic equation.",
+    "summary_km": "ដើម្បីរកតម្លៃចំនួនថេរ $m$ ឬ $k$ ដែលធ្វើឱ្យ $f(x)$ ជាប់ត្រង់ $x_0$ ត្រូវឱ្យលីមីតសងខាងស្មើគ្នានឹង $f(x_0)$ រួចដោះស្រាយសមីការពីជគណិតនោះ។",
+    "formulas": [
+      { "latex": "\\lim_{x \\to x_0^-} f(x) = \\lim_{x \\to x_0^+} f(x) = f(x_0)", "note_en": "Continuity equation for solving the unknown parameter.", "note_km": "សមីការភាពជាប់សម្រាប់ដោះស្រាយរកតម្លៃប៉ារ៉ាម៉ែត្រមិនស្គាល់។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Solution method",
+        "heading_km": "វិធីសាស្ត្រដោះស្រាយ",
+        "body_en": "1) Evaluate the limit of the piece without the unknown (or substitute directly). 2) Express the limit or value of the piece containing the unknown parameter $m$. 3) Set both expressions equal to each other and solve for $m$.",
+        "body_km": "១) គណនាលីមីតនៃផ្នែកដែលគ្មានប៉ារ៉ាម៉ែត្រមិនស្គាល់។ ២) គណនាលីមីត ឬតម្លៃនៃផ្នែកដែលមានប៉ារ៉ាម៉ែត្រ $m$។ ៣) ឱ្យកន្សោមទាំងពីរស្មើគ្នា រួចដោះស្រាយរកតម្លៃ $m$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $m$ so that $f(x)$ is continuous at $x = 2$, where $f(x) = mx + 3$ for $x \\le 2$ and $f(x) = x^2 + 1$ for $x > 2$.",
+        "prompt_km": "រកតម្លៃ $m$ ដើម្បីឱ្យ $f(x)$ ជាប់ត្រង់ $x = 2$ ដែល $f(x) = mx + 3$ សម្រាប់ $x \\le 2$ និង $f(x) = x^2 + 1$ សម្រាប់ $x > 2$។",
+        "steps": [
+          {
+            "text_en": "Compute right-hand limit as $x \\to 2^+$.",
+            "text_km": "គណនាលីមីតខាងស្តាំកាលណា $x \\to 2^+$។",
+            "latex": "\\lim_{x \\to 2^+} f(x) = \\lim_{x \\to 2^+}(x^2 + 1) = 2^2 + 1 = 5"
+          },
+          {
+            "text_en": "Compute value $f(2)$ from the left piece.",
+            "text_km": "គណនាតម្លៃ $f(2)$ តាមកន្សោមខាងឆ្វេង។",
+            "latex": "f(2) = m(2) + 3 = 2m + 3"
+          },
+          {
+            "text_en": "Set them equal for continuity: $2m + 3 = 5 \\implies 2m = 2$.",
+            "text_km": "ឱ្យកន្សោមទាំងពីរស្មើគ្នា៖ $2m + 3 = 5 \\implies 2m = 2$។",
+            "latex": "2m = 2 \\implies m = 1"
+          }
+        ],
+        "answer_latex": "m = 1"
+      }
+    ]
+  }
+}

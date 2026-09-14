@@ -681,13 +681,57 @@ function PracticeInner() {
   const currentSection = sections[activeSectionIndex] ?? null;
   const currentPartObj = question?.params?.parts?.[partIndex] ?? null;
 
-  // Skill key of the loaded question, if it has an authored lesson. Only complex
-  // numbers have lessons for now (variantless, so the key is complex/<type>);
-  // when a topic without lessons is loaded this is null and no button shows.
-  const lessonSkillKey = useMemo(
-    () => (question && question.topic === "complex" ? `complex/${question.question_type}` : null),
-    [question]
-  );
+  // Skill key of the loaded question, if it has an authored lesson.
+  // When a topic/skill without lessons is loaded this is null and no button shows.
+  const lessonSkillKey = useMemo(() => {
+    if (!question) return null;
+    if (practicingSkill?.key) return practicingSkill.key;
+    const { topic, question_type, params } = question;
+    if (topic === "complex") {
+      return `complex/${question_type}`;
+    }
+    if (topic === "limit") {
+      const tech = params?.technique || params?.formula_name;
+      return tech ? `limit/limit:${tech}` : null;
+    }
+    if (topic === "derivatives") {
+      const order = params?.order ?? 1;
+      return `derivatives/compute_derivative:order_${order}`;
+    }
+    if (topic === "continuity") {
+      const isParam = params?.unknown && params?.unknown !== "None";
+      return `continuity/check_continuity:${isParam ? "find_parameter" : "check_at_point"}`;
+    }
+    if (topic === "differential_equations") {
+      const kind = params?.kind;
+      return kind ? `differential_equations/solve_ode:${kind}` : null;
+    }
+    if (topic === "vectors_space") {
+      const op = params?.op;
+      return op ? `vectors_space/vector_ops:${op}` : null;
+    }
+    if (topic === "conics") {
+      const ask = params?.ask;
+      return ask ? `conics/classify_conic:${ask}` : null;
+    }
+    if (topic === "probability") {
+      if (question_type === "counting") {
+        const expr = String(params?.expr || "");
+        let kind = "mixed";
+        if (expr.includes("C(") && !expr.includes("P(")) kind = "combination";
+        else if (expr.includes("P(") && !expr.includes("C(")) kind = "permutation";
+        else if (expr.includes("!") || expr.includes("factorial")) kind = "factorial";
+        return `probability/counting:${kind}`;
+      }
+      const sid = params?.scenario_id || params?.variant;
+      return sid ? `probability/probability:${sid}` : null;
+    }
+    if (topic === "integral") {
+      const variant = params?.variant;
+      return variant ? `integral/${question_type}:${variant}` : null;
+    }
+    return null;
+  }, [question, practicingSkill]);
   const lessonLabel =
     practicingSkill?.label ??
     (question ? QUESTION_TYPE_LABELS[question.question_type]?.[lang] ?? question.question_type.replaceAll("_", " ") : "");

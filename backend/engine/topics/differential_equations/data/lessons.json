@@ -1,0 +1,168 @@
+{
+  "first_order_linear_homogeneous": {
+    "title_en": "First-order homogeneous ODE y' + ay = 0",
+    "title_km": "សមីការឌីផេរ៉ង់ស្យែលលំដាប់១ អូម៉ូសែន y' + ay = 0",
+    "summary_en": "A first-order linear homogeneous equation with constant coefficients has the general solution $y = C e^{-ax}$, where $C$ is an arbitrary real constant.",
+    "summary_km": "សមីការឌីផេរ៉ង់ស្យែលលីនេអ៊ែរលំដាប់១ អូម៉ូសែនមេគុណថេរ មានចម្លើយទូទៅ $y = C e^{-ax}$ ដែល $C$ ជាចំនួនថេរពិត។",
+    "formulas": [
+      { "latex": "y' + a y = 0 \\implies y = C e^{-a x}", "note_en": "General solution formula (C ∈ ℝ).", "note_km": "រូបមន្តចម្លើយទូទៅ (C ∈ ℝ)។" },
+      { "latex": "\\lambda + a = 0 \\implies \\lambda = -a", "note_en": "Characteristic root.", "note_km": "ឫសនៃសមីការសំគាល់។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Method",
+        "heading_km": "វិធីសាស្ត្រ",
+        "body_en": "Rewrite as $y' = -ay$. By separation of variables or using the characteristic root $\\lambda = -a$, write the general solution directly as $y = Ce^{-ax}$. If initial conditions are given (e.g. $y(x_0) = y_0$), substitute them to find $C$.",
+        "body_km": "សរសេរជា $y' = -ay$។ តាមវិធីបំបែកអថេរ ឬតាមឫសសមីការសំគាល់ $\\lambda = -a$ នាំឱ្យបានចម្លើយទូទៅ $y = Ce^{-ax}$។ ប្រសិនបើមានលក្ខខណ្ឌដើម (ដូចជា $y(x_0) = y_0$) ត្រូវជំនួសដើម្បីរកតម្លៃ $C$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Solve $y' + 3y = 0$ with $y(0) = 4$.",
+        "prompt_km": "ដោះស្រាយ $y' + 3y = 0$ ដោយដឹងថា $y(0) = 4$។",
+        "steps": [
+          {
+            "text_en": "Here $a = 3$, so the general solution is $y = C e^{-3x}$.",
+            "text_km": "ត្រង់នេះ $a = 3$ ដូច្នេះចម្លើយទូទៅគឺ $y = C e^{-3x}$។",
+            "latex": "y(x) = C e^{-3x}"
+          },
+          {
+            "text_en": "Apply initial condition $y(0) = 4$: $C e^0 = 4 \\implies C = 4$.",
+            "text_km": "អនុវត្តលក្ខខណ្ឌដើម $y(0) = 4$៖ $C e^0 = 4 \\implies C = 4$។",
+            "latex": "y(0) = C = 4"
+          }
+        ],
+        "answer_latex": "y = 4e^{-3x}"
+      }
+    ]
+  },
+  "first_order_linear_nonhomogeneous": {
+    "title_en": "First-order non-homogeneous ODE y' + ay = g(x)",
+    "title_km": "សមីការឌីផេរ៉ង់ស្យែលលំដាប់១ មិនអូម៉ូសែន y' + ay = g(x)",
+    "summary_en": "The general solution is $y = y_h + y_p$, where $y_h = C e^{-ax}$ is the solution to the homogeneous equation and $y_p$ is a particular solution.",
+    "summary_km": "ចម្លើយទូទៅគឺ $y = y_h + y_p$ ដែល $y_h = C e^{-ax}$ ជាចម្លើយនៃសមីការអូម៉ូសែន និង $y_p$ ជាចម្លើយដោយឡែក។",
+    "formulas": [
+      { "latex": "y = y_h + y_p = C e^{-a x} + y_p", "note_en": "Sum of homogeneous and particular solutions.", "note_km": "ផលបូកនៃចម្លើយអូម៉ូសែន និងចម្លើយដោយឡែក។" },
+      { "latex": "g(x) = b \\implies y_p = \\frac{b}{a} \\quad (a \\neq 0)", "note_en": "Constant right-hand side shortcut.", "note_km": "ករណីអង្គខាងស្តាំជាចំនួនថេរ b។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Two steps",
+        "heading_km": "ពីរជំហាន",
+        "body_en": "1) Find $y_h = Ce^{-ax}$ from $y' + ay = 0$. 2) Find a particular solution $y_p$. If $g(x) = b$ is constant, try $y_p = k \\implies a k = b \\implies k = \\frac{b}{a}$.",
+        "body_km": "១) រក $y_h = Ce^{-ax}$ ពី $y' + ay = 0$។ ២) រកចម្លើយដោយឡែក $y_p$។ ប្រសិនបើ $g(x) = b$ ជាចំនួនថេរ សន្មត $y_p = k \\implies a k = b \\implies k = \\frac{b}{a}$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Solve $y' - 2y = 6$.",
+        "prompt_km": "ដោះស្រាយ $y' - 2y = 6$។",
+        "steps": [
+          {
+            "text_en": "Homogeneous equation $y' - 2y = 0 \\implies y_h = C e^{2x}$.",
+            "text_km": "សមីការអូម៉ូសែន $y' - 2y = 0 \\implies y_h = C e^{2x}$។",
+            "latex": "y_h = C e^{2x}"
+          },
+          {
+            "text_en": "Find particular solution $y_p = k$: $0 - 2k = 6 \\implies k = -3$.",
+            "text_km": "រកចម្លើយដោយឡែក $y_p = k$៖ $0 - 2k = 6 \\implies k = -3$។",
+            "latex": "y_p = -3"
+          }
+        ],
+        "answer_latex": "y = C e^{2x} - 3"
+      }
+    ]
+  },
+  "second_order_homogeneous_constant_coeff": {
+    "title_en": "Second-order homogeneous ODE y'' + by' + cy = 0",
+    "title_km": "សមីការឌីផេរ៉ង់ស្យែលលំដាប់២ អូម៉ូសែន y'' + by' + cy = 0",
+    "summary_en": "Solve the characteristic equation $r^2 + br + c = 0$ with discriminant $\\Delta = b^2 - 4c$. The solution form depends on the sign of $\\Delta$.",
+    "summary_km": "ដោះស្រាយសមីការសំគាល់ $r^2 + br + c = 0$ ដែលមានឌីស្គ្រីមីណង់ $\\Delta = b^2 - 4c$។ ទម្រង់នៃចម្លើយអាស្រ័យលើសញ្ញារបស់ $\\Delta$។",
+    "formulas": [
+      { "latex": "\\Delta > 0: \\quad y = C_1 e^{r_1 x} + C_2 e^{r_2 x}", "note_en": "Two distinct real roots r₁, r₂.", "note_km": "ឫសពិតពីរផ្សេងគ្នា r₁, r₂។" },
+      { "latex": "\\Delta = 0: \\quad y = (C_1 x + C_2) e^{r_0 x}", "note_en": "Repeated real root r₀ = -b/(2a).", "note_km": "ឫសឌុប r₀ = -b/(2a)។" },
+      { "latex": "\\Delta < 0: \\quad y = e^{\\alpha x}\\left(C_1 \\cos\\beta x + C_2 \\sin\\beta x\\right)", "note_en": "Complex conjugate roots r = α ± iβ.", "note_km": "ឫសកុំផ្លិចឆ្លាស់គ្នា r = α ± iβ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Resolution guide",
+        "heading_km": "ការណែនាំដោះស្រាយ",
+        "body_en": "1) Write down the characteristic equation $r^2 + br + c = 0$. 2) Compute $\\Delta = b^2 - 4c$ and its roots. 3) Select the corresponding general solution formula. 4) Use initial values $y(x_0)$ and $y'(x_0)$ if given to determine $C_1$ and $C_2$.",
+        "body_km": "១) សរសេរសមីការសំគាល់ $r^2 + br + c = 0$។ ២) គណនា $\\Delta = b^2 - 4c$ និងរកឫសរបស់វា។ ៣) ជ្រើសរើសរូបមន្តចម្លើយទូទៅតាមករណី $\\Delta$។ ៤) ប្រើលក្ខខណ្ឌដើម $y(x_0)$ និង $y'(x_0)$ បើមាន ដើម្បីរក $C_1$ និង $C_2$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Solve $y'' - 5y' + 6y = 0$.",
+        "prompt_km": "ដោះស្រាយ $y'' - 5y' + 6y = 0$។",
+        "steps": [
+          {
+            "text_en": "Characteristic equation: $r^2 - 5r + 6 = 0$.",
+            "text_km": "សមីការសំគាល់៖ $r^2 - 5r + 6 = 0$។",
+            "latex": "(r - 2)(r - 3) = 0 \\implies r_1 = 2, \\ r_2 = 3"
+          },
+          {
+            "text_en": "Roots are distinct real numbers ($\\Delta > 0$).",
+            "text_km": "ឫសជាចំនួនពិតពីរផ្សេងគ្នា ($\\Delta > 0$)។",
+            "latex": "y = C_1 e^{2x} + C_2 e^{3x}"
+          }
+        ],
+        "answer_latex": "y = C_1 e^{2x} + C_2 e^{3x}"
+      },
+      {
+        "prompt_en": "Solve $y'' + 4y = 0$.",
+        "prompt_km": "ដោះស្រាយ $y'' + 4y = 0$។",
+        "steps": [
+          {
+            "text_en": "Characteristic equation: $r^2 + 4 = 0 \\implies r = \\pm 2i$.",
+            "text_km": "សមីការសំគាល់៖ $r^2 + 4 = 0 \\implies r = \\pm 2i$។",
+            "latex": "\\alpha = 0, \\quad \\beta = 2"
+          },
+          {
+            "text_en": "Apply complex roots formula with $\\alpha = 0$ and $\\beta = 2$.",
+            "text_km": "អនុវត្តរូបមន្តឫសកុំផ្លិចជាមួយ $\\alpha = 0$ និង $\\beta = 2$។",
+            "latex": "y = C_1 \\cos(2x) + C_2 \\sin(2x)"
+          }
+        ],
+        "answer_latex": "y = C_1 \\cos(2x) + C_2 \\sin(2x)"
+      }
+    ]
+  },
+  "second_order_nonhomogeneous": {
+    "title_en": "Second-order non-homogeneous ODE",
+    "title_km": "សមីការឌីផេរ៉ង់ស្យែលលំដាប់២ មិនអូម៉ូសែន",
+    "summary_en": "The general solution is $y = y_h + y_p$. Find the homogeneous solution $y_h$ using the characteristic equation, then determine a particular solution $y_p$ matching $g(x)$.",
+    "summary_km": "ចម្លើយទូទៅគឺ $y = y_h + y_p$។ រកចម្លើយអូម៉ូសែន $y_h$ តាមសមីការសំគាល់ រួចកំណត់ចម្លើយដោយឡែក $y_p$ ដែលត្រូវគ្នានឹងកន្សោម $g(x)$។",
+    "formulas": [
+      { "latex": "y = y_h + y_p", "note_en": "Complete solution structure.", "note_km": "ទម្រង់ចម្លើយពេញលេញ។" },
+      { "latex": "g(x) = k e^{\\alpha x} \\implies y_p = A e^{\\alpha x} \\quad (\\alpha \\text{ not a root})", "note_en": "Particular trial for exponential RHS.", "note_km": "ទម្រង់ចម្លើយដោយឡែកសម្រាប់អង្គស្តាំអិចស្បូណង់ស្យែល។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Method of undetermined coefficients",
+        "heading_km": "វិធីសាស្ត្រមេគុណមិនទាន់កំណត់",
+        "body_en": "If the RHS is a polynomial of degree $n$, guess $y_p$ as a general degree $n$ polynomial. If RHS is $e^{\\alpha x}$, guess $A e^{\\alpha x}$. Substitute into the equation and equate coefficients.",
+        "body_km": "ប្រសិនបើអង្គស្តាំជាពហុធាដឺក្រេ $n$ ត្រូវសន្មត $y_p$ ជាពហុធាទូទៅដឺក្រេ $n$។ បើអង្គស្តាំជា $e^{\\alpha x}$ សន្មត $A e^{\\alpha x}$។ ជំនួសចូលក្នុងសមីការដើម្បីផ្ទឹមមេគុណ។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Solve $y'' - 3y' + 2y = 4$.",
+        "prompt_km": "ដោះស្រាយ $y'' - 3y' + 2y = 4$។",
+        "steps": [
+          {
+            "text_en": "Characteristic equation: $r^2 - 3r + 2 = 0 \\implies r = 1, 2$. So $y_h = C_1 e^x + C_2 e^{2x}$.",
+            "text_km": "សមីការសំគាល់៖ $r^2 - 3r + 2 = 0 \\implies r = 1, 2$ នាំឱ្យ $y_h = C_1 e^x + C_2 e^{2x}$។",
+            "latex": "y_h = C_1 e^x + C_2 e^{2x}"
+          },
+          {
+            "text_en": "Try constant $y_p = k$: $0 - 0 + 2k = 4 \\implies k = 2$.",
+            "text_km": "សន្មតចំនួនថេរ $y_p = k$៖ $0 - 0 + 2k = 4 \\implies k = 2$។",
+            "latex": "y_p = 2"
+          }
+        ],
+        "answer_latex": "y = C_1 e^x + C_2 e^{2x} + 2"
+      }
+    ]
+  }
+}
