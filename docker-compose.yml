@@ -69,5 +69,19 @@ services:
       - ./web:/app
       - /app/node_modules
 
+  mobile:
+    build: ./mobile
+    ports:
+      - "${MOBILE_PORT:-3017}:3017"
+    depends_on:
+      - backend
+    environment:
+      - API_URL=${API_URL:-http://backend:8000}
+    volumes:
+      - ./mobile:/app
+      - /app/.dart_tool
+      - /app/build
+
 volumes:
   pgdata:
+
