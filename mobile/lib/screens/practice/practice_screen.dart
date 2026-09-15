@@ -1,388 +1,1133 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+
 import '../../core/api/api_client.dart';
+import '../../core/audio/sound_engine.dart';
+import '../../core/i18n/app_translations.dart';
 import '../../core/i18n/language_provider.dart';
+import '../../core/i18n/prompt_localizer.dart';
 import '../../core/theme/app_theme.dart';
-import '../../models/question.dart';
+import '../../models/detect_result.dart';
 import '../../models/grade_result.dart';
-import '../../widgets/math_text.dart';
+import '../../models/graph.dart';
+import '../../models/question.dart';
+import '../../models/session.dart';
 import '../../widgets/canvas/drawing_canvas.dart';
-import '../../widgets/math_keypad.dart';
+import '../../widgets/disambiguation_card.dart';
+import '../../widgets/function_graph.dart';
+import '../../models/formula.dart';
+import '../../widgets/lesson_modal.dart';
+import '../../widgets/marks_overlay.dart';
+import '../../widgets/math_text.dart';
+
+T? _firstOrNull<T>(Iterable<T> items, bool Function(T) test) {
+  for (final it in items) {
+    if (test(it)) return it;
+  }
+  return null;
+}
+
+// Question-type options per topic. Values encoded as "<question_type>:<variant>"
+// where a technique/scenario axis exists (see web TYPE_OPTIONS).
+const Map<String, List<List<String>>> _typeOptions = {
+  'complex': [
+    ['modulus', 'Modulus'],
+    ['argument', 'Argument'],
+    ['conjugate', 'Conjugate'],
+    ['real_part', 'Real part'],
+    ['imaginary_part', 'Imaginary part'],
+  ],
+  'limit': [
+    ['limit:direct_substitution', 'Direct substitution'],
+    ['limit:factoring_0_0', 'Factoring (0/0)'],
+    ['limit:rationalization_conjugate_finite', 'Conjugate rationalization'],
+    ['limit:sinc_standard_limit', 'Standard limit sin(x)/x'],
+    ['limit:exponential_standard_limit', 'Standard limit (eˣ-1)/x'],
+    ['limit:rationalization_sinc_combo', 'Conjugate + sinc combo'],
+    ['limit:exponential_sinc_combo', 'Exponential + sinc combo'],
+    ['limit:half_angle_sinc_combo', 'Half-angle + sinc combo'],
+    ['limit:rational_function_infinity', 'Rational function at infinity'],
+    ['limit:conjugate_infinity', 'Conjugate at infinity'],
+    ['limit:log_limit_infinity', 'Logarithmic limit at infinity'],
+  ],
+  'integral': [
+    ['definite_integral', 'Definite integral (any)'],
+    ['definite_integral:polynomial', 'Definite — polynomial'],
+    ['definite_integral:linear_argument', 'Definite — linear argument'],
+    ['definite_integral:mixed_sum', 'Definite — mixed sum'],
+    ['definite_integral:trig', 'Definite — trig'],
+    ['definite_integral:u_substitution', 'Definite — u-substitution'],
+    ['definite_integral:by_parts', 'Definite — by parts'],
+    ['indefinite_integral', 'Indefinite integral (any)'],
+    ['indefinite_integral:power', 'Indefinite — power'],
+    ['indefinite_integral:expand', 'Indefinite — expand'],
+    ['indefinite_integral:split', 'Indefinite — split'],
+    ['indefinite_integral:linear_argument', 'Indefinite — linear argument'],
+    ['indefinite_integral:usub', 'Indefinite — u-substitution'],
+    ['indefinite_integral:trig_sec', 'Indefinite — trig (sec²)'],
+  ],
+  'probability': [
+    ['probability:exercise_bag_split_atleast', 'Balls from a bag'],
+    ['probability:exercise_two_bag_odd_even', 'Two bags of numbered balls'],
+    ['probability:exercise_two_box_colors', 'Two boxes of colors'],
+    ['probability:exercise_banknotes', 'Banknotes'],
+    ['probability:exercise_pens', 'Pens'],
+    ['probability:exercise_students', 'Students'],
+    ['counting', 'Counting (combinations & permutations)'],
+  ],
+  'functions': [
+    ['study', 'Curve study & area']
+  ],
+  'continuity': [
+    ['check_continuity', 'Check continuity / find parameter']
+  ],
+  'derivatives': [
+    ['compute_derivative', 'Compute derivative']
+  ],
+  'differential_equations': [
+    ['solve_ode', 'Solve differential equation']
+  ],
+  'vectors_space': [
+    ['vector_ops', 'Vector operations']
+  ],
+  'conics': [
+    ['classify_conic', 'Classify conic / find feature']
+  ],
+};
+
+const List<String> _topics = [
+  'complex',
+  'limit',
+  'integral',
+  'probability',
+  'functions',
+  'continuity',
+  'derivatives',
+  'differential_equations',
+  'vectors_space',
+  'conics',
+];
+
+({String? questionType, String? variant}) _splitType(String value) {
+  if (value == 'any') return (questionType: null, variant: null);
+  final i = value.indexOf(':');
+  if (i == -1) return (questionType: value, variant: null);
+  return (questionType: value.substring(0, i), variant: value.substring(i + 1));
+}
 
 class PracticeScreen extends StatefulWidget {
   final String? initialTopic;
+  final String? initialSkill;
+  final String? initialFormula;
+  final String? initialAttempt;
 
-  const PracticeScreen({super.key, this.initialTopic});
+  const PracticeScreen({
+    super.key,
+    this.initialTopic,
+    this.initialSkill,
+    this.initialFormula,
+    this.initialAttempt,
+  });
 
   @override
   State<PracticeScreen> createState() => _PracticeScreenState();
 }
 
+class _PartState {
+  final DrawingCanvasController canvas = DrawingCanvasController();
+  final TextEditingController typed = TextEditingController();
+  DetectResult? detect;
+  GradeResult? result;
+  String? workText;
+  bool correct = false;
+
+  void dispose() {
+    canvas.dispose();
+    typed.dispose();
+  }
+}
+
 class _PracticeScreenState extends State<PracticeScreen> {
-  late final ApiClient _api;
-  final _canvasController = DrawingCanvasController();
-  final _answerController = TextEditingController();
+  final ApiClient _api = ApiClient();
 
   String _topic = 'complex';
+  String _questionType = 'any';
   String _difficulty = 'medium';
-  bool _isGenerating = false;
-  bool _isGrading = false;
-  bool _showKeypad = false;
-  bool _showSteps = false;
+  String _mode = 'templates';
 
-  Question? _currentQuestion;
-  int _activePartIndex = 0;
-  GradeResult? _gradeResult;
-  String? _errorMessage;
+  Question? _question;
+  List<_PartState> _parts = [];
+  int _partIndex = 0;
+  bool _exerciseDone = false;
 
-  final List<String> _topics = [
-    'complex',
-    'limit',
-    'integral',
-    'probability',
-    'functions',
-    'continuity',
-    'derivatives',
-    'differential_equations',
-    'vectors_space',
-    'conics',
-  ];
+  Explanation? _explanation;
+  GraphGradeResult? _graphGrade;
+  int _hintLevel = 0;
+
+  bool _busy = false;
+  String? _error;
+  int _streak = 0;
+  int _soundToken = 0;
+
+  List<SessionSummary> _sessions = [];
+  bool _reviewMode = false;
+  String? _practicingSkillLabel;
+  String? _practicingFormulaName;
+
+  bool _showResults = true;
+
+  List<String> get _partLabels =>
+      _question?.parts.map((p) => p.label).where((l) => l.isNotEmpty).toList() ??
+      [];
+
+  _PartState? get _active =>
+      _parts.isNotEmpty && _partIndex < _parts.length ? _parts[_partIndex] : null;
+
+  QuestionPart? get _activePart {
+    if (_question == null || _question!.parts.isEmpty) return null;
+    if (_partIndex >= _question!.parts.length) return null;
+    return _question!.parts[_partIndex];
+  }
+
+  String? get _currentPartLabel {
+    final labels = _partLabels;
+    if (labels.isEmpty) return null;
+    return labels[_partIndex.clamp(0, labels.length - 1)];
+  }
+
+  String? get _lessonSkillKey {
+    final q = _question;
+    if (q == null) return null;
+    final p = q.params;
+    switch (q.topic) {
+      case 'complex':
+        return 'complex/${q.questionType}';
+      case 'limit':
+        final tech = p['technique'] ?? p['formula_name'];
+        return tech != null ? 'limit/limit:$tech' : null;
+      case 'derivatives':
+        final order = p['order'] ?? 1;
+        return 'derivatives/compute_derivative:order_$order';
+      case 'continuity':
+        final isParam = p['unknown'] != null && p['unknown'] != 'None';
+        return 'continuity/check_continuity:${isParam ? 'find_parameter' : 'check_at_point'}';
+      case 'differential_equations':
+        final kind = p['kind'];
+        return kind != null ? 'differential_equations/solve_ode:$kind' : null;
+      case 'vectors_space':
+        final op = p['op'];
+        return op != null ? 'vectors_space/vector_ops:$op' : null;
+      case 'conics':
+        final ask = p['ask'];
+        return ask != null ? 'conics/classify_conic:$ask' : null;
+      case 'probability':
+        if (q.questionType == 'counting') {
+          final expr = (p['expr'] ?? '').toString();
+          var kind = 'mixed';
+          if (expr.contains('C(') && !expr.contains('P(')) kind = 'combination';
+          else if (expr.contains('P(') && !expr.contains('C(')) kind = 'permutation';
+          else if (expr.contains('!')) kind = 'factorial';
+          return 'probability/counting:$kind';
+        }
+        final sid = p['scenario_id'] ?? p['variant'];
+        return sid != null ? 'probability/probability:$sid' : null;
+      case 'integral':
+        final variant = p['variant'];
+        return variant != null ? 'integral/${q.questionType}:$variant' : null;
+    }
+    return null;
+  }
 
   @override
   void initState() {
     super.initState();
-    _api = ApiClient();
     if (widget.initialTopic != null && _topics.contains(widget.initialTopic)) {
       _topic = widget.initialTopic!;
     }
-    _loadNewQuestion();
+    _initStreak();
+    if (widget.initialAttempt != null) {
+      _loadReview(widget.initialAttempt!);
+    } else if (widget.initialSkill != null) {
+      _loadForcedSkill(widget.initialSkill!);
+    } else if (widget.initialFormula != null) {
+      _loadForcedFormula(widget.initialFormula!);
+    } else {
+      _loadSessions();
+      _newQuestion();
+    }
   }
 
   @override
   void dispose() {
-    _canvasController.dispose();
-    _answerController.dispose();
+    for (final p in _parts) {
+      p.dispose();
+    }
     super.dispose();
   }
 
-  Future<void> _loadNewQuestion() async {
-    setState(() {
-      _isGenerating = true;
-      _gradeResult = null;
-      _errorMessage = null;
-      _showSteps = false;
-      _activePartIndex = 0;
-    });
-    _canvasController.clear();
-    _answerController.clear();
+  Future<void> _initStreak() async {
+    final s = await SoundEngine.getStreak();
+    if (mounted) setState(() => _streak = s);
+  }
 
+  Future<void> _loadSessions() async {
     try {
-      final q = await _api.generateProblem(
-        topic: _topic,
-        difficulty: _difficulty,
-      );
-      setState(() {
-        _currentQuestion = q;
-        _isGenerating = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
-        _isGenerating = false;
-      });
+      final s = await _api.myProgress();
+      if (mounted) setState(() => _sessions = s);
+    } catch (_) {}
+  }
+
+  void _resetParts(int n, {int start = 0}) {
+    for (final p in _parts) {
+      p.dispose();
+    }
+    _parts = List.generate(math.max(1, n), (_) => _PartState());
+    _partIndex = start.clamp(0, _parts.length - 1);
+    _exerciseDone = false;
+    _explanation = null;
+    _graphGrade = null;
+    _hintLevel = 0;
+  }
+
+  void _loadQuestion(Question q) {
+    setState(() {
+      _question = q;
+      _resetParts(q.parts.length);
+      _error = null;
+      _fitGraphGrid(q);
+    });
+  }
+
+  void _fitGraphGrid(Question q) {
+    final g = q.graph;
+    if (g == null) return;
+    for (int i = 0; i < q.parts.length && i < _parts.length; i++) {
+      if (q.parts[i].want == 'draw') {
+        _parts[i].canvas.fitGridToWindow(g.xMin, g.xMax, g.yMin, g.yMax);
+      }
     }
   }
 
-  Future<void> _checkAnswer() async {
-    if (_currentQuestion == null) return;
-    final lang = Provider.of<LanguageProvider>(context, listen: false);
+  Future<Question> _generate() async {
+    final split = _splitType(_questionType);
+    return _api.generateProblem(
+      generationMode: _topic == 'complex' ? _mode : 'templates',
+      difficulty: _difficulty,
+      topic: _topic,
+      questionType: split.questionType,
+      variant: split.variant,
+    );
+  }
 
-    final userAnswer = _answerController.text.trim();
-    if (userAnswer.isEmpty && !_canvasController.hasInk) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter an answer or draw on the canvas'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+  Future<void> _newQuestion() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+      _practicingSkillLabel = null;
+      _practicingFormulaName = null;
+    });
+    try {
+      final q = await _generate();
+      _loadQuestion(q);
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _loadForcedSkill(String skillKey) async {
+    setState(() => _busy = true);
+    try {
+      final catalog = await _api.skillCatalog();
+      final skill = _firstOrNull(catalog.skills, (s) => s.key == skillKey);
+      final slash = skillKey.indexOf('/');
+      _topic = skill?.topic ?? (slash == -1 ? _topic : skillKey.substring(0, slash));
+      _questionType = slash == -1 ? 'any' : skillKey.substring(slash + 1);
+      _difficulty = skill?.difficulty ?? _difficulty;
+      _mode = 'templates';
+      final q = await _generate();
+      _loadQuestion(q);
+      setState(() =>
+          _practicingSkillLabel = skill?.label ?? _questionType.replaceAll('_', ' '));
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+    _loadSessions();
+  }
+
+  Future<void> _loadForcedFormula(String formulaId) async {
+    setState(() => _busy = true);
+    try {
+      final catalog = await _api.getFormulas();
+      FormulaEntry? entry;
+      for (final t in catalog.topics) {
+        entry = _firstOrNull(t.entries, (e) => e.id == formulaId);
+        if (entry != null) break;
+      }
+      final ref =
+          (entry != null && entry.variants.isNotEmpty) ? entry.variants.first : null;
+      if (ref != null) {
+        _topic = ref.topic;
+        _questionType =
+            ref.variant != null ? '${ref.questionType}:${ref.variant}' : ref.questionType;
+        _difficulty = ref.difficulty;
+        _mode = 'templates';
+      } else {
+        _questionType = 'any';
+      }
+      final q = await _generate();
+      _loadQuestion(q);
+      setState(() => _practicingFormulaName =
+          entry?.nameEn ?? formulaId.replaceAll('_', ' '));
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+    _loadSessions();
+  }
+
+  Future<void> _loadReview(String attemptId) async {
+    setState(() => _busy = true);
+    try {
+      final d = await _api.attempt(attemptId);
+      if (d.question != null) {
+        final labels =
+            d.stepCheck != null ? <String>[] : <String>[]; // parts unknown here
+        final q = Question(
+          id: d.question!.id,
+          topic: d.question!.topic,
+          questionType: d.question!.questionType,
+          difficulty: d.question!.difficulty,
+          prompt: d.question!.prompt,
+          promptLatex: d.question!.promptLatex,
+          zDisplay: '',
+          source: 'review',
+          formulaTags: d.question!.formulaTags,
+        );
+        _question = q;
+        _resetParts(math.max(1, labels.length));
+        if (d.strokes != null) {
+          await _parts[0].canvas.loadStrokes(d.strokes!);
+        }
+        _parts[0].workText = d.workText;
+        _parts[0].detect = d.workText != null
+            ? DetectResult(
+                lines: d.workText!.split('\n'),
+                linesBoxes: d.linesBoxes,
+              )
+            : null;
+        _parts[0].result = GradeResult(
+          attemptId: d.id,
+          correct: d.correct,
+          reason: d.reason,
+          expected: d.question!.expectedAnswer,
+          given: d.parsedAnswer,
+          stepCheck: d.stepCheck,
+        );
+        if (d.explanations.isNotEmpty) {
+          _explanation = Explanation(
+            content: d.explanations.first.content,
+            provider: d.explanations.first.provider,
+            trigger: d.explanations.first.trigger,
+            stepCheck: d.stepCheck,
+          );
+        }
+        _reviewMode = true;
+      }
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  // --- checking ---
+  Future<void> _check() async {
+    final q = _question;
+    final part = _active;
+    if (q == null || part == null) {
+      setState(() => _error = 'Generate a question first.');
+      return;
+    }
+    setState(() {
+      _error = null;
+      part.result = null;
+      _explanation = null;
+      _graphGrade = null;
+    });
+
+    // "Draw the graph" part → graph grading on the ink.
+    if (_activePart?.want == 'draw') {
+      setState(() => _busy = true);
+      try {
+        final thumb = await part.canvas.getInkSnapshot();
+        if (thumb == null) {
+          setState(() => _error = 'Draw the graph on the page first.');
+          return;
+        }
+        final gg = await _api.gradeGraph(q.id, thumb);
+        setState(() {
+          _graphGrade = gg;
+          part.result = GradeResult(
+              correct: true,
+              reason: 'graph',
+              expected: '',
+              part: _currentPartLabel,
+              allComplete: true);
+          _exerciseDone = true;
+        });
+      } catch (e) {
+        setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+      } finally {
+        if (mounted) setState(() => _busy = false);
+      }
       return;
     }
 
-    setState(() {
-      _isGrading = true;
-      _errorMessage = null;
-    });
+    final typed = part.typed.text.trim();
+    if (typed.isNotEmpty) {
+      await _finalizeCheck(
+          DetectResult(rawText: typed), const [], const []);
+      return;
+    }
 
+    setState(() => _busy = true);
     try {
-      String? partLabel;
-      if (_currentQuestion!.parts.isNotEmpty && _activePartIndex < _currentQuestion!.parts.length) {
-        partLabel = _currentQuestion!.parts[_activePartIndex].label;
+      final ink = await part.canvas.getImageBase64();
+      if (ink == null) {
+        setState(() {
+          _error = 'Write an answer on the page, upload an image, or type one.';
+          _busy = false;
+        });
+        return;
       }
+      final det = await _api.detect(ink);
+      part.detect = det;
+      if (det.rawText.isEmpty && det.lines.isEmpty) {
+        setState(() {
+          _error = 'Could not read the handwriting. Try writing larger or clearer.';
+          _busy = false;
+        });
+        return;
+      }
+      setState(() => _busy = false);
 
-      final res = await _api.gradeProblem(
-        questionId: _currentQuestion!.id,
-        userAnswer: userAnswer.isNotEmpty ? userAnswer : 'written',
-        part: partLabel,
-        strokes: _canvasController.hasInk ? _canvasController.toStrokeDocument() : null,
-        lang: lang.currentLang,
-      );
-
-      setState(() {
-        _gradeResult = res;
-        _isGrading = false;
-      });
+      // Disambiguation queue.
+      final lines = List<String>.from(det.lines);
+      final latex = List<String>.from(det.linesLatex);
+      if (!mounted) return;
+      final lang = context.read<LanguageProvider>();
+      for (int i = 0; i < det.lines.length; i++) {
+        final alts = i < det.linesAlt.length ? det.linesAlt[i] : const <String>[];
+        if (alts.isEmpty) continue;
+        final altLatex =
+            i < det.linesAltLatex.length ? det.linesAltLatex[i] : const <String>[];
+        if (!mounted) return;
+        final choice = await showDisambiguationDialog(
+          context,
+          lang,
+          lineNumber: i + 1,
+          primary: DisambiguationCandidate(
+              text: det.lines[i],
+              latex: i < det.linesLatex.length ? det.linesLatex[i] : null),
+          candidates: [
+            for (int j = 0; j < alts.length; j++)
+              DisambiguationCandidate(
+                  text: alts[j], latex: j < altLatex.length ? altLatex[j] : null)
+          ],
+        );
+        if (choice is PickCandidate) {
+          lines[i] = alts[choice.index];
+          if (choice.index < altLatex.length) latex[i] = altLatex[choice.index];
+        } else if (choice is WriteAgain) {
+          final box = i < det.linesBoxes.length ? det.linesBoxes[i] : null;
+          if (box != null) part.canvas.eraseRegion(box);
+          setState(() => _error = 'Redraw that line, then check your work again.');
+          return;
+        }
+        // PickNone / dismissed → keep OCR reading.
+      }
+      await _finalizeCheck(det, lines, latex);
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
-        _isGrading = false;
+        _error = e.toString().replaceFirst('Exception: ', '');
+        _busy = false;
       });
     }
   }
 
+  Future<void> _finalizeCheck(
+      DetectResult det, List<String> lines, List<String> latex) async {
+    final q = _question;
+    final part = _active;
+    if (q == null || part == null) return;
+    setState(() => _busy = true);
+    try {
+      final finalDet = det.copyWith(lines: lines, linesLatex: latex);
+      final work = lines.isNotEmpty ? lines.join('\n') : null;
+      part.workText = work;
+      part.detect = finalDet;
+      final answer = finalDet.rawText.isNotEmpty
+          ? finalDet.rawText
+          : (lines.isNotEmpty ? lines.last : '');
+      final lang = context.read<LanguageProvider>().currentLang;
+      final strokes = part.canvas.getStrokes();
+      final strokesThumb = await part.canvas.getStrokesThumb();
+
+      final res = await _api.grade(
+        questionId: q.id,
+        userAnswer: answer.isNotEmpty ? answer : 'written',
+        workText: work,
+        linesBoxes: finalDet.linesBoxes.isNotEmpty ? finalDet.linesBoxes : null,
+        part: _currentPartLabel,
+        hintsUsed: _hintLevel,
+        strokes: strokes,
+        strokesThumb: strokesThumb,
+        lang: lang,
+      );
+
+      part.result = res;
+      part.correct = res.correct;
+      if (res.explanation != null) _explanation = res.explanation;
+
+      final nowDone = res.correct && (res.allComplete ?? false);
+      if (nowDone) {
+        _exerciseDone = true;
+      } else if (res.correct && _currentPartLabel != null && _partLabels.length > 1) {
+        _partIndex = math.min(_partIndex + 1, _partLabels.length - 1);
+      }
+
+      if (q.topic == 'functions' && res.graph != null) {
+        final thumb = await part.canvas.getInkSnapshot();
+        if (thumb != null) {
+          _api.gradeGraph(q.id, thumb).then((gg) {
+            if (mounted) setState(() => _graphGrade = gg);
+          }).catchError((_) {});
+        }
+      }
+
+      final newStreak = await SoundEngine.updateStreak(res.correct);
+      _streak = newStreak;
+      _playGradeSounds(finalDet, res, newStreak);
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _playGradeSounds(DetectResult det, GradeResult res, int streak) {
+    final token = ++_soundToken;
+    final check = res.stepCheck;
+    final events = <bool>[];
+    if (check != null) {
+      for (int i = 0; i < det.lines.length; i++) {
+        final lr = _firstOrNull(check.lineResults, (r) => r.line == i + 1);
+        if (lr != null && lr.checked) events.add(lr.correct == true);
+      }
+    }
+    const stagger = Duration(milliseconds: 700);
+    if (events.isEmpty) {
+      drawingAudio.playGradeSound(res.correct);
+      return;
+    }
+    if (res.correct) {
+      for (int i = 0; i < events.length; i++) {
+        Future.delayed(stagger * i, () {
+          if (_soundToken == token) {
+            drawingAudio.playMarkSound(true, math.max(streak - 1, 0) + i);
+          }
+        });
+      }
+      Future.delayed(stagger * events.length, () {
+        if (_soundToken == token) {
+          drawingAudio.playMarkSound(true, math.max(streak - 1, 0) + events.length);
+        }
+      });
+    } else {
+      int correctSeen = 0;
+      bool thud = false;
+      for (int i = 0; i < events.length; i++) {
+        final e = events[i];
+        final delay = stagger * i;
+        if (e) {
+          final seen = correctSeen++;
+          Future.delayed(delay, () {
+            if (_soundToken == token) drawingAudio.playMarkSound(true, seen);
+          });
+        } else if (!thud) {
+          thud = true;
+          Future.delayed(delay, () {
+            if (_soundToken == token) drawingAudio.playMarkSound(false, 0);
+          });
+        }
+      }
+    }
+  }
+
+  // --- hints / explanation ---
+  Future<void> _showHint() async {
+    if (_explanation == null) {
+      await _fetchExplanation();
+      setState(() => _hintLevel = 1);
+      return;
+    }
+    setState(() => _hintLevel =
+        math.min(_hintLevel + 1, _explanation!.steps.isEmpty ? _hintLevel + 1 : _explanation!.steps.length));
+  }
+
+  Future<void> _fetchExplanation() async {
+    final q = _question;
+    final part = _active;
+    if (q == null) return;
+    setState(() => _busy = true);
+    try {
+      final lang = context.read<LanguageProvider>().currentLang;
+      final exp = await _api.explain(q.id,
+          userAnswer: part?.detect?.rawText,
+          workText: part?.workText,
+          lang: lang);
+      setState(() => _explanation = exp);
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  // --- save / resume ---
+  Future<void> _saveProgress() async {
+    final q = _question;
+    final part = _active;
+    if (q == null || part == null) return;
+    setState(() => _busy = true);
+    try {
+      final strokes = part.canvas.getStrokes();
+      final thumb = await part.canvas.getStrokesThumb();
+      final summary = await _api.saveProgress(
+        questionId: q.id,
+        part: _currentPartLabel,
+        typed: part.typed.text.trim().isNotEmpty ? part.typed.text.trim() : null,
+        workText: part.workText,
+        linesBoxes: part.detect?.linesBoxes,
+        strokes: strokes,
+        strokesThumb: thumb,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Saved (${summary.partsDone}/${summary.partsTotal} parts)'),
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+      _loadSessions();
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _resumeSession(String id) async {
+    setState(() => _busy = true);
+    try {
+      final d = await _api.progress(id);
+      final labels = d.parts.keys.toList();
+      _question = d.question;
+      _resetParts(math.max(1, labels.length));
+      _reviewMode = false;
+      int firstUndone = labels.length - 1;
+      for (int i = 0; i < labels.length; i++) {
+        final st = d.parts[labels[i]]!;
+        _parts[i].typed.text = st.typed ?? '';
+        _parts[i].workText = st.workText;
+        if (st.strokes != null) await _parts[i].canvas.loadStrokes(st.strokes!);
+        if (st.correct) {
+          _parts[i].correct = true;
+          _parts[i].result = GradeResult(
+              correct: true, reason: 'saved', expected: '');
+        } else if (firstUndone == labels.length - 1) {
+          firstUndone = i;
+        }
+      }
+      _exerciseDone = labels.isNotEmpty && labels.every((l) => d.parts[l]!.correct);
+      _partIndex = firstUndone.clamp(0, _parts.length - 1);
+      _topic = d.question.topic;
+      _difficulty = d.question.difficulty;
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _deleteSession(String id) async {
+    try {
+      await _api.deleteProgress(id);
+      setState(() => _sessions.removeWhere((s) => s.id == id));
+    } catch (_) {}
+  }
+
+  Future<void> _replayReview() async {
+    final q = _question;
+    if (q == null) return;
+    setState(() => _busy = true);
+    try {
+      final nq = await _api.replay(q.id);
+      setState(() => _reviewMode = false);
+      _loadQuestion(nq);
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _uploadImage() async {
+    final part = _active;
+    if (part == null) return;
+    try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(source: ImageSource.gallery);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      await part.canvas.loadImageStroke(bytes);
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
+  void _openLesson() {
+    final key = _lessonSkillKey;
+    if (key == null) return;
+    showDialog(
+      context: context,
+      builder: (_) => LessonModal(
+        skillKey: key,
+        fallbackLabel: _practicingSkillLabel ??
+            questionTypeLabel(_question?.questionType ?? '',
+                context.read<LanguageProvider>().currentLang),
+      ),
+    );
+  }
+
+  // --- build ---
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 1. Topic & Difficulty Controls Bar
-              _buildTopicControls(lang),
-              const SizedBox(height: 16),
-
-              if (_errorMessage != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.errorRedLight,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.errorRed.withValues(alpha: 0.5)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline, color: AppTheme.errorRed, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(_errorMessage!, style: const TextStyle(color: AppTheme.errorRed, fontSize: 13)),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // 2. Full Problem Statement Header (Rule 3: Never slice exam questions; keep preamble visible)
-              if (_currentQuestion != null) ...[
-                _buildProblemHeader(lang),
-                const SizedBox(height: 16),
-              ],
-
-              // 3. Drawing Canvas Section
-              SizedBox(
-                height: 380,
-                child: DrawingCanvas(
-                  controller: _canvasController,
-                  showGrid: true,
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // 4. Answer Input & Action Buttons
-              _buildAnswerInputSection(lang),
-              const SizedBox(height: 16),
-
-              // 5. Math Keypad (Expandable)
-              if (_showKeypad) ...[
-                MathKeypad(
-                  controller: _answerController,
-                  onSubmitted: () => setState(() => _showKeypad = false),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // 6. Grade Verdict & Sequential Step Check (Rule 4: Sequential Line-by-Line checking)
-              if (_gradeResult != null) ...[
-                _buildGradeVerdictSection(lang),
-                const SizedBox(height: 16),
-              ],
-
-              // 7. Full Solution Steps (Collapsible)
-              if (_currentQuestion != null && _currentQuestion!.steps.isNotEmpty) ...[
-                _buildSolutionSection(lang),
-              ],
-            ],
-          ),
-        ),
-      ),
+    return Column(
+      children: [
+        _header(lang),
+        if (_partLabels.length > 1) _sectionTabs(),
+        Expanded(child: _canvasArea(lang)),
+      ],
     );
   }
 
-  Widget _buildTopicControls(LanguageProvider lang) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Wrap(
-          spacing: 12,
-          runSpacing: 10,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          alignment: WrapAlignment.spaceBetween,
-          children: [
-            // Topic Dropdown
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.category_outlined, size: 18, color: AppTheme.slate600),
-                const SizedBox(width: 6),
-                DropdownButton<String>(
-                  value: _topic,
-                  underline: const SizedBox(),
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryNavy, fontSize: 14),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() => _topic = val);
-                      _loadNewQuestion();
-                    }
-                  },
-                  items: _topics.map((t) {
-                    return DropdownMenuItem(
-                      value: t,
-                      child: Text(lang.t('topic_$t')),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-
-            // Difficulty Segment
-            SegmentedButton<String>(
-              segments: [
-                ButtonSegment(value: 'easy', label: Text(lang.t('diff_easy'))),
-                ButtonSegment(value: 'medium', label: Text(lang.t('diff_medium'))),
-                ButtonSegment(value: 'hard', label: Text(lang.t('diff_hard'))),
-              ],
-              selected: {_difficulty},
-              onSelectionChanged: (newVal) {
-                setState(() => _difficulty = newVal.first);
-                _loadNewQuestion();
-              },
-              style: ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12)),
-              ),
-            ),
-
-            // New Question Button
-            ElevatedButton.icon(
-              onPressed: _isGenerating ? null : _loadNewQuestion,
-              icon: _isGenerating
-                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.refresh_rounded, size: 16),
-              label: Text(_isGenerating ? lang.t('btn_generating') : lang.t('btn_new_question')),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProblemHeader(LanguageProvider lang) {
-    final q = _currentQuestion!;
-    final hasParts = q.parts.isNotEmpty;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+  Widget _header(LanguageProvider lang) {
+    final q = _question;
+    return Material(
+      elevation: 1,
+      child: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Preamble / Prompt Text
-            MathText(
-              text: q.prompt,
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.5),
-            ),
-
-            if (q.zDisplay.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppTheme.slate100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: MathText(
-                  text: '\$\$${q.zDisplay}\$\$',
-                  textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-
-            // Clean Numbered Part Tabs (Rule 3: Clean digits or letters, no confusing sub-steps)
-            if (hasParts) ...[
-              const SizedBox(height: 14),
-              const Divider(color: AppTheme.slate200, height: 1),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: List.generate(q.parts.length, (idx) {
-                  final part = q.parts[idx];
-                  final isSelected = idx == _activePartIndex;
-                  final label = part.label.isNotEmpty ? part.label : '${idx + 1}';
-
-                  return ChoiceChip(
-                    label: Text(
-                      'Part $label',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: isSelected ? Colors.amber.shade900 : AppTheme.slate700,
+            if (_reviewMode || _practicingSkillLabel != null || _practicingFormulaName != null)
+              _banner(lang),
+            // config row
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  if (!_reviewMode) ...[
+                    _topicDropdown(lang),
+                    const SizedBox(width: 8),
+                    _typeDropdown(lang),
+                    const SizedBox(width: 8),
+                    _difficultyDropdown(lang),
+                    if (_topic == 'complex') ...[
+                      const SizedBox(width: 8),
+                      _modeDropdown(lang),
+                    ],
+                    const SizedBox(width: 8),
+                  ],
+                  if (_streak > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Chip(
+                        visualDensity: VisualDensity.compact,
+                        backgroundColor: AppTheme.accentAmberLight,
+                        label: Text('🔥 $_streak',
+                            style: const TextStyle(fontSize: 12)),
                       ),
                     ),
-                    selected: isSelected,
-                    selectedColor: AppTheme.accentAmberLight,
-                    backgroundColor: Colors.white,
-                    side: BorderSide(
-                      color: isSelected ? AppTheme.accentAmber : AppTheme.slate300,
-                      width: isSelected ? 2 : 1,
+                  if (_lessonSkillKey != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: OutlinedButton.icon(
+                        onPressed: _openLesson,
+                        icon: const Text('📖'),
+                        label: Text(lang.t('lesson'),
+                            style: const TextStyle(fontSize: 12)),
+                      ),
                     ),
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() {
-                          _activePartIndex = idx;
-                          _gradeResult = null;
-                        });
-                      }
-                    },
-                  );
-                }),
+                  if (_sessions.isNotEmpty && !_reviewMode)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: OutlinedButton(
+                        onPressed: _showSessionsSheet,
+                        child: Text('${lang.t('btn_saved')} (${_sessions.length})',
+                            style: const TextStyle(fontSize: 12)),
+                      ),
+                    ),
+                  OutlinedButton(
+                    onPressed: _busy || q == null ? null : _saveProgress,
+                    child: Text(lang.t('action_save'),
+                        style: const TextStyle(fontSize: 12)),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _busy ? null : _newQuestion,
+                    child: Text(_busy ? lang.t('btn_generating') : lang.t('btn_new_question'),
+                        style: const TextStyle(fontSize: 12)),
+                  ),
+                ],
               ),
-
-              // Active Part Question Highlight Card (Rule 3: amber accent card)
-              const SizedBox(height: 10),
+            ),
+            const SizedBox(height: 8),
+            // prompt
+            if (q != null)
+              _promptWidget(q, lang)
+            else
+              Text(lang.t('prompt_select_guide'),
+                  style: const TextStyle(color: AppTheme.slate600, fontSize: 13)),
+            if (_activePart != null) ...[
+              const SizedBox(height: 8),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: AppTheme.accentAmberLight,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.accentAmber, width: 1.5),
+                  border: Border.all(color: AppTheme.accentAmber),
                 ),
                 child: MathText(
-                  text: q.parts[_activePartIndex].questionKm ??
-                      q.parts[_activePartIndex].want ??
-                      'Question Part ${q.parts[_activePartIndex].label}',
+                  text: _activePart!.questionKm ??
+                      _activePart!.want ??
+                      'Part ${_activePart!.label}',
                   textStyle: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.amber.shade900,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.amber.shade900),
+                ),
+              ),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: 6),
+              Text(_error!,
+                  style: const TextStyle(color: AppTheme.errorRed, fontSize: 12)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _promptWidget(Question q, LanguageProvider lang) {
+    final loc = formatLocalizedPrompt(
+      topic: q.topic,
+      questionType: q.questionType,
+      params: q.params,
+      rawPrompt: q.prompt,
+      rawPromptLatex: q.promptLatex,
+      lang: lang.currentLang,
+      zDisplay: q.zDisplay,
+    );
+    final text = (loc.promptLatex != null && loc.promptLatex!.isNotEmpty)
+        ? '\$${loc.promptLatex}\$'
+        : loc.prompt;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 140),
+      child: SingleChildScrollView(
+        child: MathText(
+          text: text,
+          textStyle: const TextStyle(
+              fontSize: 15, fontWeight: FontWeight.w600, height: 1.4),
+        ),
+      ),
+    );
+  }
+
+  Widget _banner(LanguageProvider lang) {
+    String label;
+    if (_reviewMode) {
+      label = lang.t('practice_reviewing_banner');
+    } else if (_practicingSkillLabel != null) {
+      label = '${lang.t('practice_practicing')}: $_practicingSkillLabel';
+    } else {
+      label = '${lang.t('practice_practicing')}: $_practicingFormulaName';
+    }
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryNavy,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label,
+                style: const TextStyle(color: Colors.white, fontSize: 12)),
+          ),
+          if (_reviewMode) ...[
+            TextButton(
+              onPressed: _busy ? null : _replayReview,
+              child: Text(lang.t('practice_replay'),
+                  style: const TextStyle(color: Colors.white, fontSize: 11)),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _reviewMode = false;
+                  _question = null;
+                });
+                _loadSessions();
+                _newQuestion();
+              },
+              child: Text(lang.t('practice_exit_review'),
+                  style: const TextStyle(color: Colors.white70, fontSize: 11)),
+            ),
+          ] else
+            TextButton(
+              onPressed: () => setState(() {
+                _practicingSkillLabel = null;
+                _practicingFormulaName = null;
+              }),
+              child: Text(lang.t('practice_dismiss'),
+                  style: const TextStyle(color: Colors.white70, fontSize: 11)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _topicDropdown(LanguageProvider lang) => _dropdown<String>(
+        value: _topic,
+        items: [for (final t in _topics) (t, lang.t('topic_$t'))],
+        onChanged: (v) => setState(() {
+          _topic = v;
+          _questionType = 'any';
+        }),
+      );
+
+  Widget _typeDropdown(LanguageProvider lang) {
+    final opts = _typeOptions[_topic] ?? const [];
+    return _dropdown<String>(
+      value: _questionType,
+      items: [
+        ('any', lang.t('qtype_any')),
+        for (final o in opts) (o[0], questionTypeLabel(o[0], lang.currentLang)),
+      ],
+      onChanged: (v) => setState(() => _questionType = v),
+    );
+  }
+
+  Widget _difficultyDropdown(LanguageProvider lang) => _dropdown<String>(
+        value: _difficulty,
+        items: [
+          ('easy', lang.t('diff_easy')),
+          ('medium', lang.t('diff_medium')),
+          ('hard', lang.t('diff_hard')),
+        ],
+        onChanged: (v) => setState(() => _difficulty = v),
+      );
+
+  Widget _modeDropdown(LanguageProvider lang) => _dropdown<String>(
+        value: _mode,
+        items: [
+          ('templates', lang.t('mode_templates')),
+          ('gemini', lang.t('mode_gemini')),
+        ],
+        onChanged: (v) => setState(() => _mode = v),
+      );
+
+  Widget _dropdown<T>({
+    required T value,
+    required List<(T, String)> items,
+    required ValueChanged<T> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppTheme.slate300),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: DropdownButton<T>(
+        value: value,
+        underline: const SizedBox(),
+        isDense: true,
+        style: const TextStyle(fontSize: 12, color: AppTheme.primaryNavy),
+        items: [
+          for (final it in items)
+            DropdownMenuItem(value: it.$1, child: Text(it.$2))
+        ],
+        onChanged: (v) {
+          if (v != null) onChanged(v);
+        },
+      ),
+    );
+  }
+
+  Widget _sectionTabs() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (int i = 0; i < _partLabels.length; i++) ...[
+              GestureDetector(
+                onTap: () => setState(() {
+                  _partIndex = i;
+                  _explanation = null;
+                }),
+                child: Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: i == _partIndex
+                        ? AppTheme.primaryNavy
+                        : (_parts[i].correct
+                            ? AppTheme.successGreenLight
+                            : AppTheme.slate100),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_parts[i].correct)
+                        const Text('✓ ',
+                            style: TextStyle(color: AppTheme.successGreen)),
+                      Text(_partLabels[i],
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: i == _partIndex
+                                  ? Colors.white
+                                  : AppTheme.slate700)),
+                    ],
                   ),
                 ),
               ),
@@ -393,187 +1138,474 @@ class _PracticeScreenState extends State<PracticeScreen> {
     );
   }
 
-  Widget _buildAnswerInputSection(LanguageProvider lang) {
-    return Row(
+  Widget _canvasArea(LanguageProvider lang) {
+    final part = _active;
+    if (part == null) {
+      return const Center(child: Text('Generate a question to begin.'));
+    }
+    return Stack(
       children: [
-        // Answer TextField
-        Expanded(
-          child: TextField(
-            controller: _answerController,
-            decoration: InputDecoration(
-              hintText: 'Enter your final answer here (e.g. 2 + 3i, \u03c0/2, 4)',
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _showKeypad ? Icons.keyboard_hide_outlined : Icons.keyboard_alt_outlined,
-                  color: AppTheme.primaryNavy,
-                ),
-                onPressed: () => setState(() => _showKeypad = !_showKeypad),
-                tooltip: 'Math Symbols Keyboard',
-              ),
-            ),
-            onSubmitted: (_) => _checkAnswer(),
+        Positioned.fill(
+          child: DrawingCanvas(
+            key: ValueKey('canvas-$_partIndex-${_question?.id}'),
+            controller: part.canvas,
+            overlayBuilder: (map) {
+              final det = part.detect;
+              final res = part.result;
+              if (det != null && res != null && det.linesBoxes.isNotEmpty) {
+                return MarksOverlay(det: det, result: res, map: map);
+              }
+              return null;
+            },
           ),
         ),
-        const SizedBox(width: 12),
-
-        // Check Answer Button
-        ElevatedButton.icon(
-          onPressed: _isGrading ? null : _checkAnswer,
-          icon: _isGrading
-              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Icon(Icons.check_circle_rounded, size: 18),
-          label: Text(_isGrading ? lang.t('btn_checking') : lang.t('btn_check_answer')),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryNavy,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        // pen size + tool strip (left)
+        Positioned(left: 6, top: 8, child: _toolStrip(part)),
+        // results panel (right, above toolbar)
+        if (part.result != null && _showResults)
+          Positioned(
+            right: 6,
+            bottom: 70,
+            width: MediaQuery.of(context).size.width < 520
+                ? MediaQuery.of(context).size.width - 12
+                : 360,
+            child: _resultsPanel(lang, part),
           ),
+        // bottom toolbar
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 6,
+          child: Center(child: _toolbar(lang, part)),
         ),
       ],
     );
   }
 
-  Widget _buildGradeVerdictSection(LanguageProvider lang) {
-    final res = _gradeResult!;
-    final isCorrect = res.correct;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isCorrect ? AppTheme.successGreenLight : AppTheme.errorRedLight,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isCorrect ? AppTheme.successGreen : AppTheme.errorRed,
-          width: 1.5,
+  Widget _toolStrip(_PartState part) {
+    final c = part.canvas;
+    return Material(
+      elevation: 2,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+        width: 44,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RotatedBox(
+              quarterTurns: 3,
+              child: SizedBox(
+                width: 90,
+                child: Slider(
+                  min: c.tool == CanvasTool.eraser ? 10.0 : 1.0,
+                  max: c.tool == CanvasTool.eraser ? 100.0 : 30.0,
+                  value: (c.tool == CanvasTool.eraser
+                          ? c.eraserWidth
+                          : c.penWidth)
+                      .clamp(c.tool == CanvasTool.eraser ? 10.0 : 1.0,
+                          c.tool == CanvasTool.eraser ? 100.0 : 30.0)
+                      .toDouble(),
+                  onChanged: (v) => setState(() => c.tool == CanvasTool.eraser
+                      ? c.setEraserWidth(v)
+                      : c.setPenWidth(v)),
+                ),
+              ),
+            ),
+            Text(
+              '${(c.tool == CanvasTool.eraser ? c.eraserWidth : c.penWidth).round()}',
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _toolbar(LanguageProvider lang, _PartState part) {
+    final c = part.canvas;
+    Widget toolBtn(CanvasTool t, String label) => _tinyBtn(
+          label,
+          active: c.tool == t,
+          onTap: () => setState(() => c.setTool(t)),
+        );
+    return Material(
+      elevation: 4,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 12),
+        padding: const EdgeInsets.all(6),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              toolBtn(CanvasTool.pen, lang.t('tool_pen')),
+              toolBtn(CanvasTool.eraser, lang.t('tool_eraser')),
+              toolBtn(CanvasTool.ruler, lang.t('tool_line')),
+              toolBtn(CanvasTool.curve, lang.t('tool_curve')),
+              toolBtn(CanvasTool.ellipse, lang.t('tool_ellipse')),
+              toolBtn(CanvasTool.select, lang.t('tool_select')),
+              _tinyBtn(
+                c.hasGrid ? '${lang.t('tool_axes')} ✓' : lang.t('tool_axes'),
+                active: c.tool == CanvasTool.axes && c.hasGrid,
+                onTap: () {
+                  setState(() {
+                    if (c.tool == CanvasTool.axes && c.hasGrid) {
+                      c.hideGrid();
+                      c.setTool(CanvasTool.pen);
+                    } else {
+                      if (!c.hasGrid) c.spawnGrid(1, 1);
+                      c.setTool(CanvasTool.axes);
+                    }
+                  });
+                },
+              ),
+              _iconBtn(Icons.undo, c.canUndo ? c.undo : null),
+              _iconBtn(Icons.redo, c.canRedo ? c.redo : null),
+              _iconBtn(Icons.delete_outline, () {
+                setState(() {
+                  c.clear();
+                  part.detect = null;
+                  part.result = null;
+                });
+              }),
+              _tinyBtn(lang.t('tool_hint'),
+                  onTap: _busy || _question == null ? null : _showHint),
+              _iconBtn(Icons.upload_outlined, _uploadImage),
+              _iconBtn(Icons.remove, () => setState(() => c.setZoom(c.zoom - 0.2))),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Text('${(c.zoom * 100).round()}%',
+                    style: const TextStyle(fontSize: 11)),
+              ),
+              _iconBtn(Icons.add, () => setState(() => c.setZoom(c.zoom + 0.2))),
+              SizedBox(
+                width: 110,
+                child: TextField(
+                  controller: part.typed,
+                  style: const TextStyle(fontSize: 12),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: lang.t('placeholder_type_answer'),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              ElevatedButton(
+                onPressed: _busy ? null : _check,
+                style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10)),
+                child: Text(_busy ? lang.t('btn_checking') : lang.t('tool_check_work'),
+                    style: const TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tinyBtn(String label, {bool active = false, VoidCallback? onTap}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: TextButton(
+        onPressed: onTap,
+        style: TextButton.styleFrom(
+          backgroundColor: active ? AppTheme.primaryNavy : AppTheme.slate100,
+          foregroundColor: active ? Colors.white : AppTheme.slate700,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        child: Text(label, style: const TextStyle(fontSize: 12)),
+      ),
+    );
+  }
+
+  Widget _iconBtn(IconData icon, VoidCallback? onTap) {
+    return IconButton(
+      onPressed: onTap,
+      icon: Icon(icon, size: 18),
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+      padding: EdgeInsets.zero,
+    );
+  }
+
+  Widget _resultsPanel(LanguageProvider lang, _PartState part) {
+    final res = part.result!;
+    final correct = res.correct;
+    return Material(
+      elevation: 6,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.5),
+        decoration: BoxDecoration(
+          color: correct ? AppTheme.successGreenLight : AppTheme.errorRedLight,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: correct ? AppTheme.successGreen : AppTheme.errorRed),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _exerciseDone
+                          ? lang.t('verdict_complete')
+                          : correct
+                              ? '${lang.t('label_part')} ${res.part ?? ''} ${lang.t('verdict_correct')}'
+                              : lang.t('verdict_incorrect'),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 16),
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => setState(() => _showResults = false),
+                  ),
+                ],
+              ),
+              if (_exerciseDone)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _busy ? null : _newQuestion,
+                    child: Text(lang.t('action_next_question')),
+                  ),
+                ),
+              if (res.parts.isNotEmpty)
+                ...res.parts.map((pv) => Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        '${pv.correct ? "✓" : "✗"} ${pv.label}  ${pv.correct ? "" : "${lang.t('verdict_expected')} ${pv.expected ?? ''}"}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ))
+              else if (!correct)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    children: [
+                      Text('${lang.t('label_expected')}: ',
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.bold)),
+                      Flexible(child: MathText(text: '\$${res.expected}\$')),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 4),
+              Text('${lang.t('label_reason')}: ${res.reason}',
+                  style: const TextStyle(fontSize: 11, color: AppTheme.slate600)),
+              if (res.rubricScore != null) _rubricWidget(lang, res),
+              if (res.teacherFeedback?.content.isNotEmpty ?? false)
+                _teacherTip(lang, res.teacherFeedback!.content),
+              if (res.graph != null) ...[
+                const Divider(),
+                Text(lang.t('label_ref_graph_compare'),
+                    style: const TextStyle(
+                        fontSize: 11, color: AppTheme.slate600)),
+                FunctionGraph(graph: res.graph!),
+                if (_graphGrade != null && _graphGrade!.error == null)
+                  _graphAssessment(lang, _graphGrade!),
+              ],
+              if (_explanation != null) _explanationWidget(lang, _explanation!),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _rubricWidget(LanguageProvider lang, GradeResult res) {
+    final r = res.rubricScore!;
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                color: isCorrect ? AppTheme.successGreen : AppTheme.errorRed,
-                size: 26,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                isCorrect ? lang.t('verdict_correct') : lang.t('verdict_needs_revision'),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: isCorrect ? Colors.green.shade900 : Colors.red.shade900,
-                ),
-              ),
+              Text(lang.t('label_step_score'),
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold)),
+              Text('${r.earned.toStringAsFixed(1)} / ${r.possible.toStringAsFixed(0)}',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
             ],
           ),
-          if (res.reason.isNotEmpty) ...[
-            const SizedBox(height: 8),
+          for (final b in r.breakdown)
             Text(
-              '${lang.t('label_reason')} ${res.reason}',
+              '${b.pointsEarned > 0 ? "✓" : "✗"} ${b.label} (${b.pointsEarned.toStringAsFixed(1)}/${b.pointsPossible.toStringAsFixed(1)})',
               style: TextStyle(
-                fontSize: 13,
-                color: isCorrect ? Colors.green.shade800 : Colors.red.shade800,
-              ),
+                  fontSize: 11,
+                  color: b.pointsEarned > 0
+                      ? AppTheme.successGreen
+                      : AppTheme.slate600),
             ),
-          ],
-          if (res.expected.isNotEmpty && !isCorrect) ...[
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Text(
-                  lang.t('label_expected'),
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.red.shade900),
-                ),
-                const SizedBox(width: 6),
-                MathText(
-                  text: '\$${res.expected}\$',
-                  textStyle: TextStyle(fontWeight: FontWeight.bold, color: Colors.red.shade900),
-                ),
-              ],
-            ),
-          ],
+        ],
+      ),
+    );
+  }
 
-          // Sequential Line-by-Line Breakdown if available
-          if (res.stepCheck != null && res.stepCheck!.lineResults.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            const Divider(),
-            const SizedBox(height: 6),
-            Text(
-              lang.t('label_work_check'),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-            const SizedBox(height: 6),
-            for (final line in res.stepCheck!.lineResults) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2.0),
-                child: Row(
-                  children: [
-                    Icon(
-                      line.correct == true ? Icons.check_circle_outline : Icons.highlight_off,
-                      size: 16,
-                      color: line.correct == true ? AppTheme.successGreen : AppTheme.errorRed,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'Line ${line.line}: ${line.text}',
-                        style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+  Widget _teacherTip(LanguageProvider lang, String content) {
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.accentAmberLight,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.accentAmber),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('👨‍🏫 ${lang.t('label_teacher_tip')}',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber.shade900)),
+          const SizedBox(height: 4),
+          MathText(text: content, textStyle: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  Widget _graphAssessment(LanguageProvider lang, GraphGradeResult gg) {
+    Widget flag(String label, bool? ok) {
+      if (ok == null) return const SizedBox.shrink();
+      return Text('$label ${ok ? "✓" : "✗"}',
+          style: TextStyle(
+              fontSize: 11,
+              color: ok ? AppTheme.successGreen : AppTheme.errorRed));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(lang.t('label_graph_assessment'),
+              style: const TextStyle(fontSize: 11, color: AppTheme.slate600)),
+          Row(
+            children: [
+              Text('${gg.score ?? 0}/100',
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(width: 8),
+              flag(lang.t('label_curve'), gg.curveCorrect),
+              const SizedBox(width: 6),
+              flag(lang.t('label_asymptotes'), gg.asymptotesCorrect),
+              const SizedBox(width: 6),
+              flag(lang.t('label_tangent'), gg.tangentCorrect),
+              const SizedBox(width: 6),
+              flag(lang.t('label_points'), gg.pointsCorrect),
             ],
+          ),
+          if (gg.feedback != null)
+            Text(gg.feedback!, style: const TextStyle(fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  Widget _explanationWidget(LanguageProvider lang, Explanation exp) {
+    final steps = exp.steps;
+    final showCount = _hintLevel > 0 ? _hintLevel : steps.length;
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (steps.isNotEmpty) ...[
+            Text(lang.t('label_solution'),
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.slate600)),
+            for (final s in steps.take(showCount))
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: MathText(
+                    text: '${lang.t('label_step')} ${s.stepOrder}: ${s.detail}',
+                    textStyle: const TextStyle(fontSize: 12)),
+              ),
+          ],
+          if (_hintLevel == 0 || _hintLevel >= steps.length)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: MathText(text: exp.content, textStyle: const TextStyle(fontSize: 12)),
+            ),
+          if (exp.workCheck?.content.isNotEmpty ?? false) ...[
+            const Divider(),
+            Text(lang.t('label_work_check'),
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.slate600)),
+            MathText(text: exp.workCheck!.content, textStyle: const TextStyle(fontSize: 12)),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildSolutionSection(LanguageProvider lang) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  void _showSessionsSheet() {
+    final lang = context.read<LanguageProvider>();
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(12),
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  lang.t('label_solution'),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppTheme.primaryNavy),
+            for (final s in _sessions)
+              ListTile(
+                title: Text(
+                    (s.question?.prompt ?? '').split('\n').first,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+                subtitle: Text(
+                    '${questionTypeLabel(s.question?.questionType ?? '', lang.currentLang)} · ${s.partsDone}/${s.partsTotal}${s.status == "completed" ? " · done" : ""}'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _resumeSession(s.id);
+                      },
+                      child: Text(lang.t('action_resume')),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 16),
+                      onPressed: () {
+                        _deleteSession(s.id);
+                        Navigator.pop(ctx);
+                      },
+                    ),
+                  ],
                 ),
-                TextButton.icon(
-                  onPressed: () => setState(() => _showSteps = !_showSteps),
-                  icon: Icon(_showSteps ? Icons.visibility_off : Icons.visibility, size: 16),
-                  label: Text(_showSteps ? lang.t('btn_hide_steps') : lang.t('btn_show_steps')),
-                ),
-              ],
-            ),
-            if (_showSteps) ...[
-              const SizedBox(height: 12),
-              for (final s in _currentQuestion!.steps) ...[
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Step ${s.stepOrder}: ${s.title}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                      const SizedBox(height: 4),
-                      MathText(
-                        text: s.detail,
-                        textStyle: const TextStyle(fontSize: 13, color: AppTheme.slate700),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
+              ),
           ],
         ),
       ),

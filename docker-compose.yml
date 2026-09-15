@@ -75,12 +75,10 @@ services:
       - "${MOBILE_PORT:-3017}:3017"
     depends_on:
       - backend
-    environment:
-      - API_URL=${API_URL:-http://backend:8000}
-    volumes:
-      - ./mobile:/app
-      - /app/.dart_tool
-      - /app/build
+    # Serves the pre-built Flutter web release bundle via nginx (see
+    # mobile/Dockerfile). The Flutter app runs in the browser and talks to the
+    # host-exposed backend at http://localhost:8016 (ApiClient's web default),
+    # so no source mount or API_URL runtime env is needed here.
 
 volumes:
   pgdata:

@@ -1,22 +1,22 @@
-FROM ghcr.io/cirruslabs/flutter:stable
+# Build the Flutter web release bundle, then serve it statically with nginx.
+# (The previous `flutter run -d web-server` debug/DDC setup rendered a blank
+# page in the container — the release build bundles CanvasKit locally and is
+# served as plain static files, which is reliable.)
+FROM ghcr.io/cirruslabs/flutter:stable AS build
 
 WORKDIR /app
-
-# Ensure Git safe directory configuration for containerized builds
 RUN git config --global --add safe.directory '*'
 
-# Enable Flutter Web platform & disable telemetry
-RUN flutter config --enable-web --no-analytics
-
-# Copy pubspec and pre-fetch dependencies for efficient Docker layer caching
+# Pre-fetch dependencies for efficient Docker layer caching.
 COPY pubspec.yaml ./
 RUN flutter pub get
 
-# Copy source files
+# Copy the source and build the optimized web bundle.
 COPY . .
+RUN flutter build web --release --no-tree-shake-icons
 
-# Expose web dev server port
+# --- serve ---
+FROM nginx:alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/build/web /usr/share/nginx/html
 EXPOSE 3017
-
-# Run Flutter Web Server listening on all interfaces
-CMD ["flutter", "run", "-d", "web-server", "--web-port", "3017", "--web-hostname", "0.0.0.0"]

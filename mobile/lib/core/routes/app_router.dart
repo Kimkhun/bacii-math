@@ -44,8 +44,14 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/practice',
           builder: (context, state) {
-            final topic = state.uri.queryParameters['topic'];
-            return PracticeScreen(initialTopic: topic);
+            final qp = state.uri.queryParameters;
+            return PracticeScreen(
+              key: ValueKey(state.uri.toString()),
+              initialTopic: qp['topic'],
+              initialSkill: qp['skill'],
+              initialFormula: qp['formula'],
+              initialAttempt: qp['attempt'],
+            );
           },
         ),
         GoRoute(

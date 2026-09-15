@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
 import '../../core/api/api_client.dart';
 import '../../core/i18n/language_provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -17,172 +18,178 @@ class FormulasScreen extends StatefulWidget {
 class _FormulasScreenState extends State<FormulasScreen> {
   final ApiClient _api = ApiClient();
   FormulaCatalog? _catalog;
-  bool _isLoading = true;
+  bool _busy = true;
   String? _error;
-  String? _selectedTopic;
+  String _filter = 'all';
 
   @override
   void initState() {
     super.initState();
-    _fetchFormulas();
+    _load();
   }
 
-  Future<void> _fetchFormulas() async {
+  Future<void> _load() async {
     setState(() {
-      _isLoading = true;
+      _busy = true;
       _error = null;
     });
-
     try {
-      final res = await _api.getFormulas();
+      final c = await _api.getFormulas();
       setState(() {
-        _catalog = res;
-        _isLoading = false;
-        if (res.topics.isNotEmpty) {
-          _selectedTopic = res.topics.first.topic;
-        }
+        _catalog = c;
       });
     } catch (e) {
-      setState(() {
-        _error = e.toString().replaceFirst('Exception: ', '');
-        _isLoading = false;
-      });
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
+  }
+
+  String _topicLabel(LanguageProvider lang, String topic) {
+    final l = lang.t('topic_$topic');
+    return l.isNotEmpty ? l : topic.replaceAll('_', ' ');
   }
 
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
-
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
+    if (_busy) return const Center(child: CircularProgressIndicator());
     if (_error != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Failed to load formulas: $_error'),
-            const SizedBox(height: 12),
-            ElevatedButton(onPressed: _fetchFormulas, child: const Text('Retry')),
-          ],
-        ),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Text('Failed: $_error'),
+          const SizedBox(height: 12),
+          ElevatedButton(onPressed: _load, child: const Text('Retry')),
+        ]),
       );
     }
-
     final catalog = _catalog!;
-    final currentTopic = catalog.topics.firstWhere(
-      (t) => t.topic == _selectedTopic,
-      orElse: () => catalog.topics.first,
-    );
+    final topics = ['all', ...catalog.topics.map((t) => t.topic)];
+    final visible = catalog.topics
+        .where((t) => _filter == 'all' || t.topic == _filter)
+        .toList();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      padding: const EdgeInsets.all(16),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
+          constraints: const BoxConstraints(maxWidth: 720),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
-              Text(
-                lang.t('formulas_title'),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primaryNavy),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                lang.t('formulas_subtitle'),
-                style: const TextStyle(fontSize: 14, color: AppTheme.slate600),
-              ),
-              const SizedBox(height: 20),
-
-              // Topic Filter Pills
+              Text(lang.t('formulas_title'),
+                  style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryNavy)),
+              const SizedBox(height: 4),
+              Text(lang.t('formulas_subtitle'),
+                  style: const TextStyle(fontSize: 13, color: AppTheme.slate600)),
+              const SizedBox(height: 12),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: catalog.topics.map((t) {
-                    final isSelected = t.topic == _selectedTopic;
-                    final topicLabel = lang.t('topic_${t.topic}');
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text(
-                          topicLabel.isNotEmpty ? topicLabel : t.topic,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                            color: isSelected ? Colors.white : AppTheme.slate700,
-                          ),
+                  children: [
+                    for (final tp in topics)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(
+                              tp == 'all'
+                                  ? lang.t('formulas_all_topics')
+                                  : _topicLabel(lang, tp),
+                              style: const TextStyle(fontSize: 12)),
+                          selected: _filter == tp,
+                          onSelected: (_) => setState(() => _filter = tp),
                         ),
-                        selected: isSelected,
-                        selectedColor: AppTheme.primaryNavy,
-                        backgroundColor: Colors.white,
-                        showCheckmark: false,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        side: BorderSide(color: isSelected ? AppTheme.primaryNavy : AppTheme.slate300),
-                        onSelected: (_) => setState(() => _selectedTopic = t.topic),
                       ),
-                    );
-                  }).toList(),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-
-              // Formula Cards
-              for (final entry in currentTopic.entries) ...[
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                lang.isKhmer ? entry.nameKm : (entry.nameEn ?? entry.nameKm),
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.primaryNavy),
-                              ),
-                            ),
-                            OutlinedButton.icon(
-                              onPressed: () => context.go('/practice?topic=${currentTopic.topic}'),
-                              icon: const Icon(Icons.fitness_center_rounded, size: 14),
-                              label: Text(lang.t('formulas_practice'), style: const TextStyle(fontSize: 12)),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Formula LaTeX display
-                        if (entry.latex != null && entry.latex!.isNotEmpty) ...[
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppTheme.slate50,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppTheme.slate200),
-                            ),
-                            child: MathText(
-                              text: '\$\$${entry.latex}\$\$',
-                              textStyle: const TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              for (final topic in visible) ...[
+                Text(_topicLabel(lang, topic.topic),
+                    style: const TextStyle(
+                        fontSize: 17, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                for (final e in topic.entries) _entryCard(e, lang),
+                const SizedBox(height: 16),
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _entryCard(FormulaEntry e, LanguageProvider lang) {
+    final primary = lang.isKhmer
+        ? (e.nameKm.isNotEmpty ? e.nameKm : (e.nameEn ?? e.id.replaceAll('_', ' ')))
+        : (e.nameEn ?? e.id.replaceAll('_', ' '));
+    final secondary = lang.isKhmer ? e.nameEn : e.nameKm;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Wrap(
+                    spacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(primary,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15)),
+                      if (secondary != null &&
+                          secondary.isNotEmpty &&
+                          secondary != primary)
+                        Text('($secondary)',
+                            style: const TextStyle(
+                                fontSize: 13, color: AppTheme.slate600)),
+                      if (e.weight > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                              color: AppTheme.accentAmberLight,
+                              borderRadius: BorderRadius.circular(4)),
+                          child: Text(
+                              '${lang.t('formulas_weight')} ${e.weight % 1 == 0 ? e.weight.toInt() : e.weight}',
+                              style: TextStyle(
+                                  fontSize: 11, color: Colors.amber.shade900)),
+                        ),
+                    ],
+                  ),
+                ),
+                if (e.variants.isNotEmpty)
+                  OutlinedButton(
+                    onPressed: () => context.go('/practice?formula=${e.id}'),
+                    style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        visualDensity: VisualDensity.compact),
+                    child: Text(lang.t('formulas_practice'),
+                        style: const TextStyle(fontSize: 12)),
+                  ),
+              ],
+            ),
+            if (e.latex != null && e.latex!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              MathText(text: '\$\$${e.latex}\$\$'),
+            ],
+            if (e.formulas.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              for (final f in e.formulas)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: MathText(text: '\$${f}\$'),
+                ),
+            ],
+          ],
         ),
       ),
     );
