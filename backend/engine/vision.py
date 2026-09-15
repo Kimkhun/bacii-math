@@ -11,6 +11,7 @@ import re
 import httpx
 from PIL import Image
 
+from cache import get_system_model_settings
 from core.config import settings
 from engine import llm
 
