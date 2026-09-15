@@ -1417,6 +1417,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 if (_graphGrade != null && _graphGrade!.error == null)
                   _graphAssessment(lang, _graphGrade!),
               ],
+              if (part.workText != null && part.workText!.split('\n').length > 1)
+                _yourWorkWidget(lang, part, res),
               if (_explanation != null) _explanationWidget(lang, _explanation!),
             ],
           ),
@@ -1518,6 +1520,76 @@ class _PracticeScreenState extends State<PracticeScreen> {
           ),
           if (gg.feedback != null)
             Text(gg.feedback!, style: const TextStyle(fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  Widget _yourWorkWidget(LanguageProvider lang, _PartState part, GradeResult res) {
+    final lines = part.workText!.split('\n');
+    final linesLatex = part.detect?.linesLatex ?? const <String>[];
+    final errLine = res.stepCheck?.firstErrorLine;
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(lang.t('label_your_work'),
+              style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.slate600)),
+          const SizedBox(height: 4),
+          for (int i = 0; i < lines.length; i++)
+            Builder(builder: (_) {
+              final lineNo = i + 1;
+              final isError = errLine == lineNo;
+              final latex = i < linesLatex.length ? linesLatex[i] : null;
+              final lineRes = res.stepCheck?.lineResults
+                  .where((r) => r.line == lineNo)
+                  .cast<StepCheckLine?>()
+                  .firstWhere((_) => true, orElse: () => null);
+              final formulaName = isError ? lineRes?.formula?.replaceAll('_', ' ') : null;
+              final color = isError ? AppTheme.errorRed : AppTheme.slate600;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: RichText(
+                  text: TextSpan(
+                    children: [
+                      if (isError)
+                        TextSpan(
+                            text: '→ ',
+                            style: TextStyle(
+                                color: color, fontWeight: FontWeight.bold)),
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: MathText(
+                          text: (latex != null && latex.isNotEmpty)
+                              ? '\\($latex\\)'
+                              : lines[i],
+                          textStyle: TextStyle(
+                              fontSize: 12,
+                              color: color,
+                              fontWeight:
+                                  isError ? FontWeight.w600 : FontWeight.normal),
+                        ),
+                      ),
+                      if (formulaName != null && formulaName.isNotEmpty)
+                        TextSpan(
+                            text: ' ($formulaName)',
+                            style: TextStyle(
+                                fontSize: 10,
+                                color: color.withValues(alpha: 0.7))),
+                    ],
+                  ),
+                ),
+              );
+            }),
         ],
       ),
     );
