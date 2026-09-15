@@ -297,11 +297,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
     # Update the hidden skill trackers behind the student's profile. Runs on
     # every attempt (right or wrong) — a correct answer is exactly as much
     # evidence of mastery as a wrong one is of need.
-    await record_attempt_skills(
-        db, user, question,
-        correct=result["correct"],
-        step_check=step_check,
-    )
+    await record_skill_progress(db, user, question, attempt)
     return resp
 
 
