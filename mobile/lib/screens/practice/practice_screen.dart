@@ -1260,8 +1260,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   });
                 },
               ),
-              _iconBtn(Icons.undo, c.canUndo ? c.undo : null),
-              _iconBtn(Icons.redo, c.canRedo ? c.redo : null),
+              AnimatedBuilder(
+                animation: c,
+                builder: (context, _) => Row(
+                  children: [
+                    _iconBtn(Icons.undo, c.canUndo ? () => setState(c.undo) : null),
+                    _iconBtn(Icons.redo, c.canRedo ? () => setState(c.redo) : null),
+                  ],
+                ),
+              ),
               _iconBtn(Icons.delete_outline, () {
                 setState(() {
                   c.clear();
