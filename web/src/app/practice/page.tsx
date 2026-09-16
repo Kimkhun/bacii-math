@@ -2006,7 +2006,7 @@ function PracticeInner() {
                 <summary className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
                   {t("btn_saved")} ({sessions.length})
                 </summary>
-                <div className="absolute right-0 top-full mt-1.5 w-72 max-h-64 overflow-y-auto bg-white border border-[#e4e2db] rounded-lg shadow-lg p-2 space-y-1.5 z-40">
+                <div className="absolute right-0 top-full mt-1.5 w-72 max-w-[calc(100vw-1.5rem)] max-h-64 overflow-y-auto bg-white border border-[#e4e2db] rounded-lg shadow-lg p-2 space-y-1.5 z-40">
                   {sessions.map((s) => (
                     <div
                       key={s.id}
@@ -2077,7 +2077,7 @@ function PracticeInner() {
                       setActivePart(target);
                     }}
                     disabled={busy}
-                    className={`min-w-[34px] h-[30px] px-3 rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                    className={`min-w-[34px] h-[30px] px-3 stylus:min-w-[44px] stylus:h-11 stylus:px-4 stylus:text-sm rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                       isSecActive
                         ? "bg-[#23272e] text-white shadow-sm ring-2 ring-slate-900/10"
                         : isSecDone
@@ -2723,15 +2723,24 @@ function PracticeInner() {
         </div>
 
         {/* Canvas & Audio Settings Popover */}
+        {/* Below md (portrait tablets / phones) the popover becomes a bottom
+            sheet with a tap-to-dismiss backdrop, instead of a third floating
+            box competing with the left strip and the results panel. */}
         {showSettings && (
-          <div className="fixed left-16 top-1/2 -translate-y-1/2 z-30 w-72 bg-white/95 backdrop-blur-md border border-[#e4e2db] rounded-xl shadow-xl p-4 text-xs space-y-4 pointer-events-auto animate-in fade-in zoom-in-95 duration-150">
+          <div
+            className="md:hidden fixed inset-0 z-20 bg-black/20 pointer-events-auto"
+            onClick={() => setShowSettings(false)}
+          />
+        )}
+        {showSettings && (
+          <div className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] max-h-[70vh] overflow-y-auto md:inset-x-auto md:bottom-auto md:max-h-none md:overflow-visible md:left-16 md:top-1/2 md:-translate-y-1/2 z-30 md:w-72 bg-white/95 backdrop-blur-md border border-[#e4e2db] rounded-xl shadow-xl p-4 text-xs space-y-4 pointer-events-auto animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-[#f0eee6] pb-2">
               <span className="font-semibold text-[#23272e] flex items-center gap-1.5">
                 <span>⚙️</span> Canvas Settings
               </span>
               <button
                 onClick={() => setShowSettings(false)}
-                className="w-5 h-5 rounded flex items-center justify-center text-[#a8a296] hover:text-[#23272e] hover:bg-[#faf9f6]"
+                className="w-5 h-5 stylus:w-10 stylus:h-10 rounded flex items-center justify-center text-[#a8a296] hover:text-[#23272e] hover:bg-[#faf9f6]"
               >
                 ✕
               </button>
