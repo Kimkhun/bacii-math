@@ -17,7 +17,7 @@ export default function Navbar() {
           BACII Math
         </Link>
         {user && (
-          <div className="flex items-center gap-4 text-sm overflow-x-auto">
+          <div className="flex items-center gap-4 text-sm overflow-x-auto no-scrollbar">
             <Link href="/profile" className="text-slate-600 hover:text-slate-900 whitespace-nowrap">{t("nav_profile")}</Link>
             <Link href="/practice" className="text-slate-600 hover:text-slate-900 whitespace-nowrap">{t("nav_practice")}</Link>
             <Link href="/exam" className="text-slate-600 hover:text-slate-900 whitespace-nowrap">{t("nav_exam")}</Link>

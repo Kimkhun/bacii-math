@@ -7,6 +7,12 @@ import MathText from "@/components/MathText";
 import { api, FormulaCatalog } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 
+function renderMathFormula(s: string): string {
+  if (!s) return "";
+  if (s.includes("$") || /[\u1780-\u17FF]/.test(s)) return s;
+  return `\\(${s}\\)`;
+}
+
 export default function FormulasPage() {
   const { lang, t } = useLanguage();
   const [catalog, setCatalog] = useState<FormulaCatalog | null>(null);
@@ -102,15 +108,15 @@ export default function FormulasPage() {
                           )}
                         </div>
                         {e.latex && (
-                          <div className="mt-2 text-slate-700 overflow-x-auto">
-                            <MathText text={`\\(${e.latex}\\)`} />
+                          <div className="mt-2 text-slate-700">
+                            <MathText text={renderMathFormula(e.latex)} />
                           </div>
                         )}
                         {e.formulas.length > 0 && (
                           <ul className="mt-2 space-y-1 text-sm text-slate-600">
                             {e.formulas.map((f, i) => (
-                              <li key={i} className="overflow-x-auto">
-                                <MathText text={`\\(${f}\\)`} />
+                              <li key={i} className="leading-relaxed">
+                                <MathText text={renderMathFormula(f)} />
                               </li>
                             ))}
                           </ul>

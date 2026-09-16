@@ -1,196 +1,384 @@
 {
-  "domain_log": {
-    "name_en": "Domain of a logarithm",
-    "name_km": "ដែនកំណត់នៃអនុគមន៍លោការីត",
-    "latex": "\\ln(u) \\text{ defined } \\iff u > 0",
-    "weight": 1,
-    "group": "functions",
-    "formulas": [
-      "\\ln(u) \\text{ is defined only when } u > 0",
-      "\\frac{a}{b} > 0 \\iff a \\text{ and } b \\text{ have the same sign}"
-    ]
-  },
-  "sign_table": {
-    "name_en": "Sign table",
-    "name_km": "តារាងសញ្ញា",
-    "latex": "\\text{sign of } \\frac{a(x)}{b(x)} \\text{ by intervals}",
-    "weight": 1,
-    "group": "functions",
-    "formulas": [
-      "a(x)=0 \\text{ at } x=x_0 \\text{ bounds the sign intervals}"
-    ]
-  },
-  "log_quotient_rule": {
-    "name_en": "Log of a quotient",
-    "name_km": "លោការីតនៃផលធៀប",
-    "latex": "\\ln\\left(\\frac{a}{b}\\right) = \\ln a - \\ln b",
-    "weight": 1,
-    "group": "functions",
-    "formulas": [
-      "\\ln\\left(\\frac{a}{b}\\right) = \\ln a - \\ln b"
-    ]
-  },
-  "log_reciprocal": {
-    "name_en": "Log of a reciprocal",
-    "name_km": "លោការីតនៃចំនួនច្រាស",
-    "latex": "\\ln\\left(\\frac{1}{u}\\right) = -\\ln u",
-    "weight": 1,
-    "group": "functions",
-    "formulas": [
-      "\\ln(u^{-1}) = -\\ln u"
-    ]
-  },
-  "parity_definition": {
-    "name_en": "Even/odd function",
-    "name_km": "អនុគមន៍គូ ឬសេស",
-    "latex": "g(-x) = g(x) \\text{ even},\\quad g(-x) = -g(x) \\text{ odd}",
-    "weight": 1,
-    "group": "functions",
-    "formulas": [
-      "g \\text{ even } \\iff g(-x) = g(x)",
-      "g \\text{ odd } \\iff g(-x) = -g(x)"
-    ]
-  },
-  "vertical_asymptote": {
+  "asymptote_vertical": {
     "name_en": "Vertical asymptote",
-    "name_km": "អាស៊ីមតូតឈរ",
-    "latex": "\\lim_{x\\to a^+} f(x) = \\pm\\infty \\text{ or } \\lim_{x\\to a^-} f(x) = \\pm\\infty",
+    "name_km": "១.១. អាស៊ីមតូតឈរ",
     "weight": 1,
     "group": "functions",
+    "latex": "x = a",
     "formulas": [
-      "\\lim_{x\\to a^\\pm} f(x) = \\pm\\infty \\Rightarrow x=a \\text{ vertical asymptote}"
+      "គេថាបន្ទាត់ $x = a$ ជាអាស៊ីមតូតឈរនៃក្រាប $(C) : y = f(x)$ លុះត្រាតែ $\\lim_{x \\to a} f(x) = \\infty$ ។"
     ]
   },
-  "derivative_ln": {
-    "name_en": "Derivative of a logarithm",
-    "name_km": "ដេរីវេនៃអនុគមន៍លោការីត",
-    "latex": "(\\ln u)' = \\frac{u'}{u}",
-    "weight": 2,
-    "group": "functions",
-    "formulas": [
-      "(\\ln u)' = \\frac{u'}{u}"
-    ]
-  },
-  "quotient_rule": {
-    "name_en": "Quotient rule",
-    "name_km": "ដេរីវេនៃផលធៀប",
-    "latex": "\\left(\\frac{u}{v}\\right)' = \\frac{u'v - uv'}{v^2}",
-    "weight": 2,
-    "group": "functions",
-    "formulas": [
-      "\\left(\\frac{u}{v}\\right)' = \\frac{u'v - uv'}{v^2}"
-    ]
-  },
-  "tangent_equation": {
-    "name_en": "Tangent line equation",
-    "name_km": "សមីការបន្ទាត់ប៉ះ",
-    "latex": "y - y_0 = f'(x_0)(x - x_0)",
-    "weight": 1,
-    "group": "functions",
-    "formulas": [
-      "T: y - f(x_0) = f'(x_0)(x - x_0)"
-    ]
-  },
-  "product_rule": {
-    "name_en": "Product rule",
-    "name_km": "ដេរីវេនៃផលគុណ",
-    "latex": "(uv)' = u'v + uv'",
-    "weight": 2,
-    "group": "functions",
-    "formulas": [
-      "(uv)' = u'v + uv'"
-    ]
-  },
-  "monotonicity_sign": {
-    "name_en": "Monotonicity from the derivative sign",
-    "name_km": "អថេរភាព និងសញ្ញាដេរីវេ",
-    "latex": "f' > 0 \\Rightarrow f \\text{ increasing},\\quad f' < 0 \\Rightarrow f \\text{ decreasing}",
-    "weight": 1,
-    "group": "functions",
-    "formulas": [
-      "f' > 0 \\text{ on } I \\Rightarrow f \\text{ strictly increasing on } I",
-      "f' < 0 \\text{ on } I \\Rightarrow f \\text{ strictly decreasing on } I"
-    ]
-  },
-  "antiderivative_reciprocal_ln": {
-    "name_en": "Reciprocal antiderivative (log)",
-    "name_km": "ព្រីមីទីវនៃអនុគមន៍ច្រាស",
-    "latex": "\\int \\frac{u'}{u}\\,dx = \\ln|u| + C",
-    "weight": 2,
-    "group": "functions",
-    "formulas": [
-      "\\int \\frac{u'}{u}\\,dx = \\ln|u| + C"
-    ]
-  },
-  "rational_domain": {
-    "name_en": "Domain of a rational function",
-    "name_km": "ដែនកំណត់នៃអនុគមន៍សនិទាន",
-    "latex": "D_f = \\{x \\in \\mathbb{R} \\mid Q(x) \\neq 0\\}",
-    "weight": 1,
-    "group": "functions",
-    "formulas": [
-      "f = \\frac{P}{Q} \\text{ defined } \\iff Q(x) \\neq 0"
-    ]
-  },
-  "euclidean_division": {
-    "name_en": "Polynomial (Euclidean) division",
-    "name_km": "ចែកពហុធា (ចំនួនសេស)",
-    "latex": "P(x) = (x-a)Q(x) + r",
-    "weight": 2,
-    "group": "functions",
-    "formulas": [
-      "\\frac{P(x)}{x-a} = Q(x) + \\frac{r}{x-a}"
-    ]
-  },
-  "oblique_asymptote": {
-    "name_en": "Oblique asymptote",
-    "name_km": "អាស៊ីមតូតទ្រេត",
-    "latex": "y = ax + b,\\quad a = \\lim_{x\\to\\infty}\\frac{f(x)}{x},\\quad b = \\lim_{x\\to\\infty}(f(x)-ax)",
-    "weight": 2,
-    "group": "functions",
-    "formulas": [
-      "a = \\lim_{x\\to\\infty} \\frac{f(x)}{x}",
-      "b = \\lim_{x\\to\\infty} (f(x) - ax)"
-    ]
-  },
-  "horizontal_asymptote": {
+  "asymptote_horizontal": {
     "name_en": "Horizontal asymptote",
-    "name_km": "អាស៊ីមតូតដេក",
-    "latex": "y = \\lim_{x\\to\\infty} f(x)",
-    "weight": 2,
-    "group": "functions",
-    "formulas": [
-      "\\lim_{x\\to\\infty} f(x) = L \\Rightarrow y = L"
-    ]
-  },
-  "position_asymptote": {
-    "name_en": "Position of the curve vs its asymptote",
-    "name_km": "ទីតាំងខ្សែកោងធៀបនឹងអាស៊ីមតូត",
-    "latex": "\\text{sign of } f(x) - (ax+b)",
+    "name_km": "១.២. អាស៊ីមតូតដេក",
     "weight": 1,
     "group": "functions",
+    "latex": "y = b",
     "formulas": [
-      "f(x) - (ax+b) > 0 \\Rightarrow C \\text{ above } d"
+      "គេថាបន្ទាត់ $y = b$ ជាអាស៊ីមតូតដេកនៃក្រាប $(C) : y = f(x)$ លុះត្រាតែ $\\lim_{x \\to \\infty} f(x) = b$ ឬ $\\lim_{x \\to \\infty} [f(x) - b] = 0$ ។"
     ]
   },
-  "center_symmetry": {
+  "asymptote_oblique": {
+    "name_en": "Oblique asymptote",
+    "name_km": "១.៣. អាស៊ីមតូតទ្រេត",
+    "weight": 2,
+    "group": "functions",
+    "latex": "y = ax + b",
+    "formulas": [
+      "គេថាបន្ទាត់ $y = ax + b$ ជាអាស៊ីមតូតទ្រេតនៃក្រាប $(C) : y = f(x)$ លុះត្រាតែ $\\lim_{x \\to \\infty} [f(x) - (ax + b)] = 0$ ។",
+      "រូបមន្តកំណត់រកសមីការនៃអាស៊ីមតូតទ្រេត $y = ax + b$ នៃក្រាប $(C) : y = f(x)$ គឺ៖ $a = \\lim_{x \\to \\infty} \\left[\\frac{f(x)}{x}\\right]$ និង $b = \\lim_{x \\to \\infty} [f(x) - ax]$",
+      "បើអនុគមន៍ $f$ អាចសរសេរជាទម្រង់ $f(x) = ax + b + g(x)$ ដែល $\\lim_{x \\to \\infty} [g(x)] = 0$ នោះបន្ទាត់មានសមីការ $y = ax + b$ ហៅថា អាស៊ីមតូតទ្រេតនៃខ្សែរកោង $(C) : y = f(x)$ ។"
+    ]
+  },
+  "position_horizontal_asymptote": {
+    "name_en": "Curve position vs horizontal asymptote",
+    "name_km": "២.១. ទីតាំងនៃខ្សែរកោងធៀបនឹងអាស៊ីមតូតដេក",
+    "weight": 1,
+    "group": "functions",
+    "latex": "f(x) - y_d = f(x) - b",
+    "formulas": [
+      "ឧបមាថាខ្សែរកោង $(C) : y = f(x)$ និងបន្ទាត់ $(d) : y = b$ ជាអាស៊ីមតូតដេកនៃក្រាប $(C)$ ។",
+      "ដើម្បីសិក្សាទីតាំងនៃខ្សែរកោង $(C)$ ធៀបទៅនឹងអាស៊ីមតូតដេករបស់វាគេត្រូវ៖ គណនាផលដក $f(x) - y_d = f(x) - b$ រួចសិក្សាសញ្ញារបស់វា។",
+      "បើ $f(x) - y_d < 0$ នោះខ្សែរកោង $(C)$ ស្ថិតនៅខាងក្រោមបន្ទាត់ $(d)$ ។",
+      "បើ $f(x) - y_d = 0$ នោះខ្សែរកោង $(C)$ ប្រសព្វជាមួយបន្ទាត់ $(d)$ ។",
+      "បើ $f(x) - y_d > 0$ នោះខ្សែរកោង $(C)$ ស្ថិតនៅខាងលើបន្ទាត់ $(d)$ ។"
+    ]
+  },
+  "position_oblique_asymptote": {
+    "name_en": "Curve position vs oblique asymptote",
+    "name_km": "២.២. ទីតាំងនៃខ្សែរកោងធៀបនឹងអាស៊ីមតូតទ្រេត",
+    "weight": 1,
+    "group": "functions",
+    "latex": "f(x) - y_d = f(x) - (ax + b)",
+    "formulas": [
+      "ឧបមាថាខ្សែរកោង $(C) : y = f(x)$ និងបន្ទាត់ $(d) : y = ax + b$ ជាអាស៊ីមតូតទ្រេតនៃក្រាប $(C)$ ។",
+      "ដើម្បីសិក្សាទីតាំងនៃខ្សែរកោង $(C)$ ធៀបទៅនឹងអាស៊ីមតូតទ្រេតរបស់វាគេត្រូវ៖ គណនាផលដក $f(x) - y_d = f(x) - (ax + b)$ រួចសិក្សាសញ្ញារបស់វា។",
+      "បើ $f(x) - y_d < 0$ នោះខ្សែរកោង $(C)$ ស្ថិតនៅខាងក្រោមបន្ទាត់ $(d)$ ។",
+      "បើ $f(x) - y_d = 0$ នោះខ្សែរកោង $(C)$ ប្រសព្វជាមួយបន្ទាត់ $(d)$ ។",
+      "បើ $f(x) - y_d > 0$ នោះខ្សែរកោង $(C)$ ស្ថិតនៅខាងលើបន្ទាត់ $(d)$ ។"
+    ]
+  },
+  "center_of_symmetry": {
     "name_en": "Center of symmetry",
-    "name_km": "ផ្ចិតឆ្លុះ",
-    "latex": "f(a+t) + f(a-t) = 2b",
+    "name_km": "៣.១. ផ្ចិតឆ្លុះនៃខ្សែរកោង",
     "weight": 2,
     "group": "functions",
+    "latex": "f(x_0) + f(2a - x_0) = 2b",
     "formulas": [
-      "I(a,b) \\text{ center of symmetry } \\iff f(a+t)+f(a-t) = 2b"
+      "ឧបមាថាគេមានខ្សែរកោង $(C) : y = f(x)$ និងចំណុច $I(a, b)$",
+      "ដើម្បីស្រាយបញ្ជាក់ថាចំណុច $I(a, b)$ ជាផ្ចិតឆ្លុះនៃ $(C)$ គេត្រូវស្រាយឱ្យឃើញថាចំពោះគ្រប់ $x_0 \\in D_f$ ៖ $f(x_0) + f(2a - x_0) = 2b$"
     ]
   },
-  "graph_drawing": {
-    "name_en": "Sketching the graph",
-    "name_km": "ការសង់ក្រាប",
-    "latex": "\\text{curve } (C) \\text{ with its asymptotes and tangents}",
+  "axis_of_symmetry": {
+    "name_en": "Axis of symmetry",
+    "name_km": "៣.២. អ័ក្សឆ្លុះនៃខ្សែរកោង",
+    "weight": 2,
+    "group": "functions",
+    "latex": "f(x_0) = f(2a - x_0)",
+    "formulas": [
+      "ឧបមាថាគេមានខ្សែរកោង $(C) : y = f(x)$ និងបន្ទាត់ $(d) : x = a$",
+      "ដើម្បីស្រាយបញ្ជាក់ថាបន្ទាត់ $(d)$ ជាអ័ក្សឆ្លុះនៃខ្សែរកោង $(C)$ គេត្រូវស្រាយឱ្យឃើញថាចំពោះគ្រប់ $x_0 \\in D_f$ ៖ $f(x_0) = f(2a - x_0)$"
+    ]
+  },
+  "convex_concave_functions": {
+    "name_en": "Convex and concave functions",
+    "name_km": "៤.ក. អនុគមន៍ប៉ោង-ផត",
     "weight": 1,
     "group": "functions",
+    "latex": "f''(x) < 0 \\iff \\text{ប៉ោង},\\quad f''(x) > 0 \\iff \\text{ផត}",
     "formulas": [
-      "\\text{draw the curve, its asymptotes and tangents}"
+      "បើគ្រប់ $x \\in I$ គេមាន $f''(x) < 0$ នោះគេថា $f$ ជាអនុគមន៍ប៉ោង (Convex function) លើចន្លោះ $I$ ។",
+      "បើគ្រប់ $x \\in I$ គេមាន $f''(x) > 0$ នោះគេថា $f$ ជាអនុគមន៍ផត (Concave function) លើចន្លោះ $I$ ។"
+    ]
+  },
+  "inflection_point": {
+    "name_en": "Inflection point",
+    "name_km": "៤.ខ. ចំណុចរបត់នៃខ្សែរកោង",
+    "weight": 2,
+    "group": "functions",
+    "latex": "f''(x) = 0 \\implies I(x_0, f(x_0))",
+    "formulas": [
+      "គេថាចំណុច $I(x_0, y_0)$ ជាចំណុចរបត់នៃខ្សែរកោងតាងអនុគមន៍ $y = f(x)$ កាលណាខ្សែរកោងប៉ោង (ឬផត) នៅលើ $[a, x_0]$ ហើយផត (ឬប៉ោង) នៅលើ $[x_0, b]$ ។",
+      "របៀបរកចំណុចរបត់របស់ខ្សែរកោងតាង $y = f(x)$ គេត្រូវ៖",
+      "១. គណនាដេរីវេទីពីរ $y'' = f''(x)$",
+      "២. ដោះស្រាយសមីការ $f''(x) = 0$",
+      "៣. សិក្សាសញ្ញានៃ $f''(x)$",
+      "បើ $f''(x)$ ប្តូរសញ្ញានៅសងខាងនៃឫស $x_0$ នោះខ្សែរកោង មានចំណុចរបត់ $I(x_0, f(x_0))$ ។",
+      "បើ $f''(x)$ មិនប្តូរសញ្ញានោះខ្សែរកោងគ្មានចំណុចរបត់ទេ។"
+    ]
+  },
+  "tangent_at_point": {
+    "name_en": "Tangent line at a point",
+    "name_km": "៥.១. សមីការបន្ទាត់ប៉ះទៅនឹងខ្សែរកោងត្រង់ចំណុចមួយ",
+    "weight": 1,
+    "group": "functions",
+    "latex": "(T) : y = f'(x_0)(x - x_0) + y_0",
+    "formulas": [
+      "ឧបមាថាគេមានខ្សែរកោង $(C) : y = f(x)$",
+      "ដើម្បីរកសមីការនៃបន្ទាត់ $(T)$ ដែលប៉ះនឹងក្រាប $(C)$ ត្រង់ចំណុចមានអាប់ស៊ីស $x = x_0$ គេត្រូវ ៖",
+      "១. ប្រើរូបមន្តសមីការបន្ទាត់ប៉ះ $(T) : y = f'(x_0)(x - x_0) + y_0$",
+      "២. គណនាដេរីវេ $y' = f'(x)$ រួចទាញរក $f'(x_0)$",
+      "៣. គណនាអរដោនេនៃចំណុចប៉ះគឺ $y_0 = f(x_0)$",
+      "៤. យកតម្លៃ $x_0, y_0$ និង $f'(x_0)$ ជំនួសក្នុងរូបមន្តសមីការខាងលើ។"
+    ]
+  },
+  "tangent_from_external_point": {
+    "name_en": "Tangent line from an external point",
+    "name_km": "៥.២. សមីការបន្ទាត់គូសចេញពីចំណុចមួយប៉ះទៅនឹងខ្សែរកោង",
+    "weight": 2,
+    "group": "functions",
+    "latex": "A(x_A, y_A) \\in (T) \\implies y_A = f'(x_0)(x_A - x_0) + y_0",
+    "formulas": [
+      "ឧបមាថាគេមានខ្សែរកោង $(C) : y = f(x)$",
+      "ដើម្បីរកសមីការនៃបន្ទាត់ $(T)$ ដែលគូសចេញពីចំណុច $A(x_A, y_A)$ ហើយប៉ះទៅនឹងខ្សែរកោង $(C)$ គេត្រូវ ៖",
+      "១. តាង $M_0(x_0, y_0)$ ជាចំណុចប៉ះរវាងបន្ទាត់ $(T)$ និងខ្សែរកោង $(C)$",
+      "២. សមីការបន្ទាត់ប៉ះអាចសរសេរតាមរូបមន្ត $(T) : y = f'(x_0)(x - x_0) + y_0$",
+      "៣. ដោយបន្ទាត់ $(T)$ គូសចេញពីចំណុច $A(x_A, y_A)$ នោះកូអរដោនេនៃចំណុច $A$ ត្រូវផ្ទៀងផ្ទាត់នឹងសមីការនៃ $(T)$ ។ ដោយយកកូអរដោនេនៃចំណុច $A$ ជំនួសក្នុងសមីការនៃ $(T)$ រួចដោះស្រាយរក $x_0$ បន្ទាប់មកយកតម្លៃនៃ $x_0$ ដែលបានរកឃើញទៅជំនួសក្នុងសមីការនៃ $(T)$ នោះគេទទួលបានសមីការនៃបន្ទាត់ប៉ះដែលត្រូវរក។"
+    ]
+  },
+  "tangent_parallel_line": {
+    "name_en": "Tangent line parallel to a line",
+    "name_km": "៥.៣. សមីការបន្ទាត់ប៉ះទៅនឹងខ្សែរកោងហើយស្របនឹងបន្ទាត់មួយ",
+    "weight": 2,
+    "group": "functions",
+    "latex": "(T) \\parallel (d) : y = ax + b \\implies f'(x_0) = a",
+    "formulas": [
+      "ឧបមាថាគេមានខ្សែរកោង $(C) : y = f(x)$",
+      "ដើម្បីរកសមីការនៃបន្ទាត់ $(T)$ ប៉ះទៅនឹងខ្សែរកោង $(C)$ ហើយស្របទៅនឹងបន្ទាត់ $(d)$ មានសមីការ $y = ax + b$ គេត្រូវ ៖",
+      "១. តាង $M_0(x_0, y_0)$ ជាចំណុចប៉ះរវាងបន្ទាត់ $(T)$ និងខ្សែរកោង $(C)$",
+      "២. សមីការបន្ទាត់ប៉ះអាចសរសេរតាមរូបមន្ត $(T) : y = f'(x_0)(x - x_0) + y_0$",
+      "៣. ដោយបន្ទាត់ $(T) \\parallel (d) : y = ax + b$ នោះគេបាន $f'(x_0) = a$ រួចដោះស្រាយរក $x_0$ បន្ទាប់មកយកតម្លៃនៃ $x_0$ ដែលបានរកឃើញទៅជំនួសក្នុងសមីការនៃ $(T)$ នោះគេទទួលបានសមីការនៃបន្ទាត់ប៉ះដែលត្រូវរក។"
+    ]
+  },
+  "tangent_perpendicular_line": {
+    "name_en": "Tangent line perpendicular to a line",
+    "name_km": "៥.៤. សមីការបន្ទាត់ប៉ះទៅនឹងខ្សែរកោងហើយកែងនឹងបន្ទាត់មួយ",
+    "weight": 2,
+    "group": "functions",
+    "latex": "(T) \\perp (d) : y = ax + b \\implies a \\times f'(x_0) = -1",
+    "formulas": [
+      "ឧបមាថាគេមានខ្សែរកោង $(C) : y = f(x)$",
+      "ដើម្បីរកសមីការនៃបន្ទាត់ $(T)$ ប៉ះទៅនឹងខ្សែរកោង $(C)$ ហើយកែងទៅនឹងបន្ទាត់ $(d)$ មានសមីការ $y = ax + b$ គេត្រូវ ៖",
+      "១. តាង $M_0(x_0, y_0)$ ជាចំណុចប៉ះរវាងបន្ទាត់ $(T)$ និងខ្សែរកោង $(C)$",
+      "២. សមីការបន្ទាត់ប៉ះអាចសរសេរតាមរូបមន្ត $(T) : y = f'(x_0)(x - x_0) + y_0$",
+      "៣. ដោយបន្ទាត់ $(T) \\perp (d) : y = ax + b$ នោះគេបាន $a \\times f'(x_0) = -1$ រួចដោះស្រាយរក $x_0$ បន្ទាប់មកយកតម្លៃនៃ $x_0$ ដែលបានរកឃើញទៅជំនួសក្នុងសមីការនៃ $(T)$ នោះគេទទួលបានសមីការនៃបន្ទាត់ប៉ះដែលត្រូវរក។"
+    ]
+  },
+  "common_tangent_two_curves": {
+    "name_en": "Common tangent to two curves",
+    "name_km": "៥.៥. សមីការបន្ទាត់ប៉ះរួមទៅនឹងខ្សែរកោងពីរ",
+    "weight": 3,
+    "group": "functions",
+    "latex": "(T) : y = ax + b",
+    "formulas": [
+      "ឧបមាថាគេមានខ្សែរកោងពីរ $(C_f) : y = f(x)$ និង $(C_g) : y = g(x)$",
+      "ដើម្បីរកសមីការនៃបន្ទាត់ $(T)$ ប៉ះរួមទៅនឹងខ្សែរកោង $(C_f)$ និង $(C_g)$ គេត្រូវ ៖",
+      "១. តាង $(T) : y = ax + b$ ជាសមីការនៃបន្ទាត់ប៉ះរួមទៅនឹងខ្សែរកោង $(C_f)$ និង $(C_g)$ ។",
+      "២. សរសេរសមីការអាប់ស៊ីសនៃចំណុចប្រសព្វរវាង $(T)$ ជាមួយនិង $(C_f)$ និង $(C_g)$",
+      "៣. កំណត់លក្ខខណ្ឌឱ្យសមីការអាប់ស៊ីសទាំងនោះមានឫសឌុប រួចដោះស្រាយរកលេខមេគុណ $a$ និង $b$ ។"
+    ]
+  },
+  "common_tangent_at_point": {
+    "name_en": "Common tangent to two curves at a point",
+    "name_km": "៥.៦. សមីការបន្ទាត់ប៉ះរួមទៅនឹងខ្សែរកោងពីរត្រង់ចំណុចមួយ",
+    "weight": 2,
+    "group": "functions",
+    "latex": "f(x_0) = g(x_0) = y_0 \\quad \\text{និង} \\quad f'(x_0) = g'(x_0) = a",
+    "formulas": [
+      "ឧបមាថាគេមានខ្សែរកោងពីរ $(C_f) : y = f(x)$ និង $(C_g) : y = g(x)$",
+      "ខ្សែរកោង $(C_f)$ និង $(C_g)$ មានបន្ទាត់ប៉ះរួម $(T)$ ត្រង់ចំណុច $M_0(x_0, y_0)$ លុះត្រាតែ៖ $f(x_0) = g(x_0) = y_0$ និង $f'(x_0) = g'(x_0) = a$",
+      "សមីការបន្ទាត់ប៉ះរួមនេះគឺ $(T) : y = a(x - x_0) + y_0$ ។"
+    ]
+  },
+  "tangency_condition_line_curve": {
+    "name_en": "Condition for line and curve to be tangent",
+    "name_km": "៥.៧. លក្ខខណ្ឌបន្ទាត់និងខ្សែរកោងប៉ះគ្នាត្រង់ចំណុចមួយ",
+    "weight": 2,
+    "group": "functions",
+    "latex": "\\begin{cases} f'(x_0) = \\alpha \\\\ f(x_0) = \\alpha x_0 + \\beta = y_0 \\end{cases}",
+    "formulas": [
+      "ឧបមាថាគេមានខ្សែរកោង $(C) : y = f(x)$ និងបន្ទាត់ $(d) : y = \\alpha x + \\beta$",
+      "ខ្សែរកោង $(C)$ និងបន្ទាត់ $(d)$ ប៉ះគ្នាត្រង់ចំណុច $M_0(x_0, y_0)$ លុះត្រាតែ ៖ $\\begin{cases} f'(x_0) = \\alpha \\\\ f(x_0) = \\alpha x_0 + \\beta = y_0 \\end{cases}$"
+    ]
+  },
+  "intersection_with_axes": {
+    "name_en": "Intersection with coordinate axes",
+    "name_km": "៦.១. កូអរដោនេនៃចំណុចប្រសព្វរវាងខ្សែរកោងជាមួយអ័ក្ស (xOy)",
+    "weight": 1,
+    "group": "functions",
+    "latex": "(C) \\cap (x'Ox) \\implies y = 0,\\quad (C) \\cap (y'Oy) \\implies x = 0",
+    "formulas": [
+      "ឧបមាថាគេមានខ្សែរកោង $(C) : y = f(x)$",
+      "បើ $(C) \\cap (x'Ox)$ ៖ នោះ $y = f(x) = 0$",
+      "បើ $(C) \\cap (y'Oy)$ ៖ នោះ $x = 0$ និង $y = f(0)$"
+    ]
+  },
+  "intersection_curve_line": {
+    "name_en": "Intersection between curve and line",
+    "name_km": "៦.២. កូអរដោនេនៃចំណុចប្រសព្វរវាងខ្សែរកោងជាមួយបន្ទាត់មួយ",
+    "weight": 1,
+    "group": "functions",
+    "latex": "f(x) = \\alpha x + \\beta",
+    "formulas": [
+      "ឧបមាថាគេមានខ្សែរកោង $(C) : y = f(x)$ និងបន្ទាត់ $(d) : y = \\alpha x + \\beta$",
+      "ដើម្បីរកកូអរដោនេនៃចំណុចប្រសព្វរវាង $(C)$ និង $(d)$ គេត្រូវ ៖",
+      "១. សរសេរសមីការអាប់ស៊ីសដោយផ្គូផ្គងតម្លៃ $y$ គឺ $f(x) = \\alpha x + \\beta$",
+      "២. ដោះស្រាយសមីការខាងលើរកអាប់ស៊ីស $x$ រួចទាញរកអរដោនេ $y = \\alpha x + \\beta$"
+    ]
+  },
+  "intersection_two_curves": {
+    "name_en": "Intersection between two curves",
+    "name_km": "៦.៣. កូអរដោនេនៃចំណុចប្រសព្វរវាងខ្សែរកោងពីរ",
+    "weight": 1,
+    "group": "functions",
+    "latex": "f(x) = g(x)",
+    "formulas": [
+      "ឧបមាថាគេមានខ្សែរកោងពីរ $(C_f) : y = f(x)$ និង $(C_g) : y = g(x)$",
+      "ដើម្បីរកកូអរដោនេនៃចំណុចប្រសព្វរវាង $(C_f)$ និង $(C_g)$ គេត្រូវ ៖",
+      "១. សរសេរសមីការអាប់ស៊ីសដោយផ្គូផ្គងតម្លៃ $y$ គឺ $f(x) = g(x)$",
+      "២. ដោះស្រាយសមីការខាងលើរកអាប់ស៊ីស $x$ រួចទាញរកអរដោនេ $y = f(x)$ ឬ $y = g(x)$ ។"
+    ]
+  },
+  "locus_definition": {
+    "name_en": "Locus definition",
+    "name_km": "៧.១. និយមន័យសំណុំចំណុចក្នុងប្លង់",
+    "weight": 1,
+    "group": "functions",
+    "latex": "\\varphi(x, y) = 0",
+    "formulas": [
+      "ឧបមាថាគេមានចំណុច $M$ មានកូអរដោនេ $x = u(m), y = v(m)$ ដែល $m \\in \\mathbb{R}$ ជាប៉ារ៉ាម៉ែត្រមួយ ។ ទំនាក់ទំនងរវាងកូអរដោនេ $x$ និង $y$ ដែលមិនអាស្រ័យនឹង $m$ គឺ $\\varphi(x, y) = 0$ ហៅថាសមីការនៃសំណុំនៃចំណុច $M$ ក្នុងប្លង់។"
+    ]
+  },
+  "locus_horizontal_line": {
+    "name_en": "Locus as horizontal line",
+    "name_km": "៧.២. សំណុំចំណុចជាបន្ទាត់ដេក",
+    "weight": 1,
+    "group": "functions",
+    "latex": "y = \\beta",
+    "formulas": [
+      "ឧបមាថាគេមានចំណុច $M$ មានកូអរដោនេ $x = u(m), y = \\beta$ ដែល $m \\in \\mathbb{R}$ ជាប៉ារ៉ាម៉ែត្រមួយ និង $\\beta$ ជាចំនួនពិតថេរ។",
+      "ដោយគ្រប់ $m$ គេមាន $y = \\beta$ ថេរនោះសំណុំនៃចំណុច $M$ គឺជាបន្ទាត់ដេក $y = \\beta$ ។"
+    ]
+  },
+  "locus_vertical_line": {
+    "name_en": "Locus as vertical line",
+    "name_km": "៧.៣. សំណុំចំណុចជាបន្ទាត់ឈរ",
+    "weight": 1,
+    "group": "functions",
+    "latex": "x = \\alpha",
+    "formulas": [
+      "ឧបមាថាគេមានចំណុច $M$ មានកូអរដោនេ $x = \\alpha, y = v(m)$ ដែល $m \\in \\mathbb{R}$ ជាប៉ារ៉ាម៉ែត្រមួយនិង $\\alpha$ ជាចំនួនពិតថេរ។",
+      "ដោយគ្រប់ $m$ គេមាន $x = \\alpha$ ថេរនោះសំណុំនៃចំណុច $M$ គឺជាបន្ទាត់ឈរ $x = \\alpha$ ។"
+    ]
+  },
+  "locus_oblique_line": {
+    "name_en": "Locus as oblique line",
+    "name_km": "៧.៤. សំណុំចំណុចជាបន្ទាត់ទ្រេត",
+    "weight": 1,
+    "group": "functions",
+    "latex": "(d) : y = \\alpha x + \\beta",
+    "formulas": [
+      "ឧបមាថាគេមានចំណុច $M$ មានកូអរដោនេ $x = u(m), y = v(m)$ ដែល $m \\in \\mathbb{R}$",
+      "ដោយបំបាត់ប៉ារ៉ាម៉ែត្រ $m$ បើគេបានទំនាក់ទំនង $y = \\alpha x + \\beta, \\alpha \\neq 0, \\alpha, \\beta \\in \\mathbb{R}$ នោះគេថាសំណុំចំណុច $M$ គឺជាបន្ទាត់ទ្រេត $(d) : y = \\alpha x + \\beta$ ។"
+    ]
+  },
+  "locus_circle": {
+    "name_en": "Locus as circle",
+    "name_km": "៧.៥. សំណុំចំណុចជារង្វង់",
+    "weight": 2,
+    "group": "functions",
+    "latex": "(x - \\alpha)^2 + (y - \\beta)^2 = r^2",
+    "formulas": [
+      "បើកូអរដោនេនៃចំណុច $M(x, y)$ ផ្ទៀងផ្ទាត់សមីការ $(x - \\alpha)^2 + (y - \\beta)^2 = r^2$ នោះគេថាសំណុំនៃចំណុច $M$ គឺជារង្វង់ផ្ចិត $I(\\alpha, \\beta)$ និងកាំ $r$ ។"
+    ]
+  },
+  "locus_parabola": {
+    "name_en": "Locus as parabola",
+    "name_km": "៧.៦. សំណុំចំណុចជាប៉ារ៉ាបូល",
+    "weight": 2,
+    "group": "functions",
+    "latex": "(x - h)^2 = 4p(y - k) \\quad \\text{ឬ} \\quad y = ax^2 + \\beta x + \\gamma",
+    "formulas": [
+      "បើកូអរដោនេនៃចំណុច $M(x, y)$ ផ្ទៀងផ្ទាត់សមីការ $(x - h)^2 = 4p(y - k)$ ឬ $(y - k)^2 = 4p(x - h)$ ឬ $y = ax^2 + \\beta x + \\gamma, \\alpha \\neq 0, \\alpha, \\beta, \\gamma \\in \\mathbb{R}$ នោះគេថាសំណុំនៃចំណុច $M$ គឺជាប៉ារ៉ាបូល ។"
+    ]
+  },
+  "locus_ellipse": {
+    "name_en": "Locus as ellipse",
+    "name_km": "៧.៧. សំណុំចំណុចជាអេលីប",
+    "weight": 2,
+    "group": "functions",
+    "latex": "\\frac{(x - h)^2}{\\alpha^2} + \\frac{(y - k)^2}{\\beta^2} = 1",
+    "formulas": [
+      "បើកូអរដោនេនៃចំណុច $M(x, y)$ ផ្ទៀងផ្ទាត់សមីការ $\\frac{(x - h)^2}{\\alpha^2} + \\frac{(y - k)^2}{\\beta^2} = 1$ នោះគេថាសំណុំនៃចំណុច $M$ គឺជាអេលីបមួយ។"
+    ]
+  },
+  "locus_hyperbola": {
+    "name_en": "Locus as hyperbola",
+    "name_km": "៧.៨. សំណុំចំណុចជាអ៊ីពែបូល",
+    "weight": 2,
+    "group": "functions",
+    "latex": "\\frac{(x - h)^2}{\\alpha^2} - \\frac{(y - k)^2}{\\beta^2} = \\pm 1",
+    "formulas": [
+      "បើកូអរដោនេនៃចំណុច $M(x, y)$ ផ្ទៀងផ្ទាត់សមីការ $\\frac{(x - h)^2}{\\alpha^2} - \\frac{(y - k)^2}{\\beta^2} = \\pm 1$ នោះគេថាសំណុំនៃចំណុច $M$ គឺជាអ៊ីពែបូលមួយ។"
+    ]
+  },
+  "monotonicity_increasing": {
+    "name_en": "Increasing function",
+    "name_km": "៨.១. អនុគមន៍កើន",
+    "weight": 1,
+    "group": "functions",
+    "latex": "f'(x) > 0 \\ \\forall x \\in I",
+    "formulas": [
+      "$f$ ជាអនុគមន៍កើនលើចន្លោះ $I$ លុះត្រាតែ $f'(x) > 0$ គ្រប់ $x \\in I$",
+      "លក្ខណៈ៖ បើ $\\alpha, \\beta \\in I$ ដែល $\\alpha > \\beta$ នាំឱ្យ $f(\\alpha) > f(\\beta)$ ។"
+    ]
+  },
+  "monotonicity_decreasing": {
+    "name_en": "Decreasing function",
+    "name_km": "៨.២. អនុគមន៍ចុះ",
+    "weight": 1,
+    "group": "functions",
+    "latex": "f'(x) < 0 \\ \\forall x \\in I",
+    "formulas": [
+      "$f$ ជាអនុគមន៍ចុះលើចន្លោះ $I$ លុះត្រាតែ $f'(x) < 0$ គ្រប់ $x \\in I$",
+      "លក្ខណៈ៖ បើ $\\alpha, \\beta \\in I$ ដែល $\\alpha > \\beta$ នាំឱ្យ $f(\\alpha) < f(\\beta)$ ។"
+    ]
+  },
+  "relative_maximum": {
+    "name_en": "Relative maximum",
+    "name_km": "៩.១. អតិបរមាធៀប",
+    "weight": 1,
+    "group": "functions",
+    "latex": "\\begin{cases} f'(x_0) = 0 \\\\ f''(x_0) < 0 \\end{cases} \\implies f(x_0) = M",
+    "formulas": [
+      "អនុគមន៍ $f$ មានអតិបរមាធៀបត្រង់ $x = x_0$ កាលណា $\\begin{cases} f'(x_0) = 0 \\\\ f''(x_0) < 0 \\end{cases}$",
+      "$f(x_0) = M$ ជាតម្លៃអតិបរមាធៀប ។"
+    ]
+  },
+  "relative_minimum": {
+    "name_en": "Relative minimum",
+    "name_km": "៩.២. អប្បបរមាធៀប",
+    "weight": 1,
+    "group": "functions",
+    "latex": "\\begin{cases} f'(x_0) = 0 \\\\ f''(x_0) > 0 \\end{cases} \\implies f(x_0) = m",
+    "formulas": [
+      "អនុគមន៍ $f$ មានអប្បបរមាធៀបត្រង់ $x = x_0$ កាលណា $\\begin{cases} f'(x_0) = 0 \\\\ f''(x_0) > 0 \\end{cases}$",
+      "$f(x_0) = m$ ជាតម្លៃអប្បបរមាធៀប ។"
+    ]
+  },
+  "variation_study_steps": {
+    "name_en": "Study of variation of a function",
+    "name_km": "១០.១. សិក្សាទិសដៅអថេរភាពនៃអនុគមន៍មួយ",
+    "weight": 1,
+    "group": "functions",
+    "latex": "y = f(x)",
+    "formulas": [
+      "ឧបមាថាគេមានអនុគមន៍ $y = f(x)$ ដើម្បីសិក្សាទិសដៅអថេរភាពនៃអនុគមន៍នេះគេត្រូវ៖",
+      "១. រកដែនកំណត់នៃអនុគមន៍",
+      "២. គណនាដេរីវេ $y' = f'(x)",
+      "៣. គូសតារាងសញ្ញានៃ $y' = f'(x)",
+      "៤. បញ្ជាក់ភាពកើនចុះនៃអនុគមន៍"
     ]
   }
 }

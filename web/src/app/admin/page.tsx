@@ -6,6 +6,7 @@ import AdminSandbox from "@/components/AdminSandbox";
 import FunctionGraph from "@/components/FunctionGraph";
 import MathText from "@/components/MathText";
 import StructureModal from "@/components/StructureModal";
+import { useLanguage } from "@/context/LanguageContext";
 import { api, FormulaCatalog, TemplateStructure, TemplateStructures, TemplateSummary } from "@/lib/api";
 
 type Tab = "overview" | "formulas" | "templates" | "sandbox";
@@ -13,11 +14,14 @@ type TopicStructures = NonNullable<TemplateStructures["topics"]>[number];
 
 // Backend question_km strings use $...$ math markers; KaTeX auto-render here
 // only recognises \(...\) / $$...$$ — normalise to \( \).
-function kmMath(s: string): string {
-  return s.replace(/\$(.+?)\$/g, "\\($1\\)");
+function renderMathFormula(s: string): string {
+  if (!s) return "";
+  if (s.includes("$") || /[\u1780-\u17FF]/.test(s)) return s;
+  return `\\(${s}\\)`;
 }
 
 export default function AdminPage() {
+  const { lang, t } = useLanguage();
   const [tab, setTab] = useState<Tab>("overview");
   const [topicFilter, setTopicFilter] = useState("all");
   const [catalog, setCatalog] = useState<FormulaCatalog | null>(null);
@@ -225,32 +229,40 @@ export default function AdminPage() {
                     {topic.topic.replace("_", " ")}
                   </h2>
                   <div className="space-y-3">
-                    {topic.entries.map((e) => (
-                      <div key={e.id} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-                        <div className="flex flex-wrap items-center gap-2 text-sm">
-                          <code className="px-2 py-0.5 rounded bg-slate-100 text-xs">{e.id}</code>
-                          <span className="font-semibold text-slate-900">{e.name_en}</span>
-                          {e.name_km && <span className="text-slate-500">{e.name_km}</span>}
-                          <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-xs">
-                            weight {e.weight}
-                          </span>
-                        </div>
+                    {topic.entries.map((e) => {
+                      const primaryName = lang === "km"
+                        ? (e.name_km || e.name_en || e.id.replace(/_/g, " "))
+                        : (e.name_en || e.name_km || e.id.replace(/_/g, " "));
+                      const secondaryName = lang === "km" ? e.name_en : e.name_km;
+                      return (
+                        <div key={e.id} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+                          <div className="flex flex-wrap items-center gap-2 text-sm">
+                            <code className="px-2 py-0.5 rounded bg-slate-100 text-xs">{e.id}</code>
+                            <span className="font-semibold text-slate-900">{primaryName}</span>
+                            {secondaryName && secondaryName !== primaryName && (
+                              <span className="text-slate-500">({secondaryName})</span>
+                            )}
+                            <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-xs">
+                              weight {e.weight}
+                            </span>
+                          </div>
                         {e.latex && (
-                          <div className="mt-2 text-slate-700 overflow-x-auto">
-                            <MathText text={`\\(${e.latex}\\)`} />
+                          <div className="mt-2 text-slate-700">
+                            <MathText text={renderMathFormula(e.latex)} />
                           </div>
                         )}
                         {e.formulas.length > 0 && (
                           <ul className="mt-2 space-y-1 text-sm text-slate-600">
                             {e.formulas.map((f, i) => (
-                              <li key={i} className="overflow-x-auto">
-                                <MathText text={`\\(${f}\\)`} />
+                              <li key={i} className="leading-relaxed">
+                                <MathText text={renderMathFormula(f)} />
                               </li>
                             ))}
                           </ul>
                         )}
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
                 </section>
               ))}
