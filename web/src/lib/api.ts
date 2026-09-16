@@ -832,6 +832,8 @@ export interface AdminCostSummary {
     calls: number;
     total_tokens: number;
     cost_usd: number;
+    prompt_cost_usd?: number;
+    completion_cost_usd?: number;
   };
   period: {
     calls: number;
@@ -839,6 +841,8 @@ export interface AdminCostSummary {
     completion_tokens: number;
     total_tokens: number;
     cost_usd: number;
+    prompt_cost_usd?: number;
+    completion_cost_usd?: number;
     avg_latency_ms: number;
   };
   by_endpoint: Array<{
@@ -846,12 +850,16 @@ export interface AdminCostSummary {
     calls: number;
     total_tokens: number;
     cost_usd: number;
+    prompt_cost_usd?: number;
+    completion_cost_usd?: number;
   }>;
   by_model: Array<{
     model_name: string;
     calls: number;
     total_tokens: number;
     cost_usd: number;
+    prompt_cost_usd?: number;
+    completion_cost_usd?: number;
   }>;
 }
 
@@ -875,6 +883,10 @@ export interface AdminUsageLog {
   completion_tokens: number;
   total_tokens: number;
   estimated_cost_usd: number;
+  prompt_cost_usd: number;
+  completion_cost_usd: number;
+  prompt_text: string | null;
+  response_text: string | null;
   latency_ms: number;
   success: boolean;
   error_message: string | null;

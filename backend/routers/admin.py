@@ -59,6 +59,8 @@ async def get_costs_summary(
         func.coalesce(func.sum(ApiUsageLog.completion_tokens), 0).label("completion_tokens"),
         func.coalesce(func.sum(ApiUsageLog.total_tokens), 0).label("total_tokens"),
         func.coalesce(func.sum(ApiUsageLog.estimated_cost_usd), 0.0).label("cost_usd"),
+        func.coalesce(func.sum(ApiUsageLog.prompt_cost_usd), 0.0).label("prompt_cost_usd"),
+        func.coalesce(func.sum(ApiUsageLog.completion_cost_usd), 0.0).label("completion_cost_usd"),
         func.coalesce(func.avg(ApiUsageLog.latency_ms), 0).label("avg_latency_ms"),
     ).where(ApiUsageLog.created_at >= since)
     res_period = (await db.execute(q_period)).first()
@@ -68,6 +70,8 @@ async def get_costs_summary(
         func.count(ApiUsageLog.id).label("calls"),
         func.coalesce(func.sum(ApiUsageLog.total_tokens), 0).label("total_tokens"),
         func.coalesce(func.sum(ApiUsageLog.estimated_cost_usd), 0.0).label("cost_usd"),
+        func.coalesce(func.sum(ApiUsageLog.prompt_cost_usd), 0.0).label("prompt_cost_usd"),
+        func.coalesce(func.sum(ApiUsageLog.completion_cost_usd), 0.0).label("completion_cost_usd"),
     ).where(ApiUsageLog.created_at >= today_start)
     res_today = (await db.execute(q_today)).first()
 
@@ -77,6 +81,8 @@ async def get_costs_summary(
         func.count(ApiUsageLog.id).label("calls"),
         func.coalesce(func.sum(ApiUsageLog.total_tokens), 0).label("total_tokens"),
         func.coalesce(func.sum(ApiUsageLog.estimated_cost_usd), 0.0).label("cost_usd"),
+        func.coalesce(func.sum(ApiUsageLog.prompt_cost_usd), 0.0).label("prompt_cost_usd"),
+        func.coalesce(func.sum(ApiUsageLog.completion_cost_usd), 0.0).label("completion_cost_usd"),
     ).where(ApiUsageLog.created_at >= since).group_by(ApiUsageLog.endpoint)
     res_endpoints = (await db.execute(q_endpoints)).all()
 
@@ -86,6 +92,8 @@ async def get_costs_summary(
         func.count(ApiUsageLog.id).label("calls"),
         func.coalesce(func.sum(ApiUsageLog.total_tokens), 0).label("total_tokens"),
         func.coalesce(func.sum(ApiUsageLog.estimated_cost_usd), 0.0).label("cost_usd"),
+        func.coalesce(func.sum(ApiUsageLog.prompt_cost_usd), 0.0).label("prompt_cost_usd"),
+        func.coalesce(func.sum(ApiUsageLog.completion_cost_usd), 0.0).label("completion_cost_usd"),
     ).where(ApiUsageLog.created_at >= since).group_by(ApiUsageLog.model_name)
     res_models = (await db.execute(q_models)).all()
 
@@ -95,6 +103,8 @@ async def get_costs_summary(
             "calls": res_today.calls,
             "total_tokens": res_today.total_tokens,
             "cost_usd": round(float(res_today.cost_usd), 5),
+            "prompt_cost_usd": round(float(res_today.prompt_cost_usd), 5),
+            "completion_cost_usd": round(float(res_today.completion_cost_usd), 5),
         },
         "period": {
             "calls": res_period.calls,
@@ -102,6 +112,8 @@ async def get_costs_summary(
             "completion_tokens": res_period.completion_tokens,
             "total_tokens": res_period.total_tokens,
             "cost_usd": round(float(res_period.cost_usd), 5),
+            "prompt_cost_usd": round(float(res_period.prompt_cost_usd), 5),
+            "completion_cost_usd": round(float(res_period.completion_cost_usd), 5),
             "avg_latency_ms": round(float(res_period.avg_latency_ms), 1),
         },
         "by_endpoint": [
@@ -110,6 +122,8 @@ async def get_costs_summary(
                 "calls": row.calls,
                 "total_tokens": row.total_tokens,
                 "cost_usd": round(float(row.cost_usd), 5),
+                "prompt_cost_usd": round(float(row.prompt_cost_usd), 5),
+                "completion_cost_usd": round(float(row.completion_cost_usd), 5),
             }
             for row in res_endpoints
         ],
@@ -119,6 +133,8 @@ async def get_costs_summary(
                 "calls": row.calls,
                 "total_tokens": row.total_tokens,
                 "cost_usd": round(float(row.cost_usd), 5),
+                "prompt_cost_usd": round(float(row.prompt_cost_usd), 5),
+                "completion_cost_usd": round(float(row.completion_cost_usd), 5),
             }
             for row in res_models
         ],
@@ -183,6 +199,10 @@ async def get_recent_usage_logs(
         ApiUsageLog.completion_tokens,
         ApiUsageLog.total_tokens,
         ApiUsageLog.estimated_cost_usd,
+        ApiUsageLog.prompt_cost_usd,
+        ApiUsageLog.completion_cost_usd,
+        ApiUsageLog.prompt_text,
+        ApiUsageLog.response_text,
         ApiUsageLog.latency_ms,
         ApiUsageLog.success,
         ApiUsageLog.error_message,
@@ -205,6 +225,10 @@ async def get_recent_usage_logs(
             "completion_tokens": r.completion_tokens,
             "total_tokens": r.total_tokens,
             "estimated_cost_usd": round(float(r.estimated_cost_usd), 6),
+            "prompt_cost_usd": round(float(r.prompt_cost_usd or 0.0), 6),
+            "completion_cost_usd": round(float(r.completion_cost_usd or 0.0), 6),
+            "prompt_text": r.prompt_text,
+            "response_text": r.response_text,
             "latency_ms": r.latency_ms,
             "success": r.success,
             "error_message": r.error_message,

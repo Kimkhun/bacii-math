@@ -22,6 +22,16 @@ export default function AdminCostsPage() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // Inspector modal for prompt/response telemetry
+  const [selectedLog, setSelectedLog] = useState<AdminUsageLog | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
   const loadData = async () => {
     setBusy(true);
     setError("");
@@ -197,8 +207,16 @@ export default function AdminCostsPage() {
               <div className="mt-2 text-3xl font-extrabold text-slate-900">
                 ${summary.today.cost_usd.toFixed(4)}
               </div>
-              <div className="mt-1 text-xs text-slate-500">
-                {summary.today.calls.toLocaleString()} calls today ({summary.today.total_tokens.toLocaleString()} tokens)
+              <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-mono">
+                <span className="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded" title="Input Prompt Cost">
+                  In: ${(summary.today.prompt_cost_usd ?? 0).toFixed(4)}
+                </span>
+                <span className="text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium" title="Output Completion Cost">
+                  Out: ${(summary.today.completion_cost_usd ?? 0).toFixed(4)}
+                </span>
+              </div>
+              <div className="mt-1 text-[11px] text-slate-400">
+                {summary.today.calls.toLocaleString()} calls today
               </div>
             </div>
 
@@ -209,7 +227,15 @@ export default function AdminCostsPage() {
               <div className="mt-2 text-3xl font-extrabold text-emerald-600">
                 ${summary.period.cost_usd.toFixed(4)}
               </div>
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-mono">
+                <span className="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded" title="Period Input Cost">
+                  In: ${(summary.period.prompt_cost_usd ?? 0).toFixed(4)}
+                </span>
+                <span className="text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-medium" title="Period Output Cost">
+                  Out: ${(summary.period.completion_cost_usd ?? 0).toFixed(4)}
+                </span>
+              </div>
+              <div className="mt-1 text-[11px] text-slate-400">
                 {summary.period.calls.toLocaleString()} total API requests
               </div>
             </div>
@@ -401,39 +427,52 @@ export default function AdminCostsPage() {
                   <th className="px-4 py-2.5">Endpoint</th>
                   <th className="px-4 py-2.5">Model</th>
                   <th className="px-4 py-2.5">User</th>
-                  <th className="px-4 py-2.5">Tokens</th>
+                  <th className="px-4 py-2.5">Tokens (In / Out)</th>
+                  <th className="px-4 py-2.5">Cost (Total / Out)</th>
                   <th className="px-4 py-2.5">Latency</th>
-                  <th className="px-4 py-2.5">Cost</th>
                   <th className="px-4 py-2.5">Status</th>
+                  <th className="px-4 py-2.5 text-right">Inspect</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-mono">
                 {logs.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-6 text-center text-slate-400 font-sans text-xs">
+                    <td colSpan={9} className="px-4 py-6 text-center text-slate-400 font-sans text-xs">
                       No logs recorded yet.
                     </td>
                   </tr>
                 ) : (
                   logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-50 transition">
+                    <tr
+                      key={log.id}
+                      onClick={() => setSelectedLog(log)}
+                      className="hover:bg-slate-50 transition cursor-pointer group"
+                    >
                       <td className="px-4 py-2 text-slate-400">
                         {new Date(log.created_at).toLocaleTimeString()}
                       </td>
                       <td className="px-4 py-2 font-sans font-medium text-slate-700 capitalize">
-                        {log.endpoint.replace("_", " ")}
+                        {log.endpoint.replace(/_/g, " ")}
                       </td>
                       <td className="px-4 py-2 text-slate-600">{log.model_name}</td>
                       <td className="px-4 py-2 font-sans text-slate-600 truncate max-w-[140px]">
                         {log.email}
                       </td>
-                      <td className="px-4 py-2 text-slate-600">
-                        {log.total_tokens.toLocaleString()}
+                      <td className="px-4 py-2 text-slate-700">
+                        <div>{log.total_tokens.toLocaleString()}</div>
+                        <div className="text-[10px] text-slate-400">
+                          {log.prompt_tokens.toLocaleString()} in / {log.completion_tokens.toLocaleString()} out
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="font-semibold text-emerald-600">
+                          ${log.estimated_cost_usd.toFixed(5)}
+                        </div>
+                        <div className="text-[10px] text-amber-600 font-medium">
+                          Out: ${(log.completion_cost_usd ?? 0).toFixed(5)}
+                        </div>
                       </td>
                       <td className="px-4 py-2 text-slate-600">{log.latency_ms}ms</td>
-                      <td className="px-4 py-2 font-semibold text-emerald-600">
-                        ${log.estimated_cost_usd.toFixed(5)}
-                      </td>
                       <td className="px-4 py-2">
                         {log.success ? (
                           <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[10px] font-sans font-medium">
@@ -448,6 +487,17 @@ export default function AdminCostsPage() {
                           </span>
                         )}
                       </td>
+                      <td className="px-4 py-2 text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedLog(log);
+                          }}
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded text-[11px] font-sans font-medium transition border border-slate-200"
+                        >
+                          View
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -455,6 +505,155 @@ export default function AdminCostsPage() {
             </table>
           </div>
         </div>
+
+        {/* Modal: Prompt & Response Telemetry Inspector */}
+        {selectedLog && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+            <div
+              className="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <div className="flex items-center gap-3">
+                  <span className="px-2.5 py-1 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded-md uppercase tracking-wider">
+                    {selectedLog.endpoint.replace(/_/g, " ")}
+                  </span>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <span>API Call Inspection</span>
+                      <span className="text-xs font-mono font-normal text-slate-500">
+                        ({selectedLog.model_name})
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Executed at {new Date(selectedLog.created_at).toLocaleString()} • Latency: {selectedLog.latency_ms}ms
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedLog(null)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition text-lg font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Modal Cost & Telemetry Strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-6 py-3 bg-slate-100/70 border-b border-slate-200 font-mono text-xs">
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider font-sans">Total Cost</div>
+                  <div className="text-sm font-bold text-emerald-600 mt-0.5">
+                    ${selectedLog.estimated_cost_usd.toFixed(6)}
+                  </div>
+                </div>
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider font-sans">Output Cost (Completion)</div>
+                  <div className="text-sm font-bold text-amber-600 mt-0.5">
+                    ${(selectedLog.completion_cost_usd ?? 0).toFixed(6)}
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-sans">
+                    {selectedLog.completion_tokens.toLocaleString()} tokens
+                  </div>
+                </div>
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider font-sans">Input Cost (Prompt)</div>
+                  <div className="text-sm font-bold text-slate-700 mt-0.5">
+                    ${(selectedLog.prompt_cost_usd ?? 0).toFixed(6)}
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-sans">
+                    {selectedLog.prompt_tokens.toLocaleString()} tokens
+                  </div>
+                </div>
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider font-sans">Status / Latency</div>
+                  <div className="text-sm font-bold mt-0.5 flex items-center gap-1.5">
+                    <span className={selectedLog.success ? "text-emerald-600" : "text-red-600"}>
+                      {selectedLog.success ? "SUCCESS" : "FAILED"}
+                    </span>
+                    <span className="text-slate-400 font-normal">({selectedLog.latency_ms}ms)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error alert if any */}
+              {selectedLog.error_message && (
+                <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                  <span className="font-bold">Error:</span> {selectedLog.error_message}
+                </div>
+              )}
+
+              {/* Prompt & Response Scrollable Viewers */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                {/* Prompt Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 font-sans">
+                        Prompt Sent to AI (Input)
+                      </h4>
+                      <span className="text-[11px] text-slate-400 font-mono">
+                        ({selectedLog.prompt_text ? `${selectedLog.prompt_text.length.toLocaleString()} chars` : "0 chars"})
+                      </span>
+                    </div>
+                    {selectedLog.prompt_text && (
+                      <button
+                        onClick={() => copyToClipboard(selectedLog.prompt_text || "", "prompt")}
+                        className="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition font-sans flex items-center gap-1"
+                      >
+                        {copiedField === "prompt" ? "✓ Copied!" : "Copy Prompt"}
+                      </button>
+                    )}
+                  </div>
+                  <div className="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto max-h-64 overflow-y-auto whitespace-pre-wrap leading-relaxed border border-slate-800 selection:bg-indigo-600">
+                    {selectedLog.prompt_text || (
+                      <span className="text-slate-500 italic">No prompt text recorded for this call.</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Response Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 font-sans">
+                        Raw AI Response (Output)
+                      </h4>
+                      <span className="text-[11px] text-slate-400 font-mono">
+                        ({selectedLog.response_text ? `${selectedLog.response_text.length.toLocaleString()} chars` : "0 chars"})
+                      </span>
+                    </div>
+                    {selectedLog.response_text && (
+                      <button
+                        onClick={() => copyToClipboard(selectedLog.response_text || "", "response")}
+                        className="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition font-sans flex items-center gap-1"
+                      >
+                        {copiedField === "response" ? "✓ Copied!" : "Copy Response"}
+                      </button>
+                    )}
+                  </div>
+                  <div className="bg-slate-900 text-emerald-400 p-4 rounded-xl font-mono text-xs overflow-x-auto max-h-64 overflow-y-auto whitespace-pre-wrap leading-relaxed border border-slate-800 selection:bg-emerald-700">
+                    {selectedLog.response_text || (
+                      <span className="text-slate-500 italic">No output text recorded for this call.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button
+                  onClick={() => setSelectedLog(null)}
+                  className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AdminGuard>
   );

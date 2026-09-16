@@ -32,19 +32,26 @@ PRICING_PER_MILLION = {
 DEFAULT_FLASH_RATES = {"prompt": 0.075, "completion": 0.30}
 
 
-def calculate_cost(model_name: str, prompt_tokens: int, completion_tokens: int) -> float:
-    """Calculate the estimated USD cost for a given model and token counts."""
+def calculate_cost_breakdown(model_name: str, prompt_tokens: int, completion_tokens: int) -> tuple[float, float, float]:
+    """Calculate (prompt_cost, completion_cost, total_cost) in USD."""
     rates = PRICING_PER_MILLION.get(model_name.lower())
     if not rates:
         # Fallback to flash rates for unknown gemini models, 0 for local
         if "gemini" in model_name.lower():
             rates = DEFAULT_FLASH_RATES
         else:
-            return 0.0
+            return 0.0, 0.0, 0.0
 
-    prompt_cost = (prompt_tokens / 1_000_000.0) * rates["prompt"]
-    completion_cost = (completion_tokens / 1_000_000.0) * rates["completion"]
-    return round(prompt_cost + completion_cost, 7)
+    prompt_cost = round((prompt_tokens / 1_000_000.0) * rates["prompt"], 7)
+    completion_cost = round((completion_tokens / 1_000_000.0) * rates["completion"], 7)
+    total_cost = round(prompt_cost + completion_cost, 7)
+    return prompt_cost, completion_cost, total_cost
+
+
+def calculate_cost(model_name: str, prompt_tokens: int, completion_tokens: int) -> float:
+    """Calculate the estimated USD cost for a given model and token counts."""
+    _, _, total_cost = calculate_cost_breakdown(model_name, prompt_tokens, completion_tokens)
+    return total_cost
 
 
 async def _write_usage_log(
@@ -57,11 +64,15 @@ async def _write_usage_log(
     latency_ms: int,
     success: bool,
     error_message: str | None = None,
+    prompt_text: str | None = None,
+    response_text: str | None = None,
 ) -> None:
     """Internal task that writes a usage row to Postgres without raising."""
     try:
         total_tokens = prompt_tokens + completion_tokens
-        cost = calculate_cost(model_name, prompt_tokens, completion_tokens)
+        prompt_cost, completion_cost, total_cost = calculate_cost_breakdown(
+            model_name, prompt_tokens, completion_tokens
+        )
 
         parsed_user_id = None
         if user_id:
@@ -82,7 +93,11 @@ async def _write_usage_log(
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
                 total_tokens=total_tokens,
-                estimated_cost_usd=cost,
+                estimated_cost_usd=total_cost,
+                prompt_cost_usd=prompt_cost,
+                completion_cost_usd=completion_cost,
+                prompt_text=prompt_text,
+                response_text=response_text,
                 latency_ms=latency_ms,
                 success=success,
                 error_message=error_message,
@@ -103,6 +118,8 @@ def record_api_usage(
     latency_ms: int,
     success: bool = True,
     error_message: str | None = None,
+    prompt_text: str | None = None,
+    response_text: str | None = None,
 ) -> None:
     """Non-blocking fire-and-forget hook to log API consumption.
 
@@ -121,6 +138,8 @@ def record_api_usage(
                 latency_ms=latency_ms,
                 success=success,
                 error_message=error_message,
+                prompt_text=prompt_text,
+                response_text=response_text,
             )
         )
     except RuntimeError:
@@ -136,5 +155,7 @@ def record_api_usage(
                 latency_ms=latency_ms,
                 success=success,
                 error_message=error_message,
+                prompt_text=prompt_text,
+                response_text=response_text,
             )
         )

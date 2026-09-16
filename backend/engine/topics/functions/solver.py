@@ -486,17 +486,27 @@ def _solve_part_decompose(params, x, expr, part):
     b = simplify(q - a * x)
     c = simplify(r)
     display = part.get("display") or f"f(x) = {latex(dec)}"
+
+    factored_num = f"{latex(q)}({latex(den)}) + {latex(r)}" if r >= 0 else f"{latex(q)}({latex(den)}) - {latex(abs(r))}"
+    dec_step = f"f({var}) = \\frac{{{latex(num)}}}{{{latex(den)}}} = \\frac{{{factored_num}}}{{{latex(den)}}} = {latex(dec)}"
+
     steps = [
-        {"title": "Polynomial division",
-         "detail": f"\\frac{{{latex(num)}}}{{{latex(den)}}}",
+        {"title": "Decomposition of f(x)",
+         "detail": dec_step,
          "formula": "euclidean_division"},
-        {"title": "Quotient and remainder",
-         "detail": f"q(x) = {latex(q)},\\ r = {latex(r)} \\implies f(x) = {latex(dec)}",
-         "formula": "euclidean_division"},
-        {"title": "Identify a, b, c",
-         "detail": f"a = {latex(a)},\\ b = {latex(b)},\\ c = {latex(c)}",
+        {"title": "Identify coefficients",
+         "detail": f"\\alpha = {latex(a)}, \\; \\beta = {latex(b)}, \\; \\gamma = {latex(c)}",
          "formula": "euclidean_division"},
     ]
+
+    has_oblique = any(cp.get("formula") == "oblique_asymptote" for cp in part.get("extra_checkpoints", [])) or "អាស៊ីមតូតទ្រេត" in part.get("question_km", "")
+    if has_oblique:
+        steps.append({
+            "title": "Oblique asymptote deduction",
+            "detail": f"\\lim_{{{var} \\to \\pm\\infty}} \\left[f({var}) - ({latex(q)})\\right] = \\lim_{{{var} \\to \\pm\\infty}} \\frac{{{latex(r)}}}{{{latex(den)}}} = 0 \\implies (d) : y = {latex(q)}",
+            "formula": "oblique_asymptote",
+        })
+
     checkpoints = [
         {"label": "decomposition", "value": dec, "formula": "euclidean_division"},
         {"label": "a", "value": a, "formula": "euclidean_division"},
@@ -538,19 +548,25 @@ def _solve_part_symmetry(params, x, expr, part):
     target = simplify(2 * b0)
     center = simplify(s - target) == 0
     display = part.get("display") or ("center of symmetry" if center else "not a center")
+
+    X, Y = Symbol("X"), Symbol("Y")
+    subbed = simplify(expr.subs(x, X + a0) - b0)
+
     steps = [
-        {"title": "Translate to the candidate center",
-         "detail": f"Compute \\(f({inline_latex(a0)}+t) + f({inline_latex(a0)}-t)\\).",
+        {"title": "Intersection of asymptotes",
+         "detail": f"I({latex(a0)}, {latex(b0)})",
          "formula": "center_symmetry"},
-        {"title": "Evaluate",
-         "detail": f"\\(f({inline_latex(a0)}+t) + f({inline_latex(a0)}-t) = {inline_latex(s)} = 2\\times {inline_latex(b0)}\\).",
+        {"title": "Change of coordinate system",
+         "detail": f"x = X + {latex(a0)}, \\; y = Y + {latex(b0)} \\implies Y = {latex(subbed)}",
          "formula": "center_symmetry"},
-        {"title": "Conclusion",
-         "detail": ("Hence I is the center of symmetry of C." if center
-                    else "Hence I is not the center of symmetry."),
+        {"title": "Parity check",
+         "detail": f"F(-X) = {latex(simplify(subbed.subs(X, -X)))} = -F(X) \\implies \\text{{odd function}}",
          "formula": "center_symmetry"},
     ]
-    checkpoints = [{"label": "f(a+t)+f(a-t)", "value": target, "formula": "center_symmetry"}]
+    checkpoints = [
+        {"label": "f(a+t)+f(a-t)", "value": target, "formula": "center_symmetry"},
+        {"label": f"I({a0},{b0})", "value": (a0, b0), "formula": "center_symmetry"},
+    ]
     ctx = {"center": center, "a0": latex(a0), "b0": latex(b0)}
     return _part_solution(part, target, latex(target), display, None, steps, checkpoints, ctx=ctx)
 
@@ -1064,9 +1080,13 @@ def _solve_function_study(params):
 
         km_facts["parts"].append({
             "label": sol["label"],
+            "want": want,
+            "topic": "functions",
             "question_km": q_km,
+            "authored_technique": technique_km,
             "steps": [{"title": s["title"], "latex": s["detail"]} for s in sol["steps"]],
             "answer_latex": sol["answer_latex"] or sol.get("answer_display") or "",
+            "ctx": sol.get("_ctx", {}),
         })
         part_solutions.append(sol)
 

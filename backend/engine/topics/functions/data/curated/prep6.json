@@ -1,0 +1,116 @@
+{
+  "id": "function_study_prep_exercise_6",
+  "source": {
+    "year": null,
+    "track": "preparation",
+    "section": "VI",
+    "subject_km": "គណិតវិទ្យា",
+    "description": "Preparation exam — function exercise VI: f(x) = (x^2 - 2x + 1)/(x - 2) — domain, limits, vertical asymptote, decomposition into alpha, beta, gamma, oblique asymptote, derivative, variation table, center of symmetry I(2;2), graph.",
+    "extracted_by": "BAC II authentic curriculum standard"
+  },
+  "difficulty": "hard",
+  "var": "x",
+  "fn_name": "f",
+  "function_expr": "(x**2 - 2*x + 1)/(x - 2)",
+  "pattern": "f(x) = (x^2 - 2x + 1)/(x - 2)",
+  "pattern_latex": "f(x) = \\frac{x^2 - 2x + 1}{x - 2}",
+  "prompt": "គេឱ្យអនុគមន៍ f កំណត់ដោយ f(x) = (x^2 - 2x + 1)/(x - 2) មានក្រាប (C) ក្នុងតម្រុយអរតូណរម៉ាល់ (O, i, j) ។\n\n1. រកដែនកំណត់នៃអនុគមន៍ f ។\n2. រកលីមីតនៃ f កាលណា x -> 2 និង x -> +-oo រួចទាញបញ្ជាក់សមីការអាស៊ីមតូតឈរនៃខ្សែរកោង (C) ៖\n3. កំណត់បីចំនួនពិត alpha, beta និង gamma ដើម្បីឱ្យបាន f(x) = alpha*x + beta + gamma/(x - 2) រួចទាញរកសមីការអាស៊ីមតូតទ្រេតនៃខ្សែរកោង (C) ៖\n4. គណនាដេរីវេ f'(x) និងគូសតារាងអថេរភាពនៃ f ៖\n5. ស្រាយបញ្ជាក់ថា I ជាផ្ចិតបំប្លែងឆ្លុះនៃខ្សែរកោង (C) ៖\n6. សង់អាស៊ីមតូតទាំងពីរនិងខ្សែរកោង (C) ក្នុងតម្រុយរួមគ្នា ៖",
+  "prompt_latex": "\\text{គេឱ្យអនុគមន៍ } f \\text{ កំណត់ដោយ } f(x) = \\frac{x^2 - 2x + 1}{x - 2} \\text{ មានក្រាប } (C) \\text{ ក្នុងតម្រុយអរតូណរម៉ាល់ } (O, \\vec{i}, \\vec{j}) .\\\\ \\text{១. រកដែនកំណត់នៃអនុគមន៍ } f .\\\\ \\text{២. រកលីមីតនៃ } f \\text{ កាលណា } x \\to 2 \\text{ និង } x \\to \\pm\\infty \\text{ រួចទាញបញ្ជាក់សមីការអាស៊ីមតូតឈរនៃខ្សែរកោង } (C) ៖\\\\ \\text{៣. កំណត់បីចំនួនពិត } \\alpha, \\beta \\text{ និង } \\gamma \\text{ ដើម្បីឱ្យបាន } f(x) = \\alpha x + \\beta + \\frac{\\gamma}{x - 2} \\text{ រួចទាញរកសមីការអាស៊ីមតូតទ្រេតនៃខ្សែរកោង } (C) ៖\\\\ \\text{៤. គណនាដេរីវេ } f'(x) \\text{ និងគូសតារាងអថេរភាពនៃ } f ៖\\\\ \\text{៥. ស្រាយបញ្ជាក់ថា } I \\text{ ជាផ្ចិតបំប្លែងឆ្លុះនៃខ្សែរកោង } (C) ៖\\\\ \\text{៦. សង់អាស៊ីមតូតទាំងពីរនិងខ្សែរកោង } (C) \\text{ ក្នុងតម្រុយរួមគ្នា ៖}",
+  "graph": {
+    "x_min": -4,
+    "x_max": 8,
+    "y_min": -6,
+    "y_max": 10,
+    "samples": 200,
+    "asymptotes": [
+      { "kind": "vertical", "x": 2 },
+      { "kind": "oblique", "line": "x", "label": "y = x" }
+    ],
+    "points": [
+      { "x": 1, "y": 0, "label": "max" },
+      { "x": 3, "y": 4, "label": "min" },
+      { "x": 2, "y": 2, "label": "I" }
+    ]
+  },
+  "parts": [
+    {
+      "label": "1",
+      "want": "domain",
+      "kind": "interval",
+      "display": "D_f = \\mathbb{R} \\setminus \\{2\\}",
+      "question_km": "១. រកដែនកំណត់នៃអនុគមន៍ $f$",
+      "technique": "អនុគមន៍ $f(x) = \\frac{x^2 - 2x + 1}{x - 2}$ មានន័យលុះត្រាតែ $x - 2 \\neq 0 \\iff x \\neq 2$ ។\n\nដូចនេះដែនកំណត់អនុគមន៍គឺ $D_f = \\mathbb{R} \\setminus \\{2\\}$ ។",
+      "extra_checkpoints": [
+        { "label": "x != 2", "value": "2", "formula": "rational_domain" }
+      ]
+    },
+    {
+      "label": "2",
+      "want": "limits",
+      "kind": "infinity",
+      "items": [
+        { "point": "2", "side": "-" },
+        { "point": "2", "side": "+" },
+        { "point": "-oo" },
+        { "point": "oo" }
+      ],
+      "display": "\\lim_{x \\to 2} f(x) = \\pm\\infty, \\; \\lim_{x \\to \\pm\\infty} f(x) = \\pm\\infty; \\; x = 2",
+      "question_km": "២. រកលីមីតនៃ $f$ កាលណា $x \\to 2$ និង $x \\to \\pm\\infty$ រួចទាញបញ្ជាក់សមីការអាស៊ីមតូតឈរនៃខ្សែរកោង $(C)$ ៖",
+      "technique": "យើងបាន៖\n$$\\lim_{x \\to 2} f(x) = \\lim_{x \\to 2} \\frac{x^2 - 2x + 1}{x - 2} = \\pm\\infty$$\nព្រោះ៖\n$$\\lim_{x \\to 2^-} f(x) = \\lim_{x \\to 2^-} \\frac{x^2 - 2x + 1}{x - 2} = -\\infty$$\nនិង\n$$\\lim_{x \\to 2^+} f(x) = \\lim_{x \\to 2^+} \\frac{x^2 - 2x + 1}{x - 2} = +\\infty$$\nហើយ\n$$\\lim_{x \\to \\pm\\infty} f(x) = \\lim_{x \\to \\pm\\infty} \\frac{x^2 - 2x + 1}{x - 2} = \\lim_{x \\to \\pm\\infty} \\frac{x^2}{x} = \\pm\\infty$$\nដោយ $\\lim_{x \\to 2} f(x) = \\pm\\infty$ នោះបន្ទាត់សមីការ $x = 2$ ជាអាស៊ីមតូតឈរនៃ $(C)$ ។",
+      "extra_checkpoints": [
+        { "label": "vertical asymptote x=2", "value": "2", "formula": "vertical_asymptote" }
+      ]
+    },
+    {
+      "label": "3",
+      "want": "decompose",
+      "kind": "expression",
+      "expected": "x + 1/(x - 2)",
+      "display": "\\alpha = 1, \\; \\beta = 0, \\; \\gamma = 1; \\; (d) : y = x",
+      "question_km": "៣. កំណត់បីចំនួនពិត $\\alpha, \\beta$ និង $\\gamma$ ដើម្បីឱ្យបាន $f(x) = \\alpha x + \\beta + \\frac{\\gamma}{x - 2}$ រួចទាញរកសមីការអាស៊ីមតូតទ្រេតនៃខ្សែរកោង $(C)$ ៖",
+      "technique": "យើងមាន៖\n$$f(x) = \\frac{x^2 - 2x + 1}{x - 2} = \\frac{x(x - 2) + 1}{x - 2} = x + \\frac{1}{x - 2} \\quad (1)$$\nដោយ\n$$f(x) = \\alpha x + \\beta + \\frac{\\gamma}{x - 2} \\quad (2)$$\nតាម $(1)$ និង $(2)$ គេទាញបាន $\\alpha = 1, \\; \\beta = 0, \\; \\gamma = 1$ ។\n\nដូចនេះ $\\alpha = 1, \\; \\beta = 0, \\; \\gamma = 1$ ។\n\nម៉្យាងទៀត $f(x) = x + \\frac{1}{x - 2}$ មាន $\\lim_{x \\to \\pm\\infty} \\frac{1}{x - 2} = 0$ នាំឱ្យបន្ទាត់ $(d) : y = x$ ជាអាស៊ីមតូតទ្រេតនៃខ្សែរកោង $(C)$ ។",
+      "extra_checkpoints": [
+        { "label": "oblique asymptote y=x", "value": "x", "formula": "oblique_asymptote" },
+        { "label": "alpha=1", "value": "1", "formula": "euclidean_division" },
+        { "label": "beta=0", "value": "0", "formula": "euclidean_division" },
+        { "label": "gamma=1", "value": "1", "formula": "euclidean_division" }
+      ]
+    },
+    {
+      "label": "4",
+      "want": "variation_table",
+      "kind": "variation_table",
+      "expected": "(x - 1)*(x - 3)/(x - 2)**2",
+      "display": "f'(x) = \\frac{(x-1)(x-3)}{(x-2)^2}; \\; f(1) = 0, \\; f(3) = 4",
+      "question_km": "៤. គណនាដេរីវេ $f'(x)$ និងគូសតារាងអថេរភាពនៃ $f$ ៖",
+      "technique": "យើងមាន $f(x) = x + \\frac{1}{x - 2}$\n\nយើងបាន៖\n$$f'(x) = 1 - \\frac{1}{(x - 2)^2} = \\frac{(x - 2)^2 - 1}{(x - 2)^2} = \\frac{(x - 1)(x - 3)}{(x - 2)^2}$$\nដូចនេះ $f'(x) = \\frac{(x - 1)(x - 3)}{(x - 2)^2}$ ។\n\nចំពោះគ្រប់ $x \\in D_f : f'(x) = \\frac{(x - 1)(x - 3)}{(x - 2)^2}$ មានសញ្ញាដូច $(x - 1)(x - 3)$ ។\n\nបើ $f'(x) = 0 \\iff (x - 1)(x - 3) = 0$ នោះ $x_1 = 1, \\; x_2 = 3$ ។\n\nចំពោះ $x = 1$ នោះ $f(1) = 0$ (អតិបរមាធៀប)\n\nចំពោះ $x = 3$ នោះ $f(3) = 4$ (អប្បបរមាធៀប)",
+      "extra_checkpoints": [
+        { "label": "f'(x)", "value": "(x - 1)*(x - 3)/(x - 2)**2", "formula": "quotient_rule" },
+        { "label": "local max f(1)", "value": "0", "formula": "relative_maximum" },
+        { "label": "local min f(3)", "value": "4", "formula": "relative_minimum" }
+      ]
+    },
+    {
+      "label": "5",
+      "want": "symmetry",
+      "kind": "expression",
+      "x0": "2",
+      "y0": "2",
+      "expected": "4",
+      "display": "I(2, 2) ជាផ្ចិតឆ្លុះនៃខ្សែរកោង (C)",
+      "question_km": "៥. ស្រាយបញ្ជាក់ថា $I$ ជាផ្ចិតបំប្លែងឆ្លុះនៃខ្សែរកោង $(C)$ ៖",
+      "technique": "គេមាន $\\begin{cases} x = 2 \\\\ y = x \\end{cases}$ នោះ $y = 2$ គេបាន $I(2, 2)$ ជាចំណុចប្រសព្វនៃអាស៊ីមតូតទាំងពីរ ។\n\nតាមរូបមន្តប្តូរតម្រុយ៖\n$$\\begin{cases} x = X + x_I = X + 2 \\\\ y = Y + y_I = Y + 2 \\end{cases}$$\nដោយ $y = x + \\frac{1}{x - 2}$ នោះ៖\n$$Y + 2 = X + 2 + \\frac{1}{(X + 2) - 2}$$\nឬ $Y = F(X) = X + \\frac{1}{X}$ កំណត់គ្រប់ $X \\neq 0$ ។\n\nគេបាន $F(-X) = -X - \\frac{1}{X} = -F(X)$ នោះ $F$ ជាអនុគមន៍សេស ។\n\nដូចនេះ $I(2, 2)$ ជាផ្ចិតឆ្លុះនៃខ្សែរកោង $(C)$ ។",
+      "extra_checkpoints": [
+        { "label": "I(2,2)", "value": "2", "formula": "center_of_symmetry" }
+      ]
+    },
+    {
+      "label": "6",
+      "want": "draw",
+      "kind": "draw",
+      "display": "សង់អាស៊ីមតូតឈរ $x = 2$, អាស៊ីមតូតទ្រេត $y = x$ និងខ្សែរកោង $(C)$",
+      "question_km": "៦. សង់អាស៊ីមតូតទាំងពីរនិងខ្សែរកោង $(C)$ ក្នុងតម្រុយរួមគ្នា ៖",
+      "technique": "អាស៊ីមតូតឈរ៖ $x = 2$\n\nអាស៊ីមតូតទ្រេត៖ $y = x$ (កាត់តាម $(0, 0)$ និង $(1, 1)$)\n\nផ្ចិតឆ្លុះ $I(2, 2)$, ចំណុចអតិបរមា $(1, 0)$, ចំណុចអប្បបរមា $(3, 4)$"
+    }
+  ]
+}

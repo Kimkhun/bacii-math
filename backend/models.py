@@ -173,6 +173,10 @@ class ApiUsageLog(Base):
     total_tokens: Mapped[int] = mapped_column(Integer, default=0)
 
     estimated_cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    prompt_cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    completion_cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    prompt_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    response_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     latency_ms: Mapped[int] = mapped_column(Integer, default=0)
     success: Mapped[bool] = mapped_column(Boolean, default=True)
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

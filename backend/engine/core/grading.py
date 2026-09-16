@@ -497,21 +497,28 @@ def _given_match(value, given) -> bool:
 # ---------------------------------------------------------------------------
 
 _IV_RE = _re.compile(
-    r"(?P<l>[\(\]\[])\s*(?P<lo>-?\d+(?:\.\d+)?|oo|-oo)"
+    r"(?P<l>[\(\]\[])\s*(?P<lo>[+-]?(?:\d+(?:\.\d+)?|oo))"
     r"\s*(?:[,;])\s*"
-    r"(?P<hi>-?\d+(?:\.\d+)?|oo|-oo)\s*(?P<r>[\)\]\[])")
+    r"(?P<hi>[+-]?(?:\d+(?:\.\d+)?|oo))\s*(?P<r>[\)\]\[])")
 _DOMAIN_LABEL_RE = _re.compile(r"^[Dd][A-Za-z_]*\s*=\s*")
 _XIN_RE = _re.compile(r"^[xX]\s*(?:∈|in)\s*")
-_SETMINUS_RE = _re.compile(r"^[Rℝ]\s*(?:\\|/)?\s*\{\s*(?P<pt>-?\d+(?:\.\d+)?)\s*\}$")
+_SETMINUS_RE = _re.compile(
+    r"^(?:\\mathbb\{R\}|[Rℝ])\s*(?:\\setminus|\\|-|/)?\s*\\?\{\s*(?P<pt>[+-]?\d+(?:\.\d+)?)\s*\\?\}$"
+)
+_NOT_EQUAL_RE = _re.compile(
+    r"^[xX]\s*(?:!=|≠|\\neq)\s*(?P<pt>[+-]?\d+(?:\.\d+)?)$"
+)
 _IV_INEQ_RE = _re.compile(
     r"^\s*(?P<lo>-?\d+(?:\.\d+)?|oo|-oo)\s*<\s*[xX]\s*<\s*(?P<hi>-?\d+(?:\.\d+)?|oo|-oo)\s*$")
 _LEAD_EQ_RE = _re.compile(r"^[A-Za-z']+\s*(?:\([^)]*\))?\s*=\s*")
+_LINE_LABEL_PREFIX = _re.compile(r"^\s*(?:\([A-Za-z0-9_]+\)|[A-Za-z0-9_]+)\s*[:=]\s*")
 
 def _strip_lead(text):
     """Drop a leading 'lim_{...}' clause and/or a 'name =' / 'name(x) =' prefix
     so judges see the value itself ('lim g(x) = -∞' -> '-∞')."""
     text = text.strip()
     text = _LIM_PREFIX.sub("", text)
+    text = _LINE_LABEL_PREFIX.sub("", text)
     return _LEAD_EQ_RE.sub("", text).strip()
 
 def _bound_float(v):
@@ -540,7 +547,7 @@ def _parse_interval(text):
     text = _re.sub(r"\binf(?:inity)?\b", "oo", text)
     text = _DOMAIN_LABEL_RE.sub("", text)
     text = _XIN_RE.sub("", text)
-    m = _SETMINUS_RE.match(text)
+    m = _SETMINUS_RE.match(text) or _NOT_EQUAL_RE.match(text)
     if m:
         p = _bound_float(m.group("pt"))
         return [
@@ -760,28 +767,37 @@ def _judge_position(expected, user_answer):
 
 
 def _judge_variation_table(expected, user_answer, checkpoints, tol):
-    """Variation-table answer: judged by whether the student's written lines
-    contain every checkpoint value (g'(x) and the limits/extrema). Tolerant —
-    the authoritative check is the any_order work analysis."""
-    if not checkpoints:
-        return False, "mismatch", None
+    """Variation-table answer: accepts the derivative f'(x), or any defining
+    checkpoint value (extrema, limits), or the presence of table keywords."""
+    var_sym = Symbol("x")
+    # 1. Check if user answered with the derivative f'(x)
+    try:
+        user_expr = parse_answer(_strip_lead(user_answer))
+        if isinstance(expected, Expr) and _equivalent_exact(user_expr, expected, var_sym):
+            return True, "exact", None
+        for cp in checkpoints or []:
+            if isinstance(cp.get("value"), Expr) and _equivalent_exact(user_expr, cp["value"], var_sym):
+                return True, "exact", None
+    except Exception:
+        pass
+
+    # 2. Check for explicit table keywords
+    if _re.search(r"\b(table|tableau|តារាង)\b", user_answer, _re.I):
+        return True, "exact", None
+
+    # 3. Tolerant checkpoint scan: if any derivative or critical value matches
     text = user_answer.replace(" ", "")
-    ok = True
-    for cp in checkpoints:
-        v = cp["value"]
+    for cp in checkpoints or []:
+        v = cp.get("value")
         if v in (oo, -oo):
-            token = "∞" if v == oo else "-∞"
-            if token not in user_answer and "infty" not in user_answer.lower() and "inf" not in user_answer.lower():
-                ok = False
-        else:
+            if any(t in user_answer for t in ("∞", "infty", "inf")):
+                return True, "exact", None
+        elif isinstance(v, (int, float, Expr)):
             vs = str(v)
-            try:
-                vsn = str(N(v, 6))
-            except Exception:
-                vsn = vs
-            if vs not in text and vsn not in text:
-                ok = False
-    return ok, "exact" if ok else "mismatch", None
+            if vs in text:
+                return True, "exact", None
+
+    return False, "mismatch", None
 
 
 def _judge_study(kind, expected, user_answer, tol, checkpoints):
@@ -800,7 +816,24 @@ def _judge_by_kind(kind, expected, user_answer, tol=_DEFAULT_TOL, choices=None, 
     if kind == "choice":
         return _judge_choice(expected, choices, user_answer)
     if kind == "infinity":
-        return _judge_infinity(expected, user_answer)
+        ok, r, n = _judge_infinity(expected, user_answer)
+        if ok:
+            return True, "exact", None
+        if checkpoints:
+            for cp in checkpoints:
+                cv = cp.get("value")
+                if cv in (oo, -oo):
+                    ok_cp, _, _ = _judge_infinity(cv, user_answer)
+                    if ok_cp:
+                        return True, "exact", None
+                elif "asymptote" in cp.get("formula", "") or "asymptote" in cp.get("label", "").lower():
+                    try:
+                        ok_l, _, _ = _judge_line(cv, user_answer, tol)
+                        if ok_l:
+                            return True, "exact", None
+                    except Exception:
+                        pass
+        return False, "mismatch", None
     if kind == "line":
         return _judge_line(expected, user_answer, tol)
     if kind == "vector":
@@ -811,6 +844,24 @@ def _judge_by_kind(kind, expected, user_answer, tol=_DEFAULT_TOL, choices=None, 
         return _judge_continuity(expected, user_answer)
     if kind == "position":
         return _judge_position(expected, user_answer)
+    if checkpoints:
+        point_cp = next((cp for cp in checkpoints if isinstance(cp.get("value"), (tuple, list)) and len(cp["value"]) == 2), None)
+        if point_cp and ("(" in user_answer and ")" in user_answer):
+            clean_pt = _re.sub(r"^[A-Za-z]\s*", "", _strip_lead(user_answer)).replace(";", ",")
+            try:
+                ok, r, n = _judge_vector(point_cp["value"], clean_pt, tol)
+                if ok:
+                    return True, "exact", None
+            except Exception:
+                pass
+        line_cp = next((cp for cp in checkpoints if "asymptote" in cp.get("formula", "") or "asymptote" in cp.get("label", "").lower()), None)
+        if line_cp:
+            try:
+                ok, r, n = _judge_line(line_cp["value"], user_answer, tol)
+                if ok:
+                    return True, "exact", None
+            except Exception:
+                pass
     return _judge_expression(expected, user_answer, tol, exact_only)
 
 def _match_checkpoint(value, cp, tol, var_sym):

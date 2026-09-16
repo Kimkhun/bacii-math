@@ -15,6 +15,7 @@ Before writing code or executing non-read operations:
 4. **User Has the Final Say**: Suggest improvements and best practices, but never enforce them autonomously. The user always decides.
 5. **No Blind Fast Commits**: Only commit to git when the user explicitly requests it or agrees on the milestone.
 6. **No Blind Deletions or Scorched-Earth Reverts**: NEVER delete, wipe, or revert entire features or files without explicitly asking the user WHAT specific scope or revision they want reverted. If the user says "revert", confirm the exact milestone/changes first before touching files.
+7. **NO GIBBERISH MATH IN CHAT RESPONSES**: NEVER output raw, unreadable LaTeX equations, dense math syntax, or escaped symbols in conversational messages to the user. Always communicate using plain English/Khmer text and normal, human-readable numbers.
 
 ---
 

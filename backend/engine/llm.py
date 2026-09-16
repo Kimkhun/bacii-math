@@ -88,13 +88,24 @@ async def _gemini_generate(
         # Extract real token usage
         prompt_tokens = 0
         completion_tokens = 0
+
+        # Determine response text for telemetry
+        resp_text = ""
+        if hasattr(resp, "text") and resp.text:
+            resp_text = resp.text
+        elif hasattr(resp, "function_calls") and resp.function_calls:
+            try:
+                calls_data = [{"name": fc.name, "args": fc.args} for fc in resp.function_calls]
+                resp_text = json.dumps(calls_data, ensure_ascii=False)
+            except Exception:
+                resp_text = str(resp.function_calls)
+
         if hasattr(resp, "usage_metadata") and resp.usage_metadata:
             prompt_tokens = getattr(resp.usage_metadata, "prompt_token_count", 0) or 0
             completion_tokens = getattr(resp.usage_metadata, "candidates_token_count", 0) or 0
         else:
             # Fallback estimation if metadata missing (~4 chars per token)
             prompt_tokens = max(1, len(prompt) // 4)
-            resp_text = resp.text if hasattr(resp, "text") and resp.text else ""
             completion_tokens = max(1, len(resp_text) // 4)
 
         record_api_usage(
@@ -106,6 +117,8 @@ async def _gemini_generate(
             completion_tokens=completion_tokens,
             latency_ms=latency_ms,
             success=True,
+            prompt_text=prompt,
+            response_text=resp_text,
         )
 
         if tools is not None:
@@ -123,6 +136,7 @@ async def _gemini_generate(
             latency_ms=latency_ms,
             success=False,
             error_message=str(exc),
+            prompt_text=prompt,
         )
         raise
 
@@ -170,6 +184,8 @@ async def gemini_vision_generate(
             completion_tokens=completion_tokens,
             latency_ms=latency_ms,
             success=True,
+            prompt_text=f"[Handwriting OCR Image + Prompt]:\n{prompt}",
+            response_text=resp.text or "",
         )
         return resp.text
     except Exception as exc:
@@ -184,6 +200,7 @@ async def gemini_vision_generate(
             latency_ms=latency_ms,
             success=False,
             error_message=str(exc),
+            prompt_text=f"[Handwriting OCR Image + Prompt]:\n{prompt}",
         )
         return None
 
@@ -208,6 +225,8 @@ async def _ollama_generate(prompt: str, endpoint: str = "narration", user_id: an
                 completion_tokens=len(text) // 4,
                 latency_ms=latency_ms,
                 success=True,
+                prompt_text=prompt,
+                response_text=text,
             )
             return text
     except Exception as exc:
@@ -222,8 +241,9 @@ async def _ollama_generate(prompt: str, endpoint: str = "narration", user_id: an
             latency_ms=latency_ms,
             success=False,
             error_message=str(exc),
+            prompt_text=prompt,
         )
-        raise
+        raise exc
 
 
 async def _generate_with_fallback(
@@ -367,6 +387,10 @@ _KM_PART_TOOL_DECL = types.FunctionDeclaration(
 
 
 async def _narrate_single_part(part_fact: dict, user_id: any = None) -> dict | None:
+    if part_fact.get("topic") == "functions":
+        from .topics.functions.narrator import narrate_function_part
+        return await narrate_function_part(part_fact, _gemini_generate, _KM_PART_TOOL_DECL, user_id=user_id)
+
     prompt = (
         "You are an expert Cambodian Bac II mathematics grader and teacher writing the official exam solution key (អត្រាកំណែផ្លូវការ).\n"
         f"Part Data (verified by SymPy):\n{json.dumps(part_fact, ensure_ascii=False)}\n\n"

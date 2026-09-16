@@ -12,6 +12,41 @@ function kmMath(s: string): string {
   return s.replace(/\$(.+?)\$/g, "\\($1\\)");
 }
 
+function latexToMixedText(raw: string): string {
+  if (!raw.includes("\\text{")) return raw;
+  let out = "";
+  let i = 0;
+  while (i < raw.length) {
+    const textIdx = raw.indexOf("\\text{", i);
+    if (textIdx === -1) {
+      const rest = raw.slice(i).trim();
+      if (rest) out += " $" + rest + "$ ";
+      break;
+    }
+    const mathPart = raw.slice(i, textIdx).trim();
+    if (mathPart) out += " $" + mathPart + "$ ";
+    let depth = 1;
+    let j = textIdx + 6;
+    while (j < raw.length && depth > 0) {
+      if (raw[j] === "{") depth++;
+      else if (raw[j] === "}") depth--;
+      j++;
+    }
+    const textPart = raw.slice(textIdx + 6, j - 1);
+    out += textPart;
+    i = j;
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+function getCleanLines(raw: string): string[] {
+  if (!raw) return [];
+  return raw
+    .split(/\\\\|\r?\n/)
+    .map((s) => latexToMixedText(s.trim()))
+    .filter(Boolean);
+}
+
 type Part = {
   label: string;
   want?: string;
@@ -154,97 +189,233 @@ function SignTable({ st }: { st: NonNullable<Part["sign_table"]> }) {
 function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
   const cols = vt.columns;
   const n = cols.length;
+  const numIntervals = n - 1;
 
   const normVal = (v: string | undefined) => {
     if (!v) return "";
-    if (v === "oo" || v === "+oo") return "+\\infty";
-    if (v === "-oo") return "-\\infty";
-    return v;
+    const s = v.trim();
+    if (s === "oo" || s === "+oo") return "+\\infty";
+    if (s === "-oo") return "-\\infty";
+    return s;
+  };
+
+  const isPole = (idx: number) => {
+    if (idx <= 0 || idx >= n - 1) return false;
+    const val = vt.func_values[idx] || "";
+    return val.includes("/") || val.includes("||") || (vt.arrows[idx - 1] === "↘" && vt.arrows[idx] === "↘");
+  };
+
+  const getPoleLimits = (idx: number) => {
+    const raw = vt.func_values[idx] || "";
+    if (raw.includes("/")) {
+      const parts = raw.split("/").map((p) => normVal(p.trim()));
+      return { left: parts[0] || "-\\infty", right: parts[1] || "+\\infty" };
+    }
+    const left = vt.arrows[idx - 1] === "↗" ? "+\\infty" : "-\\infty";
+    const right = vt.arrows[idx] === "↘" ? "+\\infty" : "-\\infty";
+    return { left, right };
   };
 
   return (
     <div className="my-3 overflow-x-auto">
       <div className="text-[11px] font-semibold text-slate-600 mb-1.5">តារាងអថេរភាព (Variation Table)</div>
       <div className="inline-block bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-        <table className="border-collapse font-sans text-xs min-w-[280px]">
+        <table className="border-collapse font-sans text-xs">
           <tbody>
             {/* Row 1: x */}
             <tr className="border-b border-slate-900">
-              <td className="border-r border-slate-900 px-4 py-2 font-bold italic font-serif text-slate-800 text-center min-w-[80px]">
+              <td className="border-r border-slate-900 px-4 py-2 font-bold italic font-serif text-slate-800 text-center min-w-[70px]">
                 x
               </td>
-              <td className="px-3 py-2 text-left font-mono font-semibold text-slate-900">
+              {/* Start boundary point */}
+              <td className="px-2 py-2 text-center font-mono font-semibold text-slate-900">
                 <MathText text={`\\(${normVal(cols[0])}\\)`} />
               </td>
-              {cols.slice(1, -1).map((c, i) => (
+              {Array.from({ length: numIntervals }).map((_, i) => (
                 <Fragment key={i}>
-                  <td className="px-4 py-2 text-center font-mono font-semibold text-slate-900">
-                    <MathText text={`\\(${normVal(c)}\\)`} />
+                  {/* Interval column */}
+                  <td className="px-6 py-2 min-w-[60px]" />
+                  {/* Next boundary point */}
+                  <td className="px-2 py-2 text-center font-mono font-semibold text-slate-900">
+                    <MathText text={`\\(${normVal(cols[i + 1])}\\)`} />
                   </td>
                 </Fragment>
               ))}
-              <td className="px-3 py-2 text-right font-mono font-semibold text-slate-900">
-                <MathText text={`\\(${normVal(cols[n - 1])}\\)`} />
-              </td>
             </tr>
 
-            {/* Row 2: g'(x) */}
+            {/* Row 2: f'(x) */}
             <tr className="border-b border-slate-900">
               <td className="border-r border-slate-900 px-4 py-2 font-semibold text-slate-900 text-center">
-                g&apos;(x)
+                f&apos;(x)
               </td>
-              <td colSpan={Math.max(2, n)} className="px-4 py-2 text-center font-bold text-sm text-slate-800">
-                <div className="flex items-center justify-around w-full">
-                  {vt.derivative_sign.map((s, i) => (
-                    <span key={i} className="text-emerald-700 font-bold">{s || "+"}</span>
-                  ))}
-                </div>
-              </td>
+              {/* Point 0: empty */}
+              <td className="px-2 py-2" />
+              {Array.from({ length: numIntervals }).map((_, i) => {
+                const sign = vt.derivative_sign[i] || "+";
+                const isLast = i === numIntervals - 1;
+                const boundaryIdx = i + 1;
+                const pole = !isLast && isPole(boundaryIdx);
+
+                return (
+                  <Fragment key={i}>
+                    {/* Interval sign */}
+                    <td className="px-6 py-2 text-center font-bold text-sm text-slate-800">
+                      <span className={sign === "+" ? "text-emerald-700" : "text-rose-700"}>{sign}</span>
+                    </td>
+
+                    {/* Boundary separator */}
+                    <td className="relative px-0 py-2 text-center w-8">
+                      {isLast ? null : pole ? (
+                        /* Double vertical line for pole */
+                        <div className="flex items-center justify-center h-7 gap-[3px]">
+                          <div className="w-[1.5px] h-7 bg-slate-900" />
+                          <div className="w-[1.5px] h-7 bg-slate-900" />
+                        </div>
+                      ) : (
+                        /* Single line with centered 0 */
+                        <div className="relative flex items-center justify-center h-7">
+                          <div className="absolute inset-y-0 w-[1.5px] bg-slate-900 -top-2 -bottom-2" />
+                          <span className="relative z-10 bg-white px-1 font-mono text-xs font-bold text-slate-900">
+                            0
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                  </Fragment>
+                );
+              })}
             </tr>
 
-            {/* Row 3: y = f(x) */}
+            {/* Row 3: f(x) */}
             <tr>
-              <td className="border-r border-slate-900 px-4 py-5 font-semibold text-slate-900 text-center whitespace-nowrap">
-                y = f(x)
+              <td className="border-r border-slate-900 px-4 py-3 font-semibold text-slate-900 text-center whitespace-nowrap">
+                f(x)
               </td>
-              <td colSpan={Math.max(2, n)} className="px-3 py-3">
+
+              {/* Point 0 value */}
+              <td className="relative px-2 py-3 w-10">
                 {(() => {
-                  const isDec = vt.arrows[0] === "↘";
+                  const arrow0 = vt.arrows[0] || "↗";
+                  const isUp = arrow0 === "↗";
                   return (
-                    <div className="flex items-center justify-between w-full h-16 relative">
-                      {/* Left limit / value */}
-                      <span className={`${isDec ? "self-start pt-1" : "self-end pb-1"} font-mono font-semibold text-slate-900 text-xs`}>
+                    <div className="h-24 flex flex-col justify-between">
+                      <span className={`${isUp ? "invisible" : "visible"} font-mono font-semibold text-slate-900 text-xs`}>
                         <MathText text={`\\(${normVal(vt.func_values[0])}\\)`} />
                       </span>
-
-                      {/* Arrow in middle */}
-                      <div className="flex-1 flex items-center justify-center px-4">
-                        <svg className="w-full h-12" preserveAspectRatio="none" viewBox="0 0 100 40">
-                          <defs>
-                            <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                              <polygon points="0 0, 6 3, 0 6" fill="#1e293b" />
-                            </marker>
-                          </defs>
-                          <line
-                            x1="10"
-                            y1={isDec ? "6" : "34"}
-                            x2="90"
-                            y2={isDec ? "34" : "6"}
-                            stroke="#1e293b"
-                            strokeWidth="1.5"
-                            markerEnd="url(#arrowhead)"
-                          />
-                        </svg>
-                      </div>
-
-                      {/* Right limit / value */}
-                      <span className={`${isDec ? "self-end pb-1" : "self-start pt-1"} font-mono font-semibold text-slate-900 text-xs`}>
-                        <MathText text={`\\(${normVal(vt.func_values[n - 1])}\\)`} />
+                      <span className={`${isUp ? "visible" : "invisible"} font-mono font-semibold text-slate-900 text-xs`}>
+                        <MathText text={`\\(${normVal(vt.func_values[0])}\\)`} />
                       </span>
                     </div>
                   );
                 })()}
               </td>
+
+              {Array.from({ length: numIntervals }).map((_, i) => {
+                const arrow = vt.arrows[i] || "↗";
+                const isUp = arrow === "↗";
+                const isLast = i === numIntervals - 1;
+                const boundaryIdx = i + 1;
+                const pole = !isLast && isPole(boundaryIdx);
+                const nextVal = normVal(vt.func_values[boundaryIdx]);
+
+                return (
+                  <Fragment key={i}>
+                    {/* Interval arrow */}
+                    <td className="px-2 py-3 min-w-[75px]">
+                      <div className="flex items-center justify-center h-28">
+                        <svg className="w-full h-24" viewBox="0 0 100 70" preserveAspectRatio="none">
+                          <defs>
+                            <marker
+                              id={`arrowhead-${i}`}
+                              markerWidth="6"
+                              markerHeight="6"
+                              refX="5"
+                              refY="3"
+                              orient="auto"
+                            >
+                              <polygon points="0 0, 6 3, 0 6" fill="#1e293b" />
+                            </marker>
+                          </defs>
+                          <line
+                            x1="10"
+                            y1={isUp ? "58" : "16"}
+                            x2="90"
+                            y2={isUp ? "16" : "58"}
+                            stroke="#1e293b"
+                            strokeWidth="1.5"
+                            markerEnd={`url(#arrowhead-${i})`}
+                          />
+                        </svg>
+                      </div>
+                    </td>
+
+                    {/* Boundary point value / pole double bar */}
+                    <td className="relative px-0 py-3 text-center min-w-[52px]">
+                      {isLast ? (
+                        /* End boundary value */
+                        <div className="h-28 flex flex-col justify-between py-2.5">
+                          <span className={`${isUp ? "visible" : "invisible"} font-mono font-semibold text-slate-900 text-xs`}>
+                            <MathText text={`\\(${nextVal}\\)`} />
+                          </span>
+                          <span className={`${isUp ? "invisible" : "visible"} font-mono font-semibold text-slate-900 text-xs`}>
+                            <MathText text={`\\(${nextVal}\\)`} />
+                          </span>
+                        </div>
+                      ) : pole ? (
+                        /* Double vertical line with left and right one-sided limits */
+                        <div className="relative flex items-center justify-center h-28">
+                          {(() => {
+                            const limits = getPoleLimits(boundaryIdx);
+                            const leftIsDown = vt.arrows[i] === "↘";
+                            return (
+                              <>
+                                <span
+                                  className={`absolute right-[18px] ${
+                                    leftIsDown ? "bottom-3" : "top-3"
+                                  } font-mono font-semibold text-slate-900 text-xs whitespace-nowrap`}
+                                >
+                                  <MathText text={`\\(${limits.left}\\)`} />
+                                </span>
+
+                                <div className="flex items-center justify-center h-28 gap-[3px]">
+                                  <div className="w-[1.5px] h-28 bg-slate-900" />
+                                  <div className="w-[1.5px] h-28 bg-slate-900" />
+                                </div>
+
+                                <span
+                                  className={`absolute left-[18px] ${
+                                    vt.arrows[i + 1] === "↘" ? "top-3" : "bottom-3"
+                                  } font-mono font-semibold text-slate-900 text-xs whitespace-nowrap`}
+                                >
+                                  <MathText text={`\\(${limits.right}\\)`} />
+                                </span>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      ) : (
+                        /* Critical point value (local max at top, local min at bottom) */
+                        <div className="h-28 flex flex-col justify-between py-2.5">
+                          <span
+                            className={`${
+                              isUp ? "visible" : "invisible"
+                            } font-mono font-semibold text-slate-900 text-xs`}
+                          >
+                            <MathText text={`\\(${nextVal}\\)`} />
+                          </span>
+                          <span
+                            className={`${
+                              !isUp ? "visible" : "invisible"
+                            } font-mono font-semibold text-slate-900 text-xs`}
+                          >
+                            <MathText text={`\\(${nextVal}\\)`} />
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                  </Fragment>
+                );
+              })}
             </tr>
           </tbody>
         </table>
@@ -268,7 +439,7 @@ const KM_DIGITS: Record<string, string> = {
 function getSectionPrompt(sec: string, promptText: string | null | undefined, parts: Part[]): string {
   const kmSec = KM_DIGITS[sec] ?? sec;
   if (promptText) {
-    const lines = promptText.split("\n").map((l) => l.trim()).filter(Boolean);
+    const lines = getCleanLines(promptText);
     const regex = new RegExp(`^(?:${sec}|${kmSec})[.\\s]`, "i");
     const match = lines.find((l) => regex.test(l));
     if (match) return match;
@@ -490,12 +661,12 @@ export default function StructureModal({
               </div>
             )}
             {prompt && (
-              <div className="mt-2 text-base text-slate-800 leading-relaxed">
-                {promptIsLatex ? (
-                  <MathText text={`\\(${prompt}\\)`} />
-                ) : (
-                  <p className="whitespace-pre-line">{prompt}</p>
-                )}
+              <div className="mt-3 space-y-2 text-base text-slate-800 leading-relaxed">
+                {getCleanLines(prompt).map((line, idx) => (
+                  <div key={idx} className="break-words">
+                    <MathText text={line} />
+                  </div>
+                ))}
               </div>
             )}
           </div>

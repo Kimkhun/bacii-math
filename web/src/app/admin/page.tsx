@@ -20,6 +20,11 @@ function renderMathFormula(s: string): string {
   return `\\(${s}\\)`;
 }
 
+function kmMath(s: string): string {
+  if (!s) return "";
+  return s.replace(/\$(.+?)\$/g, "\\($1\\)");
+}
+
 export default function AdminPage() {
   const { lang, t } = useLanguage();
   const [tab, setTab] = useState<Tab>("overview");

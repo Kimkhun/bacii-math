@@ -129,6 +129,8 @@ async def grade_student_graph(
             completion_tokens=completion_tokens,
             latency_ms=latency_ms,
             success=True,
+            prompt_text=f"[Handdrawn Graph Grading Prompt]:\n{prompt}",
+            response_text=resp.text or "",
         )
 
         result = json.loads(resp.text)
@@ -153,6 +155,7 @@ async def grade_student_graph(
             latency_ms=latency_ms,
             success=False,
             error_message=str(exc),
+            prompt_text=f"[Handdrawn Graph Grading Prompt]:\n{prompt}",
         )
         log.warning("graph grading Gemini call failed: %s", exc)
         return None
