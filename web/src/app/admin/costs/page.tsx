@@ -13,6 +13,12 @@ export default function AdminCostsPage() {
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [totalLogs, setTotalLogs] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
   // Model settings
   const [modelSettings, setModelSettings] = useState({
     text_model: "gemini-3.5-flash",
@@ -32,6 +38,17 @@ export default function AdminCostsPage() {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
+  // Close modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedLog(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const loadData = async () => {
     setBusy(true);
     setError("");
@@ -39,12 +56,14 @@ export default function AdminCostsPage() {
       const [sumData, usersData, logsData, modelsData] = await Promise.all([
         api.adminCostSummary(days),
         api.adminUserCosts(days, endpointFilter || undefined),
-        api.adminUsageLogs(50, endpointFilter || undefined),
+        api.adminUsageLogs(page, pageSize, endpointFilter || undefined),
         api.adminModelSettings(),
       ]);
       setSummary(sumData);
       setUserCosts(usersData);
-      setLogs(logsData);
+      setLogs(logsData.logs || []);
+      setTotalLogs(logsData.total || 0);
+      setTotalPages(logsData.total_pages || 1);
       setModelSettings(modelsData);
     } catch (err: any) {
       setError(err?.message || "Failed to load admin cost metrics");
@@ -55,7 +74,12 @@ export default function AdminCostsPage() {
 
   useEffect(() => {
     loadData();
-  }, [days, endpointFilter]);
+  }, [days, endpointFilter, page, pageSize]);
+
+  const handleFilterChange = (endpoint: string) => {
+    setEndpointFilter(endpoint);
+    setPage(1);
+  };
 
   const handleSaveModels = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,17 +304,36 @@ export default function AdminCostsPage() {
                   summary.by_endpoint.map((item) => {
                     const totalCost = summary.period.cost_usd || 1;
                     const pct = Math.min(100, Math.round((item.cost_usd / totalCost) * 100));
+                    const isFiltered = endpointFilter === item.endpoint;
                     return (
-                      <div key={item.endpoint} className="space-y-1">
-                        <div className="flex justify-between text-xs font-medium text-slate-700">
-                          <span className="capitalize">{item.endpoint.replace("_", " ")}</span>
+                      <div
+                        key={item.endpoint}
+                        onClick={() => handleFilterChange(isFiltered ? "" : item.endpoint)}
+                        className={`p-2 rounded-lg transition cursor-pointer ${
+                          isFiltered
+                            ? "bg-indigo-50 border border-indigo-200"
+                            : "hover:bg-slate-50 border border-transparent"
+                        }`}
+                        title={isFiltered ? "Click to clear filter" : "Click to filter telemetry table"}
+                      >
+                        <div className="flex justify-between text-xs font-medium text-slate-700 mb-1">
+                          <span className="capitalize flex items-center gap-1.5">
+                            <span>{item.endpoint.replace(/_/g, " ")}</span>
+                            {isFiltered && (
+                              <span className="px-1.5 py-0.2 rounded text-[10px] bg-indigo-600 text-white font-semibold">
+                                Filtered
+                              </span>
+                            )}
+                          </span>
                           <span>
                             ${item.cost_usd.toFixed(4)} ({item.calls} calls)
                           </span>
                         </div>
                         <div className="w-full bg-slate-100 rounded-full h-2">
                           <div
-                            className="bg-emerald-500 h-2 rounded-full"
+                            className={`h-2 rounded-full transition-all ${
+                              isFiltered ? "bg-indigo-600" : "bg-emerald-500"
+                            }`}
                             style={{ width: `${Math.max(5, pct)}%` }}
                           />
                         </div>
@@ -411,13 +454,43 @@ export default function AdminCostsPage() {
 
         {/* Real-time Logs Feed */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-200">
-            <h3 className="font-semibold text-slate-900 text-base">
-              Recent API Telemetry Feed
-            </h3>
-            <p className="text-xs text-slate-500">
-              Live audit stream of the last 50 LLM / OCR requests.
-            </p>
+          <div className="px-5 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="font-semibold text-slate-900 text-base flex items-center gap-2">
+                <span>Recent API Telemetry Feed</span>
+                {totalLogs > 0 && (
+                  <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full font-mono font-normal">
+                    {totalLogs.toLocaleString()} calls
+                  </span>
+                )}
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Live audit stream of LLM, OCR, and grading requests with prompt/response telemetry.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={endpointFilter}
+                onChange={(e) => handleFilterChange(e.target.value)}
+                className="bg-white border border-slate-300 text-slate-700 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="">All Features / Endpoints</option>
+                {summary?.by_endpoint.map((ep) => (
+                  <option key={ep.endpoint} value={ep.endpoint}>
+                    {ep.endpoint.replace(/_/g, " ")} ({ep.calls})
+                  </option>
+                ))}
+              </select>
+              {endpointFilter && (
+                <button
+                  onClick={() => handleFilterChange("")}
+                  className="px-2 py-1 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded transition"
+                  title="Clear filter"
+                >
+                  ✕ Clear
+                </button>
+              )}
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
@@ -504,11 +577,62 @@ export default function AdminCostsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          <div className="px-5 py-3 border-t border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600">
+            <div className="flex items-center gap-3">
+              <span>
+                Showing <strong className="font-mono text-slate-900">{totalLogs === 0 ? 0 : (page - 1) * pageSize + 1}</strong> to{" "}
+                <strong className="font-mono text-slate-900">{Math.min(page * pageSize, totalLogs)}</strong> of{" "}
+                <strong className="font-mono text-slate-900">{totalLogs.toLocaleString()}</strong> calls
+              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400">|</span>
+                <label className="text-slate-500 text-[11px]">Per page:</label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="bg-white border border-slate-300 text-slate-700 text-xs rounded px-2 py-1 focus:outline-none"
+                >
+                  <option value={15}>15</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1 || busy}
+                className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-md font-medium hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                Previous
+              </button>
+              <span className="px-2 font-mono font-medium text-slate-700">
+                Page {page} of {Math.max(1, totalPages)}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages || busy}
+                className="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-md font-medium hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Modal: Prompt & Response Telemetry Inspector */}
         {selectedLog && (
-          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+            onClick={() => setSelectedLog(null)}
+          >
             <div
               className="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
@@ -527,7 +651,7 @@ export default function AdminCostsPage() {
                       </span>
                     </h3>
                     <p className="text-xs text-slate-500">
-                      Executed at {new Date(selectedLog.created_at).toLocaleString()} • Latency: {selectedLog.latency_ms}ms
+                      Call ID: <span className="font-mono">{selectedLog.id.slice(0, 8)}...</span> • {new Date(selectedLog.created_at).toLocaleString()} • Latency: {selectedLog.latency_ms}ms • User: {selectedLog.email}
                     </p>
                   </div>
                 </div>

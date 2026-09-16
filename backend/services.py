@@ -255,13 +255,32 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
 
     allowed = await cache.allow_gemini(str(user.id))
     sol_km = None
+    target_part_km = None
     if question.topic == "functions":
         try:
             km_res = await km_solution_for_question(db, user, question.id)
-            if km_res and km_res.get("solution_km"):
-                sol_km = km_res["solution_km"]
-        except Exception:
-            pass
+            if km_res:
+                raw_km = km_res.get("raw_km") or {}
+                parts_list = raw_km.get("parts") or []
+                if is_multi and part:
+                    part_obj = next(
+                        (p for p in parts_list if str(p.get("label")) == str(part)),
+                        None,
+                    )
+                    if not part_obj:
+                        part_obj = next(
+                            (p for p in parts_list if str(p.get("label")).startswith(str(part))),
+                            None,
+                        )
+                    if part_obj:
+                        target_part_km = _render_single_km_part(part_obj)
+                        sol_km = target_part_km
+                        resp["official_part_solution"] = target_part_km
+                if not sol_km:
+                    sol_km = km_res.get("solution_km")
+        except Exception as exc:
+            import logging
+            logging.getLogger("bacii").warning("Failed to fetch km_solution for %s: %s", question.id, exc)
 
     if not result["correct"]:
         steps_text = _steps_text(question, lang=lang)
@@ -296,6 +315,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
             step_check=step_check,
             user_id=user.id,
             lang=lang,
+            part_label=part if (is_multi and part) else None,
         )
         if rubric_tip:
             resp["teacher_feedback"] = {"content": rubric_tip, "provider": provider}
@@ -914,6 +934,52 @@ def _render_km_solution(km: dict | None) -> str | None:
             lines.append(f"ចម្លើយ៖ {part['answer_khmer']}")
         blocks.append("\n\n".join(lines))
     return "\n\n".join(blocks)
+
+
+def _render_single_km_part(part: dict | None) -> str:
+    """Render a single part's structured km JSON into readable MoEYS reference text."""
+    if not part:
+        return ""
+    lines = [f"**{part.get('label', '')}**"]
+    for s in part.get("steps", []):
+        km_text = s.get("khmer") or ""
+        latex_expr = s.get("latex") or ""
+        if km_text:
+            has_formula = "$" in km_text or "\\(" in km_text or "=" in km_text
+            if latex_expr and not has_formula:
+                lines.append(f"{km_text}\n\n$${latex_expr}$$")
+            else:
+                lines.append(km_text)
+        elif latex_expr:
+            lines.append(f"$${latex_expr}$$")
+    if part.get("answer_khmer"):
+        lines.append(f"ចម្លើយ៖ {part['answer_khmer']}")
+    return "\n\n".join(lines)
+
+
+async def km_solution_for_question(db: AsyncSession, user: User, question_id: uuid.UUID) -> dict | None:
+    """Retrieve or generate the authentic MoEYS solution for a question."""
+    question = await db.get(Question, question_id)
+    if not question:
+        return None
+    spec = question.spec or {}
+    source_id = spec.get("source_id") or spec.get("id")
+    if question.topic == "functions" and source_id:
+        km_data = await cache.get_km_solution(f"fn_km:study:{source_id}")
+        if not km_data:
+            try:
+                solution = solver.solve("functions", "study", spec)
+                km_facts = solution.get("km_facts")
+                km_data = await _km_solution_for(f"fn_km:study:{source_id}", km_facts)
+            except Exception as e:
+                import logging
+                logging.getLogger("bacii").warning("Failed to generate km solution for %s: %s", source_id, e)
+        if km_data:
+            return {
+                "solution_km": _render_km_solution(km_data),
+                "raw_km": km_data,
+            }
+    return None
 
 
 def _build_curated_shape_payload(topic: str) -> dict:

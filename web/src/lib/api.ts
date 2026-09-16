@@ -280,6 +280,7 @@ export interface GradeResult {
   graph?: GraphSpec | null;
   graph_check?: GraphCheck | null;
   rubric_score?: RubricScore | null;
+  official_part_solution?: string;
 }
 
 export interface Attempt {
@@ -822,9 +823,19 @@ export const api = {
   adminCostSummary: (days: number = 30) => request<AdminCostSummary>(`/admin/costs/summary?days=${days}`),
   adminUserCosts: (days: number = 30, endpoint?: string) =>
     request<AdminUserCost[]>(`/admin/costs/users?days=${days}${endpoint ? `&endpoint=${endpoint}` : ""}`),
-  adminUsageLogs: (limit: number = 50, endpoint?: string) =>
-    request<AdminUsageLog[]>(`/admin/costs/logs?limit=${limit}${endpoint ? `&endpoint=${endpoint}` : ""}`),
+  adminUsageLogs: (page: number = 1, pageSize: number = 25, endpoint?: string) =>
+    request<AdminUsageLogsResponse>(
+      `/admin/costs/logs?page=${page}&page_size=${pageSize}${endpoint ? `&endpoint=${endpoint}` : ""}`
+    ),
 };
+
+export interface AdminUsageLogsResponse {
+  logs: AdminUsageLog[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
 
 export interface AdminCostSummary {
   timeframe_days: number;

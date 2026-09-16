@@ -182,12 +182,22 @@ async def get_costs_by_user(
 
 @router.get("/costs/logs")
 async def get_recent_usage_logs(
-    limit: int = Query(50, ge=1, le=200),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1, le=100),
     endpoint: Optional[str] = None,
     admin: User = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Stream of recent API consumption logs for debugging/auditing."""
+    """Paginated stream of recent API consumption logs for debugging/auditing."""
+    # 1. Total count query
+    count_query = select(func.count(ApiUsageLog.id))
+    if endpoint:
+        count_query = count_query.where(ApiUsageLog.endpoint == endpoint)
+    total = (await db.execute(count_query)).scalar() or 0
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    offset = (page - 1) * page_size
+
+    # 2. Paginated rows query
     query = select(
         ApiUsageLog.id,
         ApiUsageLog.user_id,
@@ -207,32 +217,40 @@ async def get_recent_usage_logs(
         ApiUsageLog.success,
         ApiUsageLog.error_message,
         ApiUsageLog.created_at,
-    ).outerjoin(User, ApiUsageLog.user_id == User.id).order_by(desc(ApiUsageLog.created_at)).limit(limit)
+    ).outerjoin(User, ApiUsageLog.user_id == User.id)
 
     if endpoint:
         query = query.where(ApiUsageLog.endpoint == endpoint)
 
+    query = query.order_by(desc(ApiUsageLog.created_at)).offset(offset).limit(page_size)
+
     rows = (await db.execute(query)).all()
-    return [
-        {
-            "id": str(r.id),
-            "user_id": str(r.user_id) if r.user_id else None,
-            "email": r.email or "unauthenticated",
-            "endpoint": r.endpoint,
-            "provider": r.provider,
-            "model_name": r.model_name,
-            "prompt_tokens": r.prompt_tokens,
-            "completion_tokens": r.completion_tokens,
-            "total_tokens": r.total_tokens,
-            "estimated_cost_usd": round(float(r.estimated_cost_usd), 6),
-            "prompt_cost_usd": round(float(r.prompt_cost_usd or 0.0), 6),
-            "completion_cost_usd": round(float(r.completion_cost_usd or 0.0), 6),
-            "prompt_text": r.prompt_text,
-            "response_text": r.response_text,
-            "latency_ms": r.latency_ms,
-            "success": r.success,
-            "error_message": r.error_message,
-            "created_at": r.created_at.isoformat() if r.created_at else None,
-        }
-        for r in rows
-    ]
+    return {
+        "logs": [
+            {
+                "id": str(r.id),
+                "user_id": str(r.user_id) if r.user_id else None,
+                "email": r.email or "unauthenticated",
+                "endpoint": r.endpoint,
+                "provider": r.provider,
+                "model_name": r.model_name,
+                "prompt_tokens": r.prompt_tokens,
+                "completion_tokens": r.completion_tokens,
+                "total_tokens": r.total_tokens,
+                "estimated_cost_usd": round(float(r.estimated_cost_usd), 6),
+                "prompt_cost_usd": round(float(r.prompt_cost_usd or 0.0), 6),
+                "completion_cost_usd": round(float(r.completion_cost_usd or 0.0), 6),
+                "prompt_text": r.prompt_text,
+                "response_text": r.response_text,
+                "latency_ms": r.latency_ms,
+                "success": r.success,
+                "error_message": r.error_message,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in rows
+        ],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }

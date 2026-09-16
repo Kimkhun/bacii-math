@@ -2224,12 +2224,32 @@ function PracticeInner() {
                 </div>
               )}
               {result.teacher_feedback?.content && (
-                <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 shadow-sm">
-                  <div className="flex items-center gap-1.5 font-semibold text-amber-800 mb-1">
-                    <span>👨‍🏫</span>
-                    <span>{t("label_teacher_tip")}</span>
+                <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50/90 p-3.5 text-xs leading-relaxed text-amber-950 shadow-sm">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5 font-semibold text-amber-900">
+                      <span>👨‍🏫</span>
+                      <span>{t("label_teacher_tip")}</span>
+                    </div>
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-200/60 text-amber-800">
+                      Bac II Tutor
+                    </span>
                   </div>
-                  <MathText text={result.teacher_feedback.content} className="whitespace-pre-wrap font-sans" />
+                  <MathText text={result.teacher_feedback.content} className="whitespace-pre-wrap font-sans leading-relaxed" />
+
+                  {result.official_part_solution && (
+                    <details className="mt-2.5 pt-2.5 border-t border-amber-200 group">
+                      <summary className="cursor-pointer text-amber-800 hover:text-amber-950 font-semibold text-[11px] flex items-center justify-between select-none">
+                        <span className="flex items-center gap-1">
+                          <span>📋</span>
+                          <span>{t("label_official_moeys_key") || "មើលអត្រាកំណែផ្លូវការ (Official Model Key)"}</span>
+                        </span>
+                        <span className="text-amber-600 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div className="mt-2 p-3 bg-white/90 border border-amber-200/80 rounded-md font-sans text-slate-800 text-xs shadow-inner">
+                        <MathText text={result.official_part_solution} className="whitespace-pre-wrap leading-relaxed" />
+                      </div>
+                    </details>
+                  )}
                 </div>
               )}
               {!result.correct &&

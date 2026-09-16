@@ -547,39 +547,42 @@ async def check_rubric_feedback(
     allow_gemini: bool = True,
     step_check: dict | None = None,
     user_id: any = None,
-    lang: str = "en",
+    lang: str = "km",
+    part_label: str | None = None,
 ) -> tuple[str | None, str | None]:
-    """Generate teacher commentary on the student's solution presentation and exam
-    technique according to official Bac II grading rubrics.
-
-    The reference key is always the Khmer one (it is the official BAC II wording),
-    but the commentary itself follows the student's chosen language.
+    """Generate caring but strict tutor commentary on the student's solution presentation,
+    explicitly flagging shortcuts and omissions according to official Bac II standards.
     """
     status_str = "ត្រឹមត្រូវ (Correct)" if is_correct else "មិនទាន់ត្រឹមត្រូវ (Incorrect)"
+    part_ctx = f" (សំណួរទី {part_label})" if part_label else ""
+
     if lang == "km":
-        language_rules = (
-            "- Write your response 100% in authentic Khmer.\n"
-            "- If their answer is correct, praise their accuracy and give a quick tip on presentation (e.g. remember to write domain conditions, mention question references like 'តាមសំណួរ...', or include units like ឯកតាផ្ទៃ).\n"
-            "- Do NOT include English words. Keep it concise, helpful, and encouraging."
+        persona_rules = (
+            "LANGUAGE & TONE INSTRUCTIONS (KHMER):\n"
+            "- Write your response 100% in authentic, caring, but strict Khmer as a dedicated Bac II math teacher.\n"
+            "- If the student took a SHORTCUT or skipped required intermediate steps (e.g. didn't state existence condition, skipped factoring before canceling, or jumped directly to infinity without showing one-sided limits), explicitly point it out: 'ប្អូនបានកាត់ជំហាន (Shortcut) ត្រង់... ក្នុងពេលប្រឡងបាក់ឌុប ចាំបាច់ត្រូវបង្ហាញ... ដើម្បីកុំឱ្យគណៈមេប្រយោគកាត់ពិន្ទុ ។'\n"
+            "- If their answer is INCORRECT, pinpoint the exact step where they went off track and provide the direct formula or step needed.\n"
+            "- If their work is fully CORRECT and detailed, praise their accuracy and give 1 brief tip on presentation polish.\n"
+            "- Keep your response to 2–4 concise, direct, high-value sentences. Wrap all math in $...$."
         )
     else:
-        language_rules = (
-            "- Write your response 100% in English, even though the key below is in Khmer.\n"
-            "- If their answer is correct, praise their accuracy and give a quick tip on presentation (e.g. remember to state domain conditions, refer back to the question, or include units).\n"
-            "- Keep it concise, helpful, and encouraging."
+        persona_rules = (
+            "LANGUAGE & TONE INSTRUCTIONS (ENGLISH):\n"
+            "- Write your response 100% in English as a caring but strict Bac II math tutor.\n"
+            "- If the student took a SHORTCUT or skipped necessary intermediate steps (e.g. didn't state existence condition, skipped factoring before canceling, or jumped directly to infinity without one-sided limits), explicitly point it out: 'You took a shortcut here: you skipped... On the official Bac II exam, you must show... to avoid point deductions.'\n"
+            "- If their answer is INCORRECT, clearly pinpoint where their reasoning or arithmetic derailed and give the correct step.\n"
+            "- If their work is fully CORRECT and thorough, praise their work and provide a brief tip on presentation polish.\n"
+            "- Keep your response to 2–4 concise, direct, actionable sentences. Wrap all math in $...$."
         )
+
     prompt = (
-        "You are an expert Cambodian Bac II mathematics teacher and national exam grader reviewing a student's answer.\n"
-        f"QUESTION: {question_text}\n\n"
-        f"STUDENT'S SUBMISSION:\n{user_submission}\n\n"
-        f"OFFICIAL EXAM KEY (អត្រាកំណែផ្លូវការ):\n{correct_solution_km}\n\n"
-        f"SYMPY VERDICT: {status_str}\n"
+        f"You are a dedicated Cambodian National Bac II Grade 12 mathematics tutor reviewing a student's handwritten work for this specific sub-question{part_ctx}.\n\n"
+        f"PROBLEM STATEMENT:\n{question_text}\n\n"
+        f"STUDENT'S SUBMITTED WORK:\n{user_submission}\n\n"
+        f"OFFICIAL BAC II MODEL KEY FOR THIS PART (អត្រាកំណែផ្លូវការ):\n{correct_solution_km}\n\n"
+        f"SYMPY COMPUTED RESULT: {status_str}\n"
         f"{_step_check_summary(step_check)}\n\n"
-        "RULES:\n"
-        "- Give 2 to 3 concise, friendly, and constructive sentences offering actionable teacher feedback on their presentation according to the Bac II grading rubric (អត្រាកំណែ).\n"
-        "- If their answer is incorrect, pinpoint where they went off track and how to write it properly according to the official key.\n"
-        "- Wrap all mathematical expressions in $...$.\n"
-        f"{language_rules}"
+        f"{persona_rules}"
     )
     return await _generate_with_fallback(prompt, allow_gemini, endpoint="rubric_feedback", user_id=user_id)
 
