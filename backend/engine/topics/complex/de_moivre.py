@@ -44,11 +44,12 @@ def _solve_de_moivre(r, k, d, n):
         "answer_exact": result,
         "answer_decimal": str(result),
         "answer_latex": latex(result),
+        "given": z,
         "steps": steps,
         "formula_tags": _formula_tags(steps),
         "checkpoints": [
             {"label": "r^n", "value": r ** n, "formula": "de_moivre_formula"},
-            {"label": "n*theta mod 2pi", "value": n_theta, "formula": "angle_reduction_mod_2pi"},
+            {"label": "n*theta mod 2pi", "value": n_theta, "formula": "angle_reduction_mod_2pi", "angle": True},
             {"label": f"z^{n}", "value": result, "formula": "trig_to_algebraic"},
         ],
     }

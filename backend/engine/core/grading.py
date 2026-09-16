@@ -8,7 +8,7 @@ lives in ``engine.topics.functions.grader``.
 import math
 import re as _re
 
-from sympy import E, Expr, I, N, Symbol, binomial, im, latex, limit, oo, pi, re, simplify, sqrt
+from sympy import Add, E, Expr, expand, sympify, I, N, Symbol, binomial, im, latex, limit, oo, pi, re, simplify, sqrt
 from sympy import solve as sym_solve
 from sympy.parsing.sympy_parser import (
     convert_xor,
@@ -136,8 +136,18 @@ def _normalize_ocr_text(text):
 # to the end — the exact value is always what precedes it.
 _APPROX_TAIL_RE = _re.compile(r"(?:≈|~|\bapprox\b).*$")
 
+# Angle units after a value. Radians are the unit every angle checkpoint is
+# already in, so "rad" is just dropped — left in, sympy reads it as its own
+# rad() *function* and "0 rad" fails to parse (Zero * function). Degrees are
+# converted: "135°" means 3pi/4. Letter-bounded so "radius"/"grad" etc. never
+# match.
+_RAD_UNIT_RE = _re.compile(r"(?<![A-Za-z])rad(?:ians?|s)?(?![A-Za-z])", _re.I)
+_DEG_UNIT_RE = _re.compile(r"(\d+(?:\.\d+)?)\s*(?:°|\^\s*\\?circ\b|\\circ\b|deg(?:rees?)?(?![A-Za-z]))", _re.I)
+
 def parse_answer(text):
     text = text.strip()
+    text = _DEG_UNIT_RE.sub(r"(\1*pi/180)", text)
+    text = _RAD_UNIT_RE.sub(" ", text).strip()
     if not text:
         raise ValueError("empty answer")
     text = _APPROX_TAIL_RE.sub("", text).strip()
@@ -206,7 +216,10 @@ def _numeric_close(user, expected, tol):
         return False
 
 def _angle_close(user, expected, tol):
-    d = float(N(user - expected))
+    try:
+        d = float(N(user - expected))
+    except (TypeError, ValueError):
+        return False
     d = (d + math.pi) % (2 * math.pi) - math.pi
     return abs(d) <= tol
 
@@ -330,6 +343,98 @@ def _is_param_restatement(text: str, params: dict, given_expr) -> bool:
         except Exception:
             return False
     return True
+
+_SECTION_NUMBER_RE = _re.compile(r"^\(?\d{1,2}[.)]$")
+
+
+def _is_single_param_restatement(lhs: str, value, params: dict) -> bool:
+    """'<param> = <its given value>' as a lone clause (see
+    `_is_param_restatement` for the multi-clause form)."""
+    name = lhs.strip()
+    if not _re.fullmatch(r"[A-Za-z]\w*", name) or name not in params:
+        return False
+    try:
+        pval = parse_answer(str(params[name]))
+        return simplify(value - pval) == 0 or _numeric_close(value, pval, _DEFAULT_TOL)
+    except Exception:
+        return False
+
+
+def _is_given_decomposition(text: str, given_expr) -> bool:
+    """'a = -1/2 b = -sqrt(3)/2 i': every '<letter> = <value>' clause names a
+    term of the given expression (its real part, imaginary term, or the whole
+    thing) — the student labelling pieces of z, not computing anything."""
+    if given_expr is None:
+        return False
+    clauses = [(m.group(1), m.group(2).strip()) for m in _PARAM_CLAUSE_RE.finditer(text) if m.group(2).strip()]
+    if not clauses:
+        return False
+    given = sympify(given_expr)
+    pieces = set(Add.make_args(expand(given))) | {given}
+    for name, val_str in clauses:
+        if len(name) != 1 or name.lower() == "z":
+            return False
+        try:
+            val = parse_answer(val_str)
+        except Exception:
+            return False
+        if not any(simplify(val - p) == 0 for p in pieces):
+            return False
+    return True
+
+
+def _aux_match(values, candidates, tol, var_sym):
+    """The candidate checkpoint every one of `values` matches (some candidate
+    each), or None — e.g. both signs of 'x = ±3sqrt(2)/2' being real parts of
+    some root. Returns the first value's match."""
+    first = None
+    for v in values:
+        hit = next((c for c in candidates if _match_checkpoint(v, c, tol, var_sym)), None)
+        if hit is None:
+            return None
+        first = first or hit
+    return first
+
+
+_CLAUSE_LHS = r"\|?[A-Za-z]\w*(?:\([^()]*\))?\|?"
+_CLAUSE_VALUE_RE = _re.compile(_CLAUSE_LHS + r"\s*=\s*([^=]+?)(?=\s*\(?\s*" + _CLAUSE_LHS + r"\s*=|$)")
+
+def _answer_candidates(text):
+    """The values a conclusion sentence asserts: Khmer narration stripped,
+    then each '<name> = <value>' clause's value, with parentheses left
+    unbalanced by an '(or w = ...)' aside trimmed off."""
+    text = _strip_khmer(text or "")
+    out = []
+    for m in _CLAUSE_VALUE_RE.finditer(text):
+        val = m.group(1).strip()
+        while val.count(")") > val.count("(") and val.endswith(")"):
+            val = val[:-1].rstrip()
+        while val.count("(") > val.count(")") and val.endswith("("):
+            val = val[:-1].rstrip()
+        if val:
+            out.append(val)
+    if not out and text:
+        out.append(text)
+    return out
+
+
+def _is_symbolic_definition(value, checkpoints, var_sym) -> bool:
+    """A letters-only value (no problem variable) on a problem whose
+    checkpoints are all concrete numbers can only be a definition/formula
+    statement, never a computed step."""
+    try:
+        if not value.free_symbols or (var_sym is not None and var_sym in value.free_symbols):
+            return False
+    except AttributeError:
+        return False
+    for cp in checkpoints:
+        cv = cp.get("value")
+        if not isinstance(cv, (int, float, Expr)):
+            return False
+        if isinstance(cv, Expr) and cv.free_symbols:
+            return False
+    return True
+
 
 def _is_var_point_declaration(lhs: str, value_str: str, var_name: str) -> bool:
     """A line whose math content is just '<var> = <number>' ('Step 1: substitute
@@ -867,7 +972,13 @@ def _judge_by_kind(kind, expected, user_answer, tol=_DEFAULT_TOL, choices=None, 
 def _match_checkpoint(value, cp, tol, var_sym):
     """Line-check matcher for one checkpoint. Non-SymPy checkpoint values
     (interval/choice structures) can't be verified from an OCR line — skip them
-    rather than flagging; ±oo checkpoints match only the same infinity."""
+    rather than flagging; ±oo checkpoints match only the same infinity.
+    A checkpoint with `alternatives` (e.g. "one n-th root": any root) matches
+    any of them."""
+    if cp.get("alternatives"):
+        base = {**cp, "alternatives": None}
+        return any(_match_checkpoint(value, {**base, "value": alt}, tol, var_sym)
+                   for alt in [cp["value"], *cp["alternatives"]])
     cv = cp["value"]
     if isinstance(cv, (str, list, dict, bool)) or not isinstance(cv, (int, float, Expr)):
         return False
@@ -878,6 +989,10 @@ def _match_checkpoint(value, cp, tol, var_sym):
             return True
     except Exception:
         return False
+    # An angle checkpoint (arg(z), a reduced n*theta) is only defined mod 2pi:
+    # 7pi/4 and -pi/4 are the same argument.
+    if cp.get("angle") and _angle_close(value, cv, tol):
+        return True
     if _numeric_close(value, cv, tol):
         return True
     if cp.get("constant_ok"):
@@ -916,6 +1031,13 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     checkpoints = list(solution.get("checkpoints", []))
     if not checkpoints or checkpoints[-1]["value"] != solution["answer_exact"]:
         checkpoints.append({"label": "final answer", "value": solution["answer_exact"], "formula": None})
+    # Values an alternative valid method passes through (see nth_roots): a
+    # line matching one is correct wherever it appears, but doesn't move the
+    # step sequence forward.
+    aux_checkpoints = solution.get("aux_checkpoints") or []
+    # Complex numbers have no calculus variable — x/y there are the unknown
+    # real/imaginary parts, so letters-only lines are definitions.
+    definition_var = None if topic == "complex" else Symbol(params.get("var", "x"))
 
     line_results = []
     pointer = 0
@@ -935,6 +1057,13 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
 
         if _INTEGRAL_SIGN_RE.search(text):
             line_results.append({"line": i, "text": raw, "checked": False, "reason": "unevaluated_integral"})
+            continue
+
+        # A bare step number ('1.', '2)') left over once a Khmer heading
+        # ('3. ដោះស្រាយ...') is stripped — a heading, not the value 3, so it
+        # must be skipped before it can match a checkpoint that equals 3.
+        if _SECTION_NUMBER_RE.match(text):
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "label"})
             continue
 
         # A continuity conclusion line ("...so f is discontinuous at x=2")
@@ -998,6 +1127,17 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
                     "expected": f"{checkpoints[pair_idx]['value']}, {checkpoints[pair_idx + 1]['value']}",
                 })
                 pointer = pair_idx + 2
+                continue
+            aux_hit = _aux_match([v_plus, v_minus], checkpoints + aux_checkpoints, tol, var_sym)
+            if aux_hit is not None:
+                line_results.append({
+                    "line": i, "text": raw, "checked": True, "correct": True,
+                    "matches": aux_hit["label"], "formula": aux_hit.get("formula"),
+                    "expected": str(aux_hit["value"]), "restated": True,
+                })
+                continue
+            if had_equals and _is_symbolic_definition(v_plus, checkpoints, definition_var):
+                line_results.append({"line": i, "text": raw, "checked": False, "reason": "definition"})
                 continue
             target = checkpoints[pointer] if pointer < len(checkpoints) else None
             line_results.append({
@@ -1113,6 +1253,12 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
                 "expected": str(checkpoints[pointer - 1]["value"]),
                 "restated": True,
             })
+        elif (aux_hit := _aux_match([value], aux_checkpoints, tol, var_sym)) is not None:
+            line_results.append({
+                "line": i, "text": raw, "checked": True, "correct": True,
+                "matches": aux_hit["label"], "formula": aux_hit.get("formula"),
+                "expected": str(aux_hit["value"]), "restated": True,
+            })
         elif had_equals and _is_var_point_declaration(lhs, value_str, params.get("var", "x")):
             # 'x = 0' (Step 1: substitute x = 0 directly) names the
             # substitution point rather than asserting a computed value.
@@ -1134,6 +1280,19 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
             # the true pair isn't the last one, so the plain lhs/value split
             # above couldn't isolate it.
             line_results.append({"line": i, "text": raw, "checked": False, "reason": "identity"})
+        elif had_equals and _is_single_param_restatement(lhs, value, params):
+            # 'a = 5' when the problem's own given a is 5 — reading the given
+            # off (a single clause; multi-clause lines are handled earlier).
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
+        elif had_equals and _is_given_decomposition(text, given_expr):
+            # 'a = -1/2, b = -sqrt(3)/2 i' naming the pieces of the given z
+            # before expanding (a + b)^2 — reading the given apart, not a step.
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
+        elif had_equals and _is_symbolic_definition(value, checkpoints, definition_var):
+            # 'a = Re(z)', 'z = a + bi': a general definition written with
+            # letters, on a problem whose every checkpoint is a concrete
+            # number — nothing here to verify, so it can't be wrong.
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "definition"})
         else:
             target = checkpoints[pointer] if pointer < len(checkpoints) else None
             line_results.append({
@@ -1364,8 +1523,23 @@ def grade(topic, question_type, params, user_answer, tolerance=None):
         return result
 
     try:
+        if _KHMER_RE.search(user_answer or ""):
+            # Khmer narration can parse "successfully" into garbage symbols —
+            # always judge the asserted values instead.
+            raise ValueError("answer contains narration")
         user = parse_answer(user_answer)
     except Exception as exc:
+        # A conclusion sentence ('ដូចនេះ w = ... (ឬ w = ...)។' — "so w = ...
+        # (or w = ...)") rather than a bare value: judge every value it
+        # asserts. All of them must be correct, so hedging a wrong answer
+        # alongside a right one never passes.
+        candidates = _answer_candidates(user_answer)
+        if candidates:
+            verdicts = [grade(topic, question_type, params, c, tolerance) for c in candidates]
+            if all(v["correct"] for v in verdicts):
+                return verdicts[0]
+            if len(candidates) > 1 or candidates[0] != user_answer:
+                return next(v for v in verdicts if not v["correct"])
         return {
             "correct": False,
             "reason": f"could not parse answer: {exc}",
@@ -1374,6 +1548,15 @@ def grade(topic, question_type, params, user_answer, tolerance=None):
             "answer_decimal": solution["answer_decimal"],
             "steps": solution["steps"],
         }
+
+    alternatives = solution.get("answer_alternatives") or []
+    if alternatives and not _equivalent_exact(user, expected, Symbol("x")):
+        # Several equally valid answers (any n-th root): judge against the
+        # closest one so the reported expected value is the student's root.
+        for alt in alternatives:
+            if _equivalent_exact(user, alt, Symbol("x")) or _numeric_close(user, alt, tol):
+                expected = alt
+                break
 
     var_sym = Symbol(params.get("var", "x"))
     if question_type == "indefinite_integral":

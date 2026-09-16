@@ -34,7 +34,7 @@ from fractions import Fraction
 from sympy import Expr, Symbol, oo, simplify, sympify
 
 from .dispatch import solve
-from .grading import _equivalent_const, _numeric_close, grade, grade_part, parse_answer
+from .grading import _angle_close, _equivalent_const, _numeric_close, _strip_khmer, grade, grade_part, parse_answer
 
 # Structured final-answer kinds with a legitimate single-line typed answer
 # a student could actually write ("domain is (2, oo)", "continuous"), so
@@ -84,13 +84,15 @@ def is_simple_value(value):
     return False
 
 
-def step_matches(text, expected, tol=1e-4, constant_ok=False, var=None):
+def step_matches(text, expected, tol=1e-4, constant_ok=False, var=None, angle=False, alternatives=None):
     """True when `text` (one student line) asserts the scalar/vector value
     `expected` (see `is_simple_value` — never called on a structured value).
     `constant_ok`/`var` mirror `analyze_work`'s own checkpoint flag: an
     indefinite-integral antiderivative line may differ from `expected` by
     any constant in `var` (F(x)+C is still correct for any C) — see
     `_equivalent_const`."""
+    if alternatives:
+        return any(step_matches(text, alt, tol, constant_ok, var, angle) for alt in [expected, *alternatives])
     value_str = _value_str(text)
     if isinstance(expected, (list, tuple)):
         try:
@@ -104,7 +106,10 @@ def step_matches(text, expected, tol=1e-4, constant_ok=False, var=None):
         value = parse_answer(value_str)
     except Exception:
         return False
-    return _scalar_matches(value, expected, tol, constant_ok, var)
+    if _scalar_matches(value, expected, tol, constant_ok, var):
+        return True
+    # Angle steps are equal mod 2pi (7pi/4 is the same argument as -pi/4).
+    return angle and _angle_close(value, expected, tol)
 
 
 def _scalar_matches(value, expected, tol, constant_ok=False, var=None):
@@ -214,6 +219,8 @@ def build_rubric(topic, question_type, params, question_points=DEFAULT_QUESTION_
                 "item": it["label"], "label": cp["label"], "points": p,
                 "kind": kind, "value": cp["value"], "answer_kind": answer_kind,
                 "constant_ok": cp.get("constant_ok", False),
+                "angle": cp.get("angle", False),
+                "alternatives": cp.get("alternatives"),
             })
     return rubric
 
@@ -242,7 +249,11 @@ def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUES
     expected one) instead of contradicting it with a stricter, line-per-value
     rubric. A checkpoint AFTER the last real match earns nothing — it must
     still be independently demonstrated, not merely implied by a later one
-    that was never written.
+    that was never written. Implied credit also needs the work to actually
+    show a derivation (`_shows_work`): a bare final answer on its own earns
+    only its own step, not the whole method it skipped — while a valid
+    alternative method (expanding (a+b)^2 instead of De Moivre) still earns
+    full marks.
 
     `part_label`: see `build_rubric` — restricts scoring to one sub-part of
     a multi-part exercise (the progressive check-each-part flow).
@@ -259,7 +270,7 @@ def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUES
             if used[i]:
                 continue
             if step["kind"] == "simple":
-                ok = step_matches(raw, step["value"], tolerance or 1e-4, step.get("constant_ok", False), var_sym)
+                ok = step_matches(raw, step["value"], tolerance or 1e-4, step.get("constant_ok", False), var_sym, step.get("angle", False), step.get("alternatives"))
             else:
                 ok = _judged_step_matches(topic, question_type, params, step, raw, tolerance)
             if ok:
@@ -270,8 +281,11 @@ def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUES
     item_step_indices = {}
     for idx, step in enumerate(rubric):
         item_step_indices.setdefault(step["item"], []).append(idx)
+    solution_given = solve(topic, question_type, params).get("given")
     implied = set()
     for idxs in item_step_indices.values():
+        if not _shows_work(work, [rubric[idxs[-1]]["value"], *(rubric[idxs[-1]].get("alternatives") or [])], solution_given, var_sym, rubric[idxs[-1]].get("angle", False)):
+            continue
         last_matched_pos = max(
             (pos for pos, idx in enumerate(idxs) if matched_line_idx[idx] is not None),
             default=None,
@@ -301,6 +315,35 @@ def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUES
             entry["implied"] = True
         breakdown.append(entry)
     return {"earned": earned, "possible": possible, "breakdown": breakdown}
+
+
+def _shows_work(work, final_values, given, var_sym, angle=False):
+    """True when some line is an actual derivation step rather than just the
+    final answer or the given restated: a chained computation ('a = ... = ...')
+    or an equation whose value is neither the final answer nor the given.
+    A letters-only value ('(a+b)^2 = a^2 + 2ab + b^2') is a formula copied
+    down, not work, unless it involves the problem's own variable."""
+    for raw in work:
+        text = _strip_khmer(raw)
+        if "=" not in text:
+            continue
+        if text.count("=") >= 2:
+            return True
+        try:
+            value = parse_answer(_value_str(text))
+        except Exception:
+            continue
+        syms = getattr(value, "free_symbols", set())
+        if syms and var_sym not in syms:
+            continue
+        finals = [v for v in final_values if is_simple_value(v) and not isinstance(v, (list, tuple))]
+        others = finals + ([given] if given is not None and is_simple_value(given) else [])
+        if any(_scalar_matches(value, v, 1e-9) for v in others):
+            continue
+        if angle and any(_angle_close(value, v, 1e-9) for v in finals):
+            continue
+        return True
+    return False
 
 
 def _judged_step_matches(topic, question_type, params, step, line, tolerance):
