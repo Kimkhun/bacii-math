@@ -23,7 +23,7 @@ def _solve_argument(a, b):
             "formula": "quadrant_adjustment",
         },
     ]
-    checkpoints = [{"label": "arg(z)", "value": theta, "formula": "quadrant_adjustment"}]
+    checkpoints = [{"label": "arg(z)", "value": theta, "formula": "quadrant_adjustment", "angle": True}]
     if a != 0:
         checkpoints.insert(0, {"label": "b/a", "value": sympify(b) / a, "formula": "atan2_ratio"})
     return {
