@@ -1,0 +1,10 @@
+.dart_tool/
+.packages
+build/
+.pub-cache/
+.pub/
+.idea/
+.vscode/
+.git/
+.gitignore
+*.log

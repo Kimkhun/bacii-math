@@ -552,6 +552,51 @@ export interface Skill extends SkillEstimate {
   status: "untouched" | "learning" | "shaky" | "solid" | "mastered";
   band: string;
   weak_formulas: { formula: string; name: string; level: number }[];
+  /** Whether an authored lesson exists for this skill (Lesson button). */
+  has_lesson: boolean;
+}
+
+// --- lessons ---------------------------------------------------------------
+// Authored, reusable "how this exercise works" content for one skill. Static
+// (never LLM-generated) and identical for every student. Bilingual: pick the
+// `_en` / `_km` field for the reader's language.
+
+export interface LessonFormula {
+  latex: string;
+  note_en?: string;
+  note_km?: string;
+}
+
+export interface LessonSection {
+  heading_en: string;
+  heading_km: string;
+  body_en: string;
+  body_km: string;
+}
+
+export interface LessonStep {
+  text_en: string;
+  text_km: string;
+  latex?: string;
+}
+
+export interface LessonExample {
+  prompt_en: string;
+  prompt_km: string;
+  steps: LessonStep[];
+  answer_latex?: string;
+}
+
+export interface Lesson {
+  topic: string;
+  question_type: string;
+  title_en: string;
+  title_km: string;
+  summary_en: string;
+  summary_km: string;
+  formulas: LessonFormula[];
+  sections: LessonSection[];
+  examples: LessonExample[];
 }
 
 export interface FormulaSkill extends SkillEstimate {
@@ -734,6 +779,7 @@ export const api = {
     request<{ rebuilt: boolean; attempts_replayed: number }>("/profile/rebuild", { method: "POST" }),
   skillCatalog: () =>
     request<{ topics: string[]; labels: Record<string, string>; skills: Skill[] }>("/skills"),
+  lesson: (skillKey: string) => request<Lesson>(`/lessons?skill=${encodeURIComponent(skillKey)}`),
   formulas: () => request<FormulaCatalog>("/formulas"),
   templates: () => request<TemplateInventory>("/templates"),
   templateStructures: (topic?: string) =>

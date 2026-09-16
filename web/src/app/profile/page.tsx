@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import MathText from "@/components/MathText";
+import LessonModal from "@/components/LessonModal";
 import { api, FormulaSkill, Profile, Skill, Suggestion, TopicProgress } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -126,7 +127,7 @@ function SuggestionCard({ s }: { s: Suggestion }) {
   );
 }
 
-function SkillRow({ s }: { s: Skill }) {
+function SkillRow({ s, onLesson }: { s: Skill; onLesson: (s: Skill) => void }) {
   const { lang, t } = useLanguage();
   const { text } = levelColor(s.level);
   const untouched = s.evidence <= 0;
@@ -143,13 +144,21 @@ function SkillRow({ s }: { s: Skill }) {
         </div>
         <Bar level={s.level} className="mt-1.5" />
       </div>
-      <div className="w-24 text-right text-xs text-slate-500 shrink-0">
+      <div className="w-24 text-right text-xs text-slate-500 shrink-0 hidden sm:block">
         {untouched ? "—" : `${s.correct}/${s.attempts} ${lang === "km" ? "ត្រូវ" : "right"}`}
       </div>
-      <div className={`w-16 text-right text-sm font-semibold shrink-0 ${untouched ? "text-slate-300" : text}`}>
+      <div className={`w-12 text-right text-sm font-semibold shrink-0 ${untouched ? "text-slate-300" : text}`}>
         {untouched ? "–" : Math.round(s.level)}
       </div>
-      <div className="w-20 text-right text-[11px] text-slate-400 shrink-0">{statusLabel}</div>
+      <div className="w-20 text-right text-[11px] text-slate-400 shrink-0 hidden sm:block">{statusLabel}</div>
+      {s.has_lesson && (
+        <button
+          onClick={() => onLesson(s)}
+          className="shrink-0 px-2.5 py-1 rounded-md border border-sky-200 bg-sky-50 text-sky-700 text-xs font-medium hover:bg-sky-100"
+        >
+          {t("lesson")}
+        </button>
+      )}
       <Link
         href={`/practice?skill=${encodeURIComponent(s.key)}`}
         className="shrink-0 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium hover:bg-slate-200"
@@ -165,11 +174,13 @@ function TopicCard({
   skills,
   open,
   onToggle,
+  onLesson,
 }: {
   topic: TopicProgress;
   skills: Skill[];
   open: boolean;
   onToggle: () => void;
+  onLesson: (s: Skill) => void;
 }) {
   const { lang, t } = useLanguage();
   const { text } = levelColor(topic.score);
@@ -211,7 +222,7 @@ function TopicCard({
       {open && (
         <div>
           {skills.map((s) => (
-            <SkillRow key={s.key} s={s} />
+            <SkillRow key={s.key} s={s} onLesson={onLesson} />
           ))}
         </div>
       )}
@@ -287,6 +298,7 @@ export default function ProfilePage() {
   const [busy, setBusy] = useState(true);
   const [openTopics, setOpenTopics] = useState<Record<string, boolean>>({});
   const [showAllTopics, setShowAllTopics] = useState(false);
+  const [lessonSkill, setLessonSkill] = useState<Skill | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -427,6 +439,7 @@ export default function ProfilePage() {
                     skills={skillsByTopic[tItem.topic] ?? []}
                     open={!!openTopics[tItem.topic]}
                     onToggle={() => setOpenTopics((o) => ({ ...o, [tItem.topic]: !o[tItem.topic] }))}
+                    onLesson={setLessonSkill}
                   />
                 ))}
                 {visibleTopics.length === 0 && (
@@ -445,6 +458,13 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+      {lessonSkill && (
+        <LessonModal
+          skillKey={lessonSkill.key}
+          fallbackLabel={lessonSkill.label}
+          onClose={() => setLessonSkill(null)}
+        />
+      )}
     </AuthGuard>
   );
 }

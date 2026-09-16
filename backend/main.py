@@ -36,7 +36,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000", "http://127.0.0.1:3000",
         "http://localhost:3016", "http://127.0.0.1:3016",
-        "http://172.20.10.6:3016",  # LAN access (e.g. iPad on the same Wi-Fi)
+        "http://localhost:3017", "http://127.0.0.1:3017",
+        "http://172.20.10.6:3016", "http://172.20.10.6:3017",
     ],
     allow_credentials=True,
     allow_methods=["*"],

@@ -1,0 +1,409 @@
+{
+  "polynomial": {
+    "title_en": "Polynomial integral",
+    "title_km": "អាំងតេក្រាលពហុធា",
+    "summary_en": "Integrate polynomial functions term by term using the power rule $\\int x^n\\,dx = \\frac{x^{n+1}}{n+1}$ and the Fundamental Theorem of Calculus.",
+    "summary_km": "គណនាអាំងតេក្រាលពហុធាតាមតួនីមួយៗ ដោយប្រើរូបមន្តស្វ័យគុណ $\\int x^n\\,dx = \\frac{x^{n+1}}{n+1}$ និងទ្រឹស្តីបទគ្រឹះនៃគណិតវិភាគ។",
+    "formulas": [
+      { "latex": "\\int x^n\\,dx = \\frac{x^{n+1}}{n+1} + C \\quad (n \\neq -1)", "note_en": "Power rule antiderivative.", "note_km": "រូបមន្តព្រីមីទីវនៃស្វ័យគុណ។" },
+      { "latex": "\\int_a^b f(x)\\,dx = \\left[F(x)\\right]_a^b = F(b) - F(a)", "note_en": "Newton-Leibniz formula.", "note_km": "រូបមន្តញូតុន-ឡែបនីស។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Method",
+        "heading_km": "វិធីសាស្ត្រ",
+        "body_en": "1) Find an antiderivative $F(x)$ by raising each exponent by 1 and dividing by the new exponent. 2) Evaluate $F(b) - F(a)$ for definite integrals.",
+        "body_km": "១) រកព្រីមីទីវ $F(x)$ ដោយបន្ថែមស្វ័យគុណ ១ ហើយចែកនឹងស្វ័យគុណថ្មីនោះ។ ២) គណនា $F(b) - F(a)$ សម្រាប់អាំងតេក្រាលកំនត់។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\int_0^2 (3x^2 - 2x + 1)\\,dx$.",
+        "prompt_km": "គណនា $\\int_0^2 (3x^2 - 2x + 1)\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Find antiderivative $F(x) = x^3 - x^2 + x$.",
+            "text_km": "រកព្រីមីទីវ $F(x) = x^3 - x^2 + x$។",
+            "latex": "F(x) = \\int (3x^2 - 2x + 1)\\,dx = x^3 - x^2 + x"
+          },
+          {
+            "text_en": "Evaluate from 0 to 2: $(2^3 - 2^2 + 2) - 0 = 8 - 4 + 2$.",
+            "text_km": "គណនាតម្លៃពី 0 ដល់ 2៖ $(2^3 - 2^2 + 2) - 0 = 8 - 4 + 2$។",
+            "latex": "F(2) - F(0) = (8 - 4 + 2) - 0 = 6"
+          }
+        ],
+        "answer_latex": "\\int_0^2 (3x^2 - 2x + 1)\\,dx = 6"
+      }
+    ]
+  },
+  "power": {
+    "title_en": "Power rule antiderivative",
+    "title_km": "ព្រីមីទីវនៃស្វ័យគុណ",
+    "summary_en": "The general power rule applies to any real power $n \\neq -1$, including negative and fractional exponents: $\\int x^n\\,dx = \\frac{x^{n+1}}{n+1} + C$.",
+    "summary_km": "រូបមន្តស្វ័យគុណទូទៅប្រើសម្រាប់គ្រប់ស្វ័យគុណ $n \\neq -1$ រួមទាំងនិទស្សន្តអវិជ្ជមាន និងប្រភាគ៖ $\\int x^n\\,dx = \\frac{x^{n+1}}{n+1} + C$។",
+    "formulas": [
+      { "latex": "\\int x^n\\,dx = \\frac{x^{n+1}}{n+1} + C \\quad (n \\neq -1)", "note_en": "Power rule.", "note_km": "រូបមន្តស្វ័យគុណ។" },
+      { "latex": "\\int \\frac{1}{x^2}\\,dx = -\\frac{1}{x} + C, \\quad \\int \\frac{1}{\\sqrt{x}}\\,dx = 2\\sqrt{x} + C", "note_en": "Common fractional powers.", "note_km": "ស្វ័យគុណប្រភាគញឹកញាប់។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Tip",
+        "heading_km": "គន្លឹះ",
+        "body_en": "Rewrite radical expressions and denominators in exponential form before integrating: $\\sqrt[3]{x} = x^{1/3}$ and $\\frac{1}{x^3} = x^{-3}$.",
+        "body_km": "សរសេររ៉ាឌីកាល់ និងភាគបែងជាទម្រង់ស្វ័យគុណមុនធ្វើអាំងតេក្រាល៖ $\\sqrt[3]{x} = x^{1/3}$ និង $\\frac{1}{x^3} = x^{-3}$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $\\int x^4\\,dx$.",
+        "prompt_km": "គណនា $\\int x^4\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Add 1 to exponent: $4 + 1 = 5$, and divide by 5.",
+            "text_km": "បូក ១ ទៅលើស្វ័យគុណ៖ $4 + 1 = 5$ ហើយចែកនឹង 5។",
+            "latex": "\\int x^4\\,dx = \\frac{x^5}{5} + C"
+          }
+        ],
+        "answer_latex": "\\frac{x^5}{5} + C"
+      }
+    ]
+  },
+  "linear_argument": {
+    "title_en": "Linear argument f(ax + b)",
+    "title_km": "អាំងតេក្រាលអាគុយម៉ង់លីនេអ៊ែរ f(ax + b)",
+    "summary_en": "When the integrand has a linear inner argument $ax + b$, the antiderivative is scaled by $\\frac{1}{a}$: $\\int f(ax + b)\\,dx = \\frac{1}{a} F(ax + b) + C$.",
+    "summary_km": "នៅពេលដែលកន្សោមមានអាគុយម៉ង់លីនេអ៊ែរ $ax + b$ ព្រីមីទីវត្រូវបានគុណនឹង $\\frac{1}{a}$៖ $\\int f(ax + b)\\,dx = \\frac{1}{a} F(ax + b) + C$។",
+    "formulas": [
+      { "latex": "\\int f(ax + b)\\,dx = \\frac{1}{a} F(ax + b) + C", "note_en": "Linear substitution rule.", "note_km": "រូបមន្តជំនួសលីនេអ៊ែរ។" },
+      { "latex": "\\int e^{kx}\\,dx = \\frac{1}{k} e^{kx} + C, \\quad \\int \\cos(kx)\\,dx = \\frac{1}{k} \\sin(kx) + C", "note_en": "Common examples.", "note_km": "ឧទាហរណ៍ញឹកញាប់។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Never forget 1/a",
+        "heading_km": "កុំភ្លេចមេគុណ 1/a",
+        "body_en": "Differentiating $F(ax+b)$ produces an extra factor of $a$ by the chain rule. Dividing by $a$ in the integral balances it out.",
+        "body_km": "ដេរីវេនៃ $F(ax+b)$ បង្កើតមេគុណ $a$ តាមរូបមន្តបណ្តាក់។ ដូច្នេះការចែកនឹង $a$ ក្នុងអាំងតេក្រាលធ្វើឱ្យមានតុល្យភាព។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\int e^{3x}\\,dx$.",
+        "prompt_km": "គណនា $\\int e^{3x}\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Here $a = 3$. Apply $\\frac{1}{a} e^{ax} + C$.",
+            "text_km": "ត្រង់នេះ $a = 3$។ អនុវត្ត $\\frac{1}{a} e^{ax} + C$។",
+            "latex": "\\int e^{3x}\\,dx = \\frac{1}{3} e^{3x} + C"
+          }
+        ],
+        "answer_latex": "\\frac{1}{3}e^{3x} + C"
+      }
+    ]
+  },
+  "trig": {
+    "title_en": "Trigonometric integral",
+    "title_km": "អាំងតេក្រាលត្រីកោណមាត្រ",
+    "summary_en": "Integrate sine, cosine, and standard trigonometric functions using standard antiderivatives: $\\int \\sin x\\,dx = -\\cos x$ and $\\int \\cos x\\,dx = \\sin x$.",
+    "summary_km": "គណនាអាំងតេក្រាលស៊ីនុស កូស៊ីនុស និងអនុគមន៍ត្រីកោណមាត្រគំរូ៖ $\\int \\sin x\\,dx = -\\cos x$ និង $\\int \\cos x\\,dx = \\sin x$។",
+    "formulas": [
+      { "latex": "\\int \\sin x\\,dx = -\\cos x + C, \\quad \\int \\cos x\\,dx = \\sin x + C", "note_en": "Basic trig antiderivatives.", "note_km": "ព្រីមីទីវត្រីកោណមាត្រគ្រឹះ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Watch the signs",
+        "heading_km": "ប្រយ័ត្នសញ្ញា",
+        "body_en": "Remember that the antiderivative of $\\sin x$ is $-\\cos x$ (negative sign), whereas the derivative of $\\sin x$ is $+\\cos x$.",
+        "body_km": "ត្រូវចាំថាព្រីមីទីវនៃ $\\sin x$ គឺ $-\\cos x$ (មានសញ្ញាដក) ខណៈដេរីវេនៃ $\\sin x$ គឺ $+\\cos x$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\int_0^{\\pi/2} 2\\sin x\\,dx$.",
+        "prompt_km": "គណនា $\\int_0^{\\pi/2} 2\\sin x\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Antiderivative is $-2\\cos x$.",
+            "text_km": "ព្រីមីទីវគឺ $-2\\cos x$។",
+            "latex": "\\left[-2\\cos x\\right]_0^{\\pi/2} = -2\\cos(\\pi/2) - (-2\\cos 0)"
+          },
+          {
+            "text_en": "Evaluate: $-2(0) + 2(1) = 2$.",
+            "text_km": "គណនា៖ $-2(0) + 2(1) = 2$។",
+            "latex": "0 + 2 = 2"
+          }
+        ],
+        "answer_latex": "2"
+      }
+    ]
+  },
+  "trig_sec": {
+    "title_en": "Trigonometric integral (sec²x)",
+    "title_km": "អាំងតេក្រាលត្រីកោណមាត្រ (sec²x = 1 + tan²x)",
+    "summary_en": "Integrals involving $\\frac{1}{\\cos^2 x}$ or $1 + \\tan^2 x$ integrate directly to $\\tan x + C$.",
+    "summary_km": "អាំងតេក្រាលដែលមាន $\\frac{1}{\\cos^2 x}$ ឬ $1 + \\tan^2 x$ មានព្រីមីទីវផ្ទាល់គឺ $\\tan x + C$។",
+    "formulas": [
+      { "latex": "\\int \\frac{1}{\\cos^2 x}\\,dx = \\int (1 + \\tan^2 x)\\,dx = \\tan x + C", "note_en": "Secant-squared antiderivative.", "note_km": "ព្រីមីទីវនៃ sec²x។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Identity link",
+        "heading_km": "ទំនាក់ទំនងរូបមន្ត",
+        "body_en": "Since $(\\tan x)' = 1 + \\tan^2 x = \\frac{1}{\\cos^2 x}$, any sum of these forms integrates into $\\tan x$.",
+        "body_km": "ដោយសារ $(\\tan x)' = 1 + \\tan^2 x = \\frac{1}{\\cos^2 x}$ នោះកន្សោមទាំងនេះមានព្រីមីទីវគឺ $\\tan x$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $\\int (1 + \\tan^2 x)\\,dx$.",
+        "prompt_km": "គណនា $\\int (1 + \\tan^2 x)\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Recognize the derivative of $\\tan x$.",
+            "text_km": "សម្គាល់ដេរីវេនៃ $\\tan x$។",
+            "latex": "\\int (1 + \\tan^2 x)\\,dx = \\tan x + C"
+          }
+        ],
+        "answer_latex": "\\tan x + C"
+      }
+    ]
+  },
+  "u_substitution": {
+    "title_en": "u-substitution",
+    "title_km": "វិធីប្តូរអថេរ u (u-substitution)",
+    "summary_en": "When the integrand contains a composite function multiplied by its inner derivative $u' f(u)$, substitute $u = g(x)$ and $du = g'(x)\\,dx$.",
+    "summary_km": "នៅពេលកន្សោមក្នុងអាំងតេក្រាលជាផលគុណរវាងអនុគមន៍បណ្តាក់ និងដេរីវេក្នុងរបស់វា $u' f(u)$ ត្រូវតាង $u = g(x)$ និង $du = g'(x)\\,dx$។",
+    "formulas": [
+      { "latex": "\\int f(g(x))\\,g'(x)\\,dx = \\int f(u)\\,du", "note_en": "Substitution theorem.", "note_km": "ទ្រឹស្តីបទប្តូរអថេរ។" },
+      { "latex": "\\int_a^b f(g(x))\\,g'(x)\\,dx = \\int_{g(a)}^{g(b)} f(u)\\,du", "note_en": "Change of bounds for definite integrals.", "note_km": "ការប្តូរគោលអាំងតេក្រាលកំនត់។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Five steps",
+        "heading_km": "ប្រាំជំហាន",
+        "body_en": "1) Choose $u = g(x)$. 2) Differentiate to find $du = g'(x)\\,dx$. 3) Rewrite the entire integral in terms of $u$. 4) Integrate with respect to $u$. 5) Substitute back $x$ or change the bounds.",
+        "body_km": "១) ជ្រើសរើស $u = g(x)$។ ២) ធ្វើដេរីវេ $du = g'(x)\\,dx$។ ៣) សរសេរអាំងតេក្រាលទាំងមូលជាអថេរ $u$។ ៤) គណនាអាំងតេក្រាលធៀបនឹង $u$។ ៥) ជំនួស $x$ ត្រឡប់មកវិញ ឬប្តូរគោល។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\int 2x (x^2 + 1)^3\\,dx$.",
+        "prompt_km": "គណនា $\\int 2x (x^2 + 1)^3\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Let $u = x^2 + 1$, so $du = 2x\\,dx$.",
+            "text_km": "តាង $u = x^2 + 1$ នាំឱ្យ $du = 2x\\,dx$។",
+            "latex": "u = x^2 + 1, \\quad du = 2x\\,dx"
+          },
+          {
+            "text_en": "Substitute and integrate: $\\int u^3\\,du = \\frac{u^4}{4} + C$.",
+            "text_km": "ជំនួស និងគណនា៖ $\\int u^3\\,du = \\frac{u^4}{4} + C$។",
+            "latex": "\\frac{u^4}{4} + C = \\frac{(x^2 + 1)^4}{4} + C"
+          }
+        ],
+        "answer_latex": "\\frac{(x^2 + 1)^4}{4} + C"
+      }
+    ]
+  },
+  "usub": {
+    "title_en": "u-substitution (indefinite)",
+    "title_km": "វិធីប្តូរអថេរ u (ព្រីមីទីវ)",
+    "summary_en": "Recognizing pattern $u^n u'$ or $\\frac{u'}{u}$ to integrate without expanding.",
+    "summary_km": "ការសម្គាល់ទម្រង់ $u^n u'$ ឬ $\\frac{u'}{u}$ ដើម្បីគណនាព្រីមីទីវដោយមិនបាច់ពន្លាត។",
+    "formulas": [
+      { "latex": "\\int \\frac{u'}{u}\\,dx = \\ln|u| + C, \\quad \\int u^n u'\\,dx = \\frac{u^{n+1}}{n+1} + C", "note_en": "Standard u-substitution patterns.", "note_km": "ទម្រង់ប្តូរអថេរ u សំខាន់ៗ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Logarithmic pattern",
+        "heading_km": "ទម្រង់លោការីត u'/u",
+        "body_en": "Whenever the numerator is the derivative of the denominator, the antiderivative is $\\ln|\\text{denominator}| + C$.",
+        "body_km": "កាលណាភាគយកជាដេរីវេនៃភាគបែង នោះព្រីមីទីវគឺ $\\ln|\\text{ភាគបែង}| + C$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $\\int \\frac{2x}{x^2 + 3}\\,dx$.",
+        "prompt_km": "គណនា $\\int \\frac{2x}{x^2 + 3}\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Numerator is exactly the derivative of denominator: $(x^2 + 3)' = 2x$.",
+            "text_km": "ភាគយកជាដេរីវេនៃភាគបែង៖ $(x^2 + 3)' = 2x$។",
+            "latex": "\\int \\frac{u'}{u}\\,dx = \\ln(x^2 + 3) + C"
+          }
+        ],
+        "answer_latex": "\\ln(x^2 + 3) + C"
+      }
+    ]
+  },
+  "by_parts": {
+    "title_en": "Integration by parts",
+    "title_km": "អាំងតេក្រាលដោយផ្នែក (Integration by parts)",
+    "summary_en": "For products of two different function types (polynomial $\\times$ exponential, polynomial $\\times$ trig), use $\\int u\\,dv = uv - \\int v\\,du$.",
+    "summary_km": "សម្រាប់ផលគុណនៃពីរប្រភេទអនុគមន៍ខុសគ្នា (ពហុធា $\\times$ អិចស្បូណង់ស្យែល, ពហុធា $\\times$ ត្រីកោណមាត្រ) ត្រូវប្រើ $\\int u\\,dv = uv - \\int v\\,du$។",
+    "formulas": [
+      { "latex": "\\int u\\,dv = uv - \\int v\\,du", "note_en": "Integration by parts formula.", "note_km": "រូបមន្តអាំងតេក្រាលដោយផ្នែក។" },
+      { "latex": "\\int_a^b u\\,dv = \\left[uv\\right]_a^b - \\int_a^b v\\,du", "note_en": "Definite integration by parts.", "note_km": "អាំងតេក្រាលកំនត់ដោយផ្នែក។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "LIATE rule for choosing u",
+        "heading_km": "ក្បួន LIATE ជ្រើសរើស u",
+        "body_en": "Choose $u$ in this priority order: Logarithmic, Inverse trig, Algebraic (polynomials), Trig, Exponential. Set $dv$ to the remaining part.",
+        "body_km": "ជ្រើសរើស $u$ តាមលំដាប់អាទិភាព៖ លោការីត, ត្រីកោណមាត្របញ្ច្រាស, ពីជគណិត (ពហុធា), ត្រីកោណមាត្រ, អិចស្បូណង់ស្យែល។ តាង $dv$ ជាផ្នែកដែលនៅសល់។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\int x e^x\\,dx$.",
+        "prompt_km": "គណនា $\\int x e^x\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Let $u = x \\implies du = dx$ and $dv = e^x\\,dx \\implies v = e^x$.",
+            "text_km": "តាង $u = x \\implies du = dx$ និង $dv = e^x\\,dx \\implies v = e^x$។",
+            "latex": "u = x, \\quad v = e^x"
+          },
+          {
+            "text_en": "Apply $uv - \\int v\\,du$: $x e^x - \\int e^x\\,dx = x e^x - e^x + C$.",
+            "text_km": "អនុវត្ត $uv - \\int v\\,du$៖ $x e^x - \\int e^x\\,dx = x e^x - e^x + C$។",
+            "latex": "x e^x - e^x + C = (x - 1)e^x + C"
+          }
+        ],
+        "answer_latex": "(x - 1)e^x + C"
+      }
+    ]
+  },
+  "expand": {
+    "title_en": "Expand then integrate",
+    "title_km": "ពន្លាតរួចគណនាអាំងតេក្រាល",
+    "summary_en": "Before integrating products like $(ax + b)^2$ or $(x - 1)(x + 2)$, expand algebraically into individual monomial terms.",
+    "summary_km": "មុននឹងគណនាអាំងតេក្រាលផលគុណដូចជា $(ax + b)^2$ ឬ $(x - 1)(x + 2)$ ត្រូវពន្លាតជាផលបូកនៃតួទោលនីមួយៗសិន។",
+    "formulas": [
+      { "latex": "(ax + b)^2 = a^2 x^2 + 2abx + b^2", "note_en": "Expansion identity.", "note_km": "រូបមន្តពន្លាតការេនៃទ្វេធា។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Strategy",
+        "heading_km": "យុទ្ធសាស្ត្រ",
+        "body_en": "Expand binomial products completely so that every single term can be integrated with the simple power rule.",
+        "body_km": "ពន្លាតផលគុណឱ្យអស់ដើម្បីឱ្យតួនីមួយៗអាចគណនាតាមរូបមន្តស្វ័យគុណធម្មតា។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $\\int (2x - 1)^2\\,dx$.",
+        "prompt_km": "គណនា $\\int (2x - 1)^2\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Expand the square: $(2x - 1)^2 = 4x^2 - 4x + 1$.",
+            "text_km": "ពន្លាតការេ៖ $(2x - 1)^2 = 4x^2 - 4x + 1$។",
+            "latex": "\\int (4x^2 - 4x + 1)\\,dx"
+          },
+          {
+            "text_en": "Integrate term by term: $\\frac{4x^3}{3} - 2x^2 + x + C$.",
+            "text_km": "គណនាតាមតួ៖ $\\frac{4x^3}{3} - 2x^2 + x + C$។",
+            "latex": "\\frac{4x^3}{3} - 2x^2 + x + C"
+          }
+        ],
+        "answer_latex": "\\frac{4x^3}{3} - 2x^2 + x + C"
+      }
+    ]
+  },
+  "split": {
+    "title_en": "Split the fraction",
+    "title_km": "បំបែកប្រភាគ",
+    "summary_en": "When a fraction has multiple terms in the numerator over a single monomial denominator, divide each term separately: $\\frac{a + b}{c} = \\frac{a}{c} + \\frac{b}{c}$.",
+    "summary_km": "នៅពេលប្រភាគមានភាគយកច្រើនតួចែកនឹងភាគបែងតែមួយតួ ត្រូវបំបែកជាផលបូកនៃប្រភាគទោល៖ $\\frac{a + b}{c} = \\frac{a}{c} + \\frac{b}{c}$។",
+    "formulas": [
+      { "latex": "\\int \\frac{a x^2 + b x + c}{x}\\,dx = \\int \\left(a x + b + \\frac{c}{x}\\right)\\,dx", "note_en": "Splitting fraction formula.", "note_km": "រូបមន្តបំបែកប្រភាគ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Method",
+        "heading_km": "វិធីសាស្ត្រ",
+        "body_en": "Divide each term in the numerator by the denominator, simplify powers of $x$, and integrate each term.",
+        "body_km": "យកតួនីមួយៗនៃភាគយកចែកនឹងភាគបែង សម្រួលស្វ័យគុណនៃ $x$ រួចធ្វើអាំងតេក្រាលតួនីមួយៗ។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $\\int \\frac{x^3 + 2x}{x}\\,dx$.",
+        "prompt_km": "គណនា $\\int \\frac{x^3 + 2x}{x}\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Split into two fractions: $\\frac{x^3}{x} + \\frac{2x}{x} = x^2 + 2$.",
+            "text_km": "បំបែកជាពីរប្រភាគ៖ $\\frac{x^3}{x} + \\frac{2x}{x} = x^2 + 2$។",
+            "latex": "\\int (x^2 + 2)\\,dx"
+          },
+          {
+            "text_en": "Integrate: $\\frac{x^3}{3} + 2x + C$.",
+            "text_km": "គណនាអាំងតេក្រាល៖ $\\frac{x^3}{3} + 2x + C$។",
+            "latex": "\\frac{x^3}{3} + 2x + C"
+          }
+        ],
+        "answer_latex": "\\frac{x^3}{3} + 2x + C"
+      }
+    ]
+  },
+  "mixed_sum": {
+    "title_en": "Mixed sum of functions",
+    "title_km": "ផលបូកនៃអនុគមន៍ចម្រុះ",
+    "summary_en": "Integrate sums combining algebraic, exponential, and trigonometric terms by applying linearity $\\int (f + g) = \\int f + \\int g$.",
+    "summary_km": "គណនាអាំងតេក្រាលនៃផលបូកអនុគមន៍ពីជគណិត អិចស្បូណង់ស្យែល និងត្រីកោណមាត្រ ដោយប្រើលក្ខណៈលីនេអ៊ែរ $\\int (f + g) = \\int f + \\int g$។",
+    "formulas": [
+      { "latex": "\\int \\left(f(x) \\pm g(x)\\right)\\,dx = \\int f(x)\\,dx \\pm \\int g(x)\\,dx", "note_en": "Linearity of integration.", "note_km": "លក្ខណៈលីនេអ៊ែរនៃអាំងតេក្រាល។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Approach",
+        "heading_km": "របៀបគិត",
+        "body_en": "Handle each function type with its own standard rule, then sum the results.",
+        "body_km": "គណនាតាមប្រភេទអនុគមន៍នីមួយៗតាមរូបមន្តរបស់វា រួចបូកបញ្ចូលគ្នា។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Evaluate $\\int (e^x + \\sin x + x)\\,dx$.",
+        "prompt_km": "គណនា $\\int (e^x + \\sin x + x)\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Integrate each part individually.",
+            "text_km": "គណនាព្រីមីទីវតាមផ្នែកនីមួយៗ។",
+            "latex": "\\int e^x\\,dx = e^x, \\quad \\int \\sin x\\,dx = -\\cos x, \\quad \\int x\\,dx = \\frac{x^2}{2}"
+          }
+        ],
+        "answer_latex": "e^x - \\cos x + \\frac{x^2}{2} + C"
+      }
+    ]
+  },
+  "indefinite_sum": {
+    "title_en": "Sum of several term types",
+    "title_km": "ផលបូកនៃតួច្រើនប្រភេទ",
+    "summary_en": "Indefinite integration across multi-term expressions containing powers, exponentials, and trigonometric components.",
+    "summary_km": "ការគណនាព្រីមីទីវនៃកន្សោមច្រើនតួ ដែលមានស្វ័យគុណ អិចស្បូណង់ស្យែល និងត្រីកោណមាត្រ។",
+    "formulas": [
+      { "latex": "\\int \\sum k_i f_i(x)\\,dx = \\sum k_i \\int f_i(x)\\,dx", "note_en": "Term-by-term integration rule.", "note_km": "ក្បួនធ្វើអាំងតេក្រាលតាមតួនីមួយៗ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Constant of integration",
+        "heading_km": "ចំនួនថេរ C",
+        "body_en": "A single constant of integration $+ C$ at the very end covers all integrated terms.",
+        "body_km": "ចំនួនថេរ $+ C$ តែមួយនៅចុងបញ្ចប់ គឺគ្រប់គ្រាន់សម្រាប់តួទាំងអស់។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $\\int (3x^2 + 2e^x)\\,dx$.",
+        "prompt_km": "គណនា $\\int (3x^2 + 2e^x)\\,dx$។",
+        "steps": [
+          {
+            "text_en": "Integrate $3x^2 \\to x^3$ and $2e^x \\to 2e^x$.",
+            "text_km": "គណនា $3x^2 \\to x^3$ និង $2e^x \\to 2e^x$។",
+            "latex": "x^3 + 2e^x + C"
+          }
+        ],
+        "answer_latex": "x^3 + 2e^x + C"
+      }
+    ]
+  }
+}

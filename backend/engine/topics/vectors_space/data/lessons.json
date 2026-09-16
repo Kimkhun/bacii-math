@@ -1,0 +1,238 @@
+{
+  "magnitude": {
+    "title_en": "Magnitude of a vector |AB|",
+    "title_km": "ម៉ូឌុលនៃវិចទ័រ |AB|",
+    "summary_en": "The magnitude of a vector $\\overrightarrow{AB}$ with components $(x, y, z)$ is its geometric length $|\\overrightarrow{AB}| = \\sqrt{x^2 + y^2 + z^2}$.",
+    "summary_km": "ម៉ូឌុលនៃវិចទ័រ $\\overrightarrow{AB}$ ដែលមានកូអរដោនេ $(x, y, z)$ គឺជាប្រវែងធរណីមាត្រ $|\\overrightarrow{AB}| = \\sqrt{x^2 + y^2 + z^2}$។",
+    "formulas": [
+      { "latex": "\\overrightarrow{AB} = (x_B - x_A,\\ y_B - y_A,\\ z_B - z_A)", "note_en": "Components from terminal and initial points.", "note_km": "កូអរដោនេវិចទ័រចេញពីចំណុចចុងដកចំណុចដើម។" },
+      { "latex": "|\\overrightarrow{AB}| = \\sqrt{(x_B - x_A)^2 + (y_B - y_A)^2 + (z_B - z_A)^2}", "note_en": "3D Euclidean length formula.", "note_km": "រូបមន្តប្រវែងក្នុងលំហ 3D។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Method",
+        "heading_km": "វិធីសាស្ត្រ",
+        "body_en": "1) Find the vector components by subtracting coordinates of $A$ from $B$. 2) Square each component, add them together, and take the square root.",
+        "body_km": "១) គណនាកូអរដោនេវិចទ័រដោយយកកូអរដោនេនៃ $B$ ដក $A$។ ២) លើកកូអរដោនេនីមួយៗជាការេ បូកបញ្ចូលគ្នា រួចបំពាក់ឬសការេ។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Given $A(1, 2, 0)$ and $B(3, -2, 1)$, find $|\\overrightarrow{AB}|$.",
+        "prompt_km": "គេមានចំណុច $A(1, 2, 0)$ និង $B(3, -2, 1)$។ គណនា $|\\overrightarrow{AB}|$។",
+        "steps": [
+          {
+            "text_en": "Find components: $\\overrightarrow{AB} = (3 - 1, -2 - 2, 1 - 0) = (2, -4, 1)$.",
+            "text_km": "រកកូអរដោនេ៖ $\\overrightarrow{AB} = (3 - 1, -2 - 2, 1 - 0) = (2, -4, 1)$។",
+            "latex": "\\overrightarrow{AB} = (2, -4, 1)"
+          },
+          {
+            "text_en": "Compute magnitude: $\\sqrt{2^2 + (-4)^2 + 1^2} = \\sqrt{4 + 16 + 1} = \\sqrt{21}$.",
+            "text_km": "គណនាម៉ូឌុល៖ $\\sqrt{2^2 + (-4)^2 + 1^2} = \\sqrt{4 + 16 + 1} = \\sqrt{21}$។",
+            "latex": "|\\overrightarrow{AB}| = \\sqrt{21}"
+          }
+        ],
+        "answer_latex": "|\\overrightarrow{AB}| = \\sqrt{21}"
+      }
+    ]
+  },
+  "distance": {
+    "title_en": "Distance between two points",
+    "title_km": "ចម្ងាយរវាងពីរចំណុច",
+    "summary_en": "The distance $d(A, B)$ between points $A(x_A, y_A, z_A)$ and $B(x_B, y_B, z_B)$ equals the length of vector $\\overrightarrow{AB}$.",
+    "summary_km": "ចម្ងាយរវាងពីរចំណុច $A$ និង $B$ ក្នុងលំហ ស្មើនឹងប្រវែងនៃវិចទ័រ $\\overrightarrow{AB}$។",
+    "formulas": [
+      { "latex": "AB = \\sqrt{(x_B - x_A)^2 + (y_B - y_A)^2 + (z_B - z_A)^2}", "note_en": "Distance formula between two points in ℝ³.", "note_km": "រូបមន្តចម្ងាយរវាងពីរចំណុចក្នុង ℝ³។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Tip",
+        "heading_km": "គន្លឹះ",
+        "body_en": "Signs do not matter when subtracting because each difference is squared: $(x_B - x_A)^2 = (x_A - x_B)^2$.",
+        "body_km": "សញ្ញាមិនមានបញ្ហាទេពេលដក ពីព្រោះផលដកនីមួយៗត្រូវលើកជាការេ៖ $(x_B - x_A)^2 = (x_A - x_B)^2$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find the distance between $A(0, 1, 2)$ and $B(2, 3, 3)$.",
+        "prompt_km": "គណនាចម្ងាយរវាង $A(0, 1, 2)$ និង $B(2, 3, 3)$។",
+        "steps": [
+          {
+            "text_en": "Apply distance formula.",
+            "text_km": "អនុវត្តរូបមន្តចម្ងាយ។",
+            "latex": "AB = \\sqrt{(2-0)^2 + (3-1)^2 + (3-2)^2} = \\sqrt{4 + 4 + 1} = \\sqrt{9}"
+          }
+        ],
+        "answer_latex": "AB = 3"
+      }
+    ]
+  },
+  "dot": {
+    "title_en": "Dot product AB · AC",
+    "title_km": "ផលគុណស្កាលែ AB · AC",
+    "summary_en": "The dot product of $\\vec{u} = (x_1, y_1, z_1)$ and $\\vec{v} = (x_2, y_2, z_2)$ is the real number $\\vec{u} \\cdot \\vec{v} = x_1 x_2 + y_1 y_2 + z_1 z_2$.",
+    "summary_km": "ផលគុណស្កាលែនរវាង $\\vec{u} = (x_1, y_1, z_1)$ និង $\\vec{v} = (x_2, y_2, z_2)$ គឺជាចំនួនពិត $\\vec{u} \\cdot \\vec{v} = x_1 x_2 + y_1 y_2 + z_1 z_2$។",
+    "formulas": [
+      { "latex": "\\vec{u} \\cdot \\vec{v} = x_1 x_2 + y_1 y_2 + z_1 z_2", "note_en": "Coordinate definition.", "note_km": "និយមន័យតាមកូអរដោនេ។" },
+      { "latex": "\\vec{u} \\cdot \\vec{v} = |\\vec{u}| |\\vec{v}| \\cos\\theta", "note_en": "Geometric definition via angle θ.", "note_km": "និយមន័យធរណីមាត្រតាមមុំ θ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Application",
+        "heading_km": "ការអនុវត្ត",
+        "body_en": "The dot product is used to compute angles between vectors and to test orthogonality: $\\vec{u} \\perp \\vec{v} \\iff \\vec{u} \\cdot \\vec{v} = 0$.",
+        "body_km": "ផលគុណស្កាលែត្រូវបានប្រើដើម្បីរកមុំរវាងវិចទ័រ និងដើម្បីផ្ទៀងផ្ទាត់អរតូកូណាល់ (កែងគ្នា)៖ $\\vec{u} \\perp \\vec{v} \\iff \\vec{u} \\cdot \\vec{v} = 0$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Given $\\vec{u} = (1, 2, -1)$ and $\\vec{v} = (3, 0, 4)$, compute $\\vec{u} \\cdot \\vec{v}$.",
+        "prompt_km": "គេមាន $\\vec{u} = (1, 2, -1)$ និង $\\vec{v} = (3, 0, 4)$។ គណនា $\\vec{u} \\cdot \\vec{v}$។",
+        "steps": [
+          {
+            "text_en": "Multiply matching components and add.",
+            "text_km": "គុណកូអរដោនេត្រូវគ្នា រួចបូកបញ្ចូលគ្នា។",
+            "latex": "\\vec{u} \\cdot \\vec{v} = (1)(3) + (2)(0) + (-1)(4) = 3 + 0 - 4"
+          }
+        ],
+        "answer_latex": "\\vec{u} \\cdot \\vec{v} = -1"
+      }
+    ]
+  },
+  "cross_magnitude": {
+    "title_en": "Cross product magnitude |AB × AC|",
+    "title_km": "ម៉ូឌុលនៃផលគុណវិចទ័រ |AB × AC|",
+    "summary_en": "The cross product $\\vec{u} \\times \\vec{v}$ yields a vector perpendicular to both $\\vec{u}$ and $\\vec{v}$. Its magnitude $|\\vec{u} \\times \\vec{v}|$ represents the area of the parallelogram formed by $\\vec{u}$ and $\\vec{v}$.",
+    "summary_km": "ផលគុណវិចទ័រ $\\vec{u} \\times \\vec{v}$ បង្កើតបានវិចទ័រមួយកែងនឹងទាំង $\\vec{u}$ និង $\\vec{v}$។ ម៉ូឌុល $|\\vec{u} \\times \\vec{v}|$ តំណាងឱ្យផ្ទៃក្រឡាប្រលេឡូក្រាមដែលបង្កើតដោយ $\\vec{u}$ និង $\\vec{v}$។",
+    "formulas": [
+      { "latex": "\\vec{u} \\times \\vec{v} = \\left(y_1 z_2 - z_1 y_2,\\ z_1 x_2 - x_1 z_2,\\ x_1 y_2 - y_1 x_2\\right)", "note_en": "Cross product components.", "note_km": "កូអរដោនេនៃផលគុណវិចទ័រ។" },
+      { "latex": "|\\vec{u} \\times \\vec{v}| = |\\vec{u}| |\\vec{v}| \\sin\\theta", "note_en": "Magnitude formula.", "note_km": "រូបមន្តម៉ូឌុលផលគុណវិចទ័រ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Determinant method",
+        "heading_km": "វិធីដេទែមីណង់",
+        "body_en": "Write coordinates into a $3 \\times 3$ symbolic matrix with unit vectors $\\vec{i}, \\vec{j}, \\vec{k}$ in the first row. Expand along the first row to obtain the resulting vector.",
+        "body_km": "សរសេរកូអរដោនេក្នុងម៉ាទ្រីស $3 \\times 3$ ដែលមានវិចទ័រឯកតា $\\vec{i}, \\vec{j}, \\vec{k}$ ក្នុងជួរដេកទីមួយ។ ពន្លាតតាមជួរដេកទីមួយដើម្បីរកវិចទ័រលទ្ធផល។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Given $\\vec{u} = (1, 0, 2)$ and $\\vec{v} = (0, 1, 1)$, compute $|\\vec{u} \\times \\vec{v}|$.",
+        "prompt_km": "គេមាន $\\vec{u} = (1, 0, 2)$ និង $\\vec{v} = (0, 1, 1)$។ គណនា $|\\vec{u} \\times \\vec{v}|$។",
+        "steps": [
+          {
+            "text_en": "Compute components: $\\vec{u} \\times \\vec{v} = (0\\cdot 1 - 2\\cdot 1, 2\\cdot 0 - 1\\cdot 1, 1\\cdot 1 - 0\\cdot 0) = (-2, -1, 1)$.",
+            "text_km": "គណនាកូអរដោនេ៖ $\\vec{u} \\times \\vec{v} = (0\\cdot 1 - 2\\cdot 1, 2\\cdot 0 - 1\\cdot 1, 1\\cdot 1 - 0\\cdot 0) = (-2, -1, 1)$។",
+            "latex": "\\vec{u} \\times \\vec{v} = (-2, -1, 1)"
+          },
+          {
+            "text_en": "Compute magnitude: $\\sqrt{(-2)^2 + (-1)^2 + 1^2} = \\sqrt{4 + 1 + 1} = \\sqrt{6}$.",
+            "text_km": "គណនាម៉ូឌុល៖ $\\sqrt{(-2)^2 + (-1)^2 + 1^2} = \\sqrt{4 + 1 + 1} = \\sqrt{6}$។",
+            "latex": "|\\vec{u} \\times \\vec{v}| = \\sqrt{6}"
+          }
+        ],
+        "answer_latex": "|\\vec{u} \\times \\vec{v}| = \\sqrt{6}"
+      }
+    ]
+  },
+  "triangle_area": {
+    "title_en": "Area of a triangle in space",
+    "title_km": "ផ្ទៃក្រឡាត្រីកោណក្នុងលំហ",
+    "summary_en": "The area of triangle $ABC$ equals half the magnitude of the cross product of two adjacent side vectors: $S = \\frac{1}{2} |\\overrightarrow{AB} \\times \\overrightarrow{AC}|$.",
+    "summary_km": "ផ្ទៃក្រឡាត្រីកោណ $ABC$ ស្មើនឹងពាក់កណ្តាលនៃម៉ូឌុលផលគុណវិចទ័រនៃជ្រុងជាប់គ្នាពីរ៖ $S = \\frac{1}{2} |\\overrightarrow{AB} \\times \\overrightarrow{AC}|$។",
+    "formulas": [
+      { "latex": "S_{ABC} = \\frac{1}{2} \\left|\\overrightarrow{AB} \\times \\overrightarrow{AC}\\right|", "note_en": "Triangle area formula.", "note_km": "រូបមន្តផ្ទៃក្រឡាត្រីកោណ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Steps",
+        "heading_km": "ជំហាន",
+        "body_en": "1) Compute vectors $\\overrightarrow{AB}$ and $\\overrightarrow{AC}$. 2) Compute the cross product vector $\\overrightarrow{AB} \\times \\overrightarrow{AC}$. 3) Calculate its magnitude and multiply by $\\frac{1}{2}$.",
+        "body_km": "១) គណនាវិចទ័រ $\\overrightarrow{AB}$ និង $\\overrightarrow{AC}$។ ២) គណនាផលគុណវិចទ័រ $\\overrightarrow{AB} \\times \\overrightarrow{AC}$។ ៣) គណនាម៉ូឌុលរួចគុណនឹង $\\frac{1}{2}$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find the area of triangle $ABC$ where $|\\overrightarrow{AB} \\times \\overrightarrow{AC}| = 6$.",
+        "prompt_km": "គណនាផ្ទៃក្រឡាត្រីកោណ $ABC$ ដោយដឹងថា $|\\overrightarrow{AB} \\times \\overrightarrow{AC}| = 6$។",
+        "steps": [
+          {
+            "text_en": "Apply $S = \\frac{1}{2} |\\overrightarrow{AB} \\times \\overrightarrow{AC}|$.",
+            "text_km": "អនុវត្ត $S = \\frac{1}{2} |\\overrightarrow{AB} \\times \\overrightarrow{AC}|$។",
+            "latex": "S = \\frac{1}{2}(6) = 3"
+          }
+        ],
+        "answer_latex": "S = 3"
+      }
+    ]
+  },
+  "scalar_triple_product": {
+    "title_en": "Scalar triple product u · (v × w)",
+    "title_km": "ផលគុណចម្រុះ u · (v × w)",
+    "summary_en": "The scalar triple product $\\vec{u} \\cdot (\\vec{v} \\times \\vec{w})$ equals the determinant of the $3 \\times 3$ matrix formed by the coordinates. Its absolute value gives the volume of the parallelepiped.",
+    "summary_km": "ផលគុណចម្រុះ $\\vec{u} \\cdot (\\vec{v} \\times \\vec{w})$ ស្មើនឹងដេទែមីណង់នៃម៉ាទ្រីស $3 \\times 3$ បង្កើតដោយកូអរដោនេវិចទ័រទាំងបី។ តម្លៃដាច់ខាតរបស់វាជាមាឌប្រលេឡេពីប៉ែត។",
+    "formulas": [
+      { "latex": "\\vec{u} \\cdot (\\vec{v} \\times \\vec{w}) = \\det\\begin{pmatrix} x_u & y_u & z_u \\\\ x_v & y_v & z_v \\\\ x_w & y_w & z_w \\end{pmatrix}", "note_en": "Determinant definition.", "note_km": "និយមន័យតាមដេទែមីណង់។" },
+      { "latex": "V_{\\text{parallelepiped}} = |\\vec{u} \\cdot (\\vec{v} \\times \\vec{w})|, \\quad V_{\\text{tetrahedron}} = \\frac{1}{6} |\\vec{u} \\cdot (\\vec{v} \\times \\vec{w})|", "note_en": "Volume formulas.", "note_km": "រូបមន្តមាឌ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Coplanarity test",
+        "heading_km": "លក្ខខណ្ឌកូផ្លាណែ",
+        "body_en": "Three vectors are coplanar if and only if their scalar triple product is zero: $\\vec{u} \\cdot (\\vec{v} \\times \\vec{w}) = 0$.",
+        "body_km": "វិចទ័រទាំងបីស្ថិតក្នុងប្លង់តែមួយ (កូផ្លាណែ) លុះត្រាតែផលគុណចម្រុះរបស់វាស្មើ 0៖ $\\vec{u} \\cdot (\\vec{v} \\times \\vec{w}) = 0$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Compute $\\vec{u} \\cdot (\\vec{v} \\times \\vec{w})$ for $\\vec{u} = (1, 0, 0)$, $\\vec{v} = (0, 2, 0)$, $\\vec{w} = (0, 0, 3)$.",
+        "prompt_km": "គណនា $\\vec{u} \\cdot (\\vec{v} \\times \\vec{w})$ សម្រាប់ $\\vec{u} = (1, 0, 0)$, $\\vec{v} = (0, 2, 0)$, $\\vec{w} = (0, 0, 3)$។",
+        "steps": [
+          {
+            "text_en": "Evaluate determinant of diagonal components: $1 \\times 2 \\times 3 = 6$.",
+            "text_km": "គណនាដេទែមីណង់នៃអង្កត់ទ្រូង៖ $1 \\times 2 \\times 3 = 6$។",
+            "latex": "\\vec{u} \\cdot (\\vec{v} \\times \\vec{w}) = 1(2\\cdot 3 - 0) = 6"
+          }
+        ],
+        "answer_latex": "\\vec{u} \\cdot (\\vec{v} \\times \\vec{w}) = 6"
+      }
+    ]
+  },
+  "find_m_orthogonal": {
+    "title_en": "Find m making two vectors orthogonal",
+    "title_km": "រក m ដើម្បីឱ្យពីរវិចទ័រអរតូកូណាល់",
+    "summary_en": "Two non-zero vectors $\\vec{u}$ and $\\vec{v}$ are orthogonal (perpendicular) if and only if their dot product equals zero: $\\vec{u} \\cdot \\vec{v} = 0$.",
+    "summary_km": "វិចទ័រពីរមិនសូន្យ $\\vec{u}$ និង $\\vec{v}$ អរតូកូណាល់ (កែងគ្នា) លុះត្រាតែផលគុណស្កាលែរបស់វាស្មើ 0៖ $\\vec{u} \\cdot \\vec{v} = 0$។",
+    "formulas": [
+      { "latex": "\\vec{u} \\perp \\vec{v} \\iff \\vec{u} \\cdot \\vec{v} = 0 \\iff x_1 x_2 + y_1 y_2 + z_1 z_2 = 0", "note_en": "Orthogonality condition.", "note_km": "លក្ខខណ្ឌអរតូកូណាល់។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Method",
+        "heading_km": "វិធីសាស្ត្រ",
+        "body_en": "1) Express the dot product in terms of $m$. 2) Set the dot product equation equal to 0. 3) Solve the linear equation for $m$.",
+        "body_km": "១) គណនាផលគុណស្កាលែជាអនុគមន៍នៃ $m$។ ២) ឱ្យសមីការផលគុណស្កាលែស្មើ 0។ ៣) ដោះស្រាយសមីការលីនេអ៊ែររក $m$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $m$ such that $\\vec{u} = (m, 2, 1)$ and $\\vec{v} = (3, -1, 4)$ are orthogonal.",
+        "prompt_km": "រកតម្លៃ $m$ ដើម្បីឱ្យ $\\vec{u} = (m, 2, 1)$ និង $\\vec{v} = (3, -1, 4)$ កែងគ្នា។",
+        "steps": [
+          {
+            "text_en": "Compute dot product: $\\vec{u} \\cdot \\vec{v} = 3m + 2(-1) + 1(4) = 3m + 2$.",
+            "text_km": "គណនាផលគុណស្កាលែ៖ $\\vec{u} \\cdot \\vec{v} = 3m + 2(-1) + 1(4) = 3m + 2$។",
+            "latex": "\\vec{u} \\cdot \\vec{v} = 3m + 2"
+          },
+          {
+            "text_en": "Set to zero for orthogonality: $3m + 2 = 0 \\implies m = -\\frac{2}{3}$.",
+            "text_km": "ឱ្យស្មើ 0៖ $3m + 2 = 0 \\implies m = -\\frac{2}{3}$។",
+            "latex": "3m = -2 \\implies m = -\\frac{2}{3}"
+          }
+        ],
+        "answer_latex": "m = -\\frac{2}{3}"
+      }
+    ]
+  }
+}

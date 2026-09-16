@@ -5,6 +5,22 @@ import Canvas, { CanvasHandle, CanvasTool, PEN_WIDTHS } from "@/components/Canva
 import MathText from "@/components/MathText";
 import MathKeypad from "@/components/MathKeypad";
 import { api, SandboxGradeResult, SandboxSolveResult, TemplateStructure, TemplateSummary } from "@/lib/api";
+import { looksLikeMath, toLatexPreview } from "@/lib/mathPreview";
+
+// A field's live math preview, rendered under it as the admin types — see
+// lib/mathPreview.ts for why this is a best-effort client-side conversion
+// rather than a round-trip to SymPy. Empty/non-math values render nothing.
+function FieldPreview({ value }: { value: string }) {
+  if (!value.trim() || !looksLikeMath(value)) return null;
+  const latex = toLatexPreview(value);
+  return (
+    <div className="mt-1 px-2 py-1 bg-slate-50 border border-slate-100 rounded text-sm text-slate-700 overflow-x-auto">
+      <MathText text={`\\(${latex}\\)`} />
+    </div>
+  );
+}
+
+type SandboxTab = "setup" | "solve" | "grade";
 
 type FocusableField = HTMLInputElement | HTMLTextAreaElement;
 
@@ -46,6 +62,18 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
   const [newKey, setNewKey] = useState("");
 
   const [lines, setLines] = useState("");
+  // LaTeX for each line in `lines`, in the same order — populated only by a
+  // successful OCR recognize (backend's `lines_latex`, the real rendering,
+  // not a client-side guess). Cleared on any manual edit since the
+  // line-for-line correspondence with `lines` can no longer be trusted.
+  const [linesLatex, setLinesLatex] = useState<string[]>([]);
+  const editLines = (value: string) => {
+    setLines(value);
+    setLinesLatex([]);
+  };
+  // True only while `linesLatex` still corresponds 1:1 to the non-blank
+  // lines currently in the box (i.e. nothing was hand-edited since Recognize).
+  const linesAligned = linesLatex.length > 0 && linesLatex.length === lines.split("\n").filter((l) => l.trim()).length;
 
   const canvasRef = useRef<CanvasHandle | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -53,6 +81,7 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
   const [zoom, setZoom] = useState(1);
   const [detectBusy, setDetectBusy] = useState(false);
   const [toolsVisible, setToolsVisible] = useState(true);
+  const [tab, setTab] = useState<SandboxTab>("setup");
 
   const [sampleBusy, setSampleBusy] = useState(false);
   const [solveBusy, setSolveBusy] = useState(false);
@@ -159,6 +188,7 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
     try {
       const res = await api.sandboxSolve(topic, questionType, sendParams());
       setSolveResult(res);
+      setTab("solve");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Solve failed");
     } finally {
@@ -173,6 +203,7 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
     try {
       const res = await api.sandboxGrade(topic, questionType, sendParams(), lines);
       setGradeResult(res);
+      setTab("grade");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Grade failed");
     } finally {
@@ -199,25 +230,10 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
     reader.readAsDataURL(file);
   };
 
-  // Canvas's own paste listener only runs when fullscreen is driven by its
-  // own internal layout; it's simplest to keep our own listener here too so
-  // it keeps working regardless of Canvas's internal wiring.
-  useEffect(() => {
-    const onPaste = (e: ClipboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && /^(INPUT|TEXTAREA)$/.test(target.tagName)) return;
-      const items = e.clipboardData?.items;
-      if (!items) return;
-      for (const item of items) {
-        if (!item.type.startsWith("image/")) continue;
-        const file = item.getAsFile();
-        if (file) onFile(file);
-        break;
-      }
-    };
-    window.addEventListener("paste", onPaste);
-    return () => window.removeEventListener("paste", onPaste);
-  }, []);
+  // Paste-an-image-onto-the-canvas is handled by Canvas itself (its own
+  // `window.addEventListener("paste", ...)`, registered whenever
+  // `fullscreen` is true, which it always is here) — a second listener here
+  // used to double-fire on every Ctrl/Cmd+V and place the image twice.
 
   const recognizeHandwriting = async () => {
     const image = canvasRef.current?.getImageBase64();
@@ -230,6 +246,8 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
     try {
       const det = await api.detect(image);
       setLines(det.lines.join("\n"));
+      setLinesLatex(det.lines_latex ?? []);
+      setTab("grade");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Handwriting recognition failed");
     } finally {
@@ -244,7 +262,7 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
   // focused (see MathKeypad's own comment for why buttons don't steal focus).
   const setFieldValue = (field: string, value: string) => {
     if (field === "lines") {
-      setLines(value);
+      editLines(value);
     } else if (field.startsWith("param:")) {
       const key = field.slice(6);
       setParams((p) => ({ ...p, [key]: value }));
@@ -408,278 +426,362 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
             className="fixed right-0 z-20 w-full sm:w-[400px] bg-white border-l border-slate-200 shadow-xl overflow-y-auto"
             style={{ top: TOPBAR_H, bottom: 0 }}
           >
-            <div className="p-4 space-y-4">
+            <div className="flex flex-col h-full">
               {error && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>
+                <p className="m-4 mb-0 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                  {error}
+                </p>
               )}
 
-              <section>
-                <h2 className="text-sm font-semibold text-slate-900 mb-2">Choose a template</h2>
-                <div className="flex flex-wrap gap-2">
-                  <select
-                    value={topic}
-                    onChange={(e) => onTopicChange(e.target.value)}
-                    className="px-2.5 py-1.5 border border-slate-300 rounded-md text-sm capitalize"
-                  >
-                    {topics.map((t) => (
-                      <option key={t.topic} value={t.topic}>
-                        {t.topic.replace("_", " ")}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={questionType}
-                    onChange={(e) => onQuestionTypeChange(e.target.value)}
-                    className="px-2.5 py-1.5 border border-slate-300 rounded-md text-sm capitalize"
-                  >
-                    {questionTypes.map((qt) => (
-                      <option key={qt.question_type} value={qt.question_type}>
-                        {qt.question_type.replace("_", " ")}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="mt-2 max-h-64 overflow-y-auto border border-slate-200 rounded-md divide-y divide-slate-100">
-                  {structuresBusy && <p className="text-sm text-slate-400 p-2">Loading templates…</p>}
-                  {!structuresBusy && structuresForType.length === 0 && (
-                    <p className="text-sm text-slate-400 p-2">No templates found for this question type.</p>
-                  )}
-                  {structuresForType.map((s) => (
-                    <button
-                      key={s.id}
-                      onClick={() => loadStructure(s.id)}
-                      disabled={sampleBusy}
-                      className={`w-full text-left px-2.5 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50 ${
-                        selectedStructureId === s.id ? "bg-slate-100" : "bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 capitalize text-[10px]">
-                          {s.difficulty}
-                        </span>
-                        <code className="text-slate-400 truncate">{s.id}</code>
-                      </div>
-                      {s.pattern_latex ? (
-                        <MathText text={`\\(${s.pattern_latex}\\)`} className="text-slate-800" />
-                      ) : (
-                        <span className="text-slate-700 font-mono">{s.pattern}</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                {selectedStructureId && (
-                  <div className="mt-3 flex items-center gap-2">
-                    <button
-                      onClick={() => loadStructure(selectedStructureId)}
-                      disabled={sampleBusy}
-                      className="px-3 py-1.5 rounded-md text-sm font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                    >
-                      {sampleBusy ? "Rerolling…" : "Reroll (same template)"}
-                    </button>
-                  </div>
-                )}
-                {prompt?.latex && (
-                  <div className="mt-3 text-sm text-slate-700 bg-slate-50 rounded p-2 overflow-x-auto">
-                    <MathText text={`\\(${prompt.latex}\\)`} />
-                  </div>
-                )}
-              </section>
-
-              <section className="pt-4 border-t border-slate-100">
-                <h2 className="text-sm font-semibold text-slate-900 mb-2">
-                  Params <span className="text-slate-400 font-normal">— tap a field, then use the keypad</span>
-                </h2>
-                <div className="space-y-2">
-                  {paramKeys.map((key) => (
-                    <div key={key} className="flex items-center gap-2">
-                      <code className="w-20 shrink-0 text-xs text-slate-500 truncate" title={key}>
-                        {key}
-                      </code>
-                      <input
-                        data-field={`param:${key}`}
-                        value={params[key] ?? ""}
-                        onFocus={(e) => (activeEl.current = e.target)}
-                        onChange={(e) => setParams((p) => ({ ...p, [key]: e.target.value }))}
-                        className={fieldClass}
-                      />
-                      <button
-                        onClick={() => removeField(key)}
-                        className="w-7 h-7 shrink-0 rounded border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-red-500"
-                        title="Remove field"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  {paramKeys.length === 0 && (
-                    <p className="text-sm text-slate-400">
-                      No params yet — load a sample, or add a field manually below.
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-                  <input
-                    value={newKey}
-                    onChange={(e) => setNewKey(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addField()}
-                    placeholder="param name (e.g. a)"
-                    className="px-2.5 py-1.5 border border-slate-300 rounded-md text-sm w-32"
-                  />
+              <div className="flex shrink-0 gap-1 px-4 pt-4">
+                {([
+                  ["setup", "1. Setup"],
+                  ["solve", `2. Solve${solveResult ? "" : " —"}`],
+                  ["grade", `3. Grade${gradeResult ? "" : " —"}`],
+                ] as [SandboxTab, string][]).map(([key, label]) => (
                   <button
-                    onClick={addField}
-                    className="px-3 py-1.5 rounded-md text-sm font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
+                    key={key}
+                    onClick={() => setTab(key)}
+                    className={`flex-1 px-2 py-2 rounded-md text-sm font-semibold border ${
+                      tab === key
+                        ? "bg-slate-900 text-white border-slate-900"
+                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                    }`}
                   >
-                    + Add field
+                    {label}
                   </button>
-                </div>
-                <button
-                  onClick={runSolve}
-                  disabled={solveBusy || !questionType}
-                  className="mt-4 px-4 py-2 rounded-md text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
-                >
-                  {solveBusy ? "Solving…" : "Solve"}
-                </button>
-              </section>
+                ))}
+              </div>
 
-              <MathKeypad onKey={insertToken} onMove={moveCaret} onClear={clearActiveField} />
-
-              {solveResult && (
-                <section className="pt-4 border-t border-slate-100">
-                  <h2 className="text-sm font-semibold text-slate-900 mb-2">Solver output</h2>
-                  <div className="text-sm text-slate-700 bg-slate-50 rounded p-2 mb-3 overflow-x-auto">
-                    <span className="text-slate-400 mr-1">Answer:</span>
-                    <MathText text={`\\(${solveResult.answer_latex}\\)`} className="inline" />
-                    <span className="ml-2 text-slate-400">({solveResult.answer_exact})</span>
-                  </div>
-                  {solveResult.formula_tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {solveResult.formula_tags.map((t) => (
-                        <code key={t} className="px-1.5 py-0.5 rounded bg-slate-100 text-[11px]">
-                          {t}
-                        </code>
-                      ))}
-                    </div>
-                  )}
-                  {solveResult.checkpoints.length > 0 && (
-                    <div className="mb-3">
-                      <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
-                        Checkpoints
-                      </div>
-                      <table className="w-full text-xs">
-                        <tbody>
-                          {solveResult.checkpoints.map((cp, i) => (
-                            <tr key={i} className="border-t border-slate-100">
-                              <td className="py-1 pr-2 text-slate-500">{cp.label}</td>
-                              <td className="py-1 pr-2 font-mono text-slate-800">{cp.value}</td>
-                              <td className="py-1 text-slate-400">{cp.formula ?? ""}</td>
-                            </tr>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {tab === "setup" && (
+                  <>
+                    <section>
+                      <h2 className="text-sm font-semibold text-slate-900 mb-2">1. Pick a template</h2>
+                      <div className="flex flex-wrap gap-2">
+                        <select
+                          value={topic}
+                          onChange={(e) => onTopicChange(e.target.value)}
+                          className="px-2.5 py-1.5 border border-slate-300 rounded-md text-sm capitalize"
+                        >
+                          {topics.map((t) => (
+                            <option key={t.topic} value={t.topic}>
+                              {t.topic.replace("_", " ")}
+                            </option>
                           ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    {solveResult.steps.map((s, i) => (
-                      <div key={i} className="text-sm">
-                        <div className="font-medium text-slate-800">{s.title}</div>
-                        <div className="text-slate-600 overflow-x-auto">
-                          <MathText text={s.detail} />
-                        </div>
+                        </select>
+                        <select
+                          value={questionType}
+                          onChange={(e) => onQuestionTypeChange(e.target.value)}
+                          className="px-2.5 py-1.5 border border-slate-300 rounded-md text-sm capitalize"
+                        >
+                          {questionTypes.map((qt) => (
+                            <option key={qt.question_type} value={qt.question_type}>
+                              {qt.question_type.replace("_", " ")}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    ))}
-                  </div>
-                  <details className="mt-3 pt-2 border-t border-slate-100">
-                    <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-800">
-                      Params actually used (after parsing)
-                    </summary>
-                    <pre className="mt-1 text-[11px] bg-slate-50 rounded p-2 overflow-x-auto">
-                      {JSON.stringify(solveResult.params_used, null, 2)}
-                    </pre>
-                  </details>
-                </section>
-              )}
 
-              <section className="pt-4 border-t border-slate-100">
-                <h2 className="text-sm font-semibold text-slate-900 mb-2">
-                  Test grading{" "}
-                  <span className="text-slate-400 font-normal">
-                    — write on the canvas and hit &quot;Recognize&quot;, or type lines directly
-                  </span>
-                </h2>
-                <textarea
-                  data-field="lines"
-                  value={lines}
-                  onFocus={(e) => (activeEl.current = e.target)}
-                  onChange={(e) => setLines(e.target.value)}
-                  rows={5}
-                  placeholder={"z = 12-9i, a=12, b=-9\n|z| = sqrt(12^2 + (-9)^2)\n|z| = sqrt(225) = 15"}
-                  className={`${fieldClass} font-mono`}
-                />
-                <button
-                  onClick={runGrade}
-                  disabled={gradeBusy || !questionType || !lines.trim()}
-                  className="mt-3 px-4 py-2 rounded-md text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
-                >
-                  {gradeBusy ? "Grading…" : "Grade"}
-                </button>
-
-                {gradeResult && (
-                  <div className="mt-4 space-y-4">
-                    <div>
-                      <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
-                        Line-by-line
-                      </div>
-                      <div className="space-y-1">
-                        {gradeResult.step_check.line_results.map((r, i) => (
-                          <div key={i} className="flex items-start gap-2 text-xs font-mono">
-                            <span className="w-4 shrink-0 text-slate-400">{r.line}</span>
-                            <span
-                              className={
-                                !r.checked ? "text-slate-400" : r.correct ? "text-emerald-600" : "text-red-600"
-                              }
-                            >
-                              {!r.checked ? "–" : r.correct ? "✓" : "✗"}
-                            </span>
-                            <span className="text-slate-700 flex-1 break-all">{r.text}</span>
-                            {!r.checked && r.reason && <span className="text-slate-400">({r.reason})</span>}
-                            {r.checked && !r.correct && r.expected && (
-                              <span className="text-slate-400">expected {r.expected}</span>
+                      <div className="mt-2 max-h-64 overflow-y-auto border border-slate-200 rounded-md divide-y divide-slate-100">
+                        {structuresBusy && <p className="text-sm text-slate-400 p-2">Loading templates…</p>}
+                        {!structuresBusy && structuresForType.length === 0 && (
+                          <p className="text-sm text-slate-400 p-2">No templates found for this question type.</p>
+                        )}
+                        {structuresForType.map((s) => (
+                          <button
+                            key={s.id}
+                            onClick={() => loadStructure(s.id)}
+                            disabled={sampleBusy}
+                            className={`w-full text-left px-2.5 py-1.5 text-xs hover:bg-slate-50 disabled:opacity-50 ${
+                              selectedStructureId === s.id ? "bg-slate-100" : "bg-white"
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 capitalize text-[10px]">
+                                {s.difficulty}
+                              </span>
+                              <code className="text-slate-400 truncate">{s.id}</code>
+                            </div>
+                            {s.pattern_latex ? (
+                              <MathText text={`\\(${s.pattern_latex}\\)`} className="text-slate-800" />
+                            ) : (
+                              <span className="text-slate-700 font-mono">{s.pattern}</span>
                             )}
-                          </div>
+                          </button>
                         ))}
                       </div>
-                    </div>
 
-                    {gradeResult.rubric_score && (
-                      <div>
-                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
-                          Rubric score — {gradeResult.rubric_score.earned} / {gradeResult.rubric_score.possible}
+                      {selectedStructureId && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <button
+                            onClick={() => loadStructure(selectedStructureId)}
+                            disabled={sampleBusy}
+                            className="px-3 py-1.5 rounded-md text-sm font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                          >
+                            {sampleBusy ? "Rerolling…" : "Reroll (same template)"}
+                          </button>
                         </div>
-                        <table className="w-full text-xs">
-                          <tbody>
-                            {gradeResult.rubric_score.breakdown.map((b, i) => (
-                              <tr key={i} className="border-t border-slate-100">
-                                <td className="py-1 pr-2 text-slate-500">{b.label}</td>
-                                <td className="py-1 pr-2 font-mono text-slate-800">
-                                  {b.points_earned}/{b.points_possible}
-                                </td>
-                                <td className="py-1 text-slate-400">
-                                  {b.matched_line ?? (b.implied ? "implied by a later line" : "")}
-                                </td>
-                              </tr>
+                      )}
+                      {prompt?.latex && (
+                        <div className="mt-3 text-sm text-slate-700 bg-slate-50 rounded p-2 overflow-x-auto">
+                          <MathText text={`\\(${prompt.latex}\\)`} />
+                        </div>
+                      )}
+                    </section>
+
+                    <section className="pt-4 border-t border-slate-100">
+                      <h2 className="text-sm font-semibold text-slate-900 mb-2">
+                        2. Params{" "}
+                        <span className="text-slate-400 font-normal">
+                          — tap a field, type or use the keypad below; math renders live
+                        </span>
+                      </h2>
+                      <div className="space-y-2">
+                        {paramKeys.map((key) => (
+                          <div key={key} className="flex items-start gap-2">
+                            <code className="w-20 shrink-0 text-xs text-slate-500 truncate pt-2" title={key}>
+                              {key}
+                            </code>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  data-field={`param:${key}`}
+                                  value={params[key] ?? ""}
+                                  onFocus={(e) => (activeEl.current = e.target)}
+                                  onChange={(e) => setParams((p) => ({ ...p, [key]: e.target.value }))}
+                                  className={fieldClass}
+                                />
+                                <button
+                                  onClick={() => removeField(key)}
+                                  className="w-7 h-7 shrink-0 rounded border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-red-500"
+                                  title="Remove field"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                              <FieldPreview value={params[key] ?? ""} />
+                            </div>
+                          </div>
+                        ))}
+                        {paramKeys.length === 0 && (
+                          <p className="text-sm text-slate-400">
+                            No params yet — load a sample above, or add a field manually below.
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+                        <input
+                          value={newKey}
+                          onChange={(e) => setNewKey(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && addField()}
+                          placeholder="param name (e.g. a)"
+                          className="px-2.5 py-1.5 border border-slate-300 rounded-md text-sm w-32"
+                        />
+                        <button
+                          onClick={addField}
+                          className="px-3 py-1.5 rounded-md text-sm font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
+                        >
+                          + Add field
+                        </button>
+                      </div>
+                      <button
+                        onClick={runSolve}
+                        disabled={solveBusy || !questionType}
+                        className="mt-4 w-full px-4 py-2.5 rounded-md text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
+                      >
+                        {solveBusy ? "Solving…" : "3. Solve →"}
+                      </button>
+                    </section>
+
+                    <MathKeypad onKey={insertToken} onMove={moveCaret} onClear={clearActiveField} />
+                  </>
+                )}
+
+                {tab === "solve" && (
+                  <>
+                    {!solveResult && (
+                      <p className="text-sm text-slate-400">
+                        Nothing solved yet —{" "}
+                        <button onClick={() => setTab("setup")} className="text-slate-700 underline">
+                          go to Setup
+                        </button>{" "}
+                        and click Solve.
+                      </p>
+                    )}
+                    {solveResult && (
+                      <section>
+                        <h2 className="text-sm font-semibold text-slate-900 mb-2">Solver output</h2>
+                        <div className="text-sm text-slate-700 bg-slate-50 rounded p-2 mb-3 overflow-x-auto">
+                          <span className="text-slate-400 mr-1">Answer:</span>
+                          <MathText text={`\\(${solveResult.answer_latex}\\)`} className="inline" />
+                          <span className="ml-2 text-slate-400">({solveResult.answer_exact})</span>
+                        </div>
+                        {solveResult.formula_tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {solveResult.formula_tags.map((t) => (
+                              <code key={t} className="px-1.5 py-0.5 rounded bg-slate-100 text-[11px]">
+                                {t}
+                              </code>
                             ))}
-                          </tbody>
-                        </table>
+                          </div>
+                        )}
+                        {solveResult.checkpoints.length > 0 && (
+                          <div className="mb-3">
+                            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
+                              Checkpoints
+                            </div>
+                            <table className="w-full text-xs">
+                              <tbody>
+                                {solveResult.checkpoints.map((cp, i) => (
+                                  <tr key={i} className="border-t border-slate-100">
+                                    <td className="py-1 pr-2 text-slate-500">{cp.label}</td>
+                                    <td className="py-1 pr-2 font-mono text-slate-800">{cp.value}</td>
+                                    <td className="py-1 text-slate-400">{cp.formula ?? ""}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                        <div className="space-y-2">
+                          {solveResult.steps.map((s, i) => (
+                            <div key={i} className="text-sm">
+                              <div className="font-medium text-slate-800">{s.title}</div>
+                              <div className="text-slate-600 overflow-x-auto">
+                                <MathText text={s.detail} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <details className="mt-3 pt-2 border-t border-slate-100">
+                          <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-800">
+                            Params actually used (after parsing)
+                          </summary>
+                          <pre className="mt-1 text-[11px] bg-slate-50 rounded p-2 overflow-x-auto">
+                            {JSON.stringify(solveResult.params_used, null, 2)}
+                          </pre>
+                        </details>
+                        <button
+                          onClick={() => setTab("grade")}
+                          className="mt-4 w-full px-4 py-2.5 rounded-md text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800"
+                        >
+                          Test grading →
+                        </button>
+                      </section>
+                    )}
+                  </>
+                )}
+
+                {tab === "grade" && (
+                  <section>
+                    <h2 className="text-sm font-semibold text-slate-900 mb-2">
+                      Test grading{" "}
+                      <span className="text-slate-400 font-normal">
+                        — write on the canvas and hit &quot;Recognize&quot;, or type lines directly
+                      </span>
+                    </h2>
+                    <textarea
+                      data-field="lines"
+                      value={lines}
+                      onFocus={(e) => (activeEl.current = e.target)}
+                      onChange={(e) => editLines(e.target.value)}
+                      rows={5}
+                      placeholder={"z = 12-9i, a=12, b=-9\n|z| = sqrt(12^2 + (-9)^2)\n|z| = sqrt(225) = 15"}
+                      className={`${fieldClass} font-mono`}
+                    />
+                    {linesAligned && (
+                      <div className="mt-2">
+                        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
+                          Detected (rendered)
+                        </div>
+                        <div className="space-y-1">
+                          {linesLatex.map((l, i) => (
+                            <div
+                              key={i}
+                              className="px-2 py-1 bg-slate-50 border border-slate-100 rounded text-sm text-slate-700 overflow-x-auto"
+                            >
+                              <MathText text={`\\(${l}\\)`} />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
-                    {gradeResult.rubric_error && (
-                      <p className="text-xs text-amber-700">rubric: {gradeResult.rubric_error}</p>
+                    <button
+                      onClick={runGrade}
+                      disabled={gradeBusy || !questionType || !lines.trim()}
+                      className="mt-3 w-full px-4 py-2.5 rounded-md text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
+                    >
+                      {gradeBusy ? "Grading…" : "Grade"}
+                    </button>
+
+                    <div className="mt-4">
+                      <MathKeypad onKey={insertToken} onMove={moveCaret} onClear={clearActiveField} />
+                    </div>
+
+                    {gradeResult && (
+                      <div className="mt-4 space-y-4">
+                        <div>
+                          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
+                            Line-by-line
+                          </div>
+                          <div className="space-y-1">
+                            {gradeResult.step_check.line_results.map((r, i) => (
+                              <div key={i} className="flex items-start gap-2 text-xs font-mono">
+                                <span className="w-4 shrink-0 text-slate-400">{r.line}</span>
+                                <span
+                                  className={
+                                    !r.checked ? "text-slate-400" : r.correct ? "text-emerald-600" : "text-red-600"
+                                  }
+                                >
+                                  {!r.checked ? "–" : r.correct ? "✓" : "✗"}
+                                </span>
+                                <span className="text-slate-700 flex-1 break-all overflow-x-auto">
+                                  {linesAligned && linesLatex[r.line - 1] ? (
+                                    <MathText text={`\\(${linesLatex[r.line - 1]}\\)`} className="inline" />
+                                  ) : (
+                                    r.text
+                                  )}
+                                </span>
+                                {!r.checked && r.reason && <span className="text-slate-400">({r.reason})</span>}
+                                {r.checked && !r.correct && r.expected && (
+                                  <span className="text-slate-400">expected {r.expected}</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {gradeResult.rubric_score && (
+                          <div>
+                            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">
+                              Rubric score — {gradeResult.rubric_score.earned} / {gradeResult.rubric_score.possible}
+                            </div>
+                            <table className="w-full text-xs">
+                              <tbody>
+                                {gradeResult.rubric_score.breakdown.map((b, i) => (
+                                  <tr key={i} className="border-t border-slate-100">
+                                    <td className="py-1 pr-2 text-slate-500">{b.label}</td>
+                                    <td className="py-1 pr-2 font-mono text-slate-800">
+                                      {b.points_earned}/{b.points_possible}
+                                    </td>
+                                    <td className="py-1 text-slate-400">
+                                      {b.matched_line ?? (b.implied ? "implied by a later line" : "")}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                        {gradeResult.rubric_error && (
+                          <p className="text-xs text-amber-700">rubric: {gradeResult.rubric_error}</p>
+                        )}
+                      </div>
                     )}
-                  </div>
+                  </section>
                 )}
-              </section>
+              </div>
             </div>
           </div>
         )}

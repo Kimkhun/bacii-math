@@ -99,6 +99,20 @@ def _rewrite_trig_powers(text):
         pos = end_idx + 1
     return "".join(out)
 
+# An unevaluated integral sign in a work line — e.g. a linearity-splitting
+# step like "= ∫x²/2 dx + ∫8x dx" or "= int x^2 dx + int 8x dx" that hasn't
+# been integrated yet. The OCR's plain-text `lines` render the sign as the
+# literal word "int" (the same way it spells out "sqrt" rather than using
+# "√"), not the unicode "∫" glyph — so both forms have to be recognized.
+# `parse_answer`'s sympy parser has no notion of either: it silently reads
+# "∫"/"int" as a bare unknown symbol and splits "dx" into "d*x" (implicit
+# multiplication), producing a garbage expression that then gets checked —
+# and wrongly flagged — against the checkpoint for the *already-integrated*
+# result. Skip these lines instead; there's no checkpoint for the
+# intermediate unevaluated form to verify against. Word-bounded so it never
+# matches "int" inside another word ("point", "print", ...).
+_INTEGRAL_SIGN_RE = _re.compile(r"∫|\\int\b|\bint\b")
+
 def _normalize_ocr_text(text):
     """OCR-specific normalization applied before any other parsing: ODE
     arbitrary constants written with a LaTeX-style subscript ("C_1", "C_2")
@@ -111,8 +125,22 @@ def _normalize_ocr_text(text):
     text = text.replace("+-", "±").replace("-+", "∓")
     return text
 
+# A trailing decimal restatement of the exact value just asserted
+# ("25/81 ≈ 0.3086", or the OCR's plain-text spelling-out "25/81 approx
+# 0.3086" — it renders "≈" as the literal word the same way it spells
+# "sqrt" instead of "√"). Neither the glyph nor the word means anything to
+# sympy's parser: implicit multiplication shatters "approx" into single-
+# letter symbols (a*o*p**2*r*x) multiplied onto the real value, producing a
+# garbage expression that then fails to match the checkpoint the exact
+# fraction before it would have matched fine. Strip from "≈"/"~"/"approx"
+# to the end — the exact value is always what precedes it.
+_APPROX_TAIL_RE = _re.compile(r"(?:≈|~|\bapprox\b).*$")
+
 def parse_answer(text):
     text = text.strip()
+    if not text:
+        raise ValueError("empty answer")
+    text = _APPROX_TAIL_RE.sub("", text).strip()
     if not text:
         raise ValueError("empty answer")
     text = _normalize_ocr_text(text)
@@ -853,6 +881,10 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
         # inspects the raw characters — parse_answer normalizes again on its
         # own input, but this loop pattern-matches on `text` directly first.
         text = _normalize_ocr_text(text)
+
+        if _INTEGRAL_SIGN_RE.search(text):
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "unevaluated_integral"})
+            continue
 
         # A continuity conclusion line ("...so f is discontinuous at x=2")
         # often restates the join point as "x = 2" — parsing the tail after

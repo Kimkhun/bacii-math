@@ -16,7 +16,7 @@ from sympy import latex
 
 import cache
 from engine import explainer, formulas, generator, grader, llm, solver
-from engine.core import coaching, mastery, skills, template_shapes
+from engine.core import coaching, lessons, mastery, skills, template_shapes
 from engine.core.rubric import score_work
 from engine.topics.past_exam.rubric import mark_full_exam
 from engine.topics.functions import graph_grader
@@ -237,8 +237,14 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
 
         if question.topic != "functions":
             try:
+                # Progressive per-part grading (`is_multi and part`) only ever
+                # sends up that one part's canvas as `work_text` — scoring it
+                # against the full multi-part rubric would score every OTHER
+                # part 0 (never attempted, not merely wrong), so restrict the
+                # rubric to the part actually being graded.
                 rubric_result = score_work(
-                    question.topic, question.question_type, spec, work_text.split("\n"), question_points=10
+                    question.topic, question.question_type, spec, work_text.split("\n"),
+                    question_points=10, part_label=part if is_multi and part else None,
                 )
                 resp["rubric_score"] = _fractions_to_float(rubric_result)
             except Exception:
@@ -297,11 +303,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
     # Update the hidden skill trackers behind the student's profile. Runs on
     # every attempt (right or wrong) — a correct answer is exactly as much
     # evidence of mastery as a wrong one is of need.
-    await record_attempt_skills(
-        db, user, question,
-        correct=result["correct"],
-        step_check=step_check,
-    )
+    await record_skill_progress(db, user, question, attempt)
     return resp
 
 
@@ -1739,6 +1741,7 @@ def _skill_view(meta: dict, row: SkillState | None, now) -> dict:
         "status": mastery.status(est),
         "band": mastery.band(est["level"]),
         "weak_formulas": [],
+        "has_lesson": lessons.has_lesson(meta["key"]),
     }
 
 

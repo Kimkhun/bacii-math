@@ -1,0 +1,191 @@
+{
+  "modulus": {
+    "title_en": "Modulus |z|",
+    "title_km": "ម៉ូឌុល |z|",
+    "summary_en": "The modulus of a complex number z = a + bi is its distance from the origin in the complex plane. It is always a real number ≥ 0.",
+    "summary_km": "ម៉ូឌុលនៃចំនួនកុំផ្លិច z = a + bi គឺជាចម្ងាយពីគល់ (0) ទៅចំណុច z ក្នុងប្លង់កុំផ្លិច។ វាតែងតែជាចំនួនពិត ≥ 0 ជានិច្ច។",
+    "formulas": [
+      { "latex": "|z| = |a + bi| = \\sqrt{a^2 + b^2}", "note_en": "From the Pythagorean theorem on the point (a, b).", "note_km": "ចេញពីទ្រឹស្តីបទពីតាហ្គោរ លើចំណុច (a, b)។" },
+      { "latex": "|z|^2 = z\\,\\bar{z} = a^2 + b^2", "note_en": "Handy for division and for proofs — it removes the square root.", "note_km": "មានប្រយោជន៍សម្រាប់វិធីចែក និងសម្រាប់ការស្រាយបញ្ជាក់ — វាដកឫសការេចេញ។" }
+    ],
+    "sections": [
+      { "heading_en": "The idea", "heading_km": "គំនិតសំខាន់", "body_en": "Plot z = a + bi as the point (a, b). Draw a right triangle with legs a and b; the hypotenuse is the modulus. So the modulus measures “how big” the number is, regardless of direction.", "body_km": "គូសចំណុច z = a + bi ជាចំណុច (a, b)។ បង្កើតត្រីកោណកែងដែលមានជ្រុងកែង a និង b ; អ៊ីប៉ូតេនុសគឺជាម៉ូឌុល។ ដូច្នេះម៉ូឌុលវាស់ថា “ចំនួននេះធំប៉ុនណា” ដោយមិនគិតពីទិសដៅ។" },
+      { "heading_en": "Watch out", "heading_km": "ចំណុចត្រូវប្រយ័ត្ន", "body_en": "Square both a and b before adding — a negative sign disappears. |3 - 4i| uses (-4)^2 = 16, not -16.", "body_km": "ត្រូវលើកការេ a និង b មុននឹងបូក — សញ្ញាដកនឹងបាត់។ |3 - 4i| ប្រើ (-4)^2 = 16 មិនមែន -16 ទេ។" }
+    ],
+    "examples": [
+      { "prompt_en": "Find |3 + 4i|.", "prompt_km": "រកតម្លៃ |3 + 4i|។", "steps": [
+        { "text_en": "Identify a = 3, b = 4.", "text_km": "កំណត់ a = 3, b = 4។", "latex": "" },
+        { "text_en": "Apply the formula.", "text_km": "អនុវត្តរូបមន្ត។", "latex": "|3+4i| = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25}" }
+      ], "answer_latex": "|3+4i| = 5" },
+      { "prompt_en": "Find |1 - i|.", "prompt_km": "រកតម្លៃ |1 - i|។", "steps": [
+        { "text_en": "Here a = 1, b = -1.", "text_km": "ត្រង់នេះ a = 1, b = -1។", "latex": "|1-i| = \\sqrt{1^2 + (-1)^2} = \\sqrt{2}" }
+      ], "answer_latex": "|1-i| = \\sqrt{2}" }
+    ]
+  },
+  "argument": {
+    "title_en": "Argument arg(z)",
+    "title_km": "អាគុយម៉ង់ arg(z)",
+    "summary_en": "The argument of z = a + bi is the angle θ that the line from the origin to z makes with the positive real axis, measured counter-clockwise.",
+    "summary_km": "អាគុយម៉ង់នៃ z = a + bi គឺជាមុំ θ ដែលបន្ទាត់ពីគល់ទៅ z បង្កើតជាមួយអ័ក្សពិតវិជ្ជមាន គិតតាមទិសច្រាសទ្រនិចនាឡិកា។",
+    "formulas": [
+      { "latex": "\\tan\\theta = \\frac{b}{a}, \\quad \\cos\\theta = \\frac{a}{|z|}, \\quad \\sin\\theta = \\frac{b}{|z|}", "note_en": "Use cos and sin together to fix the correct quadrant — tan alone is ambiguous.", "note_km": "ប្រើ cos និង sin ជាមួយគ្នាដើម្បីកំណត់ការ៉េ (quadrant) ត្រឹមត្រូវ — tan តែម្នាក់ឯងមិនច្បាស់លាស់ទេ។" }
+    ],
+    "sections": [
+      { "heading_en": "The idea", "heading_km": "គំនិតសំខាន់", "body_en": "The argument is the direction of z. Together, |z| (length) and arg(z) (direction) locate z completely — that is the polar form.", "body_km": "អាគុយម៉ង់គឺជាទិសដៅរបស់ z។ រួមគ្នា |z| (ប្រវែង) និង arg(z) (ទិសដៅ) កំណត់ទីតាំង z ពេញលេញ — នេះជាទម្រង់ប៉ូឡែរ។" },
+      { "heading_en": "Method", "heading_km": "វិធីសាស្ត្រ", "body_en": "1) Find the reference angle from |b/a|. 2) Decide the quadrant from the signs of a and b. 3) Adjust the angle so it lands in that quadrant. Special axes: arg(positive real) = 0, arg(i) = π/2, arg(negative real) = π.", "body_km": "១) រកមុំយោង (reference angle) ពី |b/a|។ ២) កំណត់ការ៉េ តាមសញ្ញារបស់ a និង b។ ៣) កែតម្រូវមុំឲ្យធ្លាក់ក្នុងការ៉េនោះ។ អ័ក្សពិសេស៖ arg(ចំនួនពិតវិជ្ជមាន) = 0, arg(i) = π/2, arg(ចំនួនពិតអវិជ្ជមាន) = π។" }
+    ],
+    "examples": [
+      { "prompt_en": "Find arg(1 + i).", "prompt_km": "រកតម្លៃ arg(1 + i)។", "steps": [
+        { "text_en": "a = 1 > 0 and b = 1 > 0, so z is in the first quadrant.", "text_km": "a = 1 > 0 និង b = 1 > 0, ដូច្នេះ z ស្ថិតក្នុងការ៉េទី១។", "latex": "" },
+        { "text_en": "tanθ = b/a = 1, so θ = π/4.", "text_km": "tanθ = b/a = 1, ដូច្នេះ θ = π/4។", "latex": "\\tan\\theta = 1 \\Rightarrow \\theta = \\frac{\\pi}{4}" }
+      ], "answer_latex": "\\arg(1+i) = \\frac{\\pi}{4}" },
+      { "prompt_en": "Find arg(-1 + i).", "prompt_km": "រកតម្លៃ arg(-1 + i)។", "steps": [
+        { "text_en": "a = -1 < 0, b = 1 > 0 — second quadrant. Reference angle is π/4, so θ = π - π/4.", "text_km": "a = -1 < 0, b = 1 > 0 — ការ៉េទី២។ មុំយោងគឺ π/4, ដូច្នេះ θ = π - π/4។", "latex": "\\theta = \\pi - \\frac{\\pi}{4} = \\frac{3\\pi}{4}" }
+      ], "answer_latex": "\\arg(-1+i) = \\frac{3\\pi}{4}" }
+    ]
+  },
+  "conjugate": {
+    "title_en": "Conjugate z̄",
+    "title_km": "ចំនួនកុំផ្លិចផ្ចាស់ z̄",
+    "summary_en": "The conjugate of z = a + bi is z̄ = a - bi — the same number with the sign of the imaginary part flipped. Geometrically it is the reflection of z across the real axis.",
+    "summary_km": "ចំនួនផ្ចាស់ (conjugate) នៃ z = a + bi គឺ z̄ = a - bi — ចំនួនដដែលដែលប្តូរសញ្ញាផ្នែកនិមិត្ត។ តាមធរណីមាត្រ វាជាចំណាំងផ្លាតរបស់ z ឆ្លុះលើអ័ក្សពិត។",
+    "formulas": [
+      { "latex": "\\overline{a + bi} = a - bi", "note_en": "Flip only the imaginary part's sign.", "note_km": "ប្តូរតែសញ្ញាផ្នែកនិមិត្តប៉ុណ្ណោះ។" },
+      { "latex": "z\\,\\bar{z} = a^2 + b^2 = |z|^2", "note_en": "A real, non-negative number — the key to dividing complex numbers.", "note_km": "ជាចំនួនពិត មិនអវិជ្ជមាន — ជាគន្លឹះនៃវិធីចែកចំនួនកុំផ្លិច។" }
+    ],
+    "sections": [
+      { "heading_en": "Why it matters", "heading_km": "ហេតុអ្វីវាសំខាន់", "body_en": "Multiplying z by its conjugate clears the imaginary part, giving a real number. That is exactly how you rationalise a denominator when dividing complex numbers.", "body_km": "ការគុណ z ដោយចំនួនផ្ចាស់របស់វា លុបផ្នែកនិមិត្តចេញ ធ្វើឲ្យបានចំនួនពិត។ នេះជាវិធីធ្វើ rationalise ភាគបែងពេលចែកចំនួនកុំផ្លិច។" }
+    ],
+    "examples": [
+      { "prompt_en": "Find the conjugate of z = 5 - 2i.", "prompt_km": "រកចំនួនផ្ចាស់នៃ z = 5 - 2i។", "steps": [
+        { "text_en": "Flip the sign of the imaginary part (-2i → +2i).", "text_km": "ប្តូរសញ្ញាផ្នែកនិមិត្ត (-2i → +2i)។", "latex": "\\bar{z} = 5 + 2i" }
+      ], "answer_latex": "\\bar{z} = 5 + 2i" },
+      { "prompt_en": "Show that z̄z is real for z = 2 + 3i.", "prompt_km": "បង្ហាញថា z̄z ជាចំនួនពិត សម្រាប់ z = 2 + 3i។", "steps": [
+        { "text_en": "z̄ = 2 - 3i. Multiply: (2 + 3i)(2 - 3i) = 4 - (3i)^2.", "text_km": "z̄ = 2 - 3i។ គុណ៖ (2 + 3i)(2 - 3i) = 4 - (3i)^2។", "latex": "(2+3i)(2-3i) = 4 - 9i^2 = 4 + 9" }
+      ], "answer_latex": "z\\bar{z} = 13" }
+    ]
+  },
+  "real_part": {
+    "title_en": "Real part Re(z)",
+    "title_km": "ផ្នែកពិត Re(z)",
+    "summary_en": "For z = a + bi, the real part is Re(z) = a — the coefficient that has no i attached.",
+    "summary_km": "សម្រាប់ z = a + bi, ផ្នែកពិតគឺ Re(z) = a — គឺមេគុណដែលគ្មាន i ភ្ជាប់។",
+    "formulas": [
+      { "latex": "\\operatorname{Re}(a + bi) = a", "note_en": "Re(z) is always a real number.", "note_km": "Re(z) តែងតែជាចំនួនពិត។" },
+      { "latex": "\\operatorname{Re}(z) = \\frac{z + \\bar{z}}{2}", "note_en": "A useful identity when z is given in another form.", "note_km": "អត្តសញ្ញាណមានប្រយោជន៍ពេល z ត្រូវបានផ្តល់ក្នុងទម្រង់ផ្សេង។" }
+    ],
+    "sections": [
+      { "heading_en": "The idea", "heading_km": "គំនិតសំខាន់", "body_en": "First simplify z into the standard form a + bi. Whatever is left without an i is the real part. It can be negative, zero, or a fraction.", "body_km": "ដំបូងសម្រួល z ទៅជាទម្រង់ស្តង់ដារ a + bi។ អ្វីដែលនៅសល់ដោយគ្មាន i គឺជាផ្នែកពិត។ វាអាចជាចំនួនអវិជ្ជមាន សូន្យ ឬប្រភាគ។" }
+    ],
+    "examples": [
+      { "prompt_en": "Find Re(z) for z = -7 + 4i.", "prompt_km": "រក Re(z) សម្រាប់ z = -7 + 4i។", "steps": [
+        { "text_en": "The term without i is -7.", "text_km": "តួដែលគ្មាន i គឺ -7។", "latex": "" }
+      ], "answer_latex": "\\operatorname{Re}(z) = -7" },
+      { "prompt_en": "Find Re(z) for z = (1 + i)^2.", "prompt_km": "រក Re(z) សម្រាប់ z = (1 + i)^2។", "steps": [
+        { "text_en": "Expand first: (1+i)^2 = 1 + 2i + i^2 = 2i.", "text_km": "ពន្លាតជាមុន៖ (1+i)^2 = 1 + 2i + i^2 = 2i។", "latex": "(1+i)^2 = 1 + 2i + i^2 = 0 + 2i" }
+      ], "answer_latex": "\\operatorname{Re}(z) = 0" }
+    ]
+  },
+  "imaginary_part": {
+    "title_en": "Imaginary part Im(z)",
+    "title_km": "ផ្នែកនិមិត្ត Im(z)",
+    "summary_en": "For z = a + bi, the imaginary part is Im(z) = b — the real coefficient multiplying i (not the whole term bi).",
+    "summary_km": "សម្រាប់ z = a + bi, ផ្នែកនិមិត្តគឺ Im(z) = b — គឺមេគុណពិតដែលគុណនឹង i (មិនមែនតួ bi ទាំងមូលទេ)។",
+    "formulas": [
+      { "latex": "\\operatorname{Im}(a + bi) = b", "note_en": "Im(z) is a real number — it does not include the i.", "note_km": "Im(z) ជាចំនួនពិត — វាមិនរួមបញ្ចូល i ទេ។" },
+      { "latex": "\\operatorname{Im}(z) = \\frac{z - \\bar{z}}{2i}", "note_en": "Recovers the imaginary part from z and its conjugate.", "note_km": "ស្រង់ផ្នែកនិមិត្តចេញពី z និងចំនួនផ្ចាស់របស់វា។" }
+    ],
+    "sections": [
+      { "heading_en": "Common mistake", "heading_km": "កំហុសញឹកញាប់", "body_en": "Im(z) is the number b, not bi. For z = 3 + 5i, Im(z) = 5, not 5i.", "body_km": "Im(z) គឺជាចំនួន b មិនមែន bi ទេ។ សម្រាប់ z = 3 + 5i, Im(z) = 5 មិនមែន 5i ទេ។" }
+    ],
+    "examples": [
+      { "prompt_en": "Find Im(z) for z = 3 - 8i.", "prompt_km": "រក Im(z) សម្រាប់ z = 3 - 8i។", "steps": [
+        { "text_en": "The coefficient of i is -8.", "text_km": "មេគុណនៃ i គឺ -8។", "latex": "" }
+      ], "answer_latex": "\\operatorname{Im}(z) = -8" },
+      { "prompt_en": "Find Im(z) for z = (2 + i)(1 - i).", "prompt_km": "រក Im(z) សម្រាប់ z = (2 + i)(1 - i)។", "steps": [
+        { "text_en": "Expand: (2+i)(1-i) = 2 - 2i + i - i^2 = 3 - i.", "text_km": "ពន្លាត៖ (2+i)(1-i) = 2 - 2i + i - i^2 = 3 - i។", "latex": "(2+i)(1-i) = 3 - i" }
+      ], "answer_latex": "\\operatorname{Im}(z) = -1" }
+    ]
+  },
+  "complex_arithmetic": {
+    "title_en": "Complex arithmetic",
+    "title_km": "នព្វន្តចំនួនកុំផ្លិច",
+    "summary_en": "Add, subtract, multiply and divide complex numbers by treating i like a variable, then replacing i² with -1 and, for division, multiplying by the conjugate.",
+    "summary_km": "បូក ដក គុណ និងចែកចំនួនកុំផ្លិច ដោយចាត់ទុក i ដូចជាអថេរ រួចជំនួស i² ដោយ -1 ; សម្រាប់វិធីចែក គុណនឹងចំនួនផ្ចាស់។",
+    "formulas": [
+      { "latex": "(a+bi) \\pm (c+di) = (a\\pm c) + (b\\pm d)i", "note_en": "Add/subtract the real and imaginary parts separately.", "note_km": "បូក/ដកផ្នែកពិត និងផ្នែកនិមិត្តដោយឡែកពីគ្នា។" },
+      { "latex": "(a+bi)(c+di) = (ac-bd) + (ad+bc)i", "note_en": "Expand like FOIL, then use i² = -1.", "note_km": "ពន្លាតដូច FOIL រួចប្រើ i² = -1។" },
+      { "latex": "\\frac{z_1}{z_2} = \\frac{z_1\\,\\bar{z_2}}{|z_2|^2}", "note_en": "Multiply top and bottom by the conjugate of the denominator.", "note_km": "គុណភាគយក និងភាគបែងនឹងចំនួនផ្ចាស់នៃភាគបែង។" }
+    ],
+    "sections": [
+      { "heading_en": "The master rule", "heading_km": "ក្បួនមេ", "body_en": "Everything follows from i² = -1. Multiply the brackets as usual, then wherever i² appears, replace it with -1 and collect the real and imaginary terms.", "body_km": "អ្វីៗទាំងអស់ចេញពី i² = -1។ គុណវង់ក្រចកតាមធម្មតា រួចកន្លែងណាដែលមាន i² ជំនួសដោយ -1 ហើយប្រមូលតួពិត និងតួនិមិត្ត។" },
+      { "heading_en": "Division trick", "heading_km": "ល្បិចវិធីចែក", "body_en": "To divide, multiply numerator and denominator by the conjugate of the denominator. This makes the denominator real (|z₂|²) so you can split into real + imaginary parts.", "body_km": "ដើម្បីចែក គុណភាគយក និងភាគបែងនឹងចំនួនផ្ចាស់នៃភាគបែង។ វាធ្វើឲ្យភាគបែងក្លាយជាចំនួនពិត (|z₂|²) ដូច្នេះអ្នកអាចបំបែកជាផ្នែកពិត + ផ្នែកនិមិត្ត។" }
+    ],
+    "examples": [
+      { "prompt_en": "Compute (2 + 3i)(1 - 4i).", "prompt_km": "គណនា (2 + 3i)(1 - 4i)។", "steps": [
+        { "text_en": "Expand: 2 - 8i + 3i - 12i².", "text_km": "ពន្លាត៖ 2 - 8i + 3i - 12i²។", "latex": "= 2 - 8i + 3i - 12i^2" },
+        { "text_en": "Replace i² = -1: -12i² = +12.", "text_km": "ជំនួស i² = -1៖ -12i² = +12។", "latex": "= (2 + 12) + (-8 + 3)i" }
+      ], "answer_latex": "= 14 - 5i" },
+      { "prompt_en": "Compute \\frac{1}{2 + i}.", "prompt_km": "គណនា \\frac{1}{2 + i}។", "steps": [
+        { "text_en": "Multiply by the conjugate 2 - i.", "text_km": "គុណនឹងចំនួនផ្ចាស់ 2 - i។", "latex": "\\frac{1}{2+i}\\cdot\\frac{2-i}{2-i} = \\frac{2-i}{4 + 1}" }
+      ], "answer_latex": "= \\frac{2}{5} - \\frac{1}{5}i" }
+    ]
+  },
+  "complex_power": {
+    "title_en": "Powers of z",
+    "title_km": "ស្វ័យគុណនៃ z",
+    "summary_en": "To raise a + bi to a small integer power, expand with the binomial rule (or repeated multiplication) and simplify using the cycle of powers of i.",
+    "summary_km": "ដើម្បីលើក a + bi ជាស្វ័យគុណចំនួនគត់តូច ពន្លាតដោយក្បួនប៊ីណូម (ឬគុណម្តងហើយម្តងទៀត) រួចសម្រួលដោយប្រើវដ្តនៃស្វ័យគុណ i។",
+    "formulas": [
+      { "latex": "i^1 = i,\\quad i^2 = -1,\\quad i^3 = -i,\\quad i^4 = 1", "note_en": "The powers of i repeat every 4 — reduce the exponent mod 4.", "note_km": "ស្វ័យគុណ i ធ្វើវដ្តជារៀងរាល់ 4 — សម្រួលនិទស្សន្តម៉ូឌុលោ 4។" },
+      { "latex": "(a+bi)^2 = a^2 - b^2 + 2abi", "note_en": "The square is worth memorising.", "note_km": "ការេនេះគួរចងចាំ។" }
+    ],
+    "sections": [
+      { "heading_en": "Two routes", "heading_km": "ផ្លូវពីរ", "body_en": "For n = 2 or 3, just expand and use i² = -1. For larger n, converting to trigonometric form and using De Moivre's formula is far quicker.", "body_km": "សម្រាប់ n = 2 ឬ 3 គ្រាន់តែពន្លាត ហើយប្រើ i² = -1។ សម្រាប់ n ធំ ការបំប្លែងទៅទម្រង់ត្រីកោណមាត្រ រួចប្រើរូបមន្តដឺម័រ លឿនជាង។" }
+    ],
+    "examples": [
+      { "prompt_en": "Compute (1 + i)^2.", "prompt_km": "គណនា (1 + i)^2។", "steps": [
+        { "text_en": "Use (a+bi)^2 with a = 1, b = 1.", "text_km": "ប្រើ (a+bi)^2 ជាមួយ a = 1, b = 1។", "latex": "(1+i)^2 = 1 - 1 + 2i" }
+      ], "answer_latex": "(1+i)^2 = 2i" },
+      { "prompt_en": "Compute (1 + i)^4.", "prompt_km": "គណនា (1 + i)^4។", "steps": [
+        { "text_en": "Square the previous result: (2i)^2 = 4i².", "text_km": "លើកការេលទ្ធផលមុន៖ (2i)^2 = 4i²។", "latex": "(1+i)^4 = (2i)^2 = 4i^2" }
+      ], "answer_latex": "(1+i)^4 = -4" }
+    ]
+  },
+  "de_moivre_power": {
+    "title_en": "De Moivre's formula",
+    "title_km": "រូបមន្តដឺម័រ",
+    "summary_en": "In trigonometric form z = r(cosθ + i sinθ), raising to a power multiplies the modulus power-wise and multiplies the angle by n.",
+    "summary_km": "ក្នុងទម្រង់ត្រីកោណមាត្រ z = r(cosθ + i sinθ), ការលើកស្វ័យគុណ លើកម៉ូឌុលទៅជាស្វ័យគុណ ហើយគុណមុំនឹង n។",
+    "formulas": [
+      { "latex": "\\left[r(\\cos\\theta + i\\sin\\theta)\\right]^n = r^n\\left(\\cos n\\theta + i\\sin n\\theta\\right)", "note_en": "Powers become easy once z is in polar form.", "note_km": "ស្វ័យគុណក្លាយជាងាយស្រួល ពេល z នៅក្នុងទម្រង់ប៉ូឡែរ។" }
+    ],
+    "sections": [
+      { "heading_en": "The three steps", "heading_km": "បីជំហាន", "body_en": "1) Write z in polar form: find r = |z| and θ = arg(z). 2) Apply De Moivre: raise r to the n and multiply θ by n. 3) Convert back to a + bi if the answer is asked for in algebraic form.", "body_km": "១) សរសេរ z ក្នុងទម្រង់ប៉ូឡែរ៖ រក r = |z| និង θ = arg(z)។ ២) អនុវត្តដឺម័រ៖ លើក r ជាស្វ័យគុណ n និងគុណ θ នឹង n។ ៣) បំប្លែងត្រឡប់ទៅ a + bi បើសំណួរសួរក្នុងទម្រង់ពីជគណិត។" }
+    ],
+    "examples": [
+      { "prompt_en": "Compute (1 + i)^{8}.", "prompt_km": "គណនា (1 + i)^{8}។", "steps": [
+        { "text_en": "Polar form: r = √2, θ = π/4.", "text_km": "ទម្រង់ប៉ូឡែរ៖ r = √2, θ = π/4។", "latex": "1+i = \\sqrt{2}\\left(\\cos\\tfrac{\\pi}{4} + i\\sin\\tfrac{\\pi}{4}\\right)" },
+        { "text_en": "Apply De Moivre with n = 8.", "text_km": "អនុវត្តដឺម័រជាមួយ n = 8។", "latex": "(1+i)^8 = (\\sqrt{2})^8\\left(\\cos 2\\pi + i\\sin 2\\pi\\right) = 16(1 + 0)" }
+      ], "answer_latex": "(1+i)^8 = 16" }
+    ]
+  },
+  "nth_roots": {
+    "title_en": "n-th roots",
+    "title_km": "ឫសទី n",
+    "summary_en": "Every non-zero complex number has exactly n distinct n-th roots, equally spaced around a circle of radius ⁿ√r in the complex plane.",
+    "summary_km": "គ្រប់ចំនួនកុំផ្លិចខុសពីសូន្យ មានឫសទី n ចំនួន n ផ្សេងគ្នា ដែលរៀបស្មើគ្នាជុំវិញរង្វង់កាំ ⁿ√r ក្នុងប្លង់កុំផ្លិច។",
+    "formulas": [
+      { "latex": "z_k = \\sqrt[n]{r}\\left(\\cos\\frac{\\theta + 2k\\pi}{n} + i\\sin\\frac{\\theta + 2k\\pi}{n}\\right)", "note_en": "For k = 0, 1, …, n-1, where z = r(cosθ + i sinθ).", "note_km": "សម្រាប់ k = 0, 1, …, n-1, ដែល z = r(cosθ + i sinθ)។" }
+    ],
+    "sections": [
+      { "heading_en": "The idea", "heading_km": "គំនិតសំខាន់", "body_en": "Put z in polar form. The n roots all have modulus ⁿ√r. Their angles start at θ/n and step by 2π/n each time — so they sit at the corners of a regular n-gon.", "body_km": "ដាក់ z ក្នុងទម្រង់ប៉ូឡែរ។ ឫសទាំង n មានម៉ូឌុល ⁿ√r ដូចគ្នា។ មុំរបស់វាចាប់ផ្តើមពី θ/n ហើយបន្ថែម 2π/n រៀងរាល់ដង — ដូច្នេះវាស្ថិតនៅជ្រុងនៃពហុកោណនិយ័ត n ជ្រុង។" }
+    ],
+    "examples": [
+      { "prompt_en": "Find the square roots of i.", "prompt_km": "រកឫសការេនៃ i។", "steps": [
+        { "text_en": "i = cos(π/2) + i sin(π/2), so r = 1, θ = π/2, n = 2.", "text_km": "i = cos(π/2) + i sin(π/2), ដូច្នេះ r = 1, θ = π/2, n = 2។", "latex": "" },
+        { "text_en": "k = 0: angle π/4. k = 1: angle π/4 + π = 5π/4.", "text_km": "k = 0៖ មុំ π/4។ k = 1៖ មុំ π/4 + π = 5π/4។", "latex": "z_0 = \\cos\\tfrac{\\pi}{4} + i\\sin\\tfrac{\\pi}{4},\\quad z_1 = \\cos\\tfrac{5\\pi}{4} + i\\sin\\tfrac{5\\pi}{4}" }
+      ], "answer_latex": "z = \\pm\\left(\\tfrac{\\sqrt{2}}{2} + \\tfrac{\\sqrt{2}}{2}i\\right)" }
+    ]
+  }
+}

@@ -5,8 +5,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 BACII Math Practice — students handwrite answers to Cambodian BAC II math problems and get instant,
-mathematically-exact grading plus step-by-step explanations. Current topic: Complex Numbers (modulus,
-argument, conjugate, real/imaginary parts); architecture is meant to extend to other BAC II topics later.
+mathematically-exact grading plus step-by-step explanations. Topics implemented: complex numbers, limits,
+integrals, probability, functions, continuity, derivatives, differential equations, vectors/space, conics,
+plus past-exam replay. The app supports bilingual (Khmer/English) UI and lesson content — see
+`docs/khmer-language-mode.md`.
+
+Note: a Flutter mobile client exists on the unmerged `flutter/v1` / `flutter-frontend` branches, not on
+`main`. Several other frontend branches (`frontend/v2`/`v3`/`v4`, `khmer/v2`, a landing page) also exist
+unmerged. Check `git branch -a` before assuming `main` reflects the latest UI work.
 
 **Core principles that constrain design decisions:**
 - **SymPy is the source of truth.** Answers and grading are always computed by SymPy (each topic's
@@ -58,7 +64,9 @@ alembic upgrade head
 alembic revision --autogenerate -m "..."   # new migration after models.py changes
 ```
 
-There is no test suite or lint config in this repo currently.
+There is no automated test suite or lint config in this repo currently. Some changes (e.g. Khmer i18n)
+are instead verified with one-off manual "sweep" scripts (dictionary parity, data-loss checks) rather
+than regression tests — see `docs/khmer-language-mode.md`.
 
 Reset the database: `docker compose down -v && docker compose up -d` (wipes all data).
 
@@ -77,8 +85,9 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
 ```
 
 ### Backend layout (`backend/`)
-- `main.py` — FastAPI app, CORS, router registration.
-- `routers/` — thin HTTP layer (`auth.py`, `problems.py`, `profile.py`, `vision.py`); delegates to `services.py`.
+- `main.py` — FastAPI app, CORS, router registration (including `admin.router`, see below).
+- `routers/` — thin HTTP layer (`auth.py`, `problems.py`, `profile.py`, `vision.py`, `admin.py`); delegates
+  to `services.py`.
   `profile.py` serves the student profile (`/profile`, `/profile/rebuild`, `/skills`) — skill level,
   per-topic progress and practice suggestions; see "Skill progress" below.
   `problems.py` also exposes past-exam replay (`GET /problems/exam/{exam_id}`,
@@ -89,6 +98,10 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
   `get_current_admin_user` (`core/deps.py`), which requires `User.is_admin`. There is no signup path
   or promotion endpoint for admin — the single admin account is upserted from `ADMIN_EMAIL`/
   `ADMIN_PASSWORD` env vars on every backend startup (`main.py`'s `seed_admin_user`).
+  `admin.py` is a separate admin-only router for cost observability and dynamic model config:
+  `/admin/model-settings` (GET/POST) plus usage-cost endpoints backed by `models.ApiUsageLog` and
+  `engine/pricing.py` (per-call Gemini/Ollama cost estimation); surfaced in the web app at
+  `/admin/costs`.
 - `services.py` — orchestration layer: wires `engine/` + `models.py` + `cache.py` together for each
   endpoint's use case (create question, grade, explain, stats, exam replay, template introspection,
   skill tracking + profile). This is the place to look first to understand a request's full flow.
@@ -113,7 +126,9 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
     `generation_mode="templates"`, keeps answers clean — or via Gemini proposal re-validated by
     SymPy for `generation_mode="gemini"`, complex-topic only), `grader.py` (topic-specific grading
     rules, when any differ from the generic core), and `data/` (curated real-exam exercises +
-    formula-sheet JSON). Probability's scenario catalog lives at
+    formula-sheet JSON), and (all topics except `functions` and `past_exam`) `lessons.py` + a
+    `data/lessons.json` — bilingual (Khmer/English) lesson content shown via the web `LessonModal`.
+    Probability's scenario catalog lives at
     `engine/topics/probability/scenarios.py` + `data/scenarios/*.json`: sampled slots →
     constraint-validated → filled Khmer sentence → SymPy-solved (no LLM in v1 generation).
     `past_exam` is a special topic backing full past-exam replay (`backend/data/past_exams/*.json`,
@@ -122,7 +137,12 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
     two rules as `core/rubric.py`, rather than reusing the generic solver-checkpoint-derived rubric.
     See `docs/engine-layout.md` for the full file map and the "add a topic" recipe, and
     `docs/README.md` for the full documentation index (pipeline, step-checking, canvas, exam-data,
-    generator variants, etc.).
+    generator variants, etc.), which also lists planned-but-not-yet-built features (adaptive formula
+    practice, formula-sheet hints) and the `User.plan` subscription roadmap. `docs/adr/` holds
+    architecture decision records for the three core principles above (SymPy-as-truth, the LLM
+    fallback chain, Vertex AI/Gemini choice); each ends with open founder-level questions not yet
+    resolved (e.g. minors'-data DPA coverage for the Cambodia OCR pipeline) — check before assuming
+    those decisions are settled.
   - `explainer.py` — turns solver steps into deterministic plain-text explanation (LLM fallback baseline).
   - `llm.py` — Gemini (Vertex AI) client (text + vision) + Ollama text/vision calls, with the
     Gemini → Ollama → deterministic fallback chain and rate-limiting via `cache.allow_gemini`.
@@ -130,8 +150,10 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
     (`VISION_PROVIDER=gemini|ollama|fallback`). Returns plain-text `lines` (fed to `analyze_work`
     and the LLM), `lines_latex` (display-only LaTeX, rendered with KaTeX in the web UI), the
     extracted final answer, and a `provider` field.
-- `models.py` — SQLAlchemy 2.0 async models: `User`, `Question`, `Step`, `Attempt`, `Explanation`,
-  `StudySession`, `SkillState` (the per-student skill/formula mastery tracker).
+- `models.py` — SQLAlchemy 2.0 async models: `User` (includes an unused-so-far `plan` column, seeded
+  `"free"`, no gating logic built yet), `Question`, `Step`, `Attempt`, `Explanation`, `StudySession`,
+  `SkillState` (the per-student skill/formula mastery tracker), `ApiUsageLog` (per-call LLM cost/usage
+  records backing the `/admin/costs` page).
 - `schemas.py` — Pydantic request/response models.
 - `cache.py` — Redis-backed explanation cache (keyed by `question_type:a:b`) and per-user Gemini
   rate limiting (`gemini_rate_limit_per_minute`, default 10/min).
@@ -170,10 +192,16 @@ Full design: `docs/skill-progress.md`.
   `/profile` (skill level, per-topic progress bars, practice suggestions),
   `/formulas`, `/exam` (past-exam replay, points-rubric results), `/admin` (formula/template
   inventory and structure regeneration, admin-only both client-side via `AdminGuard` and
-  server-side via the `me_router` template endpoints above).
-- `components/` — `Canvas` (handwriting capture), `QuestionCard`, `Navbar`, `AuthGuard`.
-- `context/AuthContext.tsx` — JWT stored in `localStorage`, exposes auth state to the app.
-- `lib/api.ts` — typed API client; auto-refreshes the access token on a 401 using the refresh token.
+  server-side via the `me_router` template endpoints above), `/admin/costs` (LLM usage/cost
+  dashboard, backed by `routers/admin.py`).
+- `components/` — `Canvas` (handwriting capture), `QuestionCard`, `Navbar`, `AuthGuard`, `AdminGuard`,
+  `AdminSandbox` (admin debug/sandbox mode, see `docs/admin-sandbox.md`), `DisambiguationCard`,
+  `FunctionGraph`, `LessonModal` (bilingual lesson content), `MathKeypad`, `MathText`, `StructureModal`.
+- `context/` — `AuthContext.tsx` (JWT stored in `localStorage`, exposes auth state to the app);
+  `LanguageContext.tsx` (Khmer/English UI mode, see `docs/khmer-language-mode.md`).
+- `lib/` — `api.ts` (typed API client; auto-refreshes the access token on a 401 using the refresh
+  token); `i18n.ts` (Khmer/English string tables); `audioEngine.ts`/`sounds.ts` (canvas drawing sound
+  effects, see `docs/sounds-and-streaks.md`).
 
 ### Handwriting detection flow
 Canvas/upload image (base64) → `POST /vision/detect` → backend preprocesses (auto-crop + upscale,

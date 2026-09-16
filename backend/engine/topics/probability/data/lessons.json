@@ -1,0 +1,336 @@
+{
+  "combination": {
+    "title_en": "Combinations C(n, r)",
+    "title_km": "បន្សំ C(n, r)",
+    "summary_en": "A combination $C(n, r) = \\binom{n}{r}$ is the number of ways to choose $r$ unordered items from a set of $n$ distinct items.",
+    "summary_km": "បន្សំ $C(n, r) = \\binom{n}{r}$ គឺជាចំនួនរបៀបជ្រើសរើស $r$ ធាតុពីសំណុំដែលមាន $n$ ធាតុផ្សេងគ្នា ដោយមិនគិតពីលំដាប់។",
+    "formulas": [
+      { "latex": "C(n, r) = \\binom{n}{r} = \\frac{n!}{r!(n - r)!}", "note_en": "Combination formula.", "note_km": "រូបមន្តបន្សំ។" },
+      { "latex": "C(n, r) = C(n, n - r)", "note_en": "Symmetry property.", "note_km": "លក្ខណៈស៊ីមេទ្រី។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "When to use",
+        "heading_km": "ពេលណាត្រូវប្រើ",
+        "body_en": "Use combinations whenever order does not matter: selecting a committee of students, choosing colored balls simultaneously, or picking a hand of cards.",
+        "body_km": "ប្រើបន្សំនៅពេលដែលលំដាប់មិនសំខាន់៖ ការជ្រើសរើសគណៈកម្មការសិស្ស ការចាប់យកបាល់ព្រមគ្នា ឬការចាប់សន្លឹកបៀ។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Compute $C(7, 3)$.",
+        "prompt_km": "គណនា $C(7, 3)$។",
+        "steps": [
+          {
+            "text_en": "Apply the combination formula: $\\frac{7!}{3!4!}$.",
+            "text_km": "អនុវត្តរូបមន្តបន្សំ៖ $\\frac{7!}{3!4!}$។",
+            "latex": "C(7, 3) = \\frac{7 \\times 6 \\times 5}{3 \\times 2 \\times 1} = \\frac{210}{6}"
+          }
+        ],
+        "answer_latex": "C(7, 3) = 35"
+      }
+    ]
+  },
+  "permutation": {
+    "title_en": "Permutations P(n, r)",
+    "title_km": "តម្រៀប P(n, r)",
+    "summary_en": "A permutation $P(n, r) = A_n^r$ is the number of ways to choose and arrange $r$ ordered items from $n$ distinct items.",
+    "summary_km": "តម្រៀប (ឬចារឹក) $P(n, r) = A_n^r$ គឺជាចំនួនរបៀបជ្រើសរើស និងរៀបតាមលំដាប់ $r$ ធាតុពីសំណុំដែលមាន $n$ ធាតុផ្សេងគ្នា។",
+    "formulas": [
+      { "latex": "P(n, r) = A_n^r = \\frac{n!}{(n - r)!}", "note_en": "Permutation formula (order matters).", "note_km": "រូបមន្តតម្រៀប (គិតលំដាប់)។" },
+      { "latex": "P(n, n) = n!", "note_en": "Permutation of all n items.", "note_km": "ការតម្រៀបធាតុទាំងអស់ n!។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "When to use",
+        "heading_km": "ពេលណាត្រូវប្រើ",
+        "body_en": "Use permutations when order or roles matter: selecting a president, vice-president, and secretary, forming distinct digit codes, or arranging books on a shelf.",
+        "body_km": "ប្រើតម្រៀបនៅពេលដែលលំដាប់ ឬតួនាទីមានសារៈសំខាន់៖ ការជ្រើសរើសប្រធាន អនុប្រធាន និងលេខា ការបង្កើតលេខកូដសម្ងាត់ ឬការរៀបសៀវភៅលើធ្នើរ។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Compute $P(5, 2)$.",
+        "prompt_km": "គណនា $P(5, 2)$។",
+        "steps": [
+          {
+            "text_en": "Apply the permutation formula: $\\frac{5!}{(5-2)!} = 5 \\times 4$.",
+            "text_km": "អនុវត្តរូបមន្តតម្រៀប៖ $\\frac{5!}{(5-2)!} = 5 \\times 4$។",
+            "latex": "P(5, 2) = 5 \\times 4 = 20"
+          }
+        ],
+        "answer_latex": "P(5, 2) = 20"
+      }
+    ]
+  },
+  "factorial": {
+    "title_en": "Factorials n!",
+    "title_km": "ហ្វាក់តូរីយ៉ែល n!",
+    "summary_en": "The factorial $n!$ is the product of all positive integers from 1 to $n$, with $0! = 1$ by convention.",
+    "summary_km": "ហ្វាក់តូរីយ៉ែល $n!$ គឺជាផលគុណនៃគ្រប់ចំនួនគត់វិជ្ជមានពី 1 ដល់ $n$ ដោយកំណត់យក $0! = 1$។",
+    "formulas": [
+      { "latex": "n! = n \\times (n - 1) \\times \\dots \\times 2 \\times 1", "note_en": "Definition of factorial.", "note_km": "និយមន័យហ្វាក់តូរីយ៉ែល។" },
+      { "latex": "0! = 1, \\quad 1! = 1", "note_en": "Base values.", "note_km": "តម្លៃមូលដ្ឋាន។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Simplification tip",
+        "heading_km": "គន្លឹះសម្រួល",
+        "body_en": "When dividing factorials, cancel the smaller factorial from the larger: $\\frac{n!}{(n-2)!} = n(n - 1)$.",
+        "body_km": "ពេលសម្រួលផលចែកហ្វាក់តូរីយ៉ែល ត្រូវសម្រួលហ្វាក់តូរីយ៉ែលតូចជាងចេញ៖ $\\frac{n!}{(n-2)!} = n(n - 1)$។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Simplify $\\frac{6!}{4!}$.",
+        "prompt_km": "សម្រួល $\\frac{6!}{4!}$។",
+        "steps": [
+          {
+            "text_en": "Expand $6!$ as $6 \\times 5 \\times 4!$ and cancel $4!$.",
+            "text_km": "ពន្លាត $6!$ ជា $6 \\times 5 \\times 4!$ រួចសម្រួល $4!$ ចោល។",
+            "latex": "\\frac{6!}{4!} = \\frac{6 \\times 5 \\times 4!}{4!} = 6 \\times 5 = 30"
+          }
+        ],
+        "answer_latex": "30"
+      }
+    ]
+  },
+  "mixed": {
+    "title_en": "Mixed counting expressions",
+    "title_km": "កន្សោមរាប់ចម្រុះ",
+    "summary_en": "Counting problems often combine the fundamental counting principle (product rule) with combinations and permutations.",
+    "summary_km": "លំហាត់រាប់ចម្រុះរួមបញ្ចូលគ្នានូវគោលការណ៍ផលគុណ ជាមួយបន្សំ និងតម្រៀប។",
+    "formulas": [
+      { "latex": "N = C(n_1, r_1) \\times C(n_2, r_2)", "note_en": "Multiplication rule for independent selections.", "note_km": "គោលការណ៍ផលគុណសម្រាប់ការជ្រើសរើសមិនអាស្រ័យគ្នា។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Rule of product",
+        "heading_km": "គោលការណ៍ផលគុណ",
+        "body_en": "If a multi-step task consists of selecting $r_1$ items from group 1 and $r_2$ items from group 2, multiply the number of possibilities for each group.",
+        "body_km": "ប្រសិនបើការងារមួយត្រូវជ្រើសរើស $r_1$ ពីក្រុមទី១ និង $r_2$ ពីក្រុមទី២ ត្រូវយកចំនួនលទ្ធភាពនៃក្រុមនីមួយៗមកគុណបញ្ចូលគ្នា។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Compute $C(4, 2) \\times C(3, 1)$.",
+        "prompt_km": "គណនា $C(4, 2) \\times C(3, 1)$។",
+        "steps": [
+          {
+            "text_en": "Compute $C(4, 2) = 6$ and $C(3, 1) = 3$.",
+            "text_km": "គណនា $C(4, 2) = 6$ និង $C(3, 1) = 3$។",
+            "latex": "C(4, 2) = 6, \\quad C(3, 1) = 3"
+          },
+          {
+            "text_en": "Multiply the results: $6 \\times 3 = 18$.",
+            "text_km": "គុណលទ្ធផល៖ $6 \\times 3 = 18$។",
+            "latex": "6 \\times 3 = 18"
+          }
+        ],
+        "answer_latex": "18"
+      }
+    ]
+  },
+  "exercise_bag_split_atleast": {
+    "title_en": "Balls drawn from one bag",
+    "title_km": "ការចាប់បាល់ចេញពីថង់មួយ",
+    "summary_en": "Draw $k$ balls simultaneously from a single bag containing white and black balls. Probabilities are computed using the hypergeometric rule $P(A) = \\frac{n(A)}{n(\\Omega)}$.",
+    "summary_km": "ចាប់បាល់ $k$ គ្រាប់ព្រមគ្នាពីថង់មួយដែលមានបាល់ស និងបាល់ខ្មៅ។ ប្រូបាបត្រូវបានគណនាតាមច្បាប់ឡាផ្លាស $P(A) = \\frac{n(A)}{n(\\Omega)}$។",
+    "formulas": [
+      { "latex": "n(\\Omega) = C(N, k)", "note_en": "Total sample space size for N balls.", "note_km": "ចំនួនករណីអាចសរុប។" },
+      { "latex": "P(\\text{at least 1 white}) = 1 - P(\\text{no white}) = 1 - \\frac{C(b, k)}{C(N, k)}", "note_en": "Complement rule.", "note_km": "ច្បាប់ព្រឹត្តិការណ៍ផ្ទុយ (យ៉ាងហោចណាស់១)។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Complement technique",
+        "heading_km": "បច្ចេកទេសប្រើព្រឹត្តិការណ៍ផ្ទុយ",
+        "body_en": "For 'at least one' questions, calculate $1 - P(\\text{none})$ instead of summing multiple cases.",
+        "body_km": "សម្រាប់សំណួរ 'យ៉ាងហោចណាស់មួយ' គណនា $1 - P(\\text{គ្មានទាល់តែសោះ})$ ជំនួសឱ្យការបូកករណីច្រើនដង។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "A bag contains 4 white balls and 3 black balls. Draw 2 balls simultaneously. Find $P(\\text{both are white})$.",
+        "prompt_km": "ថង់មួយមានបាល់ស 4 និងបាល់ខ្មៅ 3។ ចាប់យកបាល់ 2 ព្រមគ្នា។ រកប្រូបាបដើម្បីឱ្យបានបាល់សទាំងពីរ។",
+        "steps": [
+          {
+            "text_en": "Sample space: $n(\\Omega) = C(7, 2) = 21$.",
+            "text_km": "ចំនួនករណីអាច៖ $n(\\Omega) = C(7, 2) = 21$។",
+            "latex": "n(\\Omega) = \\binom{7}{2} = 21"
+          },
+          {
+            "text_en": "Favourable cases: $n(A) = C(4, 2) = 6$.",
+            "text_km": "ចំនួនករណីស្រប៖ $n(A) = C(4, 2) = 6$។",
+            "latex": "P(A) = \\frac{C(4, 2)}{C(7, 2)} = \\frac{6}{21} = \\frac{2}{7}"
+          }
+        ],
+        "answer_latex": "P = \\frac{2}{7}"
+      }
+    ]
+  },
+  "exercise_two_bag_odd_even": {
+    "title_en": "Two bags of numbered balls",
+    "title_km": "ថង់ពីរផ្ទុកបាល់មានលេខ",
+    "summary_en": "Draw one ball from bag 1 and one ball from bag 2. Because draws from separate bags are independent, probabilities multiply: $P(A \\cap B) = P(A) \\cdot P(B)$.",
+    "summary_km": "ចាប់បាល់មួយពីថង់ទី១ និងមួយទៀតពីថង់ទី២។ ដោយសារការចាប់ពីថង់ដាច់ដោយឡែកពីគ្នាជាព្រឹត្តិការណ៍មិនអាស្រ័យគ្នា ប្រូបាបត្រូវគុណបញ្ចូលគ្នា៖ $P(A \\cap B) = P(A) \\cdot P(B)$។",
+    "formulas": [
+      { "latex": "P(A \\cap B) = P(A) \\times P(B)", "note_en": "Independent events product rule.", "note_km": "គោលការណ៍ផលគុណព្រឹត្តិការណ៍មិនអាស្រ័យគ្នា។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Strategy",
+        "heading_km": "យុទ្ធសាស្ត្រ",
+        "body_en": "Break the event into cases (e.g. odd from bag 1 and even from bag 2) and sum the probabilities of mutually exclusive cases.",
+        "body_km": "បំបែកព្រឹត្តិការណ៍ជាករណីៗ រួចបូកប្រូបាបនៃករណីមិនចុះសម្រុងគ្នា។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Bag 1 has 3 odd and 2 even balls. Bag 2 has 2 odd and 4 even balls. Draw one ball from each. Find $P(\\text{both are odd})$.",
+        "prompt_km": "ថង់១ មានបាល់លេខសេស 3 និងគូ 2។ ថង់២ មានបាល់លេខសេស 2 និងគូ 4។ ចាប់មួយពីថង់នីមួយៗ។ រកប្រូបាបបានបាល់សេសទាំងពីរ។",
+        "steps": [
+          {
+            "text_en": "Probability from bag 1 is $P_1 = \\frac{3}{5}$. From bag 2 is $P_2 = \\frac{2}{6} = \\frac{1}{3}$.",
+            "text_km": "ប្រូបាបពីថង់១ គឺ $P_1 = \\frac{3}{5}$។ ពីថង់២ គឺ $P_2 = \\frac{2}{6} = \\frac{1}{3}$។",
+            "latex": "P_1 = \\frac{3}{5}, \\quad P_2 = \\frac{1}{3}"
+          },
+          {
+            "text_en": "Multiply: $P = \\frac{3}{5} \\times \\frac{1}{3} = \\frac{1}{5}$.",
+            "text_km": "គុណបញ្ចូលគ្នា៖ $P = \\frac{3}{5} \\times \\frac{1}{3} = \\frac{1}{5}$។",
+            "latex": "P = \\frac{3}{5} \\cdot \\frac{1}{3} = \\frac{1}{5}"
+          }
+        ],
+        "answer_latex": "P = \\frac{1}{5}"
+      }
+    ]
+  },
+  "exercise_two_box_colors": {
+    "title_en": "Two boxes of coloured balls",
+    "title_km": "ប្រអប់ពីរផ្ទុកបាល់ពណ៌",
+    "summary_en": "Drawing balls independently from two different boxes. Sum product probabilities across matching color outcomes.",
+    "summary_km": "ការចាប់បាល់ដោយមិនអាស្រ័យគ្នាពីប្រអប់ពីរផ្សេងគ្នា។ គណនាផលបូកនៃផលគុណប្រូបាបតាមករណីពណ៌ត្រូវគ្នា។",
+    "formulas": [
+      { "latex": "P(\\text{same color}) = P(W_1 \\cap W_2) + P(B_1 \\cap B_2)", "note_en": "Sum of mutually exclusive color outcomes.", "note_km": "ផលបូកករណីពណ៌ដូចគ្នា។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Method",
+        "heading_km": "វិធីសាស្ត្រ",
+        "body_en": "Compute the probability for both white and both black separately, then add them together.",
+        "body_km": "គណនាប្រូបាបដែលបានសទាំងពីរ និងខ្មៅទាំងពីរដោយឡែកពីគ្នា រួចបូកវាបញ្ចូលគ្នា។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Find $P(\\text{same color})$ when Box 1 has 3 white, 2 black and Box 2 has 2 white, 3 black.",
+        "prompt_km": "រក $P(\\text{ពណ៌ដូចគ្នា})$ ពេលប្រអប់១ មានស 3 ខ្មៅ 2 និងប្រអប់២ មានស 2 ខ្មៅ 3។",
+        "steps": [
+          {
+            "text_en": "$P(\\text{both white}) = \\frac{3}{5} \\times \\frac{2}{5} = \\frac{6}{25}$.",
+            "text_km": "$P(\\text{សទាំងពីរ}) = \\frac{3}{5} \\times \\frac{2}{5} = \\frac{6}{25}$។",
+            "latex": "P(W) = \\frac{3}{5} \\cdot \\frac{2}{5} = \\frac{6}{25}"
+          },
+          {
+            "text_en": "$P(\\text{both black}) = \\frac{2}{5} \\times \\frac{3}{5} = \\frac{6}{25}$. Total = $\\frac{12}{25}$.",
+            "text_km": "$P(\\text{ខ្មៅទាំងពីរ}) = \\frac{2}{5} \\times \\frac{3}{5} = \\frac{6}{25}$។ សរុប = $\\frac{12}{25}$។",
+            "latex": "P = \\frac{6}{25} + \\frac{6}{25} = \\frac{12}{25}"
+          }
+        ],
+        "answer_latex": "P = \\frac{12}{25}"
+      }
+    ]
+  },
+  "exercise_banknotes": {
+    "title_en": "Banknotes drawn from a box",
+    "title_km": "ការចាប់ក្រដាសប្រាក់ចេញពីប្រអប់",
+    "summary_en": "Randomly drawing banknotes of different denominations (e.g. 10,000 Riels, 20,000 Riels, 50,000 Riels). Uses hypergeometric combinations.",
+    "summary_km": "ការចាប់ក្រដាសប្រាក់ដែលមានតម្លៃខុសៗគ្នាដោយចៃដន្យ (ដូចជា ១០០០០រៀល, ២០០០០រៀល, ៥០០០០រៀល)។ ប្រើរូបមន្តបន្សំ។",
+    "formulas": [
+      { "latex": "P = \\frac{C(n_1, k_1) C(n_2, k_2)}{C(N, k)}", "note_en": "Hypergeometric probability for banknotes.", "note_km": "ប្រូបាប៊ីលីតេបន្សំសម្រាប់ក្រដាសប្រាក់។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Note",
+        "heading_km": "សម្គាល់",
+        "body_en": "Count each banknote as a distinct item even if they share the same denomination.",
+        "body_km": "រាប់ក្រដាសប្រាក់នីមួយៗជាធាតុមួយដាច់ដោយឡែក ទោះបីវាមានតម្លៃស្មើគ្នាក៏ដោយ។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "A box holds five 10k notes and three 20k notes. Draw 2 notes. Find $P(\\text{both are 10k})$.",
+        "prompt_km": "ប្រអប់មួយមានក្រដាស ១ម៉ឺនរៀលចំនួន 5 និងក្រដាស ២ម៉ឺនរៀលចំនួន 3។ ចាប់យក 2 សន្លឹក។ រកប្រូបាបបានក្រដាស ១ម៉ឺនទាំងពីរ។",
+        "steps": [
+          {
+            "text_en": "Total ways: $C(8, 2) = 28$. Favourable ways: $C(5, 2) = 10$.",
+            "text_km": "ករណីអាច៖ $C(8, 2) = 28$។ ករណីស្រប៖ $C(5, 2) = 10$។",
+            "latex": "P = \\frac{C(5, 2)}{C(8, 2)} = \\frac{10}{28} = \\frac{5}{14}"
+          }
+        ],
+        "answer_latex": "P = \\frac{5}{14}"
+      }
+    ]
+  },
+  "exercise_pens": {
+    "title_en": "Pens drawn from a bag",
+    "title_km": "ការចាប់ប៊ិចចេញពីថង់",
+    "summary_en": "Selecting pens of different colors (blue, red, black) from a pen case without replacement using combinations.",
+    "summary_km": "ការជ្រើសរើសប៊ិចពណ៌ខុសៗគ្នា (ខៀវ ក្រហម ខ្មៅ) ពីប្រអប់ប៊ិចដោយគ្មានការជំនួសសងវិញ ដោយប្រើបន្សំ។",
+    "formulas": [
+      { "latex": "P(A) = \\frac{C(r, k_r) \\cdot C(b, k_b)}{C(N, k)}", "note_en": "Color split selection.", "note_km": "រូបមន្តបន្សំប៊ិចតាមពណ៌។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Execution",
+        "heading_km": "ការអនុវត្ត",
+        "body_en": "Choose $k_r$ pens from red pens and $k_b$ pens from blue pens, then divide by total combinations.",
+        "body_km": "ជ្រើសរើស $k_r$ ដើមពីប៊ិចក្រហម និង $k_b$ ដើមពីប៊ិចខៀវ រួចចែកនឹងបន្សំប៊ិចសរុប។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Case with 4 blue pens and 2 red pens. Pick 2 pens. Find $P(\\text{different colors})$.",
+        "prompt_km": "ប្រអប់មានប៊ិចខៀវ 4 និងក្រហម 2។ ចាប់យក 2 ដើម។ រកប្រូបាបបានពណ៌ខុសគ្នា។",
+        "steps": [
+          {
+            "text_en": "Favourable: choose 1 blue and 1 red: $C(4, 1) \\times C(2, 1) = 8$. Total: $C(6, 2) = 15$.",
+            "text_km": "ករណីស្រប៖ ជ្រើសរើសខៀវ១ និងក្រហម១៖ $C(4, 1) \\times C(2, 1) = 8$។ សរុប៖ $C(6, 2) = 15$។",
+            "latex": "P = \\frac{C(4, 1) \\times C(2, 1)}{C(6, 2)} = \\frac{8}{15}"
+          }
+        ],
+        "answer_latex": "P = \\frac{8}{15}"
+      }
+    ]
+  },
+  "exercise_students": {
+    "title_en": "Students chosen from a class",
+    "title_km": "ការជ្រើសរើសសិស្សពីថ្នាក់រៀន",
+    "summary_en": "Forming a student delegation or committee from a group of male and female students.",
+    "summary_km": "ការជ្រើសរើសគណៈប្រតិភូ ឬគណៈកម្មការសិស្សចេញពីក្រុមសិស្សប្រុស និងសិស្សស្រី។",
+    "formulas": [
+      { "latex": "n(A) = C(\\text{boys}, k_b) \\times C(\\text{girls}, k_g)", "note_en": "Committee selection rule.", "note_km": "រូបមន្តជ្រើសរើសគណៈកម្មការ។" }
+    ],
+    "sections": [
+      {
+        "heading_en": "Key note",
+        "heading_km": "ចំណាំសំខាន់",
+        "body_en": "Order does not matter when selecting group members for a committee without ranks.",
+        "body_km": "លំដាប់មិនសំខាន់ទេនៅពេលជ្រើសរើសសមាជិកគណៈកម្មការដែលគ្មានតួនាទីដាច់ដោយឡែក។"
+      }
+    ],
+    "examples": [
+      {
+        "prompt_en": "Choose 3 students from 5 boys and 4 girls. Find $P(\\text{all are girls})$.",
+        "prompt_km": "ជ្រើសរើសសិស្ស 3 នាក់ពីសិស្សប្រុស 5 នាក់ និងស្រី 4 នាក់។ រកប្រូបាបបានសិស្សស្រីទាំងអស់។",
+        "steps": [
+          {
+            "text_en": "$n(\\Omega) = C(9, 3) = 84$. $n(A) = C(4, 3) = 4$.",
+            "text_km": "$n(\\Omega) = C(9, 3) = 84$។ $n(A) = C(4, 3) = 4$។",
+            "latex": "P = \\frac{C(4, 3)}{C(9, 3)} = \\frac{4}{84} = \\frac{1}{21}"
+          }
+        ],
+        "answer_latex": "P = \\frac{1}{21}"
+      }
+    ]
+  }
+}
