@@ -324,6 +324,27 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
     # every attempt (right or wrong) — a correct answer is exactly as much
     # evidence of mastery as a wrong one is of need.
     await record_skill_progress(db, user, question, attempt)
+
+    # Auto-save progress: every grade updates the exercise's session so long
+    # multi-part exercises can be resumed without an explicit button.
+    if is_multi:
+        if result.get("part"):
+            session = await _upsert_session(
+                db, user, question.id, result["part"],
+                correct=result["correct"], typed=user_answer,
+                work_text=work_text, lines_boxes=lines_boxes,
+                strokes=strokes, strokes_thumb=strokes_thumb,
+            )
+        else:
+            session = await _upsert_session(db, user, question.id)
+            for v in result.get("parts") or []:
+                _merge_part_state(session, v["label"], correct=v["correct"])
+        if result["correct"] and result.get("all_complete"):
+            session.status = "completed"
+
+    # Nothing above commits: without this the attempt, its explanation and the
+    # skill-tracker updates are all rolled back when the request session closes.
+    await db.commit()
     return resp
 
 
