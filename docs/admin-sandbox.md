@@ -20,6 +20,15 @@ the exact same functions the real grading flow uses. Nothing here is a
 simulation of the grading pipeline; it *is* the grading pipeline, run
 in isolation.
 
+The tools panel is split into three tabs — **Setup → Solve → Grade** — instead
+of one long scroll of every section at once. Running Solve or Grade
+automatically switches you to the matching tab so the result is immediately
+in view; you can also click a tab directly to go back and adjust something.
+Any expression field (a param, or a "Test grading" line) also shows a live
+math-rendered preview underneath it as you type, via KaTeX — this is a
+best-effort client-side approximation for readability (`web/src/lib/mathPreview.ts`),
+not the SymPy-exact result; the real answer only comes from **Solve**/**Grade**.
+
 ## 1. Pick a template
 
 Choose a **topic** and **question type** from the dropdowns (the same

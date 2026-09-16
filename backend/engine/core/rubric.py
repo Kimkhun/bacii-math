@@ -31,10 +31,10 @@ already are the deterministic authority for those shapes.
 """
 from fractions import Fraction
 
-from sympy import Expr, oo, simplify, sympify
+from sympy import Expr, Symbol, oo, simplify, sympify
 
 from .dispatch import solve
-from .grading import _numeric_close, grade, grade_part, parse_answer
+from .grading import _equivalent_const, _numeric_close, grade, grade_part, parse_answer
 
 # Structured final-answer kinds with a legitimate single-line typed answer
 # a student could actually write ("domain is (2, oo)", "continuous"), so
@@ -84,9 +84,13 @@ def is_simple_value(value):
     return False
 
 
-def step_matches(text, expected, tol=1e-4):
+def step_matches(text, expected, tol=1e-4, constant_ok=False, var=None):
     """True when `text` (one student line) asserts the scalar/vector value
-    `expected` (see `is_simple_value` — never called on a structured value)."""
+    `expected` (see `is_simple_value` — never called on a structured value).
+    `constant_ok`/`var` mirror `analyze_work`'s own checkpoint flag: an
+    indefinite-integral antiderivative line may differ from `expected` by
+    any constant in `var` (F(x)+C is still correct for any C) — see
+    `_equivalent_const`."""
     value_str = _value_str(text)
     if isinstance(expected, (list, tuple)):
         try:
@@ -100,10 +104,10 @@ def step_matches(text, expected, tol=1e-4):
         value = parse_answer(value_str)
     except Exception:
         return False
-    return _scalar_matches(value, expected, tol)
+    return _scalar_matches(value, expected, tol, constant_ok, var)
 
 
-def _scalar_matches(value, expected, tol):
+def _scalar_matches(value, expected, tol, constant_ok=False, var=None):
     if expected in (oo, -oo):
         return value == expected
     try:
@@ -111,6 +115,12 @@ def _scalar_matches(value, expected, tol):
             return True
     except Exception:
         pass
+    if constant_ok and var is not None:
+        try:
+            if _equivalent_const(value, expected, var):
+                return True
+        except Exception:
+            pass
     try:
         # A malformed/list-shaped student line can parse to something that
         # isn't a plain SymPy scalar (e.g. a Python list) — `_numeric_close`
@@ -147,13 +157,24 @@ def _item_checkpoints(answer_exact, checkpoints):
     return cps
 
 
-def build_rubric(topic, question_type, params, question_points=DEFAULT_QUESTION_POINTS):
+def build_rubric(topic, question_type, params, question_points=DEFAULT_QUESTION_POINTS, part_label=None):
     """[{"item", "label", "value"|"kind", "points", "answer_kind", ...}] for
     one live/generated question, mechanically weighted per the module
     docstring's two rules. Never hand-typed — every value/kind comes
-    straight from this exercise's own ``solve()`` output."""
+    straight from this exercise's own ``solve()`` output.
+
+    `part_label`: for a multi-part exercise, restrict the rubric to just
+    that one sub-part (A, B, ...) — used by the progressive check-each-part
+    flow, where the student's `work_text` only ever contains that one
+    part's canvas, so scoring the OTHER parts' checkpoints against it would
+    always fail them (never actually attempted) instead of just not being
+    part of this grading pass."""
     solution = solve(topic, question_type, params)
     parts = solution.get("parts")
+    if parts and part_label is not None:
+        parts = [p for p in parts if p["label"] == part_label]
+        if not parts:
+            raise ValueError(f"unknown part label: {part_label}")
     if parts:
         items = [{"label": p["label"], "answer_kind": p.get("answer_kind"),
                   "answer_exact": p["answer_exact"],
@@ -192,6 +213,7 @@ def build_rubric(topic, question_type, params, question_points=DEFAULT_QUESTION_
             rubric.append({
                 "item": it["label"], "label": cp["label"], "points": p,
                 "kind": kind, "value": cp["value"], "answer_kind": answer_kind,
+                "constant_ok": cp.get("constant_ok", False),
             })
     return rubric
 
@@ -200,7 +222,7 @@ def build_rubric(topic, question_type, params, question_points=DEFAULT_QUESTION_
 # Scoring: match a student's full written work against the rubric.
 # ---------------------------------------------------------------------------
 
-def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUESTION_POINTS, tolerance=None):
+def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUESTION_POINTS, tolerance=None, part_label=None):
     """Deterministic step-by-step score for one exercise's full written
     work. `lines`: the student's raw work, one asserted fact per line, any
     order (see module docstring). A "simple" step is matched against any of
@@ -222,18 +244,22 @@ def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUES
     still be independently demonstrated, not merely implied by a later one
     that was never written.
 
+    `part_label`: see `build_rubric` — restricts scoring to one sub-part of
+    a multi-part exercise (the progressive check-each-part flow).
+
     Returns {"earned", "possible", "breakdown"} — earned/possible are exact
     Fractions; never an LLM judgment call."""
-    rubric = build_rubric(topic, question_type, params, question_points)
+    rubric = build_rubric(topic, question_type, params, question_points, part_label)
     work = [ln.strip() for ln in lines if ln.strip()]
     used = [False] * len(work)
     matched_line_idx = [None] * len(rubric)
+    var_sym = Symbol(params.get("var", "x"))
     for idx, step in enumerate(rubric):
         for i, raw in enumerate(work):
             if used[i]:
                 continue
             if step["kind"] == "simple":
-                ok = step_matches(raw, step["value"], tolerance or 1e-4)
+                ok = step_matches(raw, step["value"], tolerance or 1e-4, step.get("constant_ok", False), var_sym)
             else:
                 ok = _judged_step_matches(topic, question_type, params, step, raw, tolerance)
             if ok:

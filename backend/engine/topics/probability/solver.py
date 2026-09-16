@@ -244,6 +244,15 @@ def _solve_prob_hypergeometric(params):
                 {"label": "C(n,k) total", "value": total, "formula": "hypergeometric_rule"},
                 {"label": f"C({second},{k}) no {first_name}", "value": no, "formula": "combination_rule"},
                 {"label": f"P(no {first_name})", "value": p_no, "formula": "combination_rule"},
+                # The raw complement count before it's reduced to a fraction
+                # ("n(at least one) = n(Ω) - n(no) = 1287 - 21 = 1266") is a
+                # step students commonly write out explicitly. Without a
+                # checkpoint for it, `analyze_work`'s any-order matcher has
+                # nowhere to place that correct intermediate value and flags
+                # it wrong instead — it only ever modeled the two combination
+                # counts and the two probabilities, skipping the raw
+                # favorable-count step in between.
+                {"label": f"n(at least one {first_name})", "value": total - no, "formula": "complement_rule"},
                 {"label": f"P(at least one {first_name})", "value": p, "formula": "complement_rule"},
             ],
             p,

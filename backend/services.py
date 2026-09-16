@@ -237,8 +237,14 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
 
         if question.topic != "functions":
             try:
+                # Progressive per-part grading (`is_multi and part`) only ever
+                # sends up that one part's canvas as `work_text` — scoring it
+                # against the full multi-part rubric would score every OTHER
+                # part 0 (never attempted, not merely wrong), so restrict the
+                # rubric to the part actually being graded.
                 rubric_result = score_work(
-                    question.topic, question.question_type, spec, work_text.split("\n"), question_points=10
+                    question.topic, question.question_type, spec, work_text.split("\n"),
+                    question_points=10, part_label=part if is_multi and part else None,
                 )
                 resp["rubric_score"] = _fractions_to_float(rubric_result)
             except Exception:

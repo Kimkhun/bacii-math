@@ -1795,6 +1795,7 @@ function PracticeInner() {
                     canvasRefs.current[sIdx] = el;
                   }}
                   fullscreen
+                  active={isCurrent}
                   topOffset={headerHeight}
                   zoom={zoom}
                   onChange={markDirty}

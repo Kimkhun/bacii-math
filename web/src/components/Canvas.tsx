@@ -308,8 +308,20 @@ const Canvas = forwardRef<
     overlay?: ReactNode;
     onToolAutoSwitch?: (tool: CanvasTool) => void;
     topOffset?: number;
+    /** False when this Canvas is mounted but hidden (e.g. a not-currently-shown
+     * multi-part answer's canvas, kept mounted for its own undo/redo history).
+     * A paste's window-level "paste" event has no notion of "which canvas is
+     * visible", so every mounted Canvas would otherwise place the same pasted
+     * image onto every part at once; this flag makes only the active one
+     * respond. Pointer/pen input never has this problem — it's already
+     * naturally scoped to whichever element is actually visible/hit-tested. */
+    active?: boolean;
   }
->(({ width = 640, height = 820, fullscreen = false, onChange, zoom = 1, onZoomChange, overlay, onToolAutoSwitch, topOffset }, ref) => {
+>(
+  (
+    { width = 640, height = 820, fullscreen = false, onChange, zoom = 1, onZoomChange, overlay, onToolAutoSwitch, topOffset, active = true },
+    ref
+  ) => {
     const initialW = fullscreen ? FULL_W : width;
     const initialH = fullscreen ? FULL_H : height;
     const [canvasWidth, setCanvasWidth] = useState(initialW);
@@ -807,7 +819,7 @@ const Canvas = forwardRef<
     };
 
     useEffect(() => {
-      if (!fullscreen) return;
+      if (!fullscreen || !active) return;
       const isTextInput = (el: EventTarget | null) => {
         const tag = (el as HTMLElement)?.tagName;
         return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
@@ -852,7 +864,7 @@ const Canvas = forwardRef<
         window.removeEventListener("blur", onBlur);
         window.removeEventListener("paste", onPaste);
       };
-    }, [fullscreen]);
+    }, [fullscreen, active]);
 
     const grownRef = useRef({ top: 0, left: 0 });
     const growingRef = useRef(false);
