@@ -6,6 +6,12 @@ from engine.core.slots import _fill
 from engine.notation import pretty_expr, pretty_point
 
 from .structures import (
+    _bound_latex,
+    _def_structures,
+    _indef_structures,
+    _new_def_structures,
+    _new_indef_structures,
+    build_sample,
     _INDEF_EXPAND_TEMPLATES,
     _INDEFINITE_TEMPLATES,
     _INDEF_LINEAR_TEMPLATES,
@@ -27,8 +33,59 @@ _INDEFINITE_VARIANT_BY_DIFFICULTY = {
     "hard": ["usub", "split", "trig_sec", "linear_argument", "expand"],
 }
 
+#: Templates transcribed from the textbook's exercises. The hand-written
+#: shapes below already cover every other admin template, so these are the
+#: ones that must be drawn from structures.py directly.
+_TEXTBOOK_STRUCTURES = {}
+for _s in _new_indef_structures() + _new_def_structures():
+    _TEXTBOOK_STRUCTURES.setdefault((_s["question_type"], _s["variant"]), []).append(_s)
+_ORIGINAL_COUNT = {}
+for _s in _indef_structures() + _def_structures():
+    _key = (_s["question_type"], _s["variant"])
+    _ORIGINAL_COUNT[_key] = _ORIGINAL_COUNT.get(_key, 0) + 1
+
+#: Largest definite-integral answer a textbook template may produce in practice.
+_MAX_DEFINITE_ANSWER = 100
+
+
+def _textbook_problem(rng, question_type, variant, difficulty):
+    """With probability equal to the textbook templates' share of this
+    technique (capped at half, so hand-written shapes keep appearing), build
+    the exercise from a textbook template. Returns None to fall through."""
+    pool = _TEXTBOOK_STRUCTURES.get((question_type, variant))
+    if not pool:
+        return None
+    share = len(pool) / (len(pool) + max(_ORIGINAL_COUNT.get((question_type, variant), 0), len(pool)))
+    if rng.random() >= share:
+        return None
+    struct = rng.choice([t for t in pool if t["difficulty"] == difficulty] or pool)
+    try:
+        sample = build_sample(struct, rng.randrange(2**31), max_abs=_MAX_DEFINITE_ANSWER)
+    except ValueError:
+        return None
+    params = sample["params"]
+    var = params["var"]
+    if question_type == "indefinite_integral":
+        problem = _build_indefinite(params["expr"], var, difficulty, variant)
+    else:
+        lower, upper, func = params["lower"], params["upper"], params["expr"]
+        problem = _build_expr_problem(
+            "integral", "definite_integral", params, difficulty,
+            f"Compute ∫ from {var} = {pretty_point(lower)} to {var} = {pretty_point(upper)} "
+            f"of {pretty_expr(func)} d{var}.",
+            rf"\text{{Compute }} \int_{{{_bound_latex(lower, var)}}}^{{{_bound_latex(upper, var)}}} "
+            rf"{_expr_latex(func, var)}\,d{var}",
+            f"\\int_{{{lower}}}^{{{upper}}} ({func})\\,d{var}",
+        )
+    problem["params"]["structure"] = struct["id"]
+    return problem
+
+
 def _generate_integral(rng, difficulty, variant=None):
     variant = variant or rng.choice(_INTEGRAL_VARIANT_BY_DIFFICULTY[difficulty])
+    textbook = _textbook_problem(rng, "definite_integral", variant, difficulty)
+    if textbook is not None:
+        return textbook
 
     if variant == "trig":
         # c·sin(x) or c·cos(x) over bounds whose answers stay clean:
@@ -263,6 +320,9 @@ def _build_indefinite(func, var, difficulty, variant, curated=False):
 
 def _generate_indefinite(rng, difficulty, variant=None):
     variant = variant or rng.choice(_INDEFINITE_VARIANT_BY_DIFFICULTY[difficulty])
+    textbook = _textbook_problem(rng, "indefinite_integral", variant, difficulty)
+    if textbook is not None:
+        return textbook
     var = rng.choice(_INDEFINITE_VARIABLES)
 
     if variant == "expand":
