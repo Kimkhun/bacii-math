@@ -95,7 +95,9 @@ export interface Translations {
   formulas_title: string;
   formulas_subtitle: string;
   formulas_all_topics: string;
-  formulas_weight: string;
+  formulas_difficulty_easy: string;
+  formulas_difficulty_medium: string;
+  formulas_difficulty_hard: string;
   formulas_practice: string;
   formulas_loading: string;
   lesson: string;
@@ -312,7 +314,9 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     formulas_title: "Formula sheet",
     formulas_subtitle: "Every technique used across the practice topics — the rule, and the specific formulas under it.",
     formulas_all_topics: "All topics",
-    formulas_weight: "weight",
+    formulas_difficulty_easy: "Easy",
+    formulas_difficulty_medium: "Medium",
+    formulas_difficulty_hard: "Hard",
     formulas_practice: "Practice",
     formulas_loading: "Loading formulas…",
     lesson: "Lesson",
@@ -520,7 +524,9 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     formulas_title: "តារាងរូបមន្តគណិតវិទ្យា (បាក់ឌុប)",
     formulas_subtitle: "បណ្តុំរូបមន្ត និងវិធីសាស្រ្តដោះស្រាយលំហាត់គណិតវិទ្យាថ្នាក់ទី១២ តាមគ្រប់ប្រធានបទ។",
     formulas_all_topics: "ប្រធានបទទាំងអស់",
-    formulas_weight: "ទម្ងន់ពិន្ទុ",
+    formulas_difficulty_easy: "ងាយស្រួល",
+    formulas_difficulty_medium: "មធ្យម",
+    formulas_difficulty_hard: "ពិបាក",
     formulas_practice: "អនុវត្ត",
     formulas_loading: "កំពុងផ្ទុកតារាងរូបមន្ត...",
     lesson: "មេរៀន",

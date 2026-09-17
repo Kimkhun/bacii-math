@@ -13,6 +13,19 @@ function renderMathFormula(s: string): string {
   return `\\(${s}\\)`;
 }
 
+function difficultyFromWeight(weight: number): "easy" | "medium" | "hard" | null {
+  if (weight <= 0) return null;
+  if (weight === 1) return "easy";
+  if (weight === 2) return "medium";
+  return "hard";
+}
+
+const DIFFICULTY_STYLES: Record<"easy" | "medium" | "hard", string> = {
+  easy: "bg-emerald-100 text-emerald-800",
+  medium: "bg-amber-100 text-amber-800",
+  hard: "bg-red-100 text-red-800",
+};
+
 export default function FormulasPage() {
   const { lang, t } = useLanguage();
   const [catalog, setCatalog] = useState<FormulaCatalog | null>(null);
@@ -85,6 +98,7 @@ export default function FormulasPage() {
                       ? (e.name_km || e.name_en || e.id.replace(/_/g, " "))
                       : (e.name_en || e.id.replace(/_/g, " "));
                     const secondaryName = lang === "km" ? e.name_en : e.name_km;
+                    const difficulty = difficultyFromWeight(e.weight);
 
                     return (
                       <div key={e.id} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
@@ -93,9 +107,9 @@ export default function FormulasPage() {
                           {secondaryName && secondaryName !== primaryName && (
                             <span className="text-slate-500">({secondaryName})</span>
                           )}
-                          {e.weight > 0 && (
-                            <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-xs">
-                              {t("formulas_weight")} {e.weight}
+                          {difficulty && (
+                            <span className={`px-2 py-0.5 rounded text-xs ${DIFFICULTY_STYLES[difficulty]}`}>
+                              {t(`formulas_difficulty_${difficulty}` as const)}
                             </span>
                           )}
                           {e.variants.length > 0 && (
