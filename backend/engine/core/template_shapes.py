@@ -24,7 +24,7 @@ from collections import Counter
 
 from ..topics.conics.generator import _CONICS_CURATED
 from ..topics.continuity.generator import _CONTINUITY_CURATED
-from ..topics.derivatives.generator import _DERIVATIVE_CURATED
+from ..topics.derivatives.generator import _DERIVATIVE_CURATED, _derivative_shape
 from ..topics.differential_equations.generator import _ODE_CURATED
 from ..topics.vectors_space.generator import _VECTORS_CURATED
 
@@ -61,28 +61,9 @@ def _card(topic, qt, shape_id, items, technique, pattern, pattern_latex):
     }
 
 
-# --- derivatives: classify each expression to exactly one differentiation rule ---
-
-def _derivative_shape(item) -> str:
-    if item.get("order", 1) == 2:
-        return "second_order"
-    expr = item.get("expr", "")
-    if "log" in expr:
-        return "logarithm"
-    if "exp" in expr:
-        return "exponential"
-    if any(fn in expr for fn in ("sin", "cos", "tan")):
-        return "trigonometric"
-    if "sqrt" in expr:
-        return "radical"
-    if "/" in expr:
-        return "quotient"
-    if ")**" in expr:
-        return "chain"
-    if ")*" in expr or "*(" in expr:
-        return "product"
-    return "polynomial"
-
+# --- derivatives: one card per differentiation technique (classification
+# lives in engine.topics.derivatives.generator._derivative_shape, which the
+# actual generator also uses to filter by variant) ---
 
 _DERIVATIVE_SHAPES = [
     ("polynomial", "Power rule, term by term",
@@ -112,11 +93,11 @@ def _derivatives_shapes():
         buckets.setdefault(_derivative_shape(item), []).append(item)
     cards = []
     for shape_id, technique, pattern_latex in _DERIVATIVE_SHAPES:
-        items = buckets.get(shape_id)
-        if not items:
-            continue
-        cards.append(_card("derivatives", "compute_derivative", shape_id, items,
-                           technique, technique, pattern_latex))
+        items = buckets.get(shape_id, [])
+        card = _card("derivatives", "compute_derivative", shape_id, items,
+                     technique, technique, pattern_latex)
+        card["source_labels"] = [f"{len(items)} curated + procedurally generated"]
+        cards.append(card)
     return cards
 
 
