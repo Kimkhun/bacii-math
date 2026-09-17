@@ -387,7 +387,7 @@ def _new_def_structures():
         _entry(_DEF, "u_substitution", "hard", "({f})*({a} + 2*{v})*({v}**2 + {a}*{v} - {c})**{n}",
                bounds=[("-2", "1")], labels=["III-14"], sid="def_quad_pow_frac"),
         _entry(_DEF, "u_substitution", "hard", "(2*{v} - {a})*({v}**2 - {a}*{v} + {c})**{n}",
-               bounds=[("-2", "2")], labels=["III-15"], sid="def_quad_pow_neg"),
+               bounds=[("-2", "2"), ("0", "1")], labels=["III-15"], sid="def_quad_pow_neg"),
         _entry(_DEF, "u_substitution", "hard", "({a} + 2*{v})*sqrt({v}**2 + {a}*{v})",
                bounds=[("0", "1")], labels=["III-17"], sid="def_quad_sqrt_pow"),
         _entry(_DEF, "u_substitution", "hard", "-sin({v})*cos({v})**{n}",
@@ -526,9 +526,10 @@ def _solve_struct(qt, params):
     return _solve_definite_integral(params)
 
 
-def build_sample(struct, seed):
+def build_sample(struct, seed, max_abs=None):
     """Deterministic filled instance of a structure: params + solved solution,
-    reseeding until the answer is a clean finite real result."""
+    reseeding until the answer is a clean finite real result (and, for a
+    definite integral with ``max_abs`` set, no larger than that in size)."""
     var = struct["var"]
     for attempt in range(40):
         rng = random.Random(seed + attempt * 7919)
@@ -543,6 +544,10 @@ def build_sample(struct, seed):
         except Exception:
             continue
         if not _sample_ok(solution, struct["question_type"], var):
+            continue
+        # The grader's decimal tolerance is absolute, so a rounded answer to a
+        # huge result is marked wrong; practice keeps definite answers small.
+        if max_abs is not None and struct["question_type"] == _DEF and abs(N(solution["answer_exact"])) > max_abs:
             continue
         prompt, prompt_latex, display = _build_prompt(struct, params, expr, var)
         return {

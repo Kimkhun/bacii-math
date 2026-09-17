@@ -1,10 +1,10 @@
-"""Template shapes for the curated-replay topics (derivatives, continuity,
+"""Template shapes for the curated-shape topics (derivatives, continuity,
 conics, vectors_space, differential_equations).
 
-Unlike ``complex``/``integral``/``limit`` — which generate exercises by filling
-symbolic slot templates — these topics *replay* fixed curated BAC II exercises
-loaded from ``topics/<topic>/data/curated/*.json``. There is therefore no single
-parametric template behind an exercise; the numbers *are* the exercise.
+Unlike ``complex``/``integral``/``limit`` — which fill symbolic slot templates —
+these topics mix curated BAC II exercises from ``topics/<topic>/data/curated/*.json``
+with per-shape procedural samplers in each topic's ``generator.py``, so there is
+no single slot template to show.
 
 For the admin template inventory we still want to show a *template* (the shape
 of the exercise with placeholder letters), not one card per concrete exercise.
@@ -57,7 +57,7 @@ def _card(topic, qt, shape_id, items, technique, pattern, pattern_latex):
         "sample_answer": "",
         "sample_answer_latex": None,
         "formula_tags": [],
-        "source_labels": [f"{len(items)} exercise" + ("s" if len(items) != 1 else "")],
+        "source_labels": [f"{len(items)} curated + procedurally generated"],
     }
 
 
@@ -94,10 +94,8 @@ def _derivatives_shapes():
     cards = []
     for shape_id, technique, pattern_latex in _DERIVATIVE_SHAPES:
         items = buckets.get(shape_id, [])
-        card = _card("derivatives", "compute_derivative", shape_id, items,
-                     technique, technique, pattern_latex)
-        card["source_labels"] = [f"{len(items)} curated + procedurally generated"]
-        cards.append(card)
+        cards.append(_card("derivatives", "compute_derivative", shape_id, items,
+                           technique, technique, pattern_latex))
     return cards
 
 
