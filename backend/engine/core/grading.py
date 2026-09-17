@@ -1259,6 +1259,14 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
                 "matches": aux_hit["label"], "formula": aux_hit.get("formula"),
                 "expected": str(aux_hit["value"]), "restated": True,
             })
+        elif symbolic_value and given_expr is not None and _equivalent_exact(value, given_expr, var_sym):
+            # An algebraic rewrite of the given expression ('= lim -2*(e^(-2x)-1)/(-2x)
+            # / (4*(e^(4x)-1)/(4x))') — equal to the given, just not in the
+            # structurally identical form the early `value == given_expr`
+            # check catches. Checked only after every checkpoint match has
+            # failed, so a symbolic checkpoint that happens to simplify to the
+            # given (a cancelled factored form) is still credited first.
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
         elif had_equals and _is_var_point_declaration(lhs, value_str, params.get("var", "x")):
             # 'x = 0' (Step 1: substitute x = 0 directly) names the
             # substitution point rather than asserting a computed value.
