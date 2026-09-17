@@ -17,9 +17,10 @@ def pretty_expr(expr: str) -> str:
     s = expr
     s = re.sub(r"-\s*-", "+ ", s)
     s = re.sub(r"\*\*(-?\d+)", lambda m: _superscript(m.group(1)), s)
+    s = re.sub(r"\bpi\b", "π", s)
+    s = re.sub(r"(?<=\d)\*(?=\d)", "·", s)
     s = re.sub(r"(?<=[\w)])\*(?=[\w(])", "", s)
     s = re.sub(r"\bsqrt\(", "√(", s)
-    s = re.sub(r"\bpi\b", "π", s)
     s = re.sub(r"\boo\b", "∞", s)
     s = s.replace("+-", "- ").replace("+ -", "- ")
     s = re.sub(r"(?<=[0-9)])-", " - ", s)
