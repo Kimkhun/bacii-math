@@ -15,6 +15,7 @@ from ..topics.complex import lessons as complex_lessons
 from ..topics.conics import lessons as conics_lessons
 from ..topics.continuity import lessons as continuity_lessons
 from ..topics.derivatives import lessons as derivatives_lessons
+from ..topics.derivatives.generator import DERIVATIVE_TECHNIQUES
 from ..topics.differential_equations import lessons as ode_lessons
 from ..topics.integral import lessons as integral_lessons
 from ..topics.limit import lessons as limit_lessons
@@ -25,7 +26,10 @@ from ..topics.vectors_space import lessons as vectors_lessons
 LESSON_SKILL_KEYS: set[str] = (
     {f"complex/{qt}" for qt in complex_lessons.lesson_question_types()}
     | {f"limit/limit:{tech}" for tech in limit_lessons.lesson_techniques()}
-    | {f"derivatives/compute_derivative:{v}" for v in derivatives_lessons.lesson_variants()}
+    # derivatives lessons are authored per order (order_1/order_2), but skill
+    # keys are now per differentiation technique; every technique maps onto
+    # whichever order lesson covers it (second_order -> order_2, else order_1).
+    | {f"derivatives/compute_derivative:{v}" for v in DERIVATIVE_TECHNIQUES}
     | {f"continuity/check_continuity:{v}" for v in continuity_lessons.lesson_variants()}
     | {f"differential_equations/solve_ode:{k}" for k in ode_lessons.lesson_kinds()}
     | {f"vectors_space/vector_ops:{op}" for op in vectors_lessons.lesson_ops()}
@@ -58,8 +62,8 @@ def get_lesson(skill_key: str) -> dict | None:
         technique = variant or question_type
         return limit_lessons.get_lesson(technique)
     if topic == "derivatives":
-        var = variant or "order_1"
-        return derivatives_lessons.get_lesson(var)
+        order = "order_2" if variant == "second_order" else "order_1"
+        return derivatives_lessons.get_lesson(order)
     if topic == "continuity":
         var = variant or "check_at_point"
         return continuity_lessons.get_lesson(var)

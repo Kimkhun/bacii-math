@@ -82,7 +82,8 @@ CONF_K = 3.0
 #: Bumped whenever any constant or rule above changes, so stored SkillState
 #: rows recorded under older rules are transparently replayed from the
 #: attempt history instead of being silently mixed with new ones.
-TRACKER_VERSION = 1
+#: v2: derivatives skills re-keyed from order_1/order_2 to technique.
+TRACKER_VERSION = 2
 
 #: level -> label, ascending. The first band whose ceiling the level is under.
 BANDS = (

@@ -228,7 +228,18 @@ const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
   ],
   functions: [{ value: "study", label: "Curve study & area" }],
   continuity: [{ value: "check_continuity", label: "Check continuity / find parameter" }],
-  derivatives: [{ value: "compute_derivative", label: "Compute derivative" }],
+  derivatives: [
+    { value: "compute_derivative", label: "Compute derivative (any)" },
+    { value: "compute_derivative:polynomial", label: "Power rule, term by term" },
+    { value: "compute_derivative:chain", label: "Chain rule on a power" },
+    { value: "compute_derivative:product", label: "Product rule" },
+    { value: "compute_derivative:quotient", label: "Quotient rule" },
+    { value: "compute_derivative:radical", label: "Chain rule through a square root" },
+    { value: "compute_derivative:trigonometric", label: "Trigonometric derivatives" },
+    { value: "compute_derivative:exponential", label: "Exponential derivatives" },
+    { value: "compute_derivative:logarithm", label: "Logarithmic derivatives" },
+    { value: "compute_derivative:second_order", label: "Second derivative" },
+  ],
   differential_equations: [{ value: "solve_ode", label: "Solve differential equation" }],
   vectors_space: [{ value: "vector_ops", label: "Vector operations" }],
   conics: [{ value: "classify_conic", label: "Classify conic / find feature" }],
@@ -695,8 +706,8 @@ function PracticeInner() {
       return tech ? `limit/limit:${tech}` : null;
     }
     if (topic === "derivatives") {
-      const order = params?.order ?? 1;
-      return `derivatives/compute_derivative:order_${order}`;
+      const tech = params?.technique;
+      return tech ? `derivatives/compute_derivative:${tech}` : null;
     }
     if (topic === "continuity") {
       const isParam = params?.unknown && params?.unknown !== "None";

@@ -33,7 +33,7 @@ import re
 
 from ..topics.conics.generator import _ASK_PHRASE, _CONICS_CURATED
 from ..topics.continuity.generator import _CONTINUITY_CURATED
-from ..topics.derivatives.generator import _DERIVATIVE_CURATED
+from ..topics.derivatives.generator import DERIVATIVE_TECHNIQUES, _derivative_shape
 from ..topics.differential_equations.generator import _KIND_LABEL, _ODE_CURATED
 from ..topics.integral.generator import (
     _INDEFINITE_VARIANT_BY_DIFFICULTY,
@@ -139,8 +139,15 @@ _CONTINUITY_LABELS = {
 }
 
 _DERIVATIVE_LABELS = {
-    "order_1": "First derivative",
-    "order_2": "Second derivative",
+    "polynomial": "Power rule, term by term",
+    "chain": "Chain rule on a power of an expression",
+    "product": "Product rule",
+    "quotient": "Quotient rule",
+    "radical": "Chain rule through a square root",
+    "trigonometric": "Derivatives of trigonometric functions",
+    "exponential": "Derivatives of exponential functions",
+    "logarithm": "Derivatives of logarithmic functions",
+    "second_order": "Second derivative",
 }
 
 _VECTOR_LABELS = {
@@ -310,9 +317,9 @@ def _build_catalog():
                 for v, diff in _curated_variants(pool, "kind"):
                     out.append(_skill(topic, qt, v, _CONTINUITY_LABELS.get(v, v), diff))
             elif topic == "derivatives":
-                pool = [{**c, "kind": f"order_{c.get('order', 1)}"} for c in _DERIVATIVE_CURATED]
-                for v, diff in _curated_variants(pool, "kind"):
-                    out.append(_skill(topic, qt, v, _DERIVATIVE_LABELS.get(v, v), diff))
+                # Every technique has a procedural sampler at every difficulty.
+                for v in DERIVATIVE_TECHNIQUES:
+                    out.append(_skill(topic, qt, v, _DERIVATIVE_LABELS.get(v, v), "easy"))
             else:
                 # complex, functions, past_exam: the question type *is* the skill.
                 difficulty = "hard" if topic == "past_exam" else "medium"
@@ -343,8 +350,8 @@ def _variant_for(topic, question_type, params):
     if topic == "continuity":
         return continuity_variant(params)
     if topic == "derivatives":
-        order = params.get("order")
-        return f"order_{order}" if order not in (None, "") else None
+        # Questions stored before technique tagging carry only expr/order.
+        return params.get("technique") or (_derivative_shape(params) if params.get("expr") else None)
     return None
 
 
