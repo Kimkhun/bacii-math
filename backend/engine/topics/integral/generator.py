@@ -340,7 +340,8 @@ def _generate_indefinite(rng, difficulty, variant=None):
         )
 
     # "power" (easy) and "trig_sec" (hard): curated shapes + random term sums.
-    if rng.random() < 0.4:
+    # "indefinite_sum" names the curated shapes themselves, so it always draws one.
+    if variant == "indefinite_sum" or rng.random() < 0.4:
         pool = [t for d, t in _INDEFINITE_TEMPLATES if d == difficulty]
         if not pool:
             pool = [t for d, t in _INDEFINITE_TEMPLATES]
