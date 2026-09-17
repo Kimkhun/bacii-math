@@ -31,10 +31,11 @@ interface RequestOptions {
   method?: string;
   body?: unknown;
   auth?: "refresh" | "none";
+  keepalive?: boolean;
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, auth = "refresh" } = options;
+  const { method = "GET", body, auth = "refresh", keepalive } = options;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   const access = getAccess();
   if (access) headers["Authorization"] = `Bearer ${access}`;
@@ -43,6 +44,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
+    keepalive,
   });
 
   if (res.status === 401 && auth === "refresh" && getRefresh()) {
@@ -194,6 +196,7 @@ export interface Explanation {
   steps?: { step_order: number; title: string; detail: string; formula?: string | null }[];
   graph?: GraphSpec | null;
   graph_check?: GraphCheck | null;
+  variation_table?: any;
 }
 
 export interface PartVerdict {
@@ -279,6 +282,7 @@ export interface GradeResult {
   step_check?: StepCheck | null;
   graph?: GraphSpec | null;
   graph_check?: GraphCheck | null;
+  variation_table?: any;
   rubric_score?: RubricScore | null;
   official_part_solution?: string;
 }
@@ -763,11 +767,13 @@ export const api = {
     work_text?: string,
     lines_boxes?: (number[] | null)[],
     strokes?: StrokeDoc | null,
-    strokes_thumb?: string | null
+    strokes_thumb?: string | null,
+    keepalive?: boolean
   ) =>
     request<SessionSummary>("/problems/progress/save", {
       method: "POST",
       body: { question_id, part, typed, work_text, lines_boxes, strokes, strokes_thumb },
+      keepalive,
     }),
   myProgress: () => request<SessionSummary[]>("/progress"),
   progress: (id: string) => request<SessionDetail>(`/progress/${id}`),

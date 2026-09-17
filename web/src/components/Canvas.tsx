@@ -2090,11 +2090,14 @@ const Canvas = forwardRef<
         // mid-answer, without freezing the canvas against further writing.
         const img = new Image();
         img.onload = () => {
-          // naturalWidth/Height, not the enclosing W/H — those reflect
-          // whatever THIS canvas instance's size happens to be right now,
-          // which won't match the logical size the snapshot was exported at
-          // if the page had grown (infinite paper) before it was captured.
-          strokesRef.current.push({ kind: "raster", img, w: img.naturalWidth, h: img.naturalHeight });
+          // If the snapshot was exported as a thumbnail (e.g. maxWidth 320),
+          // scale it up to the full logical canvas width W so it aligns with
+          // the student's original handwriting and bounding boxes.
+          const scale = img.naturalWidth < W && img.naturalWidth > 0 ? W / img.naturalWidth : 1;
+          const w = Math.round(img.naturalWidth * scale);
+          const h = Math.round(img.naturalHeight * scale);
+          if (h > H) setCanvasHeight(Math.min(MAX_HEIGHT, h));
+          strokesRef.current.push({ kind: "raster", img, w, h });
           redoStackRef.current = [];
           redraw();
           onChange?.();

@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
+import NavigationProgressBar from "@/components/NavigationProgressBar";
 
 export const metadata: Metadata = {
   title: "BACII Math",
@@ -57,6 +59,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <Suspense fallback={null}>
+          <NavigationProgressBar />
+        </Suspense>
         <LanguageProvider>
           <AuthProvider>
             <Navbar />

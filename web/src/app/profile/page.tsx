@@ -5,7 +5,8 @@ import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import MathText from "@/components/MathText";
 import LessonModal from "@/components/LessonModal";
-import { api, FormulaSkill, Profile, Skill, Suggestion, TopicProgress } from "@/lib/api";
+import SavedExercisesShelf from "@/components/SavedExercisesShelf";
+import { api, FormulaSkill, Profile, SessionSummary, Skill, Suggestion, TopicProgress } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 
 // One colour scale for every bar on the page, so a 40 always looks like a 40
@@ -299,11 +300,17 @@ export default function ProfilePage() {
   const [openTopics, setOpenTopics] = useState<Record<string, boolean>>({});
   const [showAllTopics, setShowAllTopics] = useState(false);
   const [lessonSkill, setLessonSkill] = useState<Skill | null>(null);
+  const [savedSessions, setSavedSessions] = useState<SessionSummary[]>([]);
 
   useEffect(() => {
     (async () => {
       try {
-        setProfile(await api.profile());
+        const [profData, progData] = await Promise.all([
+          api.profile(),
+          api.myProgress().catch(() => [] as SessionSummary[]),
+        ]);
+        setProfile(profData);
+        setSavedSessions(progData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load");
       } finally {
@@ -311,6 +318,15 @@ export default function ProfilePage() {
       }
     })();
   }, []);
+
+  const handleDeleteSavedSession = async (id: string) => {
+    try {
+      await api.deleteProgress(id);
+      setSavedSessions((prev) => prev.filter((s) => s.id !== id));
+    } catch (err) {
+      console.error("Failed to delete saved session:", err);
+    }
+  };
 
   const skillsByTopic = useMemo(() => {
     const map: Record<string, Skill[]> = {};
@@ -405,6 +421,12 @@ export default function ProfilePage() {
                 <ActivityStrip activity={profile.activity} />
               </div>
             </div>
+
+            {/* In-progress and saved exercises shelf (Roblox-style horizontal carousel) */}
+            <SavedExercisesShelf
+              sessions={savedSessions}
+              onDelete={handleDeleteSavedSession}
+            />
 
             {/* What to practise next */}
             {profile.suggestions.length > 0 && (

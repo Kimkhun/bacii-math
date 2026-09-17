@@ -186,7 +186,7 @@ function SignTable({ st }: { st: NonNullable<Part["sign_table"]> }) {
   );
 }
 
-function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
+export function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
   const cols = vt.columns;
   const n = cols.length;
   const numIntervals = n - 1;
@@ -194,8 +194,8 @@ function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
   const normVal = (v: string | undefined) => {
     if (!v) return "";
     const s = v.trim();
-    if (s === "oo" || s === "+oo") return "+\\infty";
-    if (s === "-oo") return "-\\infty";
+    if (s === "oo" || s === "+oo" || s === "\\infty" || s === "+\\infty") return "+\\infty";
+    if (s === "-oo" || s === "-\\infty") return "-\\infty";
     return s;
   };
 
@@ -228,19 +228,24 @@ function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
                 x
               </td>
               {/* Start boundary point */}
-              <td className="px-2 py-2 text-center font-mono font-semibold text-slate-900">
+              <td className="px-1 py-2 text-center font-mono font-semibold text-slate-900 w-10 min-w-[38px]">
                 <MathText text={`\\(${normVal(cols[0])}\\)`} />
               </td>
-              {Array.from({ length: numIntervals }).map((_, i) => (
-                <Fragment key={i}>
-                  {/* Interval column */}
-                  <td className="px-6 py-2 min-w-[60px]" />
-                  {/* Next boundary point */}
-                  <td className="px-2 py-2 text-center font-mono font-semibold text-slate-900">
-                    <MathText text={`\\(${normVal(cols[i + 1])}\\)`} />
-                  </td>
-                </Fragment>
-              ))}
+              {Array.from({ length: numIntervals }).map((_, i) => {
+                const isLast = i === numIntervals - 1;
+                const boundaryIdx = i + 1;
+                const pole = !isLast && isPole(boundaryIdx);
+                return (
+                  <Fragment key={i}>
+                    {/* Interval column */}
+                    <td className="px-0 py-2 min-w-[65px]" />
+                    {/* Next boundary point */}
+                    <td className={`px-1 py-2 text-center font-mono font-semibold text-slate-900 ${pole ? "w-20 min-w-[72px]" : "w-10 min-w-[38px]"}`}>
+                      <MathText text={`\\(${normVal(cols[i + 1])}\\)`} />
+                    </td>
+                  </Fragment>
+                );
+              })}
             </tr>
 
             {/* Row 2: f'(x) */}
@@ -249,7 +254,7 @@ function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
                 f&apos;(x)
               </td>
               {/* Point 0: empty */}
-              <td className="px-2 py-2" />
+              <td className="w-10 min-w-[38px]" />
               {Array.from({ length: numIntervals }).map((_, i) => {
                 const sign = vt.derivative_sign[i] || "+";
                 const isLast = i === numIntervals - 1;
@@ -259,12 +264,12 @@ function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
                 return (
                   <Fragment key={i}>
                     {/* Interval sign */}
-                    <td className="px-6 py-2 text-center font-bold text-sm text-slate-800">
+                    <td className="px-2 py-2 text-center font-bold text-sm text-slate-800 min-w-[65px]">
                       <span className={sign === "+" ? "text-emerald-700" : "text-rose-700"}>{sign}</span>
                     </td>
 
                     {/* Boundary separator */}
-                    <td className="relative px-0 py-2 text-center w-8">
+                    <td className={`relative px-0 py-2 text-center ${pole ? "w-20 min-w-[72px]" : "w-10 min-w-[38px]"}`}>
                       {isLast ? null : pole ? (
                         /* Double vertical line for pole */
                         <div className="flex items-center justify-center h-7 gap-[3px]">
@@ -293,16 +298,13 @@ function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
               </td>
 
               {/* Point 0 value */}
-              <td className="relative px-2 py-3 w-10">
+              <td className="relative px-0 py-0 w-10 min-w-[38px]">
                 {(() => {
                   const arrow0 = vt.arrows[0] || "↗";
                   const isUp = arrow0 === "↗";
                   return (
-                    <div className="h-24 flex flex-col justify-between">
-                      <span className={`${isUp ? "invisible" : "visible"} font-mono font-semibold text-slate-900 text-xs`}>
-                        <MathText text={`\\(${normVal(vt.func_values[0])}\\)`} />
-                      </span>
-                      <span className={`${isUp ? "visible" : "invisible"} font-mono font-semibold text-slate-900 text-xs`}>
+                    <div className="relative h-24 flex items-center justify-center">
+                      <span className={`absolute ${isUp ? "bottom-2" : "top-2"} font-mono font-semibold text-slate-900 text-xs whitespace-nowrap`}>
                         <MathText text={`\\(${normVal(vt.func_values[0])}\\)`} />
                       </span>
                     </div>
@@ -321,26 +323,26 @@ function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
                 return (
                   <Fragment key={i}>
                     {/* Interval arrow */}
-                    <td className="px-2 py-3 min-w-[75px]">
-                      <div className="flex items-center justify-center h-28">
-                        <svg className="w-full h-24" viewBox="0 0 100 70" preserveAspectRatio="none">
+                    <td className="px-0 py-0 min-w-[65px]">
+                      <div className="flex items-center justify-center h-24">
+                        <svg className="w-full h-24 overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
                           <defs>
                             <marker
                               id={`arrowhead-${i}`}
-                              markerWidth="6"
-                              markerHeight="6"
-                              refX="5"
-                              refY="3"
+                              markerWidth="7"
+                              markerHeight="7"
+                              refX="6"
+                              refY="3.5"
                               orient="auto"
                             >
-                              <polygon points="0 0, 6 3, 0 6" fill="#1e293b" />
+                              <polygon points="0 0, 7 3.5, 0 7" fill="#1e293b" />
                             </marker>
                           </defs>
                           <line
-                            x1="10"
-                            y1={isUp ? "58" : "16"}
-                            x2="90"
-                            y2={isUp ? "16" : "58"}
+                            x1="-2"
+                            y1={isUp ? "76" : "20"}
+                            x2="102"
+                            y2={isUp ? "20" : "76"}
                             stroke="#1e293b"
                             strokeWidth="1.5"
                             markerEnd={`url(#arrowhead-${i})`}
@@ -350,41 +352,38 @@ function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
                     </td>
 
                     {/* Boundary point value / pole double bar */}
-                    <td className="relative px-0 py-3 text-center min-w-[52px]">
+                    <td className={`relative px-0 py-0 text-center ${pole ? "w-20 min-w-[72px]" : "w-10 min-w-[38px]"}`}>
                       {isLast ? (
                         /* End boundary value */
-                        <div className="h-28 flex flex-col justify-between py-2.5">
-                          <span className={`${isUp ? "visible" : "invisible"} font-mono font-semibold text-slate-900 text-xs`}>
-                            <MathText text={`\\(${nextVal}\\)`} />
-                          </span>
-                          <span className={`${isUp ? "invisible" : "visible"} font-mono font-semibold text-slate-900 text-xs`}>
+                        <div className="relative h-24 flex items-center justify-center">
+                          <span className={`absolute ${isUp ? "top-2" : "bottom-2"} font-mono font-semibold text-slate-900 text-xs whitespace-nowrap`}>
                             <MathText text={`\\(${nextVal}\\)`} />
                           </span>
                         </div>
                       ) : pole ? (
                         /* Double vertical line with left and right one-sided limits */
-                        <div className="relative flex items-center justify-center h-28">
+                        <div className="relative flex items-center justify-center h-24">
                           {(() => {
                             const limits = getPoleLimits(boundaryIdx);
                             const leftIsDown = vt.arrows[i] === "↘";
                             return (
                               <>
                                 <span
-                                  className={`absolute right-[18px] ${
-                                    leftIsDown ? "bottom-3" : "top-3"
+                                  className={`absolute right-[calc(50%+8px)] ${
+                                    leftIsDown ? "bottom-2" : "top-2"
                                   } font-mono font-semibold text-slate-900 text-xs whitespace-nowrap`}
                                 >
                                   <MathText text={`\\(${limits.left}\\)`} />
                                 </span>
 
-                                <div className="flex items-center justify-center h-28 gap-[3px]">
-                                  <div className="w-[1.5px] h-28 bg-slate-900" />
-                                  <div className="w-[1.5px] h-28 bg-slate-900" />
+                                <div className="flex items-center justify-center h-24 gap-[3px]">
+                                  <div className="w-[1.5px] h-24 bg-slate-900" />
+                                  <div className="w-[1.5px] h-24 bg-slate-900" />
                                 </div>
 
                                 <span
-                                  className={`absolute left-[18px] ${
-                                    vt.arrows[i + 1] === "↘" ? "top-3" : "bottom-3"
+                                  className={`absolute left-[calc(50%+8px)] ${
+                                    vt.arrows[i + 1] === "↘" ? "top-2" : "bottom-2"
                                   } font-mono font-semibold text-slate-900 text-xs whitespace-nowrap`}
                                 >
                                   <MathText text={`\\(${limits.right}\\)`} />
@@ -395,18 +394,11 @@ function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]> }) {
                         </div>
                       ) : (
                         /* Critical point value (local max at top, local min at bottom) */
-                        <div className="h-28 flex flex-col justify-between py-2.5">
+                        <div className="relative h-24 flex items-center justify-center">
                           <span
-                            className={`${
-                              isUp ? "visible" : "invisible"
-                            } font-mono font-semibold text-slate-900 text-xs`}
-                          >
-                            <MathText text={`\\(${nextVal}\\)`} />
-                          </span>
-                          <span
-                            className={`${
-                              !isUp ? "visible" : "invisible"
-                            } font-mono font-semibold text-slate-900 text-xs`}
+                            className={`absolute ${
+                              isUp ? "top-2" : "bottom-2"
+                            } font-mono font-semibold text-slate-900 text-xs whitespace-nowrap`}
                           >
                             <MathText text={`\\(${nextVal}\\)`} />
                           </span>
@@ -584,8 +576,8 @@ export default function StructureModal({
     sections.get(sec)!.push(p);
   }
 
-  const prompt = structure.sample_prompt_latex ?? structure.sample_prompt;
-  const promptIsLatex = !!structure.sample_prompt_latex;
+  const prompt = structure.sample_prompt || structure.sample_prompt_latex;
+  const promptIsLatex = !structure.sample_prompt && !!structure.sample_prompt_latex;
 
   return (
     <div

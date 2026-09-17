@@ -1,0 +1,106 @@
+{
+  "id": "rational_study_4",
+  "source": {
+    "year": null,
+    "track": "rational_functions",
+    "section": "IV",
+    "subject_km": "គណិតវិទ្យា",
+    "description": "Rational function study: f(x) = (x^2 + 2x - 3)/(x + 1) — domain, limits, vertical asymptote, oblique asymptote y = x + 1, relative position, derivative f' > 0, variation table (strictly increasing), center of symmetry I(-1, 0), graph.",
+    "extracted_by": "BAC II authentic curriculum standard"
+  },
+  "difficulty": "hard",
+  "var": "x",
+  "fn_name": "f",
+  "function_expr": "(x**2 + 2*x - 3)/(x + 1)",
+  "pattern": "f(x) = (x^2 + 2x - 3)/(x + 1)",
+  "pattern_latex": "f(x) = \\frac{x^2 + 2x - 3}{x + 1}",
+  "prompt": "គេឱ្យអនុគមន៍ f កំណត់ដោយ f(x) = (x^2 + 2x - 3)/(x + 1) មានក្រាប (C) ក្នុងតម្រុយអរតូណរម៉ាល់ (O, i, j) ។\n\n1. រកដែនកំណត់អនុគមន៍ f សិក្សាលីមីតចុងដែនកំណត់រួចទាញបញ្ជាក់នូវសមីការនៃអាស៊ីមតូតឈរនៃក្រាប (C) ៖\n2. ចូរស្រាយបញ្ជាក់ថាបន្ទាត់ (d) : y = x + 1 ជាអាស៊ីមតូតទ្រេតនៃក្រាប (C) កាលណា x -> ∞ និងសិក្សាទីតាំងធៀបរវាងបន្ទាត់ (d) ធៀបនឹងក្រាប (C) ៖\n3. ចំពោះគ្រប់ x ≠ -1 ចូរស្រាយបញ្ជាក់ថា f'(x) = (x^2 + 2x + 5)/(x + 1)^2 ៖\n4. សិក្សាអថេរភាពនៃអនុគមន៍ f រួចសង់តារាងអថេរភាពរបស់វា ៖\n5. ស្រាយបញ្ជាក់ថាចំណុច I(-1, 0) ជាផ្ចិតឆ្លុះនៃខ្សែរកោង (C) ៖\n6. ចូរសង់ក្រាប (C) និងបន្ទាត់ (d) ក្នុងតម្រុយរួមគ្នា ៖",
+  "prompt_latex": "\\text{គេឱ្យអនុគមន៍ } f \\text{ កំណត់ដោយ } f(x) = \\frac{x^2 + 2x - 3}{x + 1} \\text{ មានក្រាប } (C) \\text{ ក្នុងតម្រុយអរតូណរម៉ាល់ } (O, \\vec{i}, \\vec{j}) .\\\\ \\text{១. រកដែនកំណត់អនុគមន៍ } f \\text{ សិក្សាលីមីតចុងដែនកំណត់រួចទាញបញ្ជាក់នូវសមីការនៃអាស៊ីមតូតឈរនៃក្រាប } (C) ៖\\\\ \\text{២. ចូរស្រាយបញ្ជាក់ថាបន្ទាត់ } (d) : y = x + 1 \\text{ ជាអាស៊ីមតូតទ្រេតនៃក្រាប } (C) \\text{ កាលណា } x \\to \\infty \\text{ និងសិក្សាទីតាំងធៀបរវាងបន្ទាត់ } (d) \\text{ ធៀបនឹងក្រាប } (C) ៖\\\\ \\text{៣. ចំពោះគ្រប់ } x \\neq -1 \\text{ ចូរស្រាយបញ្ជាក់ថា } f'(x) = \\frac{x^2 + 2x + 5}{(x + 1)^2} ៖\\\\ \\text{៤. សិក្សាអថេរភាពនៃអនុគមន៍ } f \\text{ រួចសង់តារាងអថេរភាពរបស់វា ៖}\\\\ \\text{៥. ស្រាយបញ្ជាក់ថាចំណុច } I(-1, 0) \\text{ ជាផ្ចិតឆ្លុះនៃខ្សែរកោង } (C) ៖\\\\ \\text{៦. ចូរសង់ក្រាប } (C) \\text{ និងបន្ទាត់ } (d) \\text{ ក្នុងតម្រុយរួមគ្នា ៖}",
+  "graph": {
+    "x_min": -8,
+    "x_max": 6,
+    "y_min": -8,
+    "y_max": 8,
+    "samples": 200,
+    "asymptotes": [
+      { "kind": "vertical", "x": -1 },
+      { "kind": "oblique", "line": "x + 1", "label": "y = x + 1" }
+    ],
+    "points": [
+      { "x": -1, "y": 0, "label": "I" }
+    ]
+  },
+  "parts": [
+    {
+      "label": "1",
+      "want": "domain",
+      "kind": "interval",
+      "display": "D_f = \\mathbb{R} \\setminus \\{-1\\}",
+      "question_km": "១. រកដែនកំណត់អនុគមន៍ $f$ សិក្សាលីមីតចុងដែនកំណត់រួចទាញបញ្ជាក់នូវសមីការនៃអាស៊ីមតូតឈរនៃក្រាប $(C)$ ៖",
+      "technique": "អនុគមន៍ $f(x) = \\frac{x^2 + 2x - 3}{x + 1}$ មានន័យលុះត្រាតែ $x + 1 \\neq 0 \\iff x \\neq -1$ ។\n\nដូចនេះ $D_f = \\mathbb{R} \\setminus \\{-1\\} = (-\\infty, -1) \\cup (-1, +\\infty)$ ។\n\nលីមីតចុងដែនកំណត់៖\n$$\\lim_{x \\to -1^-} f(x) = \\lim_{x \\to -1^-} \\frac{x^2 + 2x - 3}{x + 1} = +\\infty \\quad (\\text{ព្រោះ } x^2 + 2x - 3 \\to -4 < 0, \\; x + 1 \\to 0^-)$$\n$$\\lim_{x \\to -1^+} f(x) = \\lim_{x \\to -1^+} \\frac{x^2 + 2x - 3}{x + 1} = -\\infty \\quad (\\text{ព្រោះ } x + 1 \\to 0^+)$$\n$$\\lim_{x \\to \\pm\\infty} f(x) = \\lim_{x \\to \\pm\\infty} \\frac{x^2}{x} = \\pm\\infty$$\nដោយ $\\lim_{x \\to -1} f(x) = \\pm\\infty$ នោះបន្ទាត់សមីការ $x = -1$ ជាអាស៊ីមតូតឈរនៃក្រាប $(C)$ ។",
+      "extra_checkpoints": [
+        { "label": "x != -1", "value": "-1", "formula": "rational_domain" },
+        { "label": "vertical asymptote x=-1", "value": "-1", "formula": "vertical_asymptote" }
+      ]
+    },
+    {
+      "label": "2",
+      "want": "asymptote",
+      "kind": "line",
+      "expected": "x + 1",
+      "display": "(d) : y = x + 1",
+      "question_km": "២. ចូរស្រាយបញ្ជាក់ថាបន្ទាត់ $(d) : y = x + 1$ ជាអាស៊ីមតូតទ្រេតនៃក្រាប $(C)$ កាលណា $x \\to \\infty$ និងសិក្សាទីតាំងធៀបរវាងបន្ទាត់ $(d)$ ធៀបនឹងក្រាប $(C)$ ៖",
+      "technique": "យើងមាន $f(x) = \\frac{x^2 + 2x - 3}{x + 1} = \\frac{(x + 1)^2 - 4}{x + 1} = x + 1 - \\frac{4}{x + 1}$\n\nយើងបាន៖\n$$\\lim_{x \\to \\pm\\infty} [f(x) - (x + 1)] = \\lim_{x \\to \\pm\\infty} \\left(-\\frac{4}{x + 1}\\right) = 0$$\nដូចនេះបន្ទាត់ $(d) : y = x + 1$ ជាអាស៊ីមតូតទ្រេតនៃក្រាប $(C)$ កាលណា $x \\to \\pm\\infty$ ។\n\nសិក្សាទីតាំងធៀប៖\nសញ្ញានៃ $f(x) - y = -\\frac{4}{x + 1}$ ៖\n- ចំពោះ $x > -1 \\implies x + 1 > 0 \\implies f(x) - y < 0$ នាំឱ្យក្រាប $(C)$ នៅខាងក្រោមបន្ទាត់ $(d)$ ។\n- ចំពោះ $x < -1 \\implies x + 1 < 0 \\implies f(x) - y > 0$ នាំឱ្យក្រាប $(C)$ នៅខាងលើបន្ទាត់ $(d)$ ។",
+      "extra_checkpoints": [
+        { "label": "oblique asymptote y=x+1", "value": "x + 1", "formula": "oblique_asymptote" },
+        { "label": "position x>-1", "value": "-1", "formula": "curve_below_asymptote" }
+      ]
+    },
+    {
+      "label": "3",
+      "want": "derivative",
+      "kind": "expression",
+      "expected": "(x**2 + 2*x + 5)/(x + 1)**2",
+      "display": "f'(x) = \\frac{x^2 + 2x + 5}{(x + 1)^2}",
+      "question_km": "៣. ចំពោះគ្រប់ $x \\neq -1$ ចូរស្រាយបញ្ជាក់ថា $f'(x) = \\frac{x^2 + 2x + 5}{(x + 1)^2}$ ៖",
+      "technique": "ចំពោះគ្រប់ $x \\neq -1$ យើងបាន៖\n$$f'(x) = \\frac{(x^2 + 2x - 3)'(x + 1) - (x^2 + 2x - 3)(x + 1)'}{(x + 1)^2}$$\n$$= \\frac{(2x + 2)(x + 1) - (x^2 + 2x - 3)}{(x + 1)^2}$$\n$$= \\frac{2x^2 + 4x + 2 - x^2 - 2x + 3}{(x + 1)^2} = \\frac{x^2 + 2x + 5}{(x + 1)^2}$$\nដូចនេះ $f'(x) = \\frac{x^2 + 2x + 5}{(x + 1)^2}$ ពិតមែន ។",
+      "extra_checkpoints": [
+        { "label": "f'(x)", "value": "(x**2 + 2*x + 5)/(x + 1)**2", "formula": "quotient_rule" }
+      ]
+    },
+    {
+      "label": "4",
+      "want": "variation_table",
+      "kind": "variation_table",
+      "expected": "(x**2 + 2*x + 5)/(x + 1)**2",
+      "display": "f'(x) > 0, \\; f \\text{ កើនដាច់ខាតលើ } D",
+      "question_km": "៤. សិក្សាអថេរភាពនៃអនុគមន៍ $f$ រួចសង់តារាងអថេរភាពរបស់វា ៖",
+      "technique": "យើងមាន $f'(x) = \\frac{x^2 + 2x + 5}{(x + 1)^2} = \\frac{(x + 1)^2 + 4}{(x + 1)^2}$ ។\n\nដោយ $(x + 1)^2 + 4 > 0$ និង $(x + 1)^2 > 0$ គ្រប់ $x \\neq -1$ នាំឱ្យ $f'(x) > 0$ ជានិច្ច ។\n\nដូចនេះអនុគមន៍ $f$ កើនដាច់ខាតលើចន្លោះ $(-\\infty, -1)$ និង $(-1, +\\infty)$ ហើយគ្មានបរមាធៀបទេ ។",
+      "extra_checkpoints": [
+        { "label": "f'(x) > 0", "value": "(x**2 + 2*x + 5)/(x + 1)**2", "formula": "strictly_increasing" }
+      ]
+    },
+    {
+      "label": "5",
+      "want": "symmetry",
+      "kind": "expression",
+      "x0": "-1",
+      "y0": "0",
+      "expected": "0",
+      "display": "I(-1, 0) ជាផ្ចិតឆ្លុះនៃខ្សែរកោង (C)",
+      "question_km": "៥. ស្រាយបញ្ជាក់ថាចំណុច $I(-1, 0)$ ជាផ្ចិតឆ្លុះនៃខ្សែរកោង $(C)$ ៖",
+      "technique": "គេមាន $\\begin{cases} x = -1 \\\\ y = x + 1 \\end{cases}$ នោះ $y = -1 + 1 = 0$ គេបាន $I(-1, 0)$ ជាចំណុចប្រសព្វនៃអាស៊ីមតូតទាំងពីរ ។\n\nតាមរូបមន្តប្តូរតម្រុយ៖\n$$\\begin{cases} x = X + x_I = X - 1 \\\\ y = Y + y_I = Y + 0 = Y \\end{cases}$$\nដោយ $y = x + 1 - \\frac{4}{x + 1}$ នោះ៖\n$$Y = X - 1 + 1 - \\frac{4}{(X - 1) + 1}$$\nឬ $Y = F(X) = X - \\frac{4}{X}$ កំណត់គ្រប់ $X \\neq 0$ ។\n\nគេបាន $F(-X) = -X - \\frac{4}{-X} = -X + \\frac{4}{X} = -\\left(X - \\frac{4}{X}\\right) = -F(X)$ នោះ $F$ ជាអនុគមន៍សេស ។\n\nដូចនេះ $I(-1, 0)$ ជាផ្ចិតឆ្លុះនៃខ្សែរកោង $(C)$ ។",
+      "extra_checkpoints": [
+        { "label": "I(-1,0)", "value": "0", "formula": "center_of_symmetry" }
+      ]
+    },
+    {
+      "label": "6",
+      "want": "draw",
+      "kind": "draw",
+      "display": "សង់អាស៊ីមតូតឈរ $x = -1$, អាស៊ីមតូតទ្រេត $y = x + 1$ និងខ្សែរកោង $(C)$",
+      "question_km": "៦. ចូរសង់ក្រាប $(C)$ និងបន្ទាត់ $(d)$ ក្នុងតម្រុយរួមគ្នា ៖",
+      "technique": "អាស៊ីមតូតឈរ៖ $x = -1$\n\nអាស៊ីមតូតទ្រេត៖ $y = x + 1$ (កាត់តាម $(0, 1)$ និង $(-1, 0)$)\n\nផ្ចិតឆ្លុះ $I(-1, 0)$"
+    }
+  ]
+}

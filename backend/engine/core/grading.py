@@ -887,7 +887,7 @@ def _judge_variation_table(expected, user_answer, checkpoints, tol):
         pass
 
     # 2. Check for explicit table keywords
-    if _re.search(r"\b(table|tableau|តារាង)\b", user_answer, _re.I):
+    if "តារាង" in user_answer or _re.search(r"\b(table|tableau)\b", user_answer, _re.I):
         return True, "exact", None
 
     # 3. Tolerant checkpoint scan: if any derivative or critical value matches
@@ -1474,6 +1474,7 @@ def grade_part(topic, question_type, params, label, user_answer, tolerance=None)
         "expected_latex": expected_latex,
         "steps": solution["steps"],
         "graph": solution.get("graph"),
+        "variation_table": part.get("variation_table"),
         "all_complete": correct and str(solution.get("target_label")) == str(label),
     }
 

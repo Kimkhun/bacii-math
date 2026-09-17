@@ -10,18 +10,24 @@ _CATALOG_DIR = os.path.join(os.path.dirname(__file__), "data", "curated")
 
 def _load():
     pool = []
-    try:
-        files = sorted(f for f in os.listdir(_CATALOG_DIR) if f.endswith(".json"))
-    except OSError:
-        files = []
-    for fname in files:
-        try:
-            with open(os.path.join(_CATALOG_DIR, fname), encoding="utf-8") as f:
-                item = json.load(f)
-        except (OSError, json.JSONDecodeError):
-            continue
-        if isinstance(item, dict) and item.get("parts"):
-            pool.append(item)
+    if not os.path.exists(_CATALOG_DIR):
+        return pool
+    for root, _, files in os.walk(_CATALOG_DIR):
+        for fname in sorted(files):
+            if not fname.endswith(".json"):
+                continue
+            fpath = os.path.join(root, fname)
+            try:
+                with open(fpath, encoding="utf-8") as f:
+                    data = json.load(f)
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(data, dict) and data.get("parts"):
+                pool.append(data)
+            elif isinstance(data, list):
+                for item in data:
+                    if isinstance(item, dict) and item.get("parts"):
+                        pool.append(item)
     return pool
 
 

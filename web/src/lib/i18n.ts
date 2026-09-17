@@ -185,6 +185,14 @@ export interface Translations {
   label_asymptotes: string;
   label_tangent: string;
   label_points: string;
+  saved_shelf_title: string;
+  saved_see_all: string;
+  saved_empty: string;
+  saved_in_progress: string;
+  saved_completed: string;
+  saved_parts_done: string;
+  autosave_saving: string;
+  autosave_saved: string;
 
   // Tooltips & accessibility labels (title=/aria-label=)
   tip_delete_progress: string;
@@ -400,6 +408,14 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     label_asymptotes: "Asymptotes",
     label_tangent: "Tangent",
     label_points: "Points",
+    saved_shelf_title: "Continue Practicing",
+    saved_see_all: "See all",
+    saved_empty: "No saved exercises yet",
+    saved_in_progress: "In Progress",
+    saved_completed: "Completed",
+    saved_parts_done: "parts done",
+    autosave_saving: "Saving...",
+    autosave_saved: "Auto-saved",
 
     tip_delete_progress: "Delete saved progress",
     tip_save_progress: "Save progress for later",
@@ -610,6 +626,14 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     label_asymptotes: "អាស៊ីមតូត",
     label_tangent: "បន្ទាត់ប៉ះ",
     label_points: "ចំណុច",
+    saved_shelf_title: "បន្តអនុវត្តលំហាត់",
+    saved_see_all: "មើលទាំងអស់",
+    saved_empty: "មិនទាន់មានលំហាត់រក្សាទុកនៅឡើយទេ",
+    saved_in_progress: "កំពុងដំណើរការ",
+    saved_completed: "បានបញ្ចប់",
+    saved_parts_done: "ផ្នែកបានរួចរាល់",
+    autosave_saving: "កំពុងរក្សាទុក...",
+    autosave_saved: "បានរក្សាទុក",
 
     tip_delete_progress: "លុបវឌ្ឍនភាពដែលបានរក្សាទុក",
     tip_save_progress: "រក្សាទុកវឌ្ឍនភាពសម្រាប់ពេលក្រោយ",

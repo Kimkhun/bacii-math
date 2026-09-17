@@ -426,8 +426,15 @@ def _solve_part_variation(params, x, expr, part):
          "detail": f"The extremum values are \\({'; '.join(f'f({latex(c)}) = {latex(simplify(expr.subs(x, c)))}' for c in crit) or 'none'}\\).",
          "formula": "monotonicity_sign"},
     ]
-    return _part_solution(part, answer, latex(answer), display, None, steps, checkpoints,
+    res = _part_solution(part, answer, latex(answer), display, None, steps, checkpoints,
                           ctx={"der": latex(der)})
+    try:
+        vt_sol = _solve_part_variation_table(params, x, expr, part)
+        if vt_sol.get("variation_table"):
+            res["variation_table"] = vt_sol["variation_table"]
+    except Exception:
+        pass
+    return res
 
 
 def _solve_part_derivative(params, x, expr, part):

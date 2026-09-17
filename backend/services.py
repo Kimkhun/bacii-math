@@ -217,6 +217,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
         "given": result.get("given"),
         "expected": result["expected"],
         "graph": result.get("graph"),
+        "variation_table": result.get("variation_table"),
     }
     if is_multi:
         resp["parts"] = result.get("parts")
@@ -398,7 +399,9 @@ async def explain_question(db, user, question_id, user_answer=None, work_text=No
         {"step_order": s.step_order, "title": s.title, "detail": s.detail, "formula": s.formula}
         for s in rows.scalars()
     ]
-    result["graph"] = solver.solve(question.topic, question.question_type, question.spec).get("graph")
+    sol = solver.solve(question.topic, question.question_type, question.spec)
+    result["graph"] = sol.get("graph")
+    result["variation_table"] = next((p.get("variation_table") for p in sol.get("parts", []) if p.get("variation_table")), None)
     if user_answer:
         allowed = await cache.allow_gemini(str(user.id))
         step_check = None
@@ -566,16 +569,18 @@ async def _upsert_session(db, user, question_id, part=None, correct=None, typed=
 def _session_summary(session, question=None):
     state = session.state or {}
     parts = state.get("parts") or {}
-    total = 0
-    if question is not None and isinstance(question.spec.get("parts"), list):
+    total = 1
+    if question is not None and isinstance(question.spec.get("parts"), list) and len(question.spec["parts"]) > 0:
         total = len(question.spec["parts"])
+    elif len(parts) > 0:
+        total = max(1, len(parts))
     done = sum(1 for p in parts.values() if p.get("correct"))
     return {
         "id": session.id,
         "question_id": session.question_id,
         "status": session.status,
         "parts_done": done,
-        "parts_total": total,
+        "parts_total": max(1, total),
         "updated_at": session.updated_at,
     }
 

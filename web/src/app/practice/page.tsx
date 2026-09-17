@@ -8,6 +8,7 @@ import Canvas, { CanvasExportMap, CanvasHandle, CanvasTool, FULL_W, LineSnapshot
 import MathText from "@/components/MathText";
 import DisambiguationCard, { DisambiguationCandidate } from "@/components/DisambiguationCard";
 import FunctionGraph from "@/components/FunctionGraph";
+import { VariationTable } from "@/components/StructureModal";
 import LessonModal from "@/components/LessonModal";
 import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, Skill, StrokeDoc } from "@/lib/api";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
@@ -659,6 +660,25 @@ function PracticeInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Autosave configuration and tracking
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const isDirtyRef = useRef(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveDebounceMs = useMemo(() => {
+    const envVal = Number(process.env.NEXT_PUBLIC_AUTOSAVE_DEBOUNCE_MS);
+    return !isNaN(envVal) && envVal > 0 ? envVal : 5000;
+  }, []);
+  const performAutoSaveRef = useRef<(options?: { keepalive?: boolean }) => Promise<void>>(async () => {});
+
+  const triggerAutoSaveDebounce = () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      performAutoSaveRef.current();
+    }, autoSaveDebounceMs);
+  };
+
   // Multi-part probability: the exercise shows all parts together, but each
   // part has its OWN canvas; the top widget switches between them.
   const partLabels: string[] =
@@ -684,7 +704,11 @@ function PracticeInner() {
   // Per-part setters that target the current part. The setter helpers capture
   // partIndex from the render they were created in, which is the right slot:
   // check() grades part A and writes to A's slot, then advances.
-  const setTyped = (v: string) => setAt(setTypedByPart, partIndex, v);
+  const setTyped = (v: string) => {
+    setAt(setTypedByPart, partIndex, v);
+    isDirtyRef.current = true;
+    triggerAutoSaveDebounce();
+  };
   const setDetected = (v: string | null) => setAt(setDetectedByPart, partIndex, v);
   const setWorkText = (v: string | null) => setAt(setWorkTextByPart, partIndex, v);
   const setWorkLatex = (v: string[] | null) => setAt(setWorkLatexByPart, partIndex, v);
@@ -838,6 +862,9 @@ function PracticeInner() {
   };
 
   const setActivePart = (i: number) => {
+    if (isDirtyRef.current) {
+      performAutoSaveRef.current();
+    }
     setPartIndex(i);
     setExplanation(null);
     setError("");
@@ -859,10 +886,12 @@ function PracticeInner() {
       setBusy(true);
       try {
         const d = await api.attempt(attemptId);
+        const labels: string[] = (d.step_check as any)?.parts?.map((p: any) => p.label) ?? [];
+        const pi = labels.indexOf((d.step_check as any)?.parts?.[0]?.label);
+        const targetPart = pi >= 0 ? pi : 0;
         if (d.question) {
           // The attempt is for one sub-part; rebuild the parts list from the
           // persisted per-part verdicts so the switcher + per-part canvases work.
-          const labels = (d.step_check as any)?.parts?.map((p: any) => p.label) ?? [];
           setQuestion({
             id: d.question.id,
             topic: d.question.topic,
@@ -876,9 +905,8 @@ function PracticeInner() {
             formula_tags: d.question.formula_tags,
             formula_difficulty: undefined,
           });
-          const pi = labels.indexOf((d.step_check as any)?.parts?.[0]?.label);
-          initPartState(labels.length, pi >= 0 ? pi : 0);
-          setAt(setResultByPart, pi >= 0 ? pi : 0, {
+          initPartState(labels.length, targetPart);
+          setAt(setResultByPart, targetPart, {
             attempt_id: d.id,
             correct: d.correct,
             reason: d.reason,
@@ -889,13 +917,16 @@ function PracticeInner() {
         }
         if (d.work_text) {
           const lines = d.work_text.split("\n");
-          setAt(setWorkTextByPart, partIndex, d.work_text);
-          setAt(setWorkLatexByPart, partIndex, null);
-          const map = activeCanvas()?.getExportMap();
-          if (map && d.lines_boxes?.length) {
+          setAt(setWorkTextByPart, targetPart, d.work_text);
+          setAt(setWorkLatexByPart, targetPart, null);
+          const map = activeCanvas()?.getExportMap() ?? { canvasW: FULL_W, canvasH: 1500, scale: 1, offsetX: 0, offsetY: 0 };
+          if (d.lines_boxes?.length) {
             const det = { lines, lines_boxes: d.lines_boxes } as DetectResult;
             const pseudo = { correct: d.correct, step_check: d.step_check } as GradeResult;
-            setAt(setMarksByPart, partIndex, [...buildWriting(det, map), ...buildMarks(det, pseudo, map, false)]);
+            // Never render computer-generated cursive text when actual strokes or thumbnail exist!
+            const showFakeWriting = !d.strokes && !d.strokes_thumb;
+            const writingNodes = showFakeWriting ? buildWriting(det, map) : [];
+            setAt(setMarksByPart, targetPart, [...writingNodes, ...buildMarks(det, pseudo, map, false)]);
           }
         }
         if (d.explanations.length) {
@@ -907,8 +938,13 @@ function PracticeInner() {
             step_check: d.step_check ?? undefined,
           });
         }
-        if (d.strokes) setPendingStrokes([d.strokes]);
+        if (d.strokes && d.strokes.strokes && d.strokes.strokes.length > 0) {
+          setPendingStrokes([d.strokes]);
+        } else if (d.strokes_thumb) {
+          setPendingThumb(d.strokes_thumb);
+        }
         setReviewMode(true);
+        setSkipAnim(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load attempt");
       } finally {
@@ -1068,6 +1104,8 @@ function PracticeInner() {
   const markDirty = () => {
     setCanUndo(activeCanvas()?.canUndo() ?? false);
     setCanRedo(activeCanvas()?.canRedo() ?? false);
+    isDirtyRef.current = true;
+    triggerAutoSaveDebounce();
   };
 
   useEffect(() => {
@@ -1212,6 +1250,9 @@ function PracticeInner() {
   // Load a question into the live per-part state so the canvases and results
   // panel reflect a fresh exercise (or a resumed/forced one).
   const loadQuestion = (q: Question) => {
+    isDirtyRef.current = false;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    setAutoSaveStatus("idle");
     const n = Math.max(1, q.params?.parts?.length ?? 0);
     setQuestion(q);
     initPartState(n);
@@ -1602,26 +1643,120 @@ function PracticeInner() {
   const [sessions, setSessions] = useState<SessionSummary[] | null>(null);
   const [savedFlash, setSavedFlash] = useState<string | null>(null);
   const [resumeWriting, setResumeWriting] = useState<(DetectResult | null)[]>([]);
-  // Vector strokes to restore into per-part canvases once they mount (resume +
+  // Vector strokes or raster snapshot to restore into per-part canvases once they mount (resume +
   // review). Loaded in an effect so canvasRefs are populated after re-render.
   const [pendingStrokes, setPendingStrokes] = useState<(StrokeDoc | null)[] | null>(null);
+  const [pendingThumb, setPendingThumb] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!pendingStrokes) return;
-    pendingStrokes.forEach((doc, i) => {
-      const secIdx = sections.length > 0 ? sections.findIndex((s) => s.partIndices.includes(i)) : i;
-      const target = secIdx >= 0 ? secIdx : i;
-      const c = canvasRefs.current[target];
-      if (c && doc) c.loadStrokes(doc);
-    });
-    setPendingStrokes(null);
-  }, [pendingStrokes, sections]);
+    if (!pendingStrokes && !pendingThumb) return;
+    const target = activeSectionIndex >= 0 ? activeSectionIndex : 0;
+    const c = canvasRefs.current[target];
+    if (!c) return;
+    if (pendingStrokes) {
+      pendingStrokes.forEach((doc, i) => {
+        const secIdx = sections.length > 0 ? sections.findIndex((s) => s.partIndices.includes(i)) : i;
+        const t = secIdx >= 0 ? secIdx : i;
+        const ref = canvasRefs.current[t];
+        if (ref && doc) ref.loadStrokes(doc);
+      });
+      setPendingStrokes(null);
+    }
+    if (pendingThumb) {
+      c.loadBackgroundInk(pendingThumb);
+      setPendingThumb(null);
+    }
+  }, [pendingStrokes, pendingThumb, sections, activeSectionIndex, question]);
 
   useEffect(() => {
     if (!reviewMode && !question) {
       api.myProgress().then(setSessions).catch(() => {});
     }
   }, [reviewMode, question]);
+
+  const performAutoSave = async (options: { keepalive?: boolean } = {}) => {
+    if (!question || !isDirtyRef.current || reviewMode) return;
+    try {
+      setAutoSaveStatus("saving");
+      const strokes = activeCanvas()?.getStrokes() ?? null;
+      const strokesThumb = activeCanvas()?.getStrokesThumb() ?? null;
+      const strokesToSend =
+        strokes && JSON.stringify(strokes).length <= 500_000 ? strokes : null;
+      const curTyped = (typedByPart[partIndex] ?? "").trim();
+      const curWorkText = workTextByPart[partIndex] ?? null;
+      const curBoxes = detectResultByPart[partIndex]?.lines_boxes ?? null;
+
+      // Fail-safe immediate local backup
+      try {
+        localStorage.setItem(
+          `bacii_autosave_${question.id}`,
+          JSON.stringify({
+            questionId: question.id,
+            partIndex,
+            currentPart,
+            typed: curTyped,
+            strokes: strokesToSend,
+            timestamp: Date.now(),
+          })
+        );
+      } catch {
+        /* ignore localStorage quota */
+      }
+
+      await api.saveProgress(
+        question.id,
+        currentPart ?? undefined,
+        curTyped || undefined,
+        curWorkText ?? undefined,
+        curBoxes ?? undefined,
+        strokesToSend,
+        strokesThumb,
+        options.keepalive
+      );
+
+      isDirtyRef.current = false;
+      setAutoSaveStatus("saved");
+      api.myProgress().then(setSessions).catch(() => {});
+      setTimeout(() => {
+        setAutoSaveStatus((prev) => (prev === "saved" ? "idle" : prev));
+      }, 3000);
+    } catch (err) {
+      console.warn("Autosave notification:", err);
+      setAutoSaveStatus("idle");
+    }
+  };
+
+  useEffect(() => {
+    performAutoSaveRef.current = performAutoSave;
+  });
+
+  // Handle all auto-save scenarios: page leave, tab switch, window blur, beforeunload, pagehide
+  useEffect(() => {
+    const handleSave = () => {
+      if (isDirtyRef.current) {
+        performAutoSaveRef.current({ keepalive: true });
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden" && isDirtyRef.current) {
+        performAutoSaveRef.current({ keepalive: true });
+      }
+    };
+
+    window.addEventListener("beforeunload", handleSave);
+    window.addEventListener("pagehide", handleSave);
+    window.addEventListener("blur", handleSave);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleSave);
+      window.removeEventListener("pagehide", handleSave);
+      window.removeEventListener("blur", handleSave);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, []);
 
   const saveProgressNow = async () => {
     if (!question) {
@@ -1655,6 +1790,9 @@ function PracticeInner() {
         ty || undefined, wt ?? undefined, boxes ?? undefined,
         strokesToSend, strokesThumb,
       );
+      isDirtyRef.current = false;
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      setAutoSaveStatus("saved");
       setSavedFlash(`Saved (${summary.parts_done}/${summary.parts_total} parts)`);
       setTimeout(() => setSavedFlash(null), 3000);
       api.myProgress().then(setSessions).catch(() => {});
@@ -1676,6 +1814,9 @@ function PracticeInner() {
 
   const loadSession = async (id: string) => {
     setBusy(true);
+    isDirtyRef.current = false;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    setAutoSaveStatus("idle");
     try {
       const d = await api.progress(id);
       const labels = Object.keys(d.parts);
@@ -1727,6 +1868,14 @@ function PracticeInner() {
       setBusy(false);
     }
   };
+
+  // Support direct resume via URL /practice?session=<id>
+  useEffect(() => {
+    const sessionId = searchParams.get("session");
+    if (!sessionId) return;
+    loadSession(sessionId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const showExplanation = async () => {
     if (!question) return;
@@ -1834,7 +1983,7 @@ function PracticeInner() {
           </div>
         )}
         <style>{MARKS_STYLE}</style>
-        {skipAnim && <style>{SKIP_ANIM_STYLE}</style>}
+        {(skipAnim || reviewMode) && <style>{SKIP_ANIM_STYLE}</style>}
 
         {sections.length > 0 ? (
           sections.map((sec, sIdx) => {
@@ -2050,61 +2199,66 @@ function PracticeInner() {
                 🔥 {streak}
               </span>
             )}
-            {savedFlash && (
-              <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
-                {savedFlash}
-              </span>
-            )}
-            {sessions && sessions.length > 0 && !reviewMode && (
-              <details className="relative">
-                <summary className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
-                  {t("btn_saved")} ({sessions.length})
-                </summary>
-                <div className="absolute right-0 top-full mt-1.5 w-72 max-w-[calc(100vw-1.5rem)] max-h-64 overflow-y-auto bg-white border border-[#e4e2db] rounded-lg shadow-lg p-2 space-y-1.5 z-40">
-                  {sessions.map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex items-center justify-between gap-2 rounded-md border border-[#e4e2db] bg-[#faf9f6] p-2"
-                    >
-                      <div className="min-w-0">
-                        <div className="text-xs font-medium text-[#23272e] truncate">
-                          {(s.question?.prompt ?? "").split("\n")[0]}
-                        </div>
-                        <div className="text-[11px] text-[#8a857b]">
-                          {QUESTION_TYPE_LABELS[s.question?.question_type ?? ""]?.[lang] ?? s.question?.question_type.replace("_", " ")} · {s.parts_done}/{s.parts_total}
-                          {s.status === "completed" ? " · done" : ""}
-                        </div>
-                      </div>
-                      <div className="flex gap-1 shrink-0">
-                        <button
-                          onClick={() => loadSession(s.id)}
-                          disabled={busy}
-                          className="px-2.5 py-1 rounded-md bg-[#23272e] text-white text-xs font-medium hover:bg-[#31363f]"
-                        >
-                          {t("action_resume")}
-                        </button>
-                        <button
-                          onClick={() => deleteSession(s.id)}
-                          disabled={busy}
-                          className="px-2 py-1 rounded-md border border-[#dddad1] text-xs text-[#8a857b] hover:bg-white"
-                          title={t("tip_delete_progress")}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+            {/* Google Docs-style save status */}
+            {question && !reviewMode && (
+              autoSaveStatus === "saving" ? (
+                <div
+                  title={lang === "km" ? "កំពុងរក្សាទុក..." : "Saving..."}
+                  className="flex items-center gap-1.5 px-2 py-1 text-xs text-slate-500 select-none whitespace-nowrap"
+                >
+                  <svg
+                    className="w-3.5 h-3.5 animate-spin text-slate-400 shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  <span className="hidden sm:inline">
+                    {lang === "km" ? "កំពុងរក្សាទុក..." : "Saving..."}
+                  </span>
                 </div>
-              </details>
+              ) : (
+                <Link
+                  href="/saved"
+                  title={
+                    lang === "km"
+                      ? "បានរក្សាទុក (ចុចដើម្បីមើលលំហាត់ដែលបានរក្សាទុក)"
+                      : "All changes saved (click to view saved exercises)"
+                  }
+                  className="flex items-center gap-1.5 px-2 py-1 text-xs text-slate-400 hover:text-slate-600 transition-colors select-none whitespace-nowrap"
+                >
+                  <svg
+                    className="w-3.5 h-3.5 text-slate-400 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"
+                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m9 13 2 2 4-4" />
+                  </svg>
+                  <span className="hidden sm:inline">
+                    {lang === "km" ? "បានរក្សាទុក" : "Saved"}
+                  </span>
+                </Link>
+              )
             )}
-            <button
-              onClick={saveProgressNow}
-              disabled={busy || !question}
-              className="px-[13px] py-2 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-50"
-              title={t("tip_save_progress")}
-            >
-              {t("action_save")}
-            </button>
             <button
               onClick={newQuestion}
               disabled={busy}
@@ -2322,6 +2476,11 @@ function PracticeInner() {
                     </Link>
                   );
                 })()}
+              {result.variation_table && (
+                <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                  <VariationTable vt={result.variation_table} />
+                </div>
+              )}
               {result.graph && (
                 <div className="mt-3 border-t border-[#e4e2db] pt-2">
                   <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
@@ -2455,6 +2614,11 @@ function PracticeInner() {
                     <div className="mt-3 border-t border-[#e4e2db] pt-2">
                       <div className="text-xs font-medium text-[#8a857b] uppercase">{t("label_work_check")}</div>
                       <MathText text={explanation.work_check.content} className="mt-1 whitespace-pre-wrap" />
+                    </div>
+                  )}
+                  {explanation.variation_table && (
+                    <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                      <VariationTable vt={explanation.variation_table} />
                     </div>
                   )}
                   {explanation.graph && (
