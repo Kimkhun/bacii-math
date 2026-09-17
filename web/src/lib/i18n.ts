@@ -657,6 +657,10 @@ export const QUESTION_TYPE_LABELS: Record<string, { en: string; km: string }> = 
   conjugate: { en: "Conjugate", km: "ចំនួនកុំផ្លិចឆ្លាស់" },
   real_part: { en: "Real part", km: "ផ្នែកពិត" },
   imaginary_part: { en: "Imaginary part", km: "ផ្នែកនិម្មិត" },
+  complex_arithmetic: { en: "Complex arithmetic", km: "ប្រមាណវិធីលើចំនួនកុំផ្លិច" },
+  complex_power: { en: "Powers of z", km: "ស្វ័យគុណនៃ z" },
+  de_moivre_power: { en: "De Moivre's formula", km: "រូបមន្តដឺម័រ" },
+  nth_roots: { en: "n-th roots", km: "ឫសទី n" },
 
   // Limits
   "limit:direct_substitution": { en: "Direct substitution", km: "ជំនួសផ្ទាល់" },
@@ -670,6 +674,10 @@ export const QUESTION_TYPE_LABELS: Record<string, { en: string; km: string }> = 
   "limit:rational_function_infinity": { en: "Rational function at infinity", km: "អនុគមន៍សនិទាននៅអនន្ត" },
   "limit:conjugate_infinity": { en: "Conjugate at infinity", km: "កន្សោមឆ្លាស់នៅអនន្ត" },
   "limit:log_limit_infinity": { en: "Logarithmic limit at infinity", km: "លីមីតលោការីតនៅអនន្ត" },
+  "limit:trig_identity_0_0": { en: "Trig identity (0/0)", km: "សមភាពត្រីកោណមាត្រ (0/0)" },
+  "limit:angle_addition_0_0": { en: "Angle-addition identity (0/0)", km: "រូបមន្តផលបូកមុំ (0/0)" },
+  "limit:log_limit_zero": { en: "Logarithmic limit at 0", km: "លីមីតលោការីតនៅ 0" },
+  "limit:indeterminate_one_infinity": { en: "Indeterminate form 1^∞", km: "រាងមិនកំណត់ 1^∞" },
 
   // Integrals
   definite_integral: { en: "Definite integral (any)", km: "អាំងតេក្រាលកំណត់ (ទាំងអស់)" },
@@ -699,7 +707,16 @@ export const QUESTION_TYPE_LABELS: Record<string, { en: string; km: string }> = 
   // Other topics
   study: { en: "Curve study & area", km: "សិក្សាខ្សែរាងកោង និងផ្ទៃ" },
   check_continuity: { en: "Check continuity / find parameter", km: "សិក្សាភាពជាប់ / រកប៉ារ៉ាម៉ែត្រ" },
-  compute_derivative: { en: "Compute derivative", km: "គណនាដេរីវេ" },
+  compute_derivative: { en: "Compute derivative (any)", km: "គណនាដេរីវេ (ទាំងអស់)" },
+  "compute_derivative:polynomial": { en: "Power rule, term by term", km: "ដេរីវេពហុធា" },
+  "compute_derivative:chain": { en: "Chain rule on a power", km: "ដេរីវេអនុគមន៍បណ្តាក់ (ស្វ័យគុណ)" },
+  "compute_derivative:product": { en: "Product rule", km: "ដេរីវេផលគុណ" },
+  "compute_derivative:quotient": { en: "Quotient rule", km: "ដេរីវេផលចែក" },
+  "compute_derivative:radical": { en: "Chain rule through a square root", km: "ដេរីវេឫសការេ" },
+  "compute_derivative:trigonometric": { en: "Trigonometric derivatives", km: "ដេរីវេអនុគមន៍ត្រីកោណមាត្រ" },
+  "compute_derivative:exponential": { en: "Exponential derivatives", km: "ដេរីវេអនុគមន៍អិចស្បូណង់ស្យែល" },
+  "compute_derivative:logarithm": { en: "Logarithmic derivatives", km: "ដេរីវេអនុគមន៍លោការីត" },
+  "compute_derivative:second_order": { en: "Second derivative", km: "ដេរីវេទីពីរ" },
   solve_ode: { en: "Solve differential equation", km: "ដោះស្រាយសមីការឌីផេរ៉ង់ស្យែល" },
   vector_ops: { en: "Vector operations", km: "ប្រមាណវិធីលើវិចទ័រ" },
   classify_conic: { en: "Classify conic / find feature", km: "កំណត់ប្រភេទកោនិក / រកលក្ខណៈ" },

@@ -187,6 +187,10 @@ const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: "conjugate", label: "Conjugate" },
     { value: "real_part", label: "Real part" },
     { value: "imaginary_part", label: "Imaginary part" },
+    { value: "complex_arithmetic", label: "Complex arithmetic" },
+    { value: "complex_power", label: "Powers of z" },
+    { value: "de_moivre_power", label: "De Moivre's formula" },
+    { value: "nth_roots", label: "n-th roots" },
   ],
   limit: [
     { value: "limit:direct_substitution", label: "Direct substitution" },
@@ -200,6 +204,10 @@ const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: "limit:rational_function_infinity", label: "Rational function at infinity" },
     { value: "limit:conjugate_infinity", label: "Conjugate at infinity" },
     { value: "limit:log_limit_infinity", label: "Logarithmic limit at infinity" },
+    { value: "limit:trig_identity_0_0", label: "Trig identity (0/0)" },
+    { value: "limit:angle_addition_0_0", label: "Angle-addition identity (0/0)" },
+    { value: "limit:log_limit_zero", label: "Logarithmic limit at 0" },
+    { value: "limit:indeterminate_one_infinity", label: "Indeterminate form 1^∞" },
   ],
   integral: [
     { value: "definite_integral", label: "Definite integral (any)" },

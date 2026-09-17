@@ -186,6 +186,14 @@ def _build_curated_limit(item, difficulty):
 def _generate_limit(rng, difficulty, variant=None):
     if variant and variant in _LIMIT_SAMPLERS:
         return generate_limit_for_technique(rng, variant, difficulty)
+    if variant in LIMIT_TECHNIQUES:
+        # Curated-only technique: replay one of its real BAC II exercises,
+        # labelled at the exercise's own difficulty when none match the request.
+        pool = [t for t in _LIMIT_CURATED_TEMPLATES if t["formula_name"] == variant]
+        at_level = [t for t in pool if t["difficulty"] == difficulty]
+        if pool:
+            item = rng.choice(at_level or pool)
+            return _build_curated_limit(item, difficulty if at_level else item["difficulty"])
 
     curated_pool = [t for t in _LIMIT_CURATED_TEMPLATES if t["difficulty"] == difficulty]
     if curated_pool and rng.random() < 0.5:
