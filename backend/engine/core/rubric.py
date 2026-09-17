@@ -337,6 +337,19 @@ def _shows_work(work, final_values, given, var_sym, angle=False):
         if syms and var_sym not in syms:
             continue
         finals = [v for v in final_values if is_simple_value(v) and not isinstance(v, (list, tuple))]
+        # A line opening with "=" continues the previous line's chain — OCR
+        # puts each "= ..." of a multi-line derivation on its own line, so the
+        # count("=") rule above never sees the chain. Such a line is work even
+        # when it's an algebraic rewrite equal to the given (dividing top and
+        # bottom by x), as long as it isn't the given copied verbatim or the
+        # final answer itself.
+        if text.lstrip().startswith("="):
+            try:
+                verbatim_given = given is not None and value == given
+            except Exception:
+                verbatim_given = False
+            if not verbatim_given and not any(_scalar_matches(value, v, 1e-9) for v in finals):
+                return True
         others = finals + ([given] if given is not None and is_simple_value(given) else [])
         if any(_scalar_matches(value, v, 1e-9) for v in others):
             continue
