@@ -316,6 +316,14 @@ export interface SavedPartState {
   correct?: boolean;
 }
 
+export interface HintResponse {
+  hint: string;
+  provider: string;
+  part?: string;
+  status?: string;
+  error_line?: number;
+}
+
 export interface SessionSummary {
   id: string;
   question_id: string;
@@ -760,6 +768,8 @@ export const api = {
     }),
   explain: (question_id: string, user_answer?: string, work_text?: string, lang?: string) =>
     request<Explanation>("/problems/explain", { method: "POST", body: { question_id, user_answer, work_text, lang } }),
+  hint: (question_id: string, part?: string, work_text?: string, user_answer?: string, lang?: string) =>
+    request<HintResponse>("/problems/hint", { method: "POST", body: { question_id, part, work_text, user_answer, lang } }),
   saveProgress: (
     question_id: string,
     part?: string,

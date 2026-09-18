@@ -17,6 +17,7 @@ from sympy import latex
 import cache
 from engine import explainer, formulas, generator, grader, llm, solver
 from engine.core import coaching, lessons, mastery, skills, template_shapes
+from engine import hints
 from engine.core.rubric import score_work
 from engine.topics.past_exam.rubric import mark_full_exam
 from engine.topics.functions import graph_grader
@@ -423,6 +424,29 @@ async def explain_question(db, user, question_id, user_answer=None, work_text=No
                 result["work_check"] = {"content": check, "provider": provider}
     await db.commit()
     return result
+
+
+async def hint_question(
+    db: AsyncSession,
+    user: User,
+    question_id: uuid.UUID,
+    part: str | None = None,
+    work_text: str | None = None,
+    lang: str = "km",
+) -> dict:
+    question = await db.get(Question, question_id)
+    if question is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
+    return await hints.generate_hint(
+        topic=question.topic,
+        question_type=question.question_type,
+        spec=question.spec or {},
+        question_prompt=question.prompt,
+        part=part,
+        work_text=work_text,
+        lang=lang,
+        user_id=user.id if user else None,
+    )
 
 
 async def get_question(db, question_id) -> dict:

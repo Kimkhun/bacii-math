@@ -123,6 +123,8 @@ def _load_limit_curated():
                 "difficulty": difficulty,
                 "var": "x",
                 "expr": expr,
+                "expr_latex": expr_latex,
+                "prompt_latex": ex.get("prompt_latex", ""),
                 "point": point,
                 "answer_latex": ex["answer_latex"],
                 "technique": ex["technique"],

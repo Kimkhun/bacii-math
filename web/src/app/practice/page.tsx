@@ -10,7 +10,7 @@ import DisambiguationCard, { DisambiguationCandidate } from "@/components/Disamb
 import FunctionGraph from "@/components/FunctionGraph";
 import { VariationTable } from "@/components/StructureModal";
 import LessonModal from "@/components/LessonModal";
-import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, Skill, StrokeDoc } from "@/lib/api";
+import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, HintResponse, Skill, StrokeDoc } from "@/lib/api";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
 import { drawingAudio } from "@/lib/audioEngine";
 import { useLanguage } from "@/context/LanguageContext";
@@ -631,10 +631,13 @@ function PracticeInner() {
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [graphGrade, setGraphGrade] = useState<GraphGradeResult | null>(null);
   const [hintLevel, setHintLevel] = useState(0);
+  const [teacherHint, setTeacherHint] = useState<HintResponse | null>(null);
   const [ambiguityQueue, setAmbiguityQueue] = useState<AmbiguousLine[] | null>(null);
   const [ambiguityResolved, setAmbiguityResolved] = useState<Record<number, DisambiguationCandidate>>({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [hintLoading, setHintLoading] = useState(false);
   const [skipAnim, setSkipAnim] = useState(false);
   const soundTimeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [debug, setDebug] = useState(false);
@@ -855,6 +858,7 @@ function PracticeInner() {
     setMarksByPart(Array(m).fill(null));
     setLinePopsByPart(Array(m).fill(null));
     setExplanation(null);
+    setTeacherHint(null);
     setHintLevel(0);
     setAmbiguityQueue(null);
     setAmbiguityResolved({});
@@ -867,6 +871,7 @@ function PracticeInner() {
     }
     setPartIndex(i);
     setExplanation(null);
+    setTeacherHint(null);
     setError("");
     const secIdx = sections.findIndex((s) => s.partIndices.includes(i));
     const targetSec = secIdx >= 0 ? secIdx : 0;
@@ -1297,7 +1302,7 @@ function PracticeInner() {
 
   const newQuestion = async () => {
     setError("");
-    setBusy(true);
+    setIsGenerating(true);
     setPracticingFormula(null);
     setPracticingSkill(null);
     try {
@@ -1307,7 +1312,7 @@ function PracticeInner() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate");
     } finally {
-      setBusy(false);
+      setIsGenerating(false);
     }
   };
 
@@ -1890,15 +1895,42 @@ function PracticeInner() {
     }
   };
 
-  // Hint: reveals one more solution step per click instead of the whole
-  // explanation at once. Fetches the explanation lazily on first click.
+  // Hint: contextual teacher hint based on student's current canvas/typed work.
   const showHint = async () => {
-    if (!explanation) {
-      await showExplanation();
-      setHintLevel(1);
-      return;
+    if (!question) return;
+    setHintLoading(true);
+    setError("");
+    try {
+      let wt = workText;
+      if (!wt && !typed.trim()) {
+        const ink = activeCanvas()?.getImageBase64();
+        if (ink) {
+          try {
+            const det = await api.detect(ink);
+            setDetectResult(det);
+            if (det.lines?.length) {
+              wt = det.lines.join("\n");
+              setWorkText(wt);
+            }
+          } catch {
+            // best-effort ink detect
+          }
+        }
+      }
+      const res = await api.hint(
+        question.id,
+        currentPart ?? undefined,
+        wt ?? undefined,
+        typed.trim() || undefined,
+        lang
+      );
+      setTeacherHint(res);
+      setHintLevel((n) => n + 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Hint failed");
+    } finally {
+      setHintLoading(false);
     }
-    setHintLevel((n) => Math.min(n + 1, explanation.steps?.length ?? n + 1));
   };
 
   const replayReview = async () => {
@@ -2261,11 +2293,11 @@ function PracticeInner() {
             )}
             <button
               onClick={newQuestion}
-              disabled={busy}
+              disabled={isGenerating || busy || hintLoading}
               className="px-[15px] py-2 stylus:px-5 stylus:py-3 rounded-[7px] bg-[#23272e] text-white text-[12.5px] font-semibold hover:bg-[#31363f] disabled:opacity-50"
               title={t("tip_new_question")}
             >
-              {busy ? t("btn_generating") : t("btn_new_question")}
+              {isGenerating ? t("btn_generating") : t("btn_new_question")}
             </button>
           </div>
         </div>
@@ -2316,6 +2348,32 @@ function PracticeInner() {
 
         {/* Right-side results / explanation panel */}
         <div className="fixed right-3 bottom-24 z-10 w-[calc(100vw-1.5rem)] sm:w-96 max-h-[55vh] overflow-y-auto pointer-events-auto space-y-3">
+          {teacherHint && (
+            <div className="rounded-xl p-3.5 border border-amber-300 bg-amber-50/95 backdrop-blur shadow-lg animate-in fade-in duration-200">
+              <div className="flex items-center justify-between mb-1.5 pb-1.5 border-b border-amber-200/80">
+                <div className="flex items-center gap-1.5 font-bold text-amber-900 text-xs">
+                  <span className="text-base">👨‍🏫</span>
+                  <span>{lang === "km" ? "ជំនួយពីគ្រូ (Teacher Hint)" : "Teacher Hint"}</span>
+                  {teacherHint.error_line && (
+                    <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-semibold">
+                      {lang === "km" ? `កំហុសនៅបន្ទាត់ទី ${teacherHint.error_line}` : `Line ${teacherHint.error_line} error`}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setTeacherHint(null)}
+                  className="text-amber-700 hover:text-amber-950 text-xs font-bold px-1.5 py-0.5 rounded hover:bg-amber-200/60 transition-colors"
+                  title={lang === "km" ? "បិទ" : "Close"}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="text-xs text-amber-950 font-medium leading-relaxed">
+                <MathText text={teacherHint.hint} />
+              </div>
+            </div>
+          )}
+
           {result && (
             <div
               className={`rounded-lg p-3 border shadow-md ${
@@ -2332,10 +2390,10 @@ function PracticeInner() {
               {exerciseDone && (
                 <button
                   onClick={newQuestion}
-                  disabled={busy}
+                  disabled={isGenerating || busy || hintLoading}
                   className="mt-2 w-full px-3 py-2 rounded-lg bg-[#23272e] text-white text-xs font-semibold hover:bg-[#31363f] disabled:opacity-50"
                 >
-                  {busy ? t("btn_generating") : t("action_next_question")}
+                  {isGenerating ? t("btn_generating") : t("action_next_question")}
                 </button>
               )}
               {sections.length > 0 ? (
@@ -2849,10 +2907,22 @@ function PracticeInner() {
             </button>
             <button
               onClick={showHint}
-              disabled={busy || !question}
-              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
+              disabled={busy || hintLoading || isGenerating || !question}
+              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40 flex items-center gap-1.5"
             >
-              {explanation?.steps?.length && hintLevel >= explanation.steps.length ? t("tool_all_hints") : t("tool_hint")}
+              {hintLoading && (
+                <svg className="w-3.5 h-3.5 animate-spin text-[#6b6558]" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              )}
+              <span>
+                {hintLoading
+                  ? (lang === "km" ? "កំពុងទាញយក..." : "Loading hint...")
+                  : explanation?.steps?.length && hintLevel >= explanation.steps.length
+                  ? t("tool_all_hints")
+                  : t("tool_hint")}
+              </span>
             </button>
             <button
               onClick={uploadImage}

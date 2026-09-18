@@ -7,7 +7,7 @@ import services
 from core.deps import get_current_admin_user, get_current_user, get_db
 from models import User
 from schemas import (
-    ExamSubmitRequest, ExplainRequest, GenerateRequest, GradeGraphRequest, GradeRequest, ReplayRequest,
+    ExamSubmitRequest, ExplainRequest, GenerateRequest, GradeGraphRequest, GradeRequest, HintRequest, ReplayRequest,
     SandboxGradeRequest, SandboxSolveRequest, SaveProgressRequest,
 )
 
@@ -74,6 +74,17 @@ async def explain(
     db: AsyncSession = Depends(get_db),
 ):
     return await services.explain_question(db, user, req.question_id, req.user_answer, req.work_text, lang=req.lang)
+
+
+@router.post("/hint")
+async def hint(
+    req: HintRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await services.hint_question(
+        db, user, req.question_id, part=req.part, work_text=req.work_text, lang=req.lang
+    )
 
 
 @router.post("/progress/save")

@@ -175,7 +175,8 @@ def _build_curated_limit(item, difficulty):
     point_display = pretty_point(point_str)
     point_latex_str = r"+\infty" if point is oo else r"-\infty" if point is -oo else latex(point)
     prompt = f"Find lim({var} → {point_display}) of {pretty_expr(str(expr))}."
-    prompt_latex = rf"\text{{Find }} \lim_{{{var} \to {point_latex_str}}} {latex(expr)}"
+    expr_l = item.get("expr_latex") or latex(expr)
+    prompt_latex = rf"\text{{Find }} \lim_{{{var} \to {point_latex_str}}} {expr_l}"
     display = f"lim_{{{var} \\to {point_display}}} {expr}"
 
     problem = _build_expr_problem("limit", "limit", params, difficulty, prompt, prompt_latex, display)

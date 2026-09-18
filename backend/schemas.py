@@ -86,6 +86,14 @@ class ExplainRequest(BaseModel):
     lang: str = "en"
 
 
+class HintRequest(BaseModel):
+    question_id: uuid.UUID
+    part: str | None = None
+    user_answer: str | None = None
+    work_text: str | None = None
+    lang: str = "km"
+
+
 class ReplayRequest(BaseModel):
     question_id: uuid.UUID
 
