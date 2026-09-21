@@ -1,0 +1,345 @@
+{
+  "topic": "limits",
+  "category": "logarithmic",
+  "title_km": "លីមីតអនុគមន៍លោការីតនេពែ",
+  "title_en": "Logarithmic Limits",
+  "count": 42,
+  "exercises": [
+    {
+      "id": "log_01",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} (x^2 + x + \\ln x)",
+      "answer_latex": "+\\infty",
+      "technique_km": "ផលបូកនៃតួខិតទៅរក +\\infty ស្មើ +\\infty",
+      "technique_en": "Sum of diverging positive terms approaches +infinity"
+    },
+    {
+      "id": "log_02",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} (x^2 + 2x - x\\ln x)",
+      "answer_latex": "+\\infty",
+      "technique_km": "ទាញ x^2 ជាកត្តា x^2(1 + 2/x - \\ln x / x) \\to +\\infty \\times 1 = +\\infty",
+      "technique_en": "Factor out x^2: x^2(1 + 2/x - ln(x)/x) -> +infinity * 1 = +infinity"
+    },
+    {
+      "id": "log_03",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} (3\\ln x - 4x^2 + x)",
+      "answer_latex": "-\\infty",
+      "technique_km": "ទាញ x^2 ជាកត្តា x^2(3\\ln x / x^2 - 4 + 1/x) \\to +\\infty \\times (-4) = -\\infty",
+      "technique_en": "Factor out x^2: x^2(3ln(x)/x^2 - 4 + 1/x) -> +infinity * (-4) = -infinity"
+    },
+    {
+      "id": "log_04",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} (\\ln^2 x - x\\ln x)",
+      "answer_latex": "-\\infty",
+      "technique_km": "ទាញ x\\ln x ជាកត្តា x\\ln x(\\ln x / x - 1) \\to +\\infty \\times (-1) = -\\infty",
+      "technique_en": "Factor out x ln(x): x ln(x)(ln(x)/x - 1) -> +infinity * (-1) = -infinity"
+    },
+    {
+      "id": "log_05",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{2020 - 2019\\ln x}{x}",
+      "answer_latex": "0",
+      "technique_km": "បំបែក 2020/x - 2019(\\ln x / x) \\to 0 - 2019(0) = 0",
+      "technique_en": "Split into 2020/x - 2019*ln(x)/x -> 0 - 0 = 0"
+    },
+    {
+      "id": "log_06",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} (2x^2\\ln x - 3x^3 + 5x)",
+      "answer_latex": "-\\infty",
+      "technique_km": "ទាញ x^3 ជាកត្តា x^3(2\\ln x / x - 3 + 5/x^2) \\to +\\infty \\times (-3) = -\\infty",
+      "technique_en": "Factor out x^3: x^3(2ln(x)/x - 3 + 5/x^2) -> +infinity * (-3) = -infinity"
+    },
+    {
+      "id": "log_07",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{x^2 - x\\ln x + 5}{x^2}",
+      "answer_latex": "1",
+      "technique_km": "ចែកនឹង x^2 បាន 1 - \\ln x / x + 5/x^2 \\to 1 - 0 + 0 = 1",
+      "technique_en": "Divide by x^2 gives 1 - ln(x)/x + 5/x^2 -> 1"
+    },
+    {
+      "id": "log_08",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{3\\ln x + x^2 - 2}{-x^2}",
+      "answer_latex": "-1",
+      "technique_km": "ចែកនឹង x^2 ភាគយកបាន 0 + 1 - 0 = 1, ភាគបែង -1, ផលធៀបស្មើ -1",
+      "technique_en": "Divide by x^2: (0 + 1 - 0)/(-1) = -1"
+    },
+    {
+      "id": "log_09",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{x^2 + x - \\ln x}{2x^2 - 3x}",
+      "answer_latex": "\\frac{1}{2}",
+      "technique_km": "ចែកភាគយកនិងភាគបែងនឹង x^2 ផលធៀបតួដឺក្រេខ្ពស់ស្មើ 1/2",
+      "technique_en": "Divide by x^2, dominant term ratio is 1/2"
+    },
+    {
+      "id": "log_10",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{2x^2 - x\\ln x}{x^2 - x + \\ln x}",
+      "answer_latex": "2",
+      "technique_km": "ចែកនឹង x^2 ភាគយកបាន 2 - 0 = 2, ភាគបែង 1 - 0 + 0 = 1, ផលធៀបស្មើ 2",
+      "technique_en": "Divide by x^2: (2 - 0)/(1 - 0 + 0) = 2"
+    },
+    {
+      "id": "log_11",
+      "shape": "L2",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\ln\\left(\\frac{x + 1}{x - 1}\\right)",
+      "answer_latex": "0",
+      "technique_km": "កាលណា x \\to +\\infty នោះ (x+1)/(x-1) \\to 1 នាំឱ្យ \\ln(1) = 0",
+      "technique_en": "Fraction approaches 1, ln(1) = 0"
+    },
+    {
+      "id": "log_12",
+      "shape": "L2",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\ln\\left(\\frac{2x - 4}{x + 3}\\right)",
+      "answer_latex": "\\ln 2",
+      "technique_km": "កាលណា x \\to +\\infty នោះ (2x-4)/(x+3) \\to 2 នាំឱ្យលីមីតស្មើ \\ln 2",
+      "technique_en": "Fraction approaches 2, limit is ln(2)"
+    },
+    {
+      "id": "log_13",
+      "shape": "L2",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\ln\\left(\\frac{ex^2 - 3x}{x^2 + \\ln x}\\right)",
+      "answer_latex": "1",
+      "technique_km": "កាលណា x \\to +\\infty នោះ ផលធៀបតួដឺក្រេខ្ពស់ស្មើ e នាំឱ្យ \\ln(e) = 1",
+      "technique_en": "Fraction approaches e, ln(e) = 1"
+    },
+    {
+      "id": "log_14",
+      "shape": "L2",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\ln\\left(\\frac{3x^2 - 4x\\ln x + 5}{2x^2}\\right)",
+      "answer_latex": "\\ln\\left(\\frac{3}{2}\\right)",
+      "technique_km": "កាលណា x \\to +\\infty នោះ ផលធៀបស្មើ 3/2 នាំឱ្យលីមីតស្មើ \\ln(3/2)",
+      "technique_en": "Fraction approaches 3/2, limit is ln(3/2)"
+    },
+    {
+      "id": "log_15",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\left(\\frac{x^2}{2} + x - x\\ln x\\right)",
+      "answer_latex": "+\\infty",
+      "technique_km": "ទាញ x^2 ជាកត្តា x^2(1/2 + 1/x - \\ln x / x) \\to +\\infty \\times 1/2 = +\\infty",
+      "technique_en": "Factor out x^2: x^2(1/2 + 1/x - ln(x)/x) -> +infinity"
+    },
+    {
+      "id": "log_16",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to 0^+} \\left(\\frac{x^2}{2} + x - x\\ln x\\right)",
+      "answer_latex": "0",
+      "technique_km": "កាលណា x \\to 0^+ នោះ x^2/2 \\to 0, x \\to 0 ហើយ x\\ln x \\to 0 នាំឱ្យលីមីតស្មើ 0",
+      "technique_en": "As x -> 0+, each term approaches 0 (using standard limit x ln x -> 0)"
+    },
+    {
+      "id": "log_17",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\left(x + 5 - \\frac{x + \\ln x}{x}\\right)",
+      "answer_latex": "+\\infty",
+      "technique_km": "កាលណា x \\to +\\infty នោះ x + 5 \\to +\\infty និង (x+\\ln x)/x \\to 1 នាំឱ្យស្មើ +\\infty",
+      "technique_en": "x + 5 diverges to +infinity while (x+ln x)/x -> 1, result +infinity"
+    },
+    {
+      "id": "log_18",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to 0^+} \\left(x + 5 - \\frac{x + \\ln x}{x}\\right)",
+      "answer_latex": "+\\infty",
+      "technique_km": "កាលណា x \\to 0^+ នោះ -\\ln x / x \\to -(-\\infty)/0^+ = +\\infty នាំឱ្យលីមីតស្មើ +\\infty",
+      "technique_en": "As x -> 0+, -ln(x)/x -> +infinity, result is +infinity"
+    },
+    {
+      "id": "log_19",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\left(-x^2 + 2x + \\frac{x}{\\ln x}\\right)",
+      "answer_latex": "-\\infty",
+      "technique_km": "ទាញ x^2 ជាកត្តា x^2(-1 + 2/x + 1/(x\\ln x)) \\to +\\infty \\times (-1) = -\\infty",
+      "technique_en": "Dominant term -x^2 forces limit to -infinity"
+    },
+    {
+      "id": "log_20",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to 0^+} \\left(-x^2 + 2x + \\frac{x}{\\ln x}\\right)",
+      "answer_latex": "0",
+      "technique_km": "កាលណា x \\to 0^+ នោះ x/\\ln x \\to 0/(-\\infty) = 0 នាំឱ្យលីមីតស្មើ 0",
+      "technique_en": "x/ln(x) -> 0/(-infinity) = 0, all terms vanish to 0"
+    },
+    {
+      "id": "log_21",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\left(x^2\\ln x - \\frac{x^2}{2}\\right)",
+      "answer_latex": "+\\infty",
+      "technique_km": "ទាញ x^2 ជាកត្តា x^2(\\ln x - 1/2) \\to +\\infty \\times (+\\infty) = +\\infty",
+      "technique_en": "Factor out x^2: x^2(ln x - 1/2) -> +infinity"
+    },
+    {
+      "id": "log_22",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to 0^+} \\left(x^2\\ln x - \\frac{x^2}{2}\\right)",
+      "answer_latex": "0",
+      "technique_km": "តាមលីមីតគ្រឹះ x^2\\ln x \\to 0 និង x^2/2 \\to 0 នាំឱ្យលីមីតស្មើ 0",
+      "technique_en": "By standard limit x^2 ln x -> 0, result is 0"
+    },
+    {
+      "id": "log_23",
+      "shape": "L2",
+      "prompt_latex": "\\lim_{x \\to +\\infty} [\\ln(x + 1) - \\ln(x - 1)]",
+      "answer_latex": "0",
+      "technique_km": "បញ្ចូលជា \\ln[(x+1)/(x-1)] \\to \\ln(1) = 0",
+      "technique_en": "Combine as ln((x+1)/(x-1)) -> ln(1) = 0"
+    },
+    {
+      "id": "log_24",
+      "shape": "L2",
+      "prompt_latex": "\\lim_{x \\to +\\infty} [\\ln(x^2 - 3x) - \\ln x^2]",
+      "answer_latex": "0",
+      "technique_km": "បញ្ចូលជា \\ln[(x^2-3x)/x^2] = \\ln(1 - 3/x) \\to \\ln(1) = 0",
+      "technique_en": "Combine as ln((x^2-3x)/x^2) -> ln(1) = 0"
+    },
+    {
+      "id": "log_25",
+      "shape": "L2",
+      "prompt_latex": "\\lim_{x \\to +\\infty} [\\ln(1 + 3x) - \\ln(x - 2)]",
+      "answer_latex": "\\ln 3",
+      "technique_km": "បញ្ចូលជា \\ln[(3x+1)/(x-2)] \\to \\ln(3)",
+      "technique_en": "Combine as ln((3x+1)/(x-2)) -> ln(3)"
+    },
+    {
+      "id": "log_26",
+      "shape": "L2",
+      "prompt_latex": "\\lim_{x \\to 0^+} [\\ln(1 + 3x) - \\ln(x + 2)]",
+      "answer_latex": "-\\ln 2",
+      "technique_km": "ជំនួសផ្ទាល់ x = 0 បាន \\ln(1) - \\ln(2) = 0 - \\ln 2 = -\\ln 2",
+      "technique_en": "Direct substitution gives ln(1) - ln(2) = -ln(2)"
+    },
+    {
+      "id": "log_27",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to 2^+} [x^2 + x + \\ln(x - 2)]",
+      "answer_latex": "-\\infty",
+      "technique_km": "កាលណា x \\to 2^+ នោះ x-2 \\to 0^+ នាំឱ្យ \\ln(x-2) \\to -\\infty",
+      "technique_en": "As x -> 2+, ln(x-2) -> -infinity, result -infinity"
+    },
+    {
+      "id": "log_28",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to 2^-} [\\ln(2 - x) + 3x^2]",
+      "answer_latex": "-\\infty",
+      "technique_km": "កាលណា x \\to 2^- នោះ 2-x \\to 0^+ នាំឱ្យ \\ln(2-x) \\to -\\infty",
+      "technique_en": "As x -> 2-, ln(2-x) -> -infinity, result -infinity"
+    },
+    {
+      "id": "log_29",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to 1^+} \\frac{x + \\ln(x - 1)}{-2x}",
+      "answer_latex": "+\\infty",
+      "technique_km": "ភាគយក x + \\ln(x-1) \\to -\\infty, ភាគបែង -2, ផលធៀបស្មើ +\\infty",
+      "technique_en": "Numerator -> -infinity, denominator -> -2, ratio is +infinity"
+    },
+    {
+      "id": "log_30",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to 3^-} \\frac{2x^2 + 5x - 4}{\\ln(3 - x)}",
+      "answer_latex": "0",
+      "technique_km": "ភាគយកខិតជិត 29, ភាគបែង \\ln(3-x) \\to -\\infty នាំឱ្យផលធៀបស្មើ 0",
+      "technique_en": "Numerator approaches 29, denominator -> -infinity, result 0"
+    },
+    {
+      "id": "log_31",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to 0^+} \\left(x - 5 + \\frac{8\\ln x}{x} + \\frac{9}{x}\\right)",
+      "answer_latex": "-\\infty",
+      "technique_km": "តួ (8\\ln x + 9)/x ខិតទៅរក -\\infty ព្រោះ \\ln x \\to -\\infty",
+      "technique_en": "Term (8ln x + 9)/x dominates to -infinity"
+    },
+    {
+      "id": "log_32",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\left(x - 5 + \\frac{8\\ln x}{x} + \\frac{9}{x}\\right)",
+      "answer_latex": "+\\infty",
+      "technique_km": "កាលណា x \\to +\\infty នោះ x \\to +\\infty ហើយ \\ln x / x \\to 0, 9/x \\to 0",
+      "technique_en": "Linear term x -> +infinity while fractional terms vanish to 0"
+    },
+    {
+      "id": "log_33",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to 0^+} \\left(2x + 3 - \\frac{5\\ln x}{x} - \\frac{4}{x}\\right)",
+      "answer_latex": "+\\infty",
+      "technique_km": "កាលណា x \\to 0^+ នោះ -5\\ln x / x \\to +\\infty ឈ្នះតួ -4/x នាំឱ្យស្មើ +\\infty",
+      "technique_en": "-5ln(x)/x dominates to +infinity"
+    },
+    {
+      "id": "log_34",
+      "shape": "L4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\left(2x + 3 - \\frac{5\\ln x}{x} - \\frac{4}{x}\\right)",
+      "answer_latex": "+\\infty",
+      "technique_km": "កាលណា x \\to +\\infty នោះ 2x \\to +\\infty និងប្រភាគទាំងពីរបាត់ទៅ 0",
+      "technique_en": "Linear term 2x -> +infinity, fraction terms vanish to 0"
+    },
+    {
+      "id": "log_35",
+      "shape": "L1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{2\\ln(x + 1)}{3x}",
+      "answer_latex": "\\frac{2}{3}",
+      "technique_km": "តាមលីមីតគ្រឹះ \\ln(x+1)/x \\to 1 នាំឱ្យ 2/3 \\times 1 = 2/3",
+      "technique_en": "Standard limit ln(x+1)/x -> 1 gives 2/3"
+    },
+    {
+      "id": "log_36",
+      "shape": "L1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{3\\ln(1 + 2x)}{-4x}",
+      "answer_latex": "-\\frac{3}{2}",
+      "technique_km": "សរសេរជា -3/4 \\times [\\ln(1+2x)/(2x) \\times 2] = -3/4 \\times 2 = -3/2",
+      "technique_en": "Standard limit with scaled argument 2x gives -3/4 * 2 = -3/2"
+    },
+    {
+      "id": "log_37",
+      "shape": "L1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{2\\ln(1 - 3x)}{x^2 - x}",
+      "answer_latex": "6",
+      "technique_km": "ដាក់ភាគបែងជា x(x-1) រួចប្រើ [\\ln(1-3x)/x] / (x-1) = -3 / (-1) = 3, គុណនឹង 2 បាន 6",
+      "technique_en": "Factor denominator x(x-1), limit is 2 * (-3)/(-1) = 6"
+    },
+    {
+      "id": "log_38",
+      "shape": "L1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{5x}{\\ln(2x + 1)}",
+      "answer_latex": "\\frac{5}{2}",
+      "technique_km": "ផលបញ្ច្រាសនៃលីមីតគ្រឹះ 5 / 2 = 5/2",
+      "technique_en": "Reciprocal standard limit 5/2"
+    },
+    {
+      "id": "log_39",
+      "shape": "L1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{-3\\ln(x + 1)}{\\sin 2x}",
+      "answer_latex": "-\\frac{3}{2}",
+      "technique_km": "ចែកនឹង x បាន [-3(\\ln(x+1)/x)] / [sin(2x)/x] = -3(1)/2 = -3/2",
+      "technique_en": "Divide by x, gives -3(1)/2 = -3/2"
+    },
+    {
+      "id": "log_40",
+      "shape": "L1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{2x} + \\sin x - 1}{\\ln(x + 1)}",
+      "answer_latex": "3",
+      "technique_km": "ចែកនឹង x ភាគយកបាន 2 + 1 = 3, ភាគបែង 1, ផលធៀបស្មើ 3",
+      "technique_en": "Divide by x, numerator gives 2+1=3, denominator gives 1, result 3"
+    },
+    {
+      "id": "log_41",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to 1^-} x\\ln(4 - 3x - x^2)",
+      "answer_latex": "-\\infty",
+      "technique_km": "កាលណា x \\to 1^- នោះ 4 - 3x - x^2 \\to 0^+ នាំឱ្យ \\ln(0^+) \\to -\\infty, ផលគុណស្មើ -\\infty",
+      "technique_en": "Argument approaches 0+, ln(0+) -> -infinity, product 1 * (-infinity) = -infinity"
+    },
+    {
+      "id": "log_42",
+      "shape": "L3",
+      "prompt_latex": "\\lim_{x \\to -4^+} x\\ln(4 - 3x - x^2)",
+      "answer_latex": "+\\infty",
+      "technique_km": "កាលណា x \\to -4^+ នោះ 4 - 3x - x^2 \\to 0^+ នាំឱ្យ \\ln(0^+) \\to -\\infty, ផលគុណ (-4)(-\\infty) = +\\infty",
+      "technique_en": "Argument -> 0+, ln(0+) -> -infinity, product (-4) * (-infinity) = +infinity"
+    }
+  ]
+}

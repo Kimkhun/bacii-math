@@ -95,13 +95,13 @@
   },
   "sinc_standard_limit": {
     "title_en": "Standard limit sin(x)/x",
-    "title_km": "លីមីតគំរូ sin(x)/x = 1",
+    "title_km": "លីមីតគ្រឹះ sin(x)/x = 1",
     "summary_en": "The foundational trigonometric limit is $\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1$. Balance coefficients so that the argument of sine matches the denominator exactly.",
     "summary_km": "លីមីតត្រីកោណមាត្រគ្រឹះគឺ $\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1$។ ត្រូវតម្រូវមេគុណឱ្យកន្សោមក្នុង $\\sin$ ដូចគ្នានឹងភាគបែង។",
     "formulas": [
-      { "latex": "\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1", "note_en": "Standard trigonometric limit.", "note_km": "លីមីតគំរូត្រីកោណមាត្រ។" },
+      { "latex": "\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1", "note_en": "Standard trigonometric limit.", "note_km": "លីមីតគ្រឹះត្រីកោណមាត្រ។" },
       { "latex": "\\lim_{x \\to 0} \\frac{\\sin(k x)}{x} = k", "note_en": "Scaled argument rule.", "note_km": "លីមីតពង្រីកមេគុណ k។" },
-      { "latex": "\\lim_{u \\to 0} \\frac{\\tan u}{u} = 1", "note_en": "Tangent standard limit.", "note_km": "លីមីតគំរូតង់សង់។" }
+      { "latex": "\\lim_{u \\to 0} \\frac{\\tan u}{u} = 1", "note_en": "Tangent standard limit.", "note_km": "លីមីតគ្រឹះតង់សង់។" }
     ],
     "sections": [
       { "heading_en": "Balancing trick", "heading_km": "គន្លឹះតម្រូវមេគុណ", "body_en": "To compute $\\frac{\\sin(kx)}{x}$, multiply the denominator by $k$ and multiply the entire fraction by $k$: $k \\cdot \\frac{\\sin(kx)}{kx} \\to k \\cdot 1 = k$.", "body_km": "ដើម្បីគណនា $\\frac{\\sin(kx)}{x}$ ត្រូវគុណភាគបែងនឹង $k$ ហើយគុណកន្សោមទាំងមូលនឹង $k$៖ $k \\cdot \\frac{\\sin(kx)}{kx} \\to k \\cdot 1 = k$។" }
@@ -146,7 +146,7 @@
     "title_en": "Conjugate + sin(x)/x combo",
     "title_km": "កន្សោមឆ្លាស់ និង sinc ចម្រុះ",
     "summary_en": "Combines square-root conjugate rationalisation with the standard sinc limit $\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1$ to eliminate a $\\frac{0}{0}$ indeterminate form.",
-    "summary_km": "រួមបញ្ចូលការគុណកន្សោមឆ្លាស់បំបាត់រ៉ាឌីកាល់ ជាមួយលីមីតគំរូ $\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1$ ដើម្បីបំបាត់រាងមិនកំណត់ $\\frac{0}{0}$។",
+    "summary_km": "រួមបញ្ចូលការគុណកន្សោមឆ្លាស់បំបាត់រ៉ាឌីកាល់ ជាមួយលីមីតគ្រឹះ $\\lim_{u \\to 0} \\frac{\\sin u}{u} = 1$ ដើម្បីបំបាត់រាងមិនកំណត់ $\\frac{0}{0}$។",
     "formulas": [
       { "latex": "\\frac{\\sqrt{A} - \\sqrt{B}}{\\sin(k x)} = \\frac{A - B}{\\sin(k x)(\\sqrt{A} + \\sqrt{B})}", "note_en": "Conjugate expansion on numerator.", "note_km": "ពន្លាតកន្សោមឆ្លាស់លើភាគយក។" },
       { "latex": "\\lim_{x \\to 0} \\frac{x}{\\sin(k x)} = \\frac{1}{k}", "note_en": "Reciprocal sinc limit.", "note_km": "លីមីតបញ្ច្រាសនៃ sinc។" }
@@ -194,20 +194,20 @@
     "title_en": "Half-angle + sin(x)/x combo",
     "title_km": "រូបមន្តកន្លះមុំ និង sinc ចម្រុះ",
     "summary_en": "Resolves limits with $1 - \\cos(mx)$ by applying the half-angle identity $1 - \\cos(mx) = 2\\sin^2\\left(\\frac{mx}{2}\\right)$ or standard limit $\\lim_{u \\to 0} \\frac{1 - \\cos u}{u^2} = \\frac{1}{2}$.",
-    "summary_km": "ដោះស្រាយលីមីតដែលមាន $1 - \\cos(mx)$ ដោយប្រើរូបមន្តកន្លះមុំ $1 - \\cos(mx) = 2\\sin^2\\left(\\frac{mx}{2}\\right)$ ឬលីមីតគំរូ $\\lim_{u \\to 0} \\frac{1 - \\cos u}{u^2} = \\frac{1}{2}$។",
+    "summary_km": "ដោះស្រាយលីមីតដែលមាន $1 - \\cos(mx)$ ដោយប្រើរូបមន្តកន្លះមុំ $1 - \\cos(mx) = 2\\sin^2\\left(\\frac{mx}{2}\\right)$ ឬលីមីតគ្រឹះ $\\lim_{u \\to 0} \\frac{1 - \\cos u}{u^2} = \\frac{1}{2}$។",
     "formulas": [
       { "latex": "1 - \\cos(m x) = 2\\sin^2\\left(\\frac{m x}{2}\\right)", "note_en": "Half-angle identity.", "note_km": "រូបមន្តកន្លះមុំ។" },
-      { "latex": "\\lim_{x \\to 0} \\frac{1 - \\cos(m x)}{x^2} = \\frac{m^2}{2}", "note_en": "Standard cosine limit.", "note_km": "លីមីតគំរូកូស៊ីនុស។" }
+      { "latex": "\\lim_{x \\to 0} \\frac{1 - \\cos(m x)}{x^2} = \\frac{m^2}{2}", "note_en": "Standard cosine limit.", "note_km": "លីមីតគ្រឹះកូស៊ីនុស។" }
     ],
     "sections": [
-      { "heading_en": "Key takeaway", "heading_km": "ចំណុចគន្លឹះ", "body_en": "Whenever $1 - \\cos(mx)$ is divided by $x^2$, convert it to $2\\sin^2\\left(\\frac{mx}{2}\\right)$ or apply the standard limit $\\lim_{x \\to 0} \\frac{1 - \\cos(mx)}{x^2} = \\frac{m^2}{2}$.", "body_km": "កាលណាមាន $1 - \\cos(mx)$ ចែកនឹង $x^2$ ត្រូវបំប្លែងវាទៅជា $2\\sin^2\\left(\\frac{mx}{2}\\right)$ ឬប្រើលីមីតគំរូ $\\lim_{x \\to 0} \\frac{1 - \\cos(mx)}{x^2} = \\frac{m^2}{2}$។" }
+      { "heading_en": "Key takeaway", "heading_km": "ចំណុចគន្លឹះ", "body_en": "Whenever $1 - \\cos(mx)$ is divided by $x^2$, convert it to $2\\sin^2\\left(\\frac{mx}{2}\\right)$ or apply the standard limit $\\lim_{x \\to 0} \\frac{1 - \\cos(mx)}{x^2} = \\frac{m^2}{2}$.", "body_km": "កាលណាមាន $1 - \\cos(mx)$ ចែកនឹង $x^2$ ត្រូវបំប្លែងវាទៅជា $2\\sin^2\\left(\\frac{mx}{2}\\right)$ ឬប្រើលីមីតគ្រឹះ $\\lim_{x \\to 0} \\frac{1 - \\cos(mx)}{x^2} = \\frac{m^2}{2}$។" }
     ],
     "examples": [
       {
         "prompt_en": "Evaluate $\\lim_{x \\to 0} \\frac{1 - \\cos(4x)}{x^2}$.",
         "prompt_km": "គណនា $\\lim_{x \\to 0} \\frac{1 - \\cos(4x)}{x^2}$។",
         "steps": [
-          { "text_en": "Apply the standard formula with $m = 4$.", "text_km": "អនុវត្តរូបមន្តគំរូជាមួយ $m = 4$។", "latex": "\\lim_{x \\to 0}\\frac{1 - \\cos(4x)}{x^2} = \\frac{4^2}{2} = \\frac{16}{2} = 8" }
+          { "text_en": "Apply the standard formula with $m = 4$.", "text_km": "អនុវត្តរូបមន្តគ្រឹះជាមួយ $m = 4$។", "latex": "\\lim_{x \\to 0}\\frac{1 - \\cos(4x)}{x^2} = \\frac{4^2}{2} = \\frac{16}{2} = 8" }
         ],
         "answer_latex": "\\lim_{x \\to 0}\\frac{1 - \\cos(4x)}{x^2} = 8"
       }
@@ -215,16 +215,16 @@
   },
   "exponential_standard_limit": {
     "title_en": "Standard limit (eˣ - 1)/x",
-    "title_km": "លីមីតគំរូ (eˣ - 1)/x = 1",
+    "title_km": "លីមីតគ្រឹះ (eˣ - 1)/x = 1",
     "summary_en": "The standard limit for exponential indeterminate forms as $x \\to 0$ is $\\lim_{u \\to 0} \\frac{e^u - 1}{u} = 1$.",
-    "summary_km": "លីមីតគំរូសម្រាប់រាងមិនកំណត់អិចស្បូណង់ស្យែលកាលណា $x \\to 0$ គឺ $\\lim_{u \\to 0} \\frac{e^u - 1}{u} = 1$។",
+    "summary_km": "លីមីតគ្រឹះសម្រាប់រាងមិនកំណត់អិចស្បូណង់ស្យែលកាលណា $x \\to 0$ គឺ $\\lim_{u \\to 0} \\frac{e^u - 1}{u} = 1$។",
     "formulas": [
       { "latex": "\\lim_{u \\to 0} \\frac{e^u - 1}{u} = 1", "note_en": "Fundamental exponential limit.", "note_km": "លីមីតគ្រឹះអិចស្បូណង់ស្យែល។" },
       { "latex": "\\lim_{x \\to 0} \\frac{e^{a x} - 1}{x} = a", "note_en": "Scaled exponent rule.", "note_km": "លីមីតពង្រីកមេគុណ a។" },
       { "latex": "\\lim_{x \\to 0} \\frac{e^{a x} - 1}{e^{b x} - 1} = \\frac{a}{b}", "note_en": "Quotient of exponential terms (b ≠ 0).", "note_km": "ផលចែកនៃអិចស្បូណង់ស្យែល (b ≠ 0)។" }
     ],
     "sections": [
-      { "heading_en": "Division technique", "heading_km": "វិធីចែក x", "body_en": "For fractions like $\\frac{e^{ax} - 1}{e^{bx} - 1}$, divide both numerator and denominator by $x$ to create two standard limits: $\\frac{\\frac{e^{ax}-1}{x}}{\\frac{e^{bx}-1}{x}} \\to \\frac{a}{b}$.", "body_km": "សម្រាប់ប្រភាគដូចជា $\\frac{e^{ax} - 1}{e^{bx} - 1}$ ត្រូវចែកភាគយកនិងភាគបែងនឹង $x$ ដើម្បីបង្កើតលីមីតគំរូពីរ៖ $\\frac{\\frac{e^{ax}-1}{x}}{\\frac{e^{bx}-1}{x}} \\to \\frac{a}{b}$។" }
+      { "heading_en": "Division technique", "heading_km": "វិធីចែក x", "body_en": "For fractions like $\\frac{e^{ax} - 1}{e^{bx} - 1}$, divide both numerator and denominator by $x$ to create two standard limits: $\\frac{\\frac{e^{ax}-1}{x}}{\\frac{e^{bx}-1}{x}} \\to \\frac{a}{b}$.", "body_km": "សម្រាប់ប្រភាគដូចជា $\\frac{e^{ax} - 1}{e^{bx} - 1}$ ត្រូវចែកភាគយកនិងភាគបែងនឹង $x$ ដើម្បីបង្កើតលីមីតគ្រឹះពីរ៖ $\\frac{\\frac{e^{ax}-1}{x}}{\\frac{e^{bx}-1}{x}} \\to \\frac{a}{b}$។" }
     ],
     "examples": [
       {
@@ -266,7 +266,7 @@
     "title_en": "Logarithmic limit at infinity",
     "title_km": "លីមីតលោការីតនៅអនន្ត",
     "summary_en": "Combine logarithmic terms using $\\ln A - \\ln B = \\ln\\left(\\frac{A}{B}\\right)$, then use the standard limit $\\lim_{u \\to 0} \\frac{\\ln(1 + u)}{u} = 1$.",
-    "summary_km": "បូកបញ្ចូលតួលោការីតតាមរូបមន្ត $\\ln A - \\ln B = \\ln\\left(\\frac{A}{B}\\right)$ រួចប្រើលីមីតគំរូ $\\lim_{u \\to 0} \\frac{\\ln(1 + u)}{u} = 1$។",
+    "summary_km": "បូកបញ្ចូលតួលោការីតតាមរូបមន្ត $\\ln A - \\ln B = \\ln\\left(\\frac{A}{B}\\right)$ រួចប្រើលីមីតគ្រឹះ $\\lim_{u \\to 0} \\frac{\\ln(1 + u)}{u} = 1$។",
     "formulas": [
       { "latex": "\\ln A - \\ln B = \\ln\\left(\\frac{A}{B}\\right)", "note_en": "Logarithm quotient law.", "note_km": "លក្ខណៈផលចែកលោការីត។" },
       { "latex": "\\lim_{u \\to 0} \\frac{\\ln(1 + u)}{u} = 1", "note_en": "Fundamental log limit.", "note_km": "លីមីតគ្រឹះលោការីត។" }
@@ -314,10 +314,10 @@
     "title_en": "Logarithmic limit at 0",
     "title_km": "លីមីតលោការីតត្រង់សូន្យ",
     "summary_en": "Resolves indeterminate limits as $x \\to 0^+$ involving logarithms, such as $\\lim_{x \\to 0^+} x^p \\ln x = 0$ ($p > 0$) and $\\lim_{x \\to 0} \\frac{\\ln(1 + x)}{x} = 1$.",
-    "summary_km": "ដោះស្រាយលីមីតកាលណា $x \\to 0^+$ ដែលមានលោការីត ដូចជាលីមីតគំរូ $\\lim_{x \\to 0^+} x^p \\ln x = 0$ ($p > 0$) និង $\\lim_{x \\to 0} \\frac{\\ln(1 + x)}{x} = 1$។",
+    "summary_km": "ដោះស្រាយលីមីតកាលណា $x \\to 0^+$ ដែលមានលោការីត ដូចជាលីមីតគ្រឹះ $\\lim_{x \\to 0^+} x^p \\ln x = 0$ ($p > 0$) និង $\\lim_{x \\to 0} \\frac{\\ln(1 + x)}{x} = 1$។",
     "formulas": [
       { "latex": "\\lim_{x \\to 0^+} x^p \\ln x = 0 \\quad (p > 0)", "note_en": "Power dominates logarithm.", "note_km": "ស្វ័យគុណឈ្នះលោការីត។" },
-      { "latex": "\\lim_{x \\to 0} \\frac{\\ln(1 + x)}{x} = 1", "note_en": "Standard linear approximation limit.", "note_km": "លីមីតគំរូលោការីតត្រង់ 0។" }
+      { "latex": "\\lim_{x \\to 0} \\frac{\\ln(1 + x)}{x} = 1", "note_en": "Standard linear approximation limit.", "note_km": "លីមីតគ្រឹះលោការីតត្រង់ 0។" }
     ],
     "sections": [
       { "heading_en": "Concept", "heading_km": "គំនិតគ្រឹះ", "body_en": "Although $\\ln x \\to -\\infty$ as $x \\to 0^+$, any positive power of $x$ approaches $0$ much faster, pulling the entire product to $0$.", "body_km": "ទោះបីជា $\\ln x \\to -\\infty$ កាលណា $x \\to 0^+$ ក៏ដោយ ក៏គ្រប់ស្វ័យគុណវិជ្ជមាននៃ $x$ ខិតជិត $0$ លឿនជាងច្រើន ដែលទាញផលគុណទាំងមូលឱ្យស្មើ $0$។" }
@@ -327,7 +327,7 @@
         "prompt_en": "Evaluate $\\lim_{x \\to 0^+} x \\ln x$.",
         "prompt_km": "គណនា $\\lim_{x \\to 0^+} x \\ln x$។",
         "steps": [
-          { "text_en": "Apply the standard growth limit: $x^1$ dominates $\\ln x$.", "text_km": "អនុវត្តលីមីតគំរូ៖ ស្វ័យគុណ $x^1$ ឈ្នះ $\\ln x$។", "latex": "\\lim_{x \\to 0^+} x\\ln x = 0" }
+          { "text_en": "Apply the standard growth limit: $x^1$ dominates $\\ln x$.", "text_km": "អនុវត្តលីមីតគ្រឹះ៖ ស្វ័យគុណ $x^1$ ឈ្នះ $\\ln x$។", "latex": "\\lim_{x \\to 0^+} x\\ln x = 0" }
         ],
         "answer_latex": "\\lim_{x \\to 0^+} x\\ln x = 0"
       }

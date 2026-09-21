@@ -1,0 +1,489 @@
+{
+  "topic": "limits",
+  "category": "exponential",
+  "title_km": "លីមីតអនុគមន៍អិចស្ប៉ូណង់ស្យែល (រាង 0/0)",
+  "title_en": "Exponential Limits (0/0 and Combos)",
+  "count": 60,
+  "exercises": [
+    {
+      "id": "exp_01",
+      "shape": "E1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{3x} - e^x}{x}",
+      "answer_latex": "2",
+      "technique_km": "បំបែក (e^{3x} - 1)/x - (e^x - 1)/x រួចប្រើរូបមន្តលីមីតគ្រឹះបាន 3 - 1 = 2",
+      "technique_en": "Split into (e^{3x} - 1)/x - (e^x - 1)/x = 3 - 1 = 2"
+    },
+    {
+      "id": "exp_02",
+      "shape": "E1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{4x} - 1}{x}",
+      "answer_latex": "4",
+      "technique_km": "គុណនិងចែកនឹង 4 ប្រើរូបមន្តលីមីតគ្រឹះ (e^{4x} - 1)/(4x) \\times 4 = 4",
+      "technique_en": "Standard exponential limit with argument 4x = 4"
+    },
+    {
+      "id": "exp_03",
+      "shape": "E1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{2x} - 1}{6x}",
+      "answer_latex": "\\frac{1}{3}",
+      "technique_km": "សរសេរជា 1/3 \\times (e^{2x} - 1)/(2x) = 1/3",
+      "technique_en": "Factor out 1/3, apply standard limit (e^{2x}-1)/(2x) = 1/3"
+    },
+    {
+      "id": "exp_04",
+      "shape": "E1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{2x} - e^{-2x}}{x}",
+      "answer_latex": "4",
+      "technique_km": "បំបែក (e^{2x} - 1)/x - (e^{-2x} - 1)/x = 2 - (-2) = 4",
+      "technique_en": "Split into (e^{2x}-1)/x - (e^{-2x}-1)/x = 2 - (-2) = 4"
+    },
+    {
+      "id": "exp_05",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{3x} - e^{2x}}{\\sin x}",
+      "answer_latex": "1",
+      "technique_km": "ចែកភាគយកនិងភាគបែងនឹង x បាន [(e^{3x}-e^{2x})/x] / [sin x / x] = (3 - 2)/1 = 1",
+      "technique_en": "Divide by x, numerator gives 3-2=1, denominator gives 1"
+    },
+    {
+      "id": "exp_06",
+      "shape": "E1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{3x} + 2x - 1}{x}",
+      "answer_latex": "5",
+      "technique_km": "បំបែក (e^{3x} - 1)/x + 2x/x = 3 + 2 = 5",
+      "technique_en": "Split into (e^{3x}-1)/x + 2 = 3 + 2 = 5"
+    },
+    {
+      "id": "exp_07",
+      "shape": "E3",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{2e^{2x} - 3e^x + 1}{x}",
+      "answer_latex": "1",
+      "technique_km": "បំបែក 2(e^{2x} - 1)/x - 3(e^x - 1)/x = 2(2) - 3(1) = 1",
+      "technique_en": "Group as 2(e^{2x}-1)/x - 3(e^x-1)/x = 4 - 3 = 1"
+    },
+    {
+      "id": "exp_08",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{2e^{x^2} - 2}{1 - \\cos 2x}",
+      "answer_latex": "1",
+      "technique_km": "ភាគយក 2(e^{x^2}-1) \\sim 2x^2, ភាគបែង 1 - cos 2x = 2sin^2 x \\sim 2x^2, ផលធៀបបាន 1",
+      "technique_en": "Numerator is 2x^2, denominator is 2sin^2(x) ~ 2x^2, limit is 1"
+    },
+    {
+      "id": "exp_09",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^x - e^{-x}}{\\sin 2x}",
+      "answer_latex": "1",
+      "technique_km": "ចែកនឹង x បាន (1 - (-1)) / 2 = 2/2 = 1",
+      "technique_en": "Divide by x, numerator gives 2, denominator gives 2, ratio is 1"
+    },
+    {
+      "id": "exp_10",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^x + e^{-x} - 2}{x^2}",
+      "answer_latex": "1",
+      "technique_km": "សរសេរជា (e^x - 1)^2 / (x^2 e^x) = 1^2 / 1 = 1",
+      "technique_en": "Rewrite as (e^x - 1)^2 / (x^2 e^x) -> 1"
+    },
+    {
+      "id": "exp_11",
+      "shape": "E3",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{2e^{2x} - e^x - 1}{x}",
+      "answer_latex": "3",
+      "technique_km": "បំបែក 2(e^{2x} - 1)/x - (e^x - 1)/x = 2(2) - 1 = 3",
+      "technique_en": "Group as 2(e^{2x}-1)/x - (e^x-1)/x = 4 - 1 = 3"
+    },
+    {
+      "id": "exp_12",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{2x} + 3e^x - 4}{\\sin 5x}",
+      "answer_latex": "1",
+      "technique_km": "ចែកនឹង x ភាគយកបាន (2 + 3) = 5, ភាគបែង sin(5x)/x = 5, ផលធៀប 5/5 = 1",
+      "technique_en": "Divide by x, numerator gives 2+3=5, denominator gives 5, limit is 1"
+    },
+    {
+      "id": "exp_13",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{x^2} - \\cos 2x}{x^2}",
+      "answer_latex": "3",
+      "technique_km": "បំបែក (e^{x^2} - 1)/x^2 + (1 - cos 2x)/x^2 = 1 + 2 = 3",
+      "technique_en": "Split into (e^{x^2}-1)/x^2 + (1-cos 2x)/x^2 = 1 + 2 = 3"
+    },
+    {
+      "id": "exp_14",
+      "shape": "E1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{6x}{e^{3x} - e^x}",
+      "answer_latex": "3",
+      "technique_km": "ចែកភាគបែងនឹង x បាន 3 - 1 = 2, ផលធៀប 6/2 = 3",
+      "technique_en": "Invert standard limit, 6 / (3 - 1) = 3"
+    },
+    {
+      "id": "exp_15",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^x + 2\\sin x - 1}{x}",
+      "answer_latex": "3",
+      "technique_km": "បំបែក (e^x - 1)/x + 2(sin x)/x = 1 + 2 = 3",
+      "technique_en": "Split into (e^x-1)/x + 2sin(x)/x = 1 + 2 = 3"
+    },
+    {
+      "id": "exp_16",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^x + \\sin x - 1}{\\sqrt{x + 1} - 1}",
+      "answer_latex": "4",
+      "technique_km": "ចែកនឹង x ភាគយកបាន 1 + 1 = 2, ភាគបែង (\\sqrt{x+1}-1)/x = 1/2, ផលធៀប 2 / (1/2) = 4",
+      "technique_en": "Divide by x, numerator gives 2, denominator gives 1/2, result is 4"
+    },
+    {
+      "id": "exp_17",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{\\sin^2 x} - e^{\\sin x}}{\\sin x}",
+      "answer_latex": "-1",
+      "technique_km": "តាង u = sin x -> 0, (e^{u^2} - e^u)/u = (e^{u^2}-1)/u - (e^u-1)/u = 0 - 1 = -1",
+      "technique_en": "Substitute u = sin(x), split into (e^{u^2}-1)/u - (e^u-1)/u = 0 - 1 = -1"
+    },
+    {
+      "id": "exp_18",
+      "shape": "E1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^x + e^{2x} + e^{3x} - 3}{x}",
+      "answer_latex": "6",
+      "technique_km": "បំបែក (e^x - 1)/x + (e^{2x} - 1)/x + (e^{3x} - 1)/x = 1 + 2 + 3 = 6",
+      "technique_en": "Split into sum of (e^{kx}-1)/x = 1 + 2 + 3 = 6"
+    },
+    {
+      "id": "exp_19",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{1 - \\cos 4x}{e^{x^2} + 4\\sin^2 x - 1}",
+      "answer_latex": "\\frac{8}{5}",
+      "technique_km": "ចែកនឹង x^2 ភាគយកបាន 8, ភាគបែង (e^{x^2}-1)/x^2 + 4(sin x / x)^2 = 1 + 4 = 5, បាន 8/5",
+      "technique_en": "Divide by x^2, numerator gives 8, denominator gives 1+4=5, result 8/5"
+    },
+    {
+      "id": "exp_20",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{(2e^{x^2} - 2)(1 - \\cos 2x)}{x^4}",
+      "answer_latex": "4",
+      "technique_km": "បំបែក 2[(e^{x^2}-1)/x^2] \\times [(1-cos 2x)/x^2] = 2(1) \\times 2 = 4",
+      "technique_en": "Product of standard limits: 2(1) * 2 = 4"
+    },
+    {
+      "id": "exp_21",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{3x^2} + \\cos 2x - 2}{x^2}",
+      "answer_latex": "1",
+      "technique_km": "បំបែក (e^{3x^2} - 1)/x^2 - (1 - cos 2x)/x^2 = 3 - 2 = 1",
+      "technique_en": "Split into (e^{3x^2}-1)/x^2 - (1-cos 2x)/x^2 = 3 - 2 = 1"
+    },
+    {
+      "id": "exp_22",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{-x^2} - \\cos 2x}{x^2}",
+      "answer_latex": "1",
+      "technique_km": "បំបែក (e^{-x^2} - 1)/x^2 + (1 - cos 2x)/x^2 = -1 + 2 = 1",
+      "technique_en": "Split into (e^{-x^2}-1)/x^2 + (1-cos 2x)/x^2 = -1 + 2 = 1"
+    },
+    {
+      "id": "exp_23",
+      "shape": "E3",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{2e^x + 3e^{2x} - 5}{e^{2x} - 1}",
+      "answer_latex": "4",
+      "technique_km": "ចែកនឹង x ភាគយកបាន 2(1) + 3(2) = 8, ភាគបែង (e^{2x}-1)/x = 2, ផលធៀប 8/2 = 4",
+      "technique_en": "Divide by x, numerator gives 2+6=8, denominator gives 2, result 8/2=4"
+    },
+    {
+      "id": "exp_24",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{e^{2x}}{x^2}",
+      "answer_latex": "+\\infty",
+      "technique_km": "តាមលំដាប់កំណើនអិចស្ប៉ូណង់ស្យែល លីមីតស្មើ +\\infty",
+      "technique_en": "Exponential growth dominance over polynomial, limit is +infinity"
+    },
+    {
+      "id": "exp_25",
+      "shape": "E3",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{2e^x + 3e^{2x} - 5}{e^{3x} - 1}",
+      "answer_latex": "\\frac{8}{3}",
+      "technique_km": "ចែកភាគយកនិងភាគបែងនឹង x បាន [2(1) + 3(2)] / 3 = 8/3",
+      "technique_en": "Divide by x, numerator gives 2+6=8, denominator gives 3, result 8/3"
+    },
+    {
+      "id": "exp_26",
+      "shape": "E1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^x + e^{2x} + \\dots + e^{nx} - n}{x}",
+      "answer_latex": "\\frac{n(n+1)}{2}",
+      "technique_km": "បំបែកផលបូក \\sum_{k=1}^n \\frac{e^{kx}-1}{x} = 1 + 2 + \\dots + n = \\frac{n(n+1)}{2}",
+      "technique_en": "Sum of standard limits 1 + 2 + ... + n = n(n+1)/2"
+    },
+    {
+      "id": "exp_27",
+      "shape": "E1",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{(e^x - 1)(e^{2x} - 1)\\dots(e^{nx} - 1)}{x^n}",
+      "answer_latex": "n!",
+      "technique_km": "បំបែកផលគុណនៃលីមីតគ្រឹះ 1 \\times 2 \\times \\dots \\times n = n!",
+      "technique_en": "Product of standard limits 1 * 2 * ... * n = n!"
+    },
+    {
+      "id": "exp_28",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{-2\\sin x} - e^{\\tan x}}{x^3 + x}",
+      "answer_latex": "-3",
+      "technique_km": "ចែកភាគយកនិងភាគបែងនឹង x បាន [(-2) - 1] / 1 = -3",
+      "technique_en": "Divide by x, numerator gives -2 - 1 = -3, denominator gives 1"
+    },
+    {
+      "id": "exp_29",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^x + \\sin x - 1}{x^2 + 2x}",
+      "answer_latex": "1",
+      "technique_km": "ចែកភាគយកនិងភាគបែងនឹង x បាន (1 + 1)/(0 + 2) = 2/2 = 1",
+      "technique_en": "Divide by x, numerator gives 1+1=2, denominator gives 2, result 1"
+    },
+    {
+      "id": "exp_30",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{2\\sin x - 1 + e^x}{\\sin x}",
+      "answer_latex": "3",
+      "technique_km": "បំបែក 2 + \\frac{e^x - 1}{\\sin x} = 2 + 1 = 3",
+      "technique_en": "Split into 2 + (e^x - 1)/sin(x) = 2 + 1 = 3"
+    },
+    {
+      "id": "exp_31",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^x + \\sin x - 1}{1 - \\sqrt{x + 1}}",
+      "answer_latex": "-4",
+      "technique_km": "គុណកន្សោមឆ្លាស់ភាគបែង 1+\\sqrt{x+1} បាន (2) \\times (-2) = -4",
+      "technique_en": "Multiply by conjugate (1+sqrt(x+1)), result is 2 * (-2) = -4"
+    },
+    {
+      "id": "exp_32",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{ax} - e^{bx}}{\\sin ax - \\sin bx}",
+      "answer_latex": "1",
+      "technique_km": "ចែកនឹង x ភាគយកបាន a - b, ភាគបែងបាន a - b, ផលធៀបស្មើ 1",
+      "technique_en": "Divide by x, numerator gives a-b, denominator gives a-b, result 1"
+    },
+    {
+      "id": "exp_33",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{3x} - e^{2x}}{\\sin 5x - \\sin 4x}",
+      "answer_latex": "1",
+      "technique_km": "ចែកនឹង x ភាគយកបាន 3 - 2 = 1, ភាគបែង 5 - 4 = 1, ផលធៀបស្មើ 1",
+      "technique_en": "Divide by x, (3-2)/(5-4) = 1/1 = 1"
+    },
+    {
+      "id": "exp_34",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{x e^{x^2} + \\sin x - \\tan x - x}{x^3}",
+      "answer_latex": "\\frac{1}{2}",
+      "technique_km": "បំបែកជា [x(e^{x^2}-1)]/x^3 + (sin x - tan x)/x^3 = 1 - 1/2 = 1/2",
+      "technique_en": "Split into (e^{x^2}-1)/x^2 + (sin x - tan x)/x^3 = 1 - 1/2 = 1/2"
+    },
+    {
+      "id": "exp_35",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{4x} - e^{-4x}}{\\sin x}",
+      "answer_latex": "8",
+      "technique_km": "ចែកនឹង x ភាគយកបាន 4 - (-4) = 8, ភាគបែង 1, ផលធៀបស្មើ 8",
+      "technique_en": "Divide by x, numerator gives 4 - (-4) = 8, denominator gives 1"
+    },
+    {
+      "id": "exp_36",
+      "shape": "E2",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{(e^{2x} - 2e^x + 1)\\sin x}{x^3}",
+      "answer_latex": "1",
+      "technique_km": "សរសេរជា [(e^x - 1)/x]^2 \\times (sin x / x) = 1^2 \\times 1 = 1",
+      "technique_en": "Rewrite as ((e^x-1)/x)^2 * (sin(x)/x) = 1"
+    },
+    {
+      "id": "exp_37",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} (x^2 + x e^x)",
+      "answer_latex": "+\\infty",
+      "technique_km": "កាលណា x \\to +\\infty នោះ x^2 \\to +\\infty និង x e^x \\to +\\infty",
+      "technique_en": "Both terms approach +infinity, result is +infinity"
+    },
+    {
+      "id": "exp_38",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} (x^2 + x e^x)",
+      "answer_latex": "+\\infty",
+      "technique_km": "កាលណា x \\to -\\infty នោះ x^2 \\to +\\infty ហើយ x e^x \\to 0 នាំឱ្យលីមីតស្មើ +\\infty",
+      "technique_en": "x^2 -> +infinity while x e^x -> 0, result is +infinity"
+    },
+    {
+      "id": "exp_39",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} (x^3 - 3x^2 - 1)e^{-x}",
+      "answer_latex": "0",
+      "technique_km": "តាមលំដាប់កំណើន e^x ឈ្នះពហុធា ដូចនេះ P(x)e^{-x} \\to 0",
+      "technique_en": "Exponential dominates polynomial, limit is 0"
+    },
+    {
+      "id": "exp_40",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} (x^3 - 3x^2 - 1)e^{-x}",
+      "answer_latex": "-\\infty",
+      "technique_km": "កាលណា x \\to -\\infty នោះ x^3 \\to -\\infty និង e^{-x} \\to +\\infty នាំឱ្យលីមីតស្មើ -\\infty",
+      "technique_en": "Polynomial -> -infinity, e^{-x} -> +infinity, product is -infinity"
+    },
+    {
+      "id": "exp_41",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{e^x - x}{2e^x + 1}",
+      "answer_latex": "\\frac{1}{2}",
+      "technique_km": "ចែកភាគយកនិងភាគបែងនឹង e^x បាន (1 - 0)/(2 + 0) = 1/2",
+      "technique_en": "Divide by e^x, (1 - x/e^x)/(2 + e^{-x}) -> 1/2"
+    },
+    {
+      "id": "exp_42",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} \\frac{e^x - x}{2e^x + 1}",
+      "answer_latex": "+\\infty",
+      "technique_km": "កាលណា x \\to -\\infty នោះ e^x \\to 0 នាំឱ្យ (0 - x)/(0 + 1) = -x \\to +\\infty",
+      "technique_en": "e^x -> 0 as x -> -infinity, (-x)/1 -> +infinity"
+    },
+    {
+      "id": "exp_43",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{2e^x - 1}{x^2 + x - 3}",
+      "answer_latex": "+\\infty",
+      "technique_km": "តាមលំដាប់កំណើន e^x ឈ្នះ x^2 នាំឱ្យលីមីតស្មើ +\\infty",
+      "technique_en": "Exponential dominates quadratic, limit is +infinity"
+    },
+    {
+      "id": "exp_44",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} \\frac{2e^x - 1}{x^2 + x - 3}",
+      "answer_latex": "0",
+      "technique_km": "កាលណា x \\to -\\infty នោះ e^x \\to 0 នាំឱ្យ -1 / (+\\infty) = 0",
+      "technique_en": "Numerator approaches -1, denominator approaches +infinity, ratio is 0"
+    },
+    {
+      "id": "exp_45",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} (e^x - x^4 + 3)e^{-x}",
+      "answer_latex": "1",
+      "technique_km": "ពន្លាត 1 - (x^4 - 3)e^{-x} = 1 - 0 = 1",
+      "technique_en": "Expands to 1 - (x^4-3)e^{-x} -> 1 - 0 = 1"
+    },
+    {
+      "id": "exp_46",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} (e^x - x^4 + 3)e^{-x}",
+      "answer_latex": "-\\infty",
+      "technique_km": "កាលណា x \\to -\\infty នោះ -x^4 e^{-x} \\to -\\infty",
+      "technique_en": "Dominant term is -x^4 e^{-x} -> -infinity"
+    },
+    {
+      "id": "exp_47",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{2x + 3e^{2x}}{x^2 - 6e^{2x}}",
+      "answer_latex": "-\\frac{1}{2}",
+      "technique_km": "ចែកភាគយកនិងភាគបែងនឹង e^{2x} បាន 3 / (-6) = -1/2",
+      "technique_en": "Divide by e^{2x}, leading ratio is 3/(-6) = -1/2"
+    },
+    {
+      "id": "exp_48",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} \\frac{2x + 3e^{2x}}{x^2 - 6e^{2x}}",
+      "answer_latex": "0",
+      "technique_km": "កាលណា x \\to -\\infty នោះ e^{2x} \\to 0 នាំឱ្យ 2x/x^2 = 2/x \\to 0",
+      "technique_en": "e^{2x} vanishes, ratio behaves as 2x/x^2 = 2/x -> 0"
+    },
+    {
+      "id": "exp_49",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} (x^3 - 6x + 3e^x)",
+      "answer_latex": "+\\infty",
+      "technique_km": "ផលបូកនៃតួខិតទៅរក +\\infty ស្មើ +\\infty",
+      "technique_en": "All terms grow positively, limit is +infinity"
+    },
+    {
+      "id": "exp_50",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} (x^3 - 6x + 3e^x)",
+      "answer_latex": "-\\infty",
+      "technique_km": "កាលណា x \\to -\\infty នោះ e^x \\to 0, តួដឺក្រេខ្ពស់ x^3 \\to -\\infty",
+      "technique_en": "e^x -> 0, cubic term x^3 -> -infinity"
+    },
+    {
+      "id": "exp_51",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{x e^x + 2x - 3}{x + 1}",
+      "answer_latex": "+\\infty",
+      "technique_km": "ចែកនឹង x បាន (e^x + 2 - 3/x)/(1 + 1/x) \\to +\\infty",
+      "technique_en": "Dominant numerator x e^x over x gives e^x -> +infinity"
+    },
+    {
+      "id": "exp_52",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} \\frac{x e^x + 2x - 3}{x + 1}",
+      "answer_latex": "2",
+      "technique_km": "កាលណា x \\to -\\infty នោះ x e^x \\to 0, ផលធៀបស្មើ 2x/x = 2",
+      "technique_en": "x e^x -> 0, remaining linear ratio is 2x/x = 2"
+    },
+    {
+      "id": "exp_53",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{2x + 3}{1 + e^x}",
+      "answer_latex": "0",
+      "technique_km": "តាមលំដាប់កំណើន e^x ឈ្នះពហុធា ដូចនេះលីមីតស្មើ 0",
+      "technique_en": "Denominator exponential dominates numerator linear term, limit 0"
+    },
+    {
+      "id": "exp_54",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} \\frac{2x + 3}{1 + e^x}",
+      "answer_latex": "-\\infty",
+      "technique_km": "កាលណា x \\to -\\infty នោះ e^x \\to 0, ភាគយក 2x \\to -\\infty",
+      "technique_en": "e^x -> 0, numerator 2x -> -infinity"
+    },
+    {
+      "id": "exp_55",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{2e^x + x^6}{3e^x - 2x}",
+      "answer_latex": "\\frac{2}{3}",
+      "technique_km": "កាលណា x \\to +\\infty នោះ e^x ឈ្នះ x^6 នាំឱ្យផលធៀបស្មើ 2/3",
+      "technique_en": "Exponential dominates x^6 at +infinity, leading ratio 2/3"
+    },
+    {
+      "id": "exp_56",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} \\frac{2e^x + x^6}{3e^x - 2x}",
+      "answer_latex": "+\\infty",
+      "technique_km": "កាលណា x \\to -\\infty នោះ e^x \\to 0, ផលធៀប x^6 / (-2x) = -x^5 / 2 \\to +\\infty",
+      "technique_en": "e^x -> 0, ratio x^6 / (-2x) = -x^5/2 -> +infinity"
+    },
+    {
+      "id": "exp_57",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{e^{2x} + e^x + 1}{e^{2x} - e^x + 2}",
+      "answer_latex": "1",
+      "technique_km": "ចែកនឹង e^{2x} ផលធៀបមេគុណស្មើ 1/1 = 1",
+      "technique_en": "Divide by e^{2x}, leading ratio is 1"
+    },
+    {
+      "id": "exp_58",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} \\frac{e^{2x} + e^x + 1}{e^{2x} - e^x + 2}",
+      "answer_latex": "\\frac{1}{2}",
+      "technique_km": "កាលណា x \\to -\\infty នោះ e^x \\to 0 នាំឱ្យលីមីតស្មើ 1/2",
+      "technique_en": "All exponentials vanish to 0, remaining ratio is 1/2"
+    },
+    {
+      "id": "exp_59",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\frac{e^x + x^2}{e^x - 2x^2}",
+      "answer_latex": "1",
+      "technique_km": "ចែកនឹង e^x ផលធៀបមេគុណស្មើ 1/1 = 1",
+      "technique_en": "Exponential dominates x^2, leading ratio is 1"
+    },
+    {
+      "id": "exp_60",
+      "shape": "E4",
+      "prompt_latex": "\\lim_{x \\to -\\infty} \\frac{e^x + x^2}{e^x - 2x^2}",
+      "answer_latex": "-\\frac{1}{2}",
+      "technique_km": "កាលណា x \\to -\\infty នោះ e^x \\to 0 នាំឱ្យផលធៀប x^2 / (-2x^2) = -1/2",
+      "technique_en": "Exponentials vanish to 0, quadratic ratio is 1/(-2) = -1/2"
+    }
+  ]
+}

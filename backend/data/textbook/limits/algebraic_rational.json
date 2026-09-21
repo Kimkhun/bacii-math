@@ -1,0 +1,249 @@
+{
+  "topic": "limits",
+  "category": "algebraic_rational",
+  "title_km": "លីមីតសនិទាន (ការដាក់ជាផលគុណកត្តារាង 0/0)",
+  "title_en": "Rational Limits (Factoring 0/0)",
+  "count": 30,
+  "exercises": [
+    {
+      "id": "rat_01",
+      "shape": "R1",
+      "prompt_latex": "\\lim_{x \\to -2} \\frac{x^2 - 4}{x + 2}",
+      "answer_latex": "-4",
+      "technique_km": "ប្រើរូបមន្តផលដកការេពីរតួ x^2 - 4 = (x - 2)(x + 2) រួចសម្រួលកត្តា (x + 2)",
+      "technique_en": "Factor numerator as difference of squares (x - 2)(x + 2), cancel (x + 2)"
+    },
+    {
+      "id": "rat_02",
+      "shape": "R1",
+      "prompt_latex": "\\lim_{x \\to 3} \\frac{x^2 - 9}{x^2 - 3x}",
+      "answer_latex": "2",
+      "technique_km": "ដាក់ភាគយកជាផលដកការេ (x - 3)(x + 3) និងទាញ x ជាកត្តារួមនៅភាគបែង រួចសម្រួល (x - 3)",
+      "technique_en": "Factor numerator as (x - 3)(x + 3) and denominator as x(x - 3), cancel (x - 3)"
+    },
+    {
+      "id": "rat_03",
+      "shape": "R2",
+      "prompt_latex": "\\lim_{x \\to 1} \\frac{x^3 - 1}{x^2 - 1}",
+      "answer_latex": "\\frac{3}{2}",
+      "technique_km": "ប្រើផលដកគូប x^3 - 1 = (x - 1)(x^2 + x + 1) និងផលដកការេ x^2 - 1 = (x - 1)(x + 1) រួចសម្រួល (x - 1)",
+      "technique_en": "Factor difference of cubes in numerator and difference of squares in denominator, cancel (x - 1)"
+    },
+    {
+      "id": "rat_04",
+      "shape": "R4",
+      "prompt_latex": "\\lim_{x \\to 2} \\frac{32 - 2x^4}{4 - x^2}",
+      "answer_latex": "16",
+      "technique_km": "ទាញ 2 ជាកត្តា 2(16 - x^4) = 2(4 - x^2)(4 + x^2) រួចសម្រួល (4 - x^2)",
+      "technique_en": "Factor 2(16 - x^4) = 2(4 - x^2)(4 + x^2), cancel (4 - x^2)"
+    },
+    {
+      "id": "rat_05",
+      "shape": "R3",
+      "prompt_latex": "\\lim_{x \\to 2} \\frac{x^2 + x - 6}{x - 2}",
+      "answer_latex": "5",
+      "technique_km": "ដាក់ភាគយកជាផលគុណកត្តា (x - 2)(x + 3) រួចសម្រួល (x - 2)",
+      "technique_en": "Factor numerator as (x - 2)(x + 3), cancel (x - 2)"
+    },
+    {
+      "id": "rat_06",
+      "shape": "R3",
+      "prompt_latex": "\\lim_{x \\to -1} \\frac{x^2 - 1}{x^2 + 3x + 2}",
+      "answer_latex": "-2",
+      "technique_km": "ដាក់ភាគយក (x - 1)(x + 1) និងភាគបែង (x + 1)(x + 2) រួចសម្រួល (x + 1)",
+      "technique_en": "Factor (x - 1)(x + 1) over (x + 1)(x + 2), cancel (x + 1)"
+    },
+    {
+      "id": "rat_07",
+      "shape": "R4",
+      "prompt_latex": "\\lim_{x \\to -2} \\frac{x^4 - 16}{x + 2}",
+      "answer_latex": "-32",
+      "technique_km": "ពន្លាតផលដកការេ x^4 - 16 = (x^2 - 4)(x^2 + 4) = (x - 2)(x + 2)(x^2 + 4) រួចសម្រួល (x + 2)",
+      "technique_en": "Factor x^4 - 16 = (x - 2)(x + 2)(x^2 + 4), cancel (x + 2)"
+    },
+    {
+      "id": "rat_08",
+      "shape": "R4",
+      "prompt_latex": "\\lim_{x \\to 1} \\frac{x^4 - 1}{x^3 - 1}",
+      "answer_latex": "\\frac{4}{3}",
+      "technique_km": "ដាក់ភាគយក (x - 1)(x + 1)(x^2 + 1) និងភាគបែង (x - 1)(x^2 + x + 1) រួចសម្រួល (x - 1)",
+      "technique_en": "Factor quartic numerator and cubic denominator, cancel (x - 1)"
+    },
+    {
+      "id": "rat_09",
+      "shape": "R2",
+      "prompt_latex": "\\lim_{x \\to -1} \\frac{2x^2 - x - 3}{x^3 + 1}",
+      "answer_latex": "-\\frac{5}{3}",
+      "technique_km": "ដាក់ភាគយក (x + 1)(2x - 3) និងភាគបែងផលបូកគូប (x + 1)(x^2 - x + 1) រួចសម្រួល (x + 1)",
+      "technique_en": "Factor quadratic numerator (x + 1)(2x - 3) and sum of cubes denominator, cancel (x + 1)"
+    },
+    {
+      "id": "rat_10",
+      "shape": "R2",
+      "prompt_latex": "\\lim_{x \\to 2} \\frac{x^3 - 8}{x^2 - 4}",
+      "answer_latex": "3",
+      "technique_km": "ដាក់ភាគយកផលដកគូប (x - 2)(x^2 + 2x + 4) និងភាគបែងផលដកការេ (x - 2)(x + 2) រួចសម្រួល (x - 2)",
+      "technique_en": "Factor difference of cubes and difference of squares, cancel (x - 2)"
+    },
+    {
+      "id": "rat_11",
+      "shape": "R2",
+      "prompt_latex": "\\lim_{x \\to 2} \\frac{x^3 - 8}{3x^2 - 5x - 2}",
+      "answer_latex": "\\frac{12}{7}",
+      "technique_km": "ដាក់ភាគយក (x - 2)(x^2 + 2x + 4) និងភាគបែង (x - 2)(3x + 1) រួចសម្រួល (x - 2)",
+      "technique_en": "Factor difference of cubes and quadratic denominator, cancel (x - 2)"
+    },
+    {
+      "id": "rat_12",
+      "shape": "R3",
+      "prompt_latex": "\\lim_{x \\to 3} \\frac{x^2 - 5x + 6}{x^2 - 9}",
+      "answer_latex": "\\frac{1}{6}",
+      "technique_km": "ដាក់ភាគយក (x - 2)(x - 3) និងភាគបែង (x - 3)(x + 3) រួចសម្រួល (x - 3)",
+      "technique_en": "Factor numerator (x - 2)(x - 3) and difference of squares denominator, cancel (x - 3)"
+    },
+    {
+      "id": "rat_13",
+      "shape": "R3",
+      "prompt_latex": "\\lim_{x \\to 2} \\frac{x^2 - 5x + 6}{x - 2}",
+      "answer_latex": "-1",
+      "technique_km": "ដាក់ភាគយក (x - 2)(x - 3) រួចសម្រួលកត្តា (x - 2)",
+      "technique_en": "Factor numerator as (x - 2)(x - 3), cancel (x - 2)"
+    },
+    {
+      "id": "rat_14",
+      "shape": "R1",
+      "prompt_latex": "\\lim_{x \\to a} \\frac{x^3 - ax^2}{x^2 - a^2}",
+      "answer_latex": "\\frac{a}{2}",
+      "technique_km": "ទាញ x^2 ជាកត្តារួម x^2(x - a) និងភាគបែង (x - a)(x + a) រួចសម្រួល (x - a)",
+      "technique_en": "Factor x^2(x - a) over (x - a)(x + a), cancel (x - a)"
+    },
+    {
+      "id": "rat_15",
+      "shape": "R1",
+      "prompt_latex": "\\lim_{x \\to \\sqrt{5}} \\frac{x^2 - 5}{x - \\sqrt{5}}",
+      "answer_latex": "2\\sqrt{5}",
+      "technique_km": "ដាក់ភាគយកជាផលដកការេ (x - \\sqrt{5})(x + \\sqrt{5}) រួចសម្រួល (x - \\sqrt{5})",
+      "technique_en": "Factor numerator as difference of squares (x - sqrt(5))(x + sqrt(5)), cancel (x - sqrt(5))"
+    },
+    {
+      "id": "rat_16",
+      "shape": "R1",
+      "prompt_latex": "\\lim_{x \\to \\sqrt{3}} \\frac{x^2 - 3}{x - \\sqrt{3}}",
+      "answer_latex": "2\\sqrt{3}",
+      "technique_km": "ដាក់ភាគយកជាផលដកការេ (x - \\sqrt{3})(x + \\sqrt{3}) រួចសម្រួល (x - \\sqrt{3})",
+      "technique_en": "Factor numerator as difference of squares (x - sqrt(3))(x + sqrt(3)), cancel (x - sqrt(3))"
+    },
+    {
+      "id": "rat_17",
+      "shape": "R1",
+      "prompt_latex": "\\lim_{x \\to -\\frac{1}{3}} \\frac{3x^2 - \\frac{1}{3}}{x + \\frac{1}{3}}",
+      "answer_latex": "-2",
+      "technique_km": "ទាញ 3 ជាកត្តារួម 3(x^2 - 1/9) = 3(x - 1/3)(x + 1/3) រួចសម្រួល (x + 1/3)",
+      "technique_en": "Factor 3(x^2 - 1/9) = 3(x - 1/3)(x + 1/3), cancel (x + 1/3)"
+    },
+    {
+      "id": "rat_18",
+      "shape": "R2",
+      "prompt_latex": "\\lim_{x \\to -3} \\frac{x^3 + 27}{2x^2 - 3x - 27}",
+      "answer_latex": "-\\frac{9}{5}",
+      "technique_km": "ដាក់ភាគយកផលបូកគូប (x + 3)(x^2 - 3x + 9) និងភាគបែង (x + 3)(2x - 9) រួចសម្រួល (x + 3)",
+      "technique_en": "Factor sum of cubes in numerator and quadratic in denominator, cancel (x + 3)"
+    },
+    {
+      "id": "rat_19",
+      "shape": "R4",
+      "prompt_latex": "\\lim_{x \\to 3} \\frac{x^4 - 81}{2x^3 - 5x^2 - 3x}",
+      "answer_latex": "\\frac{36}{7}",
+      "technique_km": "ដាក់ភាគយក (x - 3)(x + 3)(x^2 + 9) និងភាគបែង x(x - 3)(2x + 1) រួចសម្រួល (x - 3)",
+      "technique_en": "Factor numerator as (x - 3)(x + 3)(x^2 + 9) and denominator as x(x - 3)(2x + 1), cancel (x - 3)"
+    },
+    {
+      "id": "rat_20",
+      "shape": "R4",
+      "prompt_latex": "\\lim_{x \\to 2} \\frac{5x^2 - 8x - 4}{x^4 - 16}",
+      "answer_latex": "\\frac{3}{8}",
+      "technique_km": "ដាក់ភាគយក (x - 2)(5x + 2) និងភាគបែង (x - 2)(x + 2)(x^2 + 4) រួចសម្រួល (x - 2)",
+      "technique_en": "Factor numerator (x - 2)(5x + 2) and denominator (x - 2)(x + 2)(x^2 + 4), cancel (x - 2)"
+    },
+    {
+      "id": "rat_21",
+      "shape": "R5",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{(x - 2)^3 + 8}{x}",
+      "answer_latex": "12",
+      "technique_km": "ពន្លាតទ្វេធា (x - 2)^3 + 8 = x^3 - 6x^2 + 12x រួចសម្រួល x",
+      "technique_en": "Expand (x - 2)^3 + 8 = x^3 - 6x^2 + 12x, cancel x"
+    },
+    {
+      "id": "rat_22",
+      "shape": "R5",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{(x + 3)^2 - 9}{x}",
+      "answer_latex": "6",
+      "technique_km": "ពន្លាត (x + 3)^2 - 9 = x^2 + 6x រួចសម្រួលកត្តា x",
+      "technique_en": "Expand (x + 3)^2 - 9 = x^2 + 6x, cancel x"
+    },
+    {
+      "id": "rat_23",
+      "shape": "R5",
+      "prompt_latex": "\\lim_{x \\to 0} \\frac{(1 + x)^2 - (3x + 1)^2}{2x}",
+      "answer_latex": "-2",
+      "technique_km": "ពន្លាតភាគយកបាន -8x^2 - 4x រួចសម្រួល 2x",
+      "technique_en": "Expand numerator to -8x^2 - 4x, cancel 2x"
+    },
+    {
+      "id": "rat_24",
+      "shape": "R3",
+      "prompt_latex": "\\lim_{x \\to 3} \\frac{x^3 - 3x^2 + x - 3}{2x^2 - 7x + 3}",
+      "answer_latex": "2",
+      "technique_km": "ផ្ដុំតួភាគយក x^2(x - 3) + (x - 3) = (x - 3)(x^2 + 1) និងភាគបែង (x - 3)(2x - 1) រួចសម្រួល (x - 3)",
+      "technique_en": "Factor numerator by grouping as (x - 3)(x^2 + 1) and denominator as (x - 3)(2x - 1), cancel (x - 3)"
+    },
+    {
+      "id": "rat_25",
+      "shape": "R6",
+      "prompt_latex": "\\lim_{x \\to 1} \\frac{x^9 - 3x + 2}{x^6 + 5x - 6}",
+      "answer_latex": "\\frac{6}{11}",
+      "technique_km": "ចែកតាមហន័រដើម្បីទាញ (x - 1) ឬប្រើរូបមន្តដេរីវេ f'(1)/g'(1) = (9(1)^8 - 3)/(6(1)^5 + 5)",
+      "technique_en": "Factor (x - 1) via Horner's method or evaluate as derivative ratio f'(1)/g'(1) = 6/11"
+    },
+    {
+      "id": "rat_26",
+      "shape": "R6",
+      "prompt_latex": "\\lim_{x \\to 1} \\frac{x^{2015} - 1}{x - 1}",
+      "answer_latex": "2015",
+      "technique_km": "ប្រើរូបមន្តលីមីតពហុធាដឺក្រេ n គឺ \\lim_{x \\to 1} \\frac{x^n - 1}{x - 1} = n",
+      "technique_en": "Apply standard polynomial identity lim_{x->1} (x^n - 1)/(x - 1) = n"
+    },
+    {
+      "id": "rat_27",
+      "shape": "R6",
+      "prompt_latex": "\\lim_{x \\to 1} \\frac{x^{100} - 7x + 6}{x^{50} - 5x + 4}",
+      "answer_latex": "\\frac{31}{15}",
+      "technique_km": "ប្រើដេរីវេ f'(1)/g'(1) = (100(1)^{99} - 7)/(50(1)^{49} - 5) = 93/45 = 31/15",
+      "technique_en": "Apply derivative definition f'(1)/g'(1) = (100 - 7)/(50 - 5) = 93/45 = 31/15"
+    },
+    {
+      "id": "rat_28",
+      "shape": "R6",
+      "prompt_latex": "\\lim_{x \\to -1} \\frac{x^{2017} + 1}{x^{2015} + 1}",
+      "answer_latex": "\\frac{2017}{2015}",
+      "technique_km": "ប្រើនិយមន័យដេរីវេត្រង់ x = -1 បាន 2017(-1)^{2016} / (2015(-1)^{2014}) = 2017/2015",
+      "technique_en": "Apply derivative definition at x = -1 to get 2017/2015"
+    },
+    {
+      "id": "rat_29",
+      "shape": "R6",
+      "prompt_latex": "\\lim_{x \\to 1} \\frac{x + x^2 + \\dots + x^{2017} - 2017}{x + x^2 + \\dots + x^{2016} - 2016}",
+      "answer_latex": "\\frac{2018}{2016}",
+      "technique_km": "បំបែក 2017 = 1 + 1 + ... + 1 រួចទាញផលបូក \\sum (x^k - 1)/(x - 1) បាន [2017*2018/2]/[2016*2017/2] = 2018/2016 = 1009/1008",
+      "technique_en": "Split into sum of (x^k - 1)/(x - 1), yielding [n(n+1)/2] / [m(m+1)/2]"
+    },
+    {
+      "id": "rat_30",
+      "shape": "R6",
+      "prompt_latex": "\\lim_{x \\to 1} \\frac{x + x^2 + \\dots + x^n - n}{x + x^2 + \\dots + x^m - m}",
+      "answer_latex": "\\frac{n(n + 1)}{m(m + 1)}",
+      "technique_km": "រូបមន្តទូទៅ៖ \\sum_{k=1}^n k / \\sum_{j=1}^m j = \\frac{n(n+1)}{m(m+1)}",
+      "technique_en": "General formula: sum_{k=1}^n k / sum_{j=1}^m j = n(n+1)/(m(m+1))"
+    }
+  ]
+}

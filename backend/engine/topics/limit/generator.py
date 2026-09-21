@@ -4,7 +4,7 @@ from sympy import expand, latex, oo, sympify
 from engine.core.expr_shared import _build_expr_problem, _expr_latex, _fmt_poly
 from engine.notation import pretty_expr, pretty_point
 
-from .structures import LIMIT_TECHNIQUES, _LIMIT_CURATED_TEMPLATES
+from .structures import LIMIT_STRUCTURES, LIMIT_TECHNIQUES, _LIMIT_CURATED_TEMPLATES
 
 
 def _sample_direct_substitution(rng):
@@ -133,9 +133,9 @@ def _build_sampled_limit(technique, expr, point, difficulty):
     point_latex = r"+\infty" if point == "oo" else str(point)
     point_display = "+∞" if point == "oo" else str(point)
     params = {"expr": expr, "var": "x", "point": point}
-    prompt = f"Find lim(x → {point_display}) of {pretty_expr(expr)}."
+    prompt = f"lim(x → {point_display}) of {pretty_expr(expr)}"
     expr_latex = _expr_latex(expr)
-    prompt_latex = rf"\text{{Find }} \lim_{{x \to {point_latex}}} {expr_latex}"
+    prompt_latex = rf"\lim_{{x \to {point_latex}}} {expr_latex}"
     display = f"lim_{{x \\to {point_display}}} {expr}"
     return _build_expr_problem("limit", "limit", params, difficulty, prompt, prompt_latex, display)
 
@@ -174,9 +174,9 @@ def _build_curated_limit(item, difficulty):
     }
     point_display = pretty_point(point_str)
     point_latex_str = r"+\infty" if point is oo else r"-\infty" if point is -oo else latex(point)
-    prompt = f"Find lim({var} → {point_display}) of {pretty_expr(str(expr))}."
-    expr_l = item.get("expr_latex") or latex(expr)
-    prompt_latex = rf"\text{{Find }} \lim_{{{var} \to {point_latex_str}}} {expr_l}"
+    prompt = f"lim({var} → {point_display}) of {pretty_expr(str(expr))}"
+    expr_l = item.get("expr_latex") or latex(expr, ln_notation=True)
+    prompt_latex = rf"\lim_{{{var} \to {point_latex_str}}} {expr_l}"
     display = f"lim_{{{var} \\to {point_display}}} {expr}"
 
     problem = _build_expr_problem("limit", "limit", params, difficulty, prompt, prompt_latex, display)
@@ -185,26 +185,94 @@ def _build_curated_limit(item, difficulty):
 
 
 def _generate_limit(rng, difficulty, variant=None):
-    if variant and variant in _LIMIT_SAMPLERS:
-        return generate_limit_for_technique(rng, variant, difficulty)
-    if variant in LIMIT_TECHNIQUES:
-        # Curated-only technique: replay one of its real BAC II exercises,
-        # labelled at the exercise's own difficulty when none match the request.
-        pool = [t for t in _LIMIT_CURATED_TEMPLATES if t["formula_name"] == variant]
-        at_level = [t for t in pool if t["difficulty"] == difficulty]
-        if pool:
-            item = rng.choice(at_level or pool)
-            return _build_curated_limit(item, difficulty if at_level else item["difficulty"])
+    if variant:
+        norm_variant = variant[6:] if variant.startswith("limit:") else variant
+        # Category/family match (e.g. "rational", "radical", "trig", "exponential", "logarithmic", "infinity")
+        cat_pool = [
+            s for s in LIMIT_STRUCTURES
+            if s.get("category") == norm_variant
+            or (norm_variant in ("exponential", "exp_log") and s.get("category") == "exponential")
+            or (norm_variant in ("logarithmic", "log") and s.get("category") == "logarithmic")
+        ]
+        if cat_pool:
+            at_diff = [s for s in cat_pool if s.get("difficulty") == difficulty]
+            chosen = rng.choice(at_diff or cat_pool)
+            expr, point, slots = chosen["sampler"](rng)
+            prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty))
+            prob["params"]["technique"] = chosen["id"]
+            prob["params"]["title_km"] = chosen.get("title_km")
+            prob["params"]["formula_name"] = chosen.get("shape", chosen["id"])
+            prob["params"].update(slots)
+            return prob
+
+        # Subfamily match (e.g. "rational:powers", "exponential:zero", "exponential:one_inf", "logarithmic:zero", etc.)
+        subfam_pool = []
+        if ":" in variant:
+            parts = variant.split(":")
+            cat_part = parts[-2] if len(parts) >= 2 and parts[-2] != "limit" else None
+            sub_part = parts[-1]
+            subfam_pool = [
+                s for s in LIMIT_STRUCTURES
+                if s.get("subfamily") == sub_part and (
+                    not cat_part or s.get("category") == cat_part
+                    or (cat_part in ("exponential", "exp_log") and s.get("category") == "exponential")
+                    or (cat_part in ("logarithmic", "log") and s.get("category") == "logarithmic")
+                )
+            ]
+        if subfam_pool:
+            at_diff = [s for s in subfam_pool if s.get("difficulty") == difficulty]
+            chosen = rng.choice(at_diff or subfam_pool)
+            expr, point, slots = chosen["sampler"](rng)
+            prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty))
+            prob["params"]["technique"] = chosen["id"]
+            prob["params"]["title_km"] = chosen.get("title_km")
+            prob["params"]["formula_name"] = chosen.get("shape", chosen["id"])
+            prob["params"].update(slots)
+            return prob
+
+        # Specific structure id match (e.g. "limit:rational:diff_cubes" or "diff_cubes")
+        matching = [s for s in LIMIT_STRUCTURES if s["id"] == variant or s["id"].endswith(f":{variant}")]
+        if matching:
+            chosen = matching[0]
+            expr, point, slots = chosen["sampler"](rng)
+            prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty))
+            prob["params"]["technique"] = chosen["id"]
+            prob["params"]["title_km"] = chosen.get("title_km")
+            prob["params"]["formula_name"] = chosen.get("shape", chosen["id"])
+            prob["params"].update(slots)
+            return prob
+
+        if variant in _LIMIT_SAMPLERS:
+            return generate_limit_for_technique(rng, variant, difficulty)
+        if variant in LIMIT_TECHNIQUES:
+            pool = [t for t in _LIMIT_CURATED_TEMPLATES if t["formula_name"] == variant]
+            at_level = [t for t in pool if t["difficulty"] == difficulty]
+            if pool:
+                item = rng.choice(at_level or pool)
+                return _build_curated_limit(item, difficulty if at_level else item["difficulty"])
+
+    # If no variant or "any": sample from all LIMIT_STRUCTURES matching difficulty
+    matching_structs = [s for s in LIMIT_STRUCTURES if s.get("difficulty") == difficulty]
+    pool = matching_structs or LIMIT_STRUCTURES
+    if pool and rng.random() < 0.7:
+        chosen = rng.choice(pool)
+        expr, point, slots = chosen["sampler"](rng)
+        prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty))
+        prob["params"]["technique"] = chosen["id"]
+        prob["params"]["title_km"] = chosen.get("title_km")
+        prob["params"]["formula_name"] = chosen.get("shape", chosen["id"])
+        prob["params"].update(slots)
+        return prob
 
     curated_pool = [t for t in _LIMIT_CURATED_TEMPLATES if t["difficulty"] == difficulty]
-    if curated_pool and rng.random() < 0.5:
+    if curated_pool:
         return _build_curated_limit(rng.choice(curated_pool), difficulty)
 
-    techniques = _LIMIT_TECHNIQUES_BY_DIFFICULTY.get(difficulty, [])
-    if not techniques:
-        if not curated_pool:
-            raise ValueError(f"no curated exercises or parameterizable techniques for difficulty {difficulty}")
-        return _build_curated_limit(rng.choice(curated_pool), difficulty)
-
-    technique = rng.choice(techniques)
-    return generate_limit_for_technique(rng, technique, difficulty)
+    chosen = rng.choice(LIMIT_STRUCTURES)
+    expr, point, slots = chosen["sampler"](rng)
+    prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty))
+    prob["params"]["technique"] = chosen["id"]
+    prob["params"]["title_km"] = chosen.get("title_km")
+    prob["params"]["formula_name"] = chosen.get("shape", chosen["id"])
+    prob["params"].update(slots)
+    return prob

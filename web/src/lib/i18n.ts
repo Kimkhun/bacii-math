@@ -481,7 +481,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     diff_medium: "មធ្យម",
     diff_hard: "ពិបាក",
 
-    mode_templates: "គំរូ",
+    mode_templates: "ពុម្ព",
     mode_gemini: "AI Gemini",
 
     btn_new_question: "លំហាត់ថ្មី",
@@ -686,12 +686,79 @@ export const QUESTION_TYPE_LABELS: Record<string, { en: string; km: string }> = 
   de_moivre_power: { en: "De Moivre's formula", km: "រូបមន្តដឺម័រ" },
   nth_roots: { en: "n-th roots", km: "ឫសទី n" },
 
-  // Limits
+  // Limits (Categories & Families)
+  "limit:rational": { en: "Rational limits", km: "លីមីតសនិទាន" },
+  "limit:rational:powers": { en: "Algebraic powers (squares, cubes, general)", km: "រូបមន្តស្វ័យគុណ (ការេ គូប ដឺក្រេខ្ពស់)" },
+  "limit:rational:quadratics": { en: "Quadratic trinomials", km: "បំបែកត្រីធាដឺក្រេទីពីរ" },
+  "limit:rational:binomial": { en: "Shifted binomials at 0", km: "ពន្លាតទ្វេធាត្រង់ 0" },
+
+  "limit:radical": { en: "Radical limits", km: "លីមីតរ៉ាឌីកាល់" },
+  "limit:radical:sqrt": { en: "Square root conjugates", km: "កន្សោមឆ្លាស់ឬសការេ" },
+  "limit:radical:cbrt": { en: "Cube root conjugates", km: "កន្សោមឆ្លាស់ឬសគូប" },
+  "limit:radical:double_and_split": { en: "Double conjugate & split trick", km: "ឆ្លាស់ពីរជាន់ & ថែមថយតួ" },
+
+  "limit:trig": { en: "Trigonometric limits", km: "លីមីតត្រីកោណមាត្រ" },
+  "limit:trig:sinc_standard": { en: "Fundamental limit sin(kx)/x at 0", km: "លីមីតគ្រឹះ sin(kx)/x ត្រង់ 0" },
+  "limit:trig:change_var": { en: "Change of variable at non-zero points", km: "ប្តូរអថេរត្រង់ π/2, π/3, π/4, π" },
+  "limit:trig:half_angle": { en: "Half-angle & double-angle identities", km: "រូបមន្តកន្លះមុំ និងមុំទ្វេ" },
+  "limit:trig:sum_product": { en: "Sum-to-product & linear combinations", km: "បំប្លែងផលបូកទៅផលគុណ (Simpson)" },
+  "limit:trig:radical_trig": { en: "Radicals mixed with trigonometry", km: "កន្សោមឆ្លាស់ឬសការេចម្រុះត្រីកោណមាត្រ" },
+
+  "limit:exponential": { en: "Exponential limits", km: "លីមីតអិចស្ប៉ូណង់ស្យែល" },
+  "limit:exponential:zero": { en: "Indeterminate form 0/0", km: "រាងមិនកំណត់ 0/0" },
+  "limit:exponential:trig_combo": { en: "Mixed with trigonometry", km: "រាងចម្រុះត្រីកោណមាត្រ" },
+  "limit:exponential:one_inf": { en: "Indeterminate form 1^∞", km: "រាងមិនកំណត់ 1^អនន្ត" },
+  "limit:exponential:infinity": { en: "Limits at infinity & growth dominance", km: "លីមីតនៅអនន្ត និងលំដាប់កំណើន" },
+  "limit:exp_log": { en: "Exponential limits", km: "លីមីតអិចស្ប៉ូណង់ស្យែល" },
+
+  "limit:logarithmic": { en: "Logarithmic limits", km: "លីមីតលោការីត" },
+  "limit:logarithmic:zero": { en: "Indeterminate form 0/0", km: "រាងមិនកំណត់ 0/0" },
+  "limit:logarithmic:rational": { en: "Logarithm of rational function", km: "លោការីតនៃកន្សោមសនិទាន" },
+  "limit:logarithmic:growth_zero": { en: "Growth dominance at 0⁺", km: "លំដាប់កំណើនត្រង់ 0⁺ (x ln x)" },
+  "limit:logarithmic:infinity": { en: "Limits at infinity & growth dominance", km: "លីមីតនៅអនន្ត និងលំដាប់កំណើន" },
+
+  "limit:infinity": { en: "Limits at infinity", km: "លីមីតនៅអនន្ត" },
+
+  "limit:rational:diff_squares_linear": { en: "Diff of squares (linear)", km: "ផលដកការេពីរតួ (លីនេអ៊ែរ)" },
+  "limit:rational:diff_squares_quad": { en: "Diff of squares (factor x)", km: "ផលដកការេពីរតួ (ទាញកត្តា x)" },
+  "limit:rational:diff_cubes": { en: "Diff of cubes", km: "ផលដកគូបពីរតួ (x³ - a³)" },
+  "limit:rational:sum_cubes": { en: "Sum of cubes", km: "ផលបូកគូបពីរតួ (x³ + a³)" },
+  "limit:rational:quad_linear": { en: "Quadratic (linear denom)", km: "ត្រីធាដឺក្រេទីពីរ (ភាគបែងលីនេអ៊ែរ)" },
+  "limit:rational:quad_quad": { en: "Quadratic (cancel x-c)", km: "ត្រីធាដឺក្រេទីពីរ (សម្រួលកត្តា x-c)" },
+  "limit:rational:quartic": { en: "Quartic difference factoring", km: "ផលដកដឺក្រេទីបួន (x⁴ - a⁴)" },
+  "limit:rational:shifted_binomial": { en: "Shifted binomial at 0", km: "ពន្លាតទ្វេធាត្រង់ 0" },
+  "limit:rational:high_degree": { en: "High-degree identity", km: "លីមីតពហុធាដឺក្រេខ្ពស់" },
+
+  "limit:radical:sqrt_single_num": { en: "Sqrt conjugate (numerator)", km: "កន្សោមឆ្លាស់ឬសការេនៅភាគយក" },
+  "limit:radical:sqrt_single_den": { en: "Sqrt conjugate (denominator)", km: "កន្សោមឆ្លាស់ឬសការេនៅភាគបែង" },
+  "limit:radical:sqrt_two_radicals": { en: "Diff of two sqrts", km: "ផលដកឬសការេពីរ" },
+  "limit:radical:sqrt_double_conjugate": { en: "Double sqrt conjugate", km: "កន្សោមឆ្លាស់ពីរជាន់ (ភាគយកនិងភាគបែង)" },
+  "limit:radical:cbrt_single": { en: "Cube root conjugate", km: "កន្សោមឆ្លាស់ឬសគូប" },
+  "limit:radical:split_trick": { en: "Mixed radical split trick", km: "វិធីថែមថយចំនួនថេរបំបែកលីមីត" },
+
+  "limit:infinity:conjugate": { en: "Conjugate at infinity (∞ - ∞)", km: "គុណកន្សោមឆ្លាស់នៅអនន្ត (រាង ∞ - ∞)" },
+  "limit:infinity:rational": { en: "Rational at infinity", km: "លីមីតអនុគមន៍សនិទាននៅអនន្ត" },
+
+  "limit:trig:sinc_standard": { en: "Fundamental sinc limit sin(kx)/x", km: "លីមីតគ្រឹះ sin(kx)/x" },
+  "limit:trig:half_angle": { en: "Half-angle trig (1 - cos(mx))/x²", km: "លីមីតកន្លះមុំ (1 - cos(mx))/x²" },
+
+  "limit:exponential:diff_ratio": { en: "Difference of exponentials", km: "ផលដកអិចស្ប៉ូណង់ស្យែលត្រង់ 0" },
+  "limit:exponential:trig_combo": { en: "Exponential mixed with trig", km: "អិចស្ប៉ូណង់ស្យែលចម្រុះត្រីកោណមាត្រ" },
+  "limit:exponential:quad_trinomial": { en: "Quadratic trinomial in e^x", km: "ត្រីធាអិចស្ប៉ូណង់ស្យែលត្រង់ 0" },
+  "limit:exponential:one_inf_rational": { en: "Form 1^∞ (Rational base)", km: "រាងមិនកំណត់ 1^អនន្ត (ប្រភាគសនិទាន)" },
+  "limit:exponential:one_inf_trig": { en: "Form 1^∞ (Trig/Substitution)", km: "រាងមិនកំណត់ 1^អនន្ត (ត្រីកោណមាត្រ)" },
+  "limit:exponential:growth_infinity": { en: "Exponential growth dominance", km: "លីមីតនៅអនន្ត និងលំដាប់កំណើន" },
+
+  "limit:exp:standard": { en: "Exponential ratio (e^(ax) - 1)/(e^(bx) - 1)", km: "ផលធៀបអិចស្ប៉ូណង់ស្យែល (e^(ax) - 1)/(e^(bx) - 1)" },
+  "limit:log:infinity": { en: "Logarithmic limit at infinity", km: "លីមីតអនុគមន៍លោការីតនៅអនន្ត" },
+  "limit:euler:one_infinity": { en: "Indeterminate form 1^∞", km: "រាងមិនកំណត់ 1^អនន្ត (ទម្រង់ចំនួន e)" },
+
+  // Limits (Legacy keys preserved for backwards compatibility)
   "limit:direct_substitution": { en: "Direct substitution", km: "ជំនួសផ្ទាល់" },
   "limit:factoring_0_0": { en: "Factoring (0/0)", km: "ដាក់ជាផលគុណកត្តា (0/0)" },
   "limit:rationalization_conjugate_finite": { en: "Conjugate rationalization", km: "គុណកន្សោមឆ្លាស់" },
-  "limit:sinc_standard_limit": { en: "Standard limit sin(x)/x", km: "លីមីតគំរូ sin(x)/x" },
-  "limit:exponential_standard_limit": { en: "Standard limit (eˣ-1)/x", km: "លីមីតគំរូ (eˣ-1)/x" },
+  "limit:sinc_standard_limit": { en: "Fundamental limit sin(x)/x", km: "លីមីតគ្រឹះ sin(x)/x" },
+  "limit:exponential_standard_limit": { en: "Fundamental limit (eˣ-1)/x", km: "លីមីតគ្រឹះ (eˣ-1)/x" },
   "limit:rationalization_sinc_combo": { en: "Conjugate + sinc combo", km: "កន្សោមឆ្លាស់ + sinc" },
   "limit:exponential_sinc_combo": { en: "Exponential + sinc combo", km: "អិចស្បូណង់ស្យែល + sinc" },
   "limit:half_angle_sinc_combo": { en: "Half-angle + sinc combo", km: "កន្លះមុំ + sinc" },

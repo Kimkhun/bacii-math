@@ -1,0 +1,89 @@
+{
+  "topic": "limits",
+  "category": "indeterminate_one_infinity",
+  "title_km": "លីមីតរាងមិនកំណត់ 1^អនន្ត (ចំនួន e)",
+  "title_en": "Indeterminate Form 1^infinity (Euler's Number e)",
+  "count": 10,
+  "exercises": [
+    {
+      "id": "one_inf_01",
+      "shape": "U1",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\left(\\frac{x+2}{x}\\right)^x",
+      "answer_latex": "e^2",
+      "technique_km": "បំបែកជា (1 + 2/x)^x = [(1 + 1/(x/2))^{x/2}]^2 = e^2",
+      "technique_en": "Rewrite as (1 + 2/x)^x = e^2"
+    },
+    {
+      "id": "one_inf_02",
+      "shape": "U1",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\left(\\frac{x-1}{x+3}\\right)^x",
+      "answer_latex": "e^{-4}",
+      "technique_km": "បំបែក (x-1)/(x+3) = 1 - 4/(x+3) បានលីមីតស្មើ e^{-4}",
+      "technique_en": "Rewrite as (1 - 4/(x+3))^x = e^{-4}"
+    },
+    {
+      "id": "one_inf_03",
+      "shape": "U2",
+      "prompt_latex": "\\lim_{x \\to 0} (1 + 2x)^{\\frac{1}{x}}",
+      "answer_latex": "e^2",
+      "technique_km": "សរសេរជា [(1 + 2x)^{1/(2x)}]^2 = e^2",
+      "technique_en": "Standard limit (1+2x)^{1/(2x) * 2} = e^2"
+    },
+    {
+      "id": "one_inf_04",
+      "shape": "U2",
+      "prompt_latex": "\\lim_{x \\to 0} (1 - 3x)^{\\frac{2}{x}}",
+      "answer_latex": "e^{-6}",
+      "technique_km": "សរសេរជា [(1 - 3x)^{1/(-3x)}]^{-6} = e^{-6}",
+      "technique_en": "Standard limit form gives e^{-3 * 2} = e^{-6}"
+    },
+    {
+      "id": "one_inf_05",
+      "shape": "U3",
+      "prompt_latex": "\\lim_{x \\to 0} (1 + \\sin x)^{\\frac{1}{x}}",
+      "answer_latex": "e",
+      "technique_km": "សរសេរជា [(1 + \\sin x)^{1/\\sin x}]^{(\\sin x)/x} = e^1 = e",
+      "technique_en": "Compose standard limit with (sin x)/x -> 1, result e"
+    },
+    {
+      "id": "one_inf_06",
+      "shape": "U3",
+      "prompt_latex": "\\lim_{x \\to 0} (\\cos x)^{\\frac{1}{x^2}}",
+      "answer_latex": "e^{-\\frac{1}{2}}",
+      "technique_km": "ប្រើ 1 - cos x \\sim x^2 / 2 នាំឱ្យ ln(\\cos x) / x^2 \\to -1/2 ដូចនេះលីមីតស្មើ e^{-1/2}",
+      "technique_en": "Use ln(cos x)/x^2 -> -1/2, yielding e^{-1/2}"
+    },
+    {
+      "id": "one_inf_07",
+      "shape": "U3",
+      "prompt_latex": "\\lim_{x \\to \\frac{\\pi}{2}} (1 + \\cos x)^{\\frac{1}{x - \\frac{\\pi}{2}}}",
+      "answer_latex": "e^{-1}",
+      "technique_km": "តាង t = x - \\pi/2 \\to 0 នាំឱ្យ cos x = -sin t \\sim -t ដូចនេះលីមីតស្មើ e^{-1}",
+      "technique_en": "Substitute t = x - pi/2, cos(t + pi/2) = -sin(t), yielding e^{-1}"
+    },
+    {
+      "id": "one_inf_08",
+      "shape": "U1",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\left(\\frac{2x+3}{2x+1}\\right)^{x+1}",
+      "answer_latex": "e",
+      "technique_km": "បំបែក (2x+3)/(2x+1) = 1 + 2/(2x+1) រួចគុណនឹង (x+1) បាន 2(x+1)/(2x+1) \\to 1 ដូចនេះស្មើ e",
+      "technique_en": "Rewrite base as 1 + 2/(2x+1), exponent times fraction -> 1, limit e"
+    },
+    {
+      "id": "one_inf_09",
+      "shape": "U1",
+      "prompt_latex": "\\lim_{x \\to 0} \\left(\\frac{1+x}{1-x}\\right)^{\\frac{1}{x}}",
+      "answer_latex": "e^2",
+      "technique_km": "បំបែក [(1+x)^{1/x}] / [(1-x)^{1/x}] = e / e^{-1} = e^2",
+      "technique_en": "Ratio of (1+x)^{1/x} and (1-x)^{1/x} gives e / e^{-1} = e^2"
+    },
+    {
+      "id": "one_inf_10",
+      "shape": "U1",
+      "prompt_latex": "\\lim_{x \\to +\\infty} \\left(1 - \\frac{1}{x}\\right)^x",
+      "answer_latex": "e^{-1}",
+      "technique_km": "រូបមន្តលីមីតគ្រឹះ (1 - 1/x)^x = e^{-1}",
+      "technique_en": "Standard limit (1 - 1/x)^x = e^{-1}"
+    }
+  ]
+}

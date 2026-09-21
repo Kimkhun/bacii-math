@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useState } from "react";
 
 import FunctionGraph from "@/components/FunctionGraph";
 import MathText from "@/components/MathText";
@@ -85,6 +85,22 @@ type KmPart = {
   answer_latex: string;
 };
 
+type VariantStep = {
+  title?: string;
+  detail?: string;
+  formula?: string;
+};
+
+type Variant = {
+  variant_index: number;
+  params: Record<string, unknown>;
+  prompt?: string;
+  prompt_latex?: string;
+  answer_latex?: string;
+  answer_exact?: string;
+  steps?: VariantStep[];
+};
+
 type Structure = {
   id: string;
   pattern?: string | null;
@@ -94,6 +110,8 @@ type Structure = {
   sample_prompt_latex?: string | null;
   sample_answer?: string | null;
   sample_answer_latex?: string | null;
+  sample_params?: Record<string, unknown> | null;
+  variants?: Variant[] | null;
   formula_tags?: string[] | null;
   source_labels?: string[] | null;
   graph?: unknown;
@@ -551,8 +569,45 @@ export default function StructureModal({
   onClose: () => void;
 }) {
   const [structure, setStructure] = useState<Structure>(initialStructure);
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
+  const [customParams, setCustomParams] = useState<Record<string, unknown> | null>(null);
+  const [customResult, setCustomResult] = useState<{
+    prompt: string;
+    prompt_latex: string;
+    answer_exact: string;
+    answer_latex: string;
+    steps: VariantStep[];
+  } | null>(null);
+  const [customSolving, setCustomSolving] = useState(false);
   const [mode, setMode] = useState<"ai" | "override">("ai");
   const [regenerating, setRegenerating] = useState(false);
+
+  // Sync state whenever a different structure is selected
+  useEffect(() => {
+    setStructure(initialStructure);
+    setSelectedVariantIdx(0);
+    setCustomParams(null);
+    setCustomResult(null);
+    // If structure has no variants loaded yet, automatically fetch them
+    if (
+      (initialStructure.id.startsWith("limit:") ||
+        initialStructure.id.startsWith("integral:") ||
+        initialStructure.id.startsWith("curated_") ||
+        initialStructure.id.startsWith("int_")) &&
+      (!initialStructure.variants || initialStructure.variants.length === 0)
+    ) {
+      setRegenerating(true);
+      api
+        .regenerateStructure(initialStructure.id)
+        .then((res) => {
+          if (res?.structure) {
+            setStructure(res.structure as unknown as Structure);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setRegenerating(false));
+    }
+  }, [initialStructure]);
 
   const handleRegenerate = async () => {
     try {
@@ -560,6 +615,9 @@ export default function StructureModal({
       const res = await api.regenerateStructure(structure.id);
       if (res?.structure) {
         setStructure(res.structure as unknown as Structure);
+        setSelectedVariantIdx(0);
+        setCustomParams(null);
+        setCustomResult(null);
       }
     } catch (err) {
       console.error("Failed to regenerate:", err);
@@ -567,6 +625,102 @@ export default function StructureModal({
       setRegenerating(false);
     }
   };
+
+  const selectPresetVariant = (idx: number) => {
+    setSelectedVariantIdx(idx);
+    setCustomParams(null);
+    setCustomResult(null);
+  };
+
+  const isCustom = customResult !== null;
+  const activeVariant = structure.variants && structure.variants.length > 0
+    ? structure.variants[selectedVariantIdx] || structure.variants[0]
+    : null;
+  const activeParams = (customParams || (activeVariant ? activeVariant.params : structure.sample_params)) as Record<string, unknown> | null;
+
+  const handleParamSelect = async (key: string, value: unknown) => {
+    const base = { ...((activeVariant ? activeVariant.params : structure.sample_params) || {}), ...(customParams || {}) };
+    const updated = { ...base, [key]: value };
+    setCustomParams(updated);
+
+    // Check if updated params match one of the preset variants
+    const matchIdx = structure.variants?.findIndex((v) => {
+      const vParams = v.params || {};
+      const keys = Object.keys(updated).filter((k) => !["expr", "var", "variant", "lower", "upper", "point", "formula_name", "curated_technique"].includes(k));
+      return keys.every((pk) => String(vParams[pk]) === String(updated[pk]));
+    });
+
+    if (matchIdx !== undefined && matchIdx >= 0) {
+      setSelectedVariantIdx(matchIdx);
+      setCustomResult(null);
+      return;
+    }
+
+    setCustomSolving(true);
+    try {
+      const res = await api.solveCustomStructure(structure.id, updated);
+      if (res) {
+        setCustomResult(res);
+      }
+    } catch (err) {
+      console.error("Failed to solve custom params:", err);
+    } finally {
+      setCustomSolving(false);
+    }
+  };
+
+  // Parameter options collected across variants
+  const paramChoices = useMemo(() => {
+    const choices: Record<string, (string | number)[]> = {};
+    const variants = structure.variants || [];
+    for (const v of variants) {
+      if (!v.params) continue;
+      for (const [k, val] of Object.entries(v.params)) {
+        if (["expr", "var", "variant", "lower", "upper", "point", "formula_name", "curated_technique"].includes(k)) continue;
+        if (!choices[k]) choices[k] = [];
+        if (!choices[k].some((existing) => String(existing) === String(val))) {
+          choices[k].push(val as string | number);
+        }
+      }
+    }
+    if (structure.sample_params) {
+      for (const [k, val] of Object.entries(structure.sample_params)) {
+        if (["expr", "var", "variant", "lower", "upper", "point", "formula_name", "curated_technique"].includes(k)) continue;
+        if (!choices[k]) choices[k] = [];
+        if (!choices[k].some((existing) => String(existing) === String(val))) {
+          choices[k].push(val as string | number);
+        }
+      }
+    }
+    for (const k in choices) {
+      choices[k].sort((a, b) => {
+        const numA = Number(a);
+        const numB = Number(b);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return String(a).localeCompare(String(b));
+      });
+    }
+    return choices;
+  }, [structure]);
+
+  const rawPrompt = isCustom
+    ? (customResult.prompt_latex || customResult.prompt)
+    : activeVariant
+    ? (activeVariant.prompt_latex || activeVariant.prompt)
+    : (structure.sample_prompt_latex || structure.sample_prompt);
+  const cleanPrompt = rawPrompt
+    ? rawPrompt.replace(/^Find\s+/i, "").replace(/\\log/g, "\\ln")
+    : "";
+  const rawAnswer = isCustom
+    ? (customResult.answer_latex || customResult.answer_exact)
+    : activeVariant
+    ? (activeVariant.answer_latex || activeVariant.answer_exact)
+    : (structure.sample_answer_latex || structure.sample_answer);
+  const cleanAnswer = rawAnswer ? String(rawAnswer).replace(/\\log/g, "\\ln") : "";
+  const activeSteps = (isCustom ? customResult.steps : activeVariant?.steps)?.map((st) => ({
+    ...st,
+    detail: st.detail ? st.detail.replace(/\\log/g, "\\ln") : st.detail,
+  }));
 
   // Group parts by the exam section (label prefix before the first '.').
   const sections = new Map<string, Part[]>();
@@ -576,8 +730,8 @@ export default function StructureModal({
     sections.get(sec)!.push(p);
   }
 
-  const prompt = structure.sample_prompt || structure.sample_prompt_latex;
-  const promptIsLatex = !structure.sample_prompt && !!structure.sample_prompt_latex;
+  const prompt = cleanPrompt;
+  const activeAnswer = cleanAnswer;
 
   return (
     <div
@@ -647,6 +801,99 @@ export default function StructureModal({
                 <p>{structure.pattern}</p>
               )}
             </div>
+
+            {/* Pre-generated Variants Switcher */}
+            {structure.variants && structure.variants.length > 1 && (
+              <div className="mt-3 flex flex-wrap items-center gap-2 pt-2 border-t border-sky-100">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-sky-800">
+                  វ៉ារ្យ៉ង់គំរូ (Variants):
+                </span>
+                <div className="flex flex-wrap items-center gap-1.5 p-1 bg-white/90 rounded-lg border border-sky-200">
+                  {structure.variants.map((v, idx) => {
+                    const isSelected = !isCustom && idx === selectedVariantIdx;
+                    const paramSummary = Object.entries(v.params || {})
+                      .filter(([k]) => !["expr", "var", "variant", "lower", "upper", "point", "formula_name", "curated_technique"].includes(k))
+                      .map(([k, val]) => `${k} = ${val}`)
+                      .join(", ");
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => selectPresetVariant(idx)}
+                        className={`px-2.5 py-1 text-xs rounded-md font-mono transition-all ${
+                          isSelected
+                            ? "bg-sky-700 text-white font-bold shadow-xs"
+                            : "text-sky-900 hover:bg-sky-100 bg-white"
+                        }`}
+                      >
+                        Variant {v.variant_index} {paramSummary ? `(${paramSummary})` : ""}
+                      </button>
+                    );
+                  })}
+                  {isCustom && (
+                    <span className="px-2.5 py-1 text-xs rounded-md font-mono font-bold bg-amber-500 text-white shadow-xs">
+                      Custom Mix ✨
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Active / Interactive Parameters */}
+            {activeParams && Object.keys(activeParams).length > 0 && (() => {
+              const entries = Object.entries(activeParams).filter(
+                ([k]) => !["expr", "var", "variant", "lower", "upper", "point", "formula_name", "curated_technique"].includes(k)
+              );
+              return entries.length > 0 ? (
+                <div className="mt-2.5 pt-2.5 border-t border-sky-100 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-sky-800">
+                      ប៉ារ៉ាម៉ែត្រ (Interactive Parameters):
+                    </span>
+                    {customSolving && (
+                      <span className="text-xs text-amber-600 font-medium animate-pulse">
+                        កំពុងគណនា (Calculating)...
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {entries.map(([k, currentVal]) => {
+                      const choices = paramChoices[k] && paramChoices[k].length > 0
+                        ? paramChoices[k]
+                        : [currentVal as string | number];
+                      return (
+                        <div
+                          key={k}
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-sky-200 shadow-xs"
+                        >
+                          <span className="text-xs font-mono font-bold text-sky-950">
+                            {k}:
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {choices.map((val) => {
+                              const isSelected = String(currentVal) === String(val);
+                              return (
+                                <button
+                                  key={String(val)}
+                                  type="button"
+                                  onClick={() => handleParamSelect(k, val)}
+                                  className={`px-2 py-0.5 text-xs font-mono rounded transition-colors ${
+                                    isSelected
+                                      ? "bg-sky-700 text-white font-bold shadow-xs"
+                                      : "bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-200"
+                                  }`}
+                                >
+                                  {String(val)}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null;
+            })()}
             {structure.technique && (
               <div className="mt-2 text-sm text-slate-600 leading-relaxed">
                 {structure.technique}
@@ -654,11 +901,16 @@ export default function StructureModal({
             )}
             {prompt && (
               <div className="mt-3 space-y-2 text-base text-slate-800 leading-relaxed">
-                {getCleanLines(prompt).map((line, idx) => (
-                  <div key={idx} className="break-words">
-                    <MathText text={line} />
-                  </div>
-                ))}
+                {getCleanLines(prompt).map((line, idx) => {
+                  const mathLine = line.includes("$") || line.includes("\\(") || line.includes("\\[")
+                    ? line
+                    : `\\(${line}\\)`;
+                  return (
+                    <div key={idx} className="break-words">
+                      <MathText text={mathLine} />
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -669,32 +921,91 @@ export default function StructureModal({
               {mode === "ai" ? "ដំណោះស្រាយលម្អិតផ្លូវការ (Official Step-by-Step Solution)" : "ដំណោះស្រាយឯកសារ (File Override Solution)"}
             </div>
 
-            {[...sections.entries()].map(([sec, parts]) => {
-              const secHeader = getSectionPrompt(sec, prompt, parts);
-              return (
-                <div key={sec} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-                  {/* Main Question Heading */}
-                  <div className="border-b border-slate-200 pb-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
-                      <MathText text={kmMath(secHeader)} />
-                    </h3>
-                  </div>
+            {sections.size > 0 ? (
+              [...sections.entries()].map(([sec, parts]) => {
+                const secHeader = getSectionPrompt(sec, prompt, parts);
+                return (
+                  <div key={sec} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                    {/* Main Question Heading */}
+                    <div className="border-b border-slate-200 pb-3">
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+                        <MathText text={kmMath(secHeader)} />
+                      </h3>
+                    </div>
 
-                  {/* Sub-steps and calculations */}
-                  <div className="space-y-3">
-                    {parts.map((p) => (
-                      <PartBlock
-                        key={p.label}
-                        part={p}
-                        kmPart={structure.solution_km_json?.parts?.find((kp) => kp.label === p.label)}
-                        mode={mode}
-                        graph={structure.graph}
-                      />
-                    ))}
+                    {/* Sub-steps and calculations */}
+                    <div className="space-y-3">
+                      {parts.map((p) => (
+                        <PartBlock
+                          key={p.label}
+                          part={p}
+                          kmPart={structure.solution_km_json?.parts?.find((kp) => kp.label === p.label)}
+                          mode={mode}
+                          graph={structure.graph}
+                        />
+                      ))}
+                    </div>
                   </div>
+                );
+              })
+            ) : activeSteps && activeSteps.length > 0 ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                <div className="space-y-4">
+                  {activeSteps.map((step, sIdx) => (
+                    <div key={sIdx} className="space-y-1.5 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                      {step.title && (
+                        <div className="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-sky-100 text-sky-800 text-xs font-bold">
+                            {sIdx + 1}
+                          </span>
+                          <MathText text={kmMath(step.title)} />
+                        </div>
+                      )}
+                      {step.detail && (
+                        <div className="pl-7 text-sm text-slate-700 leading-relaxed">
+                          <MathText text={kmMath(step.detail)} />
+                        </div>
+                      )}
+                      {step.formula && (
+                        <div className="pl-7 text-xs font-mono text-slate-500">
+                          Formula: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">{step.formula}</code>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+                {activeAnswer && (
+                  <div className="pt-3 border-t border-slate-200 text-base font-semibold text-slate-900 flex items-center gap-2">
+                    <span className="text-slate-600 font-medium">ចម្លើយ៖</span>
+                    <MathText text={`\\(${activeAnswer}\\)`} />
+                  </div>
+                )}
+              </div>
+            ) : activeAnswer ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                  <span className="text-slate-600 font-medium">ចម្លើយ៖</span>
+                  <MathText text={`\\(${activeAnswer}\\)`} />
+                </div>
+              </div>
+            ) : regenerating ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm flex flex-col items-center justify-center gap-3 text-slate-500">
+                <span className="animate-spin text-2xl">🔄</span>
+                <span className="text-sm font-medium">កំពុងទាញយកដំណោះស្រាយលម្អិត... (Loading solution...)</span>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center space-y-3">
+                <p className="text-sm text-slate-600">
+                  មិនទាន់មានទិន្នន័យដំណោះស្រាយនៅក្នុងម៉ូដាល់នេះនៅឡើយទេ
+                </p>
+                <button
+                  onClick={handleRegenerate}
+                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-sky-700 text-white hover:bg-sky-800 transition shadow-sm"
+                >
+                  ទាញយកដំណោះស្រាយ និងវ៉ារ្យ៉ង់ឥឡូវនេះ (Fetch Variants & Solution)
+                </button>
+              </div>
+            )}
           </div>
 
           {structure.formula_tags?.length ? (

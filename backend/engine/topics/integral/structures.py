@@ -19,6 +19,7 @@ The slot/fill machinery itself (``fill_structured``, ``fill_bound``) lives in
 ``engine.core.slots``, shared with the ``limit`` topic's generator.
 """
 import random
+import zlib
 
 from sympy import E, Integral, N, Symbol, latex, oo, pi, sqrt, sympify, zoo
 
@@ -553,9 +554,42 @@ def build_sample(struct, seed, max_abs=None):
         return {
             "structure": struct,
             "params": params,
+            "sample_params": vals,
             "prompt": prompt,
             "prompt_latex": prompt_latex,
             "display": display,
             "solution": solution,
         }
     raise ValueError(f"could not build a valid sample for {struct['id']}")
+
+
+def build_integral_variants(struct, count=3, seed=None):
+    """Pre-generate up to `count` distinct parameter variants for an integral structure,
+    each with SymPy solution, prompt_latex, and answer."""
+    variants = []
+    seen_params = set()
+    base_seed = (zlib.crc32(struct["id"].encode()) & 0xFFFFFFFF) if seed is None else seed
+    for i in range(35):
+        if len(variants) >= count:
+            break
+        try:
+            sample = build_sample(struct, seed=base_seed + i * 31337)
+        except Exception:
+            continue
+        p = sample.get("sample_params") or {}
+        sig = tuple(sorted((k, str(v)) for k, v in p.items()))
+        if sig in seen_params and len(seen_params) < 15:
+            continue
+        seen_params.add(sig)
+        sol = sample["solution"]
+        variants.append({
+            "variant_index": len(variants) + 1,
+            "params": p,
+            "prompt": sample["prompt"],
+            "prompt_latex": sample["prompt_latex"],
+            "answer_latex": sol.get("answer_latex") or latex(sol["answer_exact"]),
+            "answer_exact": str(sol["answer_exact"]),
+            "steps": sol.get("steps", []),
+        })
+    return variants
+

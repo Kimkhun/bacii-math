@@ -424,6 +424,9 @@ export interface TemplateInventory {
 export interface TemplateStructure {
   id: string;
   question_type: string;
+  category?: string | null;
+  subfamily?: string | null;
+  shape?: string | null;
   difficulty: string;
   pattern: string;
   pattern_latex: string | null;
@@ -829,6 +832,17 @@ export const api = {
     request<{ structure: TemplateStructure }>("/templates/structures/regenerate", {
       method: "POST",
       body: { structure_id },
+    }),
+  solveCustomStructure: (structure_id: string, params: Record<string, unknown>) =>
+    request<{
+      prompt: string;
+      prompt_latex: string;
+      answer_exact: string;
+      answer_latex: string;
+      steps: { title?: string; detail?: string; formula?: string }[];
+    }>("/templates/structures/solve-custom", {
+      method: "POST",
+      body: { structure_id, params },
     }),
   adminModelSettings: () => request<{ text_model: string; vision_model: string; vision_provider: string }>("/admin/model-settings"),
   updateAdminModelSettings: (settings: { text_model: string; vision_model: string; vision_provider: string }) =>

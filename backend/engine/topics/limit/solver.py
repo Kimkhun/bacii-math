@@ -23,6 +23,8 @@ from ...core.shared import _calc_locals, _formula_tags, inline_latex
 
 
 def _limit_step(title, detail, formula):
+    if isinstance(detail, str):
+        detail = detail.replace(r"\log", r"\ln")
     return {"title": title, "detail": detail, "formula": formula}
 
 
@@ -117,6 +119,48 @@ def _exponential_standard_limit_checkpoints(x, point, expr, formula):
     ]
 
 
+def _one_infinity_checkpoints(x, point, expr, formula):
+    """Derive intermediate checkpoint for 1^infinity forms f(x)^g(x):
+    the limit of the exponent g(x) * (f(x) - 1). If finite, students
+    writing this exponent limit get credited intermediate progress."""
+    try:
+        base, pwr = expr.as_base_exp()
+        L = limit(pwr * (base - 1), x, point)
+        if L is not None and not L.has(Symbol):
+            return [{"label": "exponent limit", "value": L, "formula": formula}]
+    except Exception:
+        return []
+    return []
+
+
+def _logarithmic_standard_limit_checkpoints(x, point, expr, formula):
+    """Derive intermediate checkpoints for logarithmic limits:
+    1. If expr has ln(g(x)), check if inside limit lim(g(x)) exists and is positive.
+    2. If expr is a fraction num/den, check separated numerator and denominator limits."""
+    cps = []
+    try:
+        ln_atoms = [arg for arg in expr.atoms(log)]
+        for log_expr in ln_atoms:
+            inside = log_expr.args[0]
+            inside_lim = limit(inside, x, point)
+            if inside_lim is not None and not inside_lim.has(Symbol) and inside_lim > 0:
+                cps.append({"label": "inside logarithm limit", "value": inside_lim, "formula": formula})
+                break
+
+        if point == 0:
+            num, den = expr.as_numer_denom()
+            if den != 1:
+                num_lim = limit(num / x, x, point)
+                den_lim = limit(den / x, x, point)
+                if den_lim != 0 and num_lim is not None and not num_lim.has(Symbol) and not den_lim.has(Symbol):
+                    if simplify(num_lim / den_lim - limit(expr, x, point)) == 0:
+                        cps.append({"label": "numerator limit", "value": num_lim, "formula": formula})
+                        cps.append({"label": "denominator limit", "value": den_lim, "formula": formula})
+    except Exception:
+        pass
+    return cps
+
+
 def _curated_limit_steps(params, var, x, point, point_latex, expr, result):
     """Curated real BAC II exercise: SymPy still computes `result` (the graded
     answer); the exam-authored technique text narrates the steps instead of a
@@ -136,14 +180,18 @@ def _curated_limit_steps(params, var, x, point, point_latex, expr, result):
         ))
     steps.append(_limit_step(
         "Result",
-        f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr)}\\) = {inline_latex(result)}.",
+        f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr, ln_notation=True)}\\) = {inline_latex(result)}.",
         formula,
     ))
     checkpoints = []
     if formula == "rationalization_conjugate_finite":
         checkpoints.extend(_rationalization_conjugate_checkpoints(x, point, expr, formula))
-    elif formula == "exponential_standard_limit":
+    elif formula in ("exponential_standard_limit", "E1", "E2", "E3") or formula.startswith("limit:exponential"):
         checkpoints.extend(_exponential_standard_limit_checkpoints(x, point, expr, formula))
+    elif formula in ("indeterminate_one_infinity", "EU1", "EU2") or "one_inf" in formula or "euler" in formula:
+        checkpoints.extend(_one_infinity_checkpoints(x, point, expr, formula))
+    elif formula in ("log_limit_zero", "log_limit_infinity", "L1", "L2", "L3", "L4") or formula.startswith("limit:logarithmic") or formula.startswith("limit:log"):
+        checkpoints.extend(_logarithmic_standard_limit_checkpoints(x, point, expr, formula))
     elif formula in _CURATED_REUSABLE_HANDLERS:
         try:
             _, extra_cps = _LIMIT_TECHNIQUE_HANDLERS[formula]({}, var, x, point, point_latex, expr, result)
@@ -501,11 +549,11 @@ def _solve_limit(params):
     point_latex = latex(point) + ("^" + ("+" if side == "+" else "-") if side else "")
 
     steps = [
-        {
-            "title": "Set up the limit",
-            "detail": f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr)}\\).",
-            "formula": "setup_limit",
-        },
+        _limit_step(
+            "Set up the limit",
+            f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr, ln_notation=True)}\\).",
+            "setup_limit",
+        ),
     ]
 
     if params.get("formula_name"):

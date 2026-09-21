@@ -181,6 +181,88 @@ function parseFullProblem(
 // *technique*/*scenario* one level below question_type (limit's techniques,
 // probability's scenario catalog, integral's per-kind variants), the value is
 // encoded as "<question_type>:<variant>" — see splitTypeValue().
+export const LIMIT_CATEGORIES = [
+  { value: "any", en: "All limit categories", km: "គ្រប់ជំពូកលីមីត" },
+  { value: "rational", en: "1. Rational limits", km: "១. លីមីតសនិទាន" },
+  { value: "radical", en: "2. Radical limits", km: "២. លីមីតរ៉ាឌីកាល់" },
+  { value: "trig", en: "3. Trigonometric limits", km: "៣. លីមីតត្រីកោណមាត្រ" },
+  { value: "exponential", en: "4. Exponential limits", km: "៤. លីមីតអិចស្ប៉ូណង់ស្យែល" },
+  { value: "logarithmic", en: "5. Logarithmic limits", km: "៥. លីមីតលោការីត" },
+  { value: "infinity", en: "6. Limits at infinity", km: "៦. លីមីតនៅអនន្ត" },
+];
+
+export const LIMIT_SUBTOPICS: Record<string, { value: string; labelEn: string; labelKm: string }[]> = {
+  rational: [
+    { value: "limit:rational", labelEn: "All rational limits", labelKm: "សនិទានទាំងអស់" },
+    { value: "limit:rational:powers", labelEn: "1. Algebraic identities (squares, cubes, powers)", labelKm: "១. រូបមន្តស្វ័យគុណ (ការេ គូប ដឺក្រេខ្ពស់)" },
+    { value: "limit:rational:quadratics", labelEn: "2. Quadratic trinomials", labelKm: "២. បំបែកត្រីធាដឺក្រេទីពីរ" },
+    { value: "limit:rational:binomial", labelEn: "3. Shifted binomials at 0", labelKm: "៣. ពន្លាតទ្វេធាត្រង់ 0" },
+  ],
+  radical: [
+    { value: "limit:radical", labelEn: "All radical limits", labelKm: "រ៉ាឌីកាល់ទាំងអស់" },
+    { value: "limit:radical:sqrt", labelEn: "1. Square root conjugates", labelKm: "១. កន្សោមឆ្លាស់ឬសការេ" },
+    { value: "limit:radical:cbrt", labelEn: "2. Cube root conjugates", labelKm: "២. កន្សោមឆ្លាស់ឬសគូប" },
+    { value: "limit:radical:double_and_split", labelEn: "3. Double conjugate & split trick (advanced)", labelKm: "៣. ឆ្លាស់ពីរជាន់ & ថែមថយតួ (កម្រិតខ្ពស់)" },
+  ],
+  trig: [
+    { value: "limit:trig", labelEn: "All trigonometric limits", labelKm: "ត្រីកោណមាត្រទាំងអស់" },
+    { value: "limit:trig:sinc_standard", labelEn: "1. Fundamental limit sin(kx)/x at 0", labelKm: "១. លីមីតគ្រឹះ sin(kx)/x ត្រង់ 0" },
+    { value: "limit:trig:change_var", labelEn: "2. Change of variable at non-zero points", labelKm: "២. ប្តូរអថេរត្រង់ π/2, π/3, π/4, π" },
+    { value: "limit:trig:half_angle", labelEn: "3. Half-angle & double-angle identities", labelKm: "៣. រូបមន្តកន្លះមុំ និងមុំទ្វេ" },
+    { value: "limit:trig:sum_product", labelEn: "4. Sum-to-product & linear combinations", labelKm: "៤. បំប្លែងផលបូកទៅផលគុណ (Simpson)" },
+    { value: "limit:trig:radical_trig", labelEn: "5. Radicals mixed with trigonometry", labelKm: "៥. កន្សោមឆ្លាស់ឬសការេចម្រុះត្រីកោណមាត្រ" },
+  ],
+  exponential: [
+    { value: "limit:exponential", labelEn: "All exponential limits", labelKm: "អិចស្ប៉ូណង់ស្យែលទាំងអស់" },
+    { value: "limit:exponential:zero", labelEn: "1. Indeterminate form 0/0", labelKm: "១. រាងមិនកំណត់ 0/0" },
+    { value: "limit:exponential:trig_combo", labelEn: "2. Mixed with trigonometry", labelKm: "២. រាងចម្រុះត្រីកោណមាត្រ" },
+    { value: "limit:exponential:one_inf", labelEn: "3. Indeterminate form 1^∞", labelKm: "៣. រាងមិនកំណត់ 1^អនន្ត" },
+    { value: "limit:exponential:infinity", labelEn: "4. Limits at infinity & growth dominance", labelKm: "៤. លីមីតនៅអនន្ត និងលំដាប់កំណើន" },
+  ],
+  exp_log: [
+    { value: "limit:exponential", labelEn: "All exponential limits", labelKm: "អិចស្ប៉ូណង់ស្យែលទាំងអស់" },
+    { value: "limit:exponential:zero", labelEn: "1. Indeterminate form 0/0", labelKm: "១. រាងមិនកំណត់ 0/0" },
+    { value: "limit:exponential:trig_combo", labelEn: "2. Mixed with trigonometry", labelKm: "២. រាងចម្រុះត្រីកោណមាត្រ" },
+    { value: "limit:exponential:one_inf", labelEn: "3. Indeterminate form 1^∞", labelKm: "៣. រាងមិនកំណត់ 1^អនន្ត" },
+    { value: "limit:exponential:infinity", labelEn: "4. Limits at infinity & growth dominance", labelKm: "៤. លីមីតនៅអនន្ត និងលំដាប់កំណើន" },
+  ],
+  logarithmic: [
+    { value: "limit:logarithmic", labelEn: "All logarithmic limits", labelKm: "លោការីតទាំងអស់" },
+    { value: "limit:logarithmic:zero", labelEn: "1. Indeterminate form 0/0", labelKm: "១. រាងមិនកំណត់ 0/0" },
+    { value: "limit:logarithmic:rational", labelEn: "2. Logarithm of rational function", labelKm: "២. លោការីតនៃកន្សោមសនិទាន" },
+    { value: "limit:logarithmic:growth_zero", labelEn: "3. Growth dominance at 0⁺", labelKm: "៣. លំដាប់កំណើនត្រង់ 0⁺ (x ln x)" },
+    { value: "limit:logarithmic:infinity", labelEn: "4. Limits at infinity & growth dominance", labelKm: "៤. លីមីតនៅអនន្ត និងលំដាប់កំណើន" },
+  ],
+  infinity: [
+    { value: "limit:infinity", labelEn: "All limits at infinity", labelKm: "នៅអនន្តទាំងអស់" },
+    { value: "limit:infinity:conjugate", labelEn: "1. Conjugate at infinity (∞ - ∞)", labelKm: "១. គុណកន្សោមឆ្លាស់នៅអនន្ត (រាង ∞ - ∞)" },
+    { value: "limit:infinity:rational", labelEn: "2. Rational function at infinity", labelKm: "២. លីមីតអនុគមន៍សនិទាននៅអនន្ត" },
+  ],
+};
+
+function getLimitCategory(qt: string): string {
+  if (!qt || qt === "any") return "any";
+  if (qt === "limit:rational" || qt.startsWith("limit:rational:")) return "rational";
+  if (qt === "limit:radical" || qt.startsWith("limit:radical:")) return "radical";
+  if (qt === "limit:trig" || qt.startsWith("limit:trig:")) return "trig";
+  if (
+    qt === "limit:exponential" ||
+    qt.startsWith("limit:exponential:") ||
+    qt === "limit:exp_log" ||
+    qt.startsWith("limit:exp:") ||
+    qt.startsWith("limit:euler:")
+  )
+    return "exponential";
+  if (
+    qt === "limit:logarithmic" ||
+    qt.startsWith("limit:logarithmic:") ||
+    qt.startsWith("limit:log:")
+  )
+    return "logarithmic";
+  if (qt === "limit:infinity" || qt.startsWith("limit:infinity:")) return "infinity";
+  return "any";
+}
+
 const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
   complex: [
     { value: "modulus", label: "Modulus" },
@@ -194,21 +276,12 @@ const TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: "nth_roots", label: "n-th roots" },
   ],
   limit: [
-    { value: "limit:direct_substitution", label: "Direct substitution" },
-    { value: "limit:factoring_0_0", label: "Factoring (0/0)" },
-    { value: "limit:rationalization_conjugate_finite", label: "Conjugate rationalization" },
-    { value: "limit:sinc_standard_limit", label: "Standard limit sin(x)/x" },
-    { value: "limit:exponential_standard_limit", label: "Standard limit (eˣ-1)/x" },
-    { value: "limit:rationalization_sinc_combo", label: "Conjugate + sinc combo" },
-    { value: "limit:exponential_sinc_combo", label: "Exponential + sinc combo" },
-    { value: "limit:half_angle_sinc_combo", label: "Half-angle + sinc combo" },
-    { value: "limit:rational_function_infinity", label: "Rational function at infinity" },
-    { value: "limit:conjugate_infinity", label: "Conjugate at infinity" },
-    { value: "limit:log_limit_infinity", label: "Logarithmic limit at infinity" },
-    { value: "limit:trig_identity_0_0", label: "Trig identity (0/0)" },
-    { value: "limit:angle_addition_0_0", label: "Angle-addition identity (0/0)" },
-    { value: "limit:log_limit_zero", label: "Logarithmic limit at 0" },
-    { value: "limit:indeterminate_one_infinity", label: "Indeterminate form 1^∞" },
+    { value: "limit:rational", label: "Rational limits" },
+    { value: "limit:radical", label: "Radical limits" },
+    { value: "limit:trig", label: "Trigonometric limits" },
+    { value: "limit:exponential", label: "Exponential limits" },
+    { value: "limit:logarithmic", label: "Logarithmic limits" },
+    { value: "limit:infinity", label: "Limits at infinity" },
   ],
   integral: [
     { value: "definite_integral", label: "Definite integral (any)" },
@@ -2187,19 +2260,62 @@ function PracticeInner() {
                   <option value="vectors_space">{t("topic_vectors_space")}</option>
                   <option value="conics">{t("topic_conics")}</option>
                 </select>
-                <select
-                  value={questionType}
-                  onChange={(e) => changeQuestionType(e.target.value)}
-                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
-                  title={t("label_question_type")}
-                >
-                  <option value="any">{t("qtype_any")}</option>
-                  {TYPE_OPTIONS[topic].map((top) => (
-                    <option key={top.value} value={top.value}>
-                      {QUESTION_TYPE_LABELS[top.value]?.[lang] ?? top.label}
-                    </option>
-                  ))}
-                </select>
+                {topic === "limit" ? (
+                  <>
+                    <select
+                      value={getLimitCategory(questionType)}
+                      onChange={(e) => {
+                        const cat = e.target.value;
+                        if (cat === "any") {
+                          changeQuestionType("any");
+                        } else {
+                          changeQuestionType(`limit:${cat}`);
+                        }
+                      }}
+                      className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white font-medium"
+                      title={lang === "km" ? "ជំពូកលីមីត" : "Limit Category"}
+                    >
+                      {LIMIT_CATEGORIES.map((c) => (
+                        <option key={c.value} value={c.value}>
+                          {lang === "km" ? c.km : c.en}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={questionType}
+                      onChange={(e) => changeQuestionType(e.target.value)}
+                      className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                      title={lang === "km" ? "វិធីសាស្ត្រគណនា" : "Limit Technique"}
+                    >
+                      {getLimitCategory(questionType) === "any" ? (
+                        <option value="any">
+                          {lang === "km" ? "គ្រប់វិធីសាស្ត្រទាំងអស់" : "All techniques"}
+                        </option>
+                      ) : (
+                        LIMIT_SUBTOPICS[getLimitCategory(questionType)]?.map((sub) => (
+                          <option key={sub.value} value={sub.value}>
+                            {lang === "km" ? sub.labelKm : sub.labelEn}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </>
+                ) : (
+                  <select
+                    value={questionType}
+                    onChange={(e) => changeQuestionType(e.target.value)}
+                    className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                    title={t("label_question_type")}
+                  >
+                    <option value="any">{t("qtype_any")}</option>
+                    {TYPE_OPTIONS[topic]?.map((top) => (
+                      <option key={top.value} value={top.value}>
+                        {QUESTION_TYPE_LABELS[top.value]?.[lang] ?? top.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <select
                   value={difficulty}
                   onChange={(e) => changeDifficulty(e.target.value)}

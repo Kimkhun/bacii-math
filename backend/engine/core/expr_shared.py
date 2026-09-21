@@ -17,7 +17,7 @@ def _build_expr_problem(topic, question_type, params, difficulty, prompt, prompt
     }
 
 def _expr_latex(expr_str, var="x"):
-    return latex(sympify(expr_str, locals={var: Symbol(var)}))
+    return latex(sympify(expr_str, locals={var: Symbol(var)}), ln_notation=True)
 
 def _fmt_poly(p, q, r, var="x"):
     terms = []

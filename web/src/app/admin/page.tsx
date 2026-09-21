@@ -25,10 +25,92 @@ function kmMath(s: string): string {
   return s.replace(/\$(.+?)\$/g, "\\($1\\)");
 }
 
+interface LimitSubtopicDef {
+  key: string;
+  en: string;
+  km: string;
+  matches: (subfam: string) => boolean;
+}
+
+interface LimitCategoryDef {
+  key: string;
+  en: string;
+  km: string;
+  subtopics: LimitSubtopicDef[];
+}
+
+const LIMIT_CATEGORIES_CONFIG: LimitCategoryDef[] = [
+  {
+    key: "rational",
+    en: "1. Rational limits",
+    km: "១. លីមីតសនិទាន",
+    subtopics: [
+      { key: "powers", en: "1. Algebraic identities (powers)", km: "១. រូបមន្តស្វ័យគុណ (ការេ គូប ដឺក្រេខ្ពស់)", matches: (s) => s === "powers" },
+      { key: "quadratics", en: "2. Quadratic trinomials", km: "២. បំបែកត្រីធាដឺក្រេទីពីរ", matches: (s) => s === "quadratics" },
+      { key: "binomial", en: "3. Shifted binomials at 0", km: "៣. ពន្លាតទ្វេធាត្រង់ 0", matches: (s) => s === "binomial" },
+    ],
+  },
+  {
+    key: "radical",
+    en: "2. Radical limits",
+    km: "២. លីមីតរ៉ាឌីកាល់",
+    subtopics: [
+      { key: "sqrt", en: "1. Square root conjugates", km: "១. កន្សោមឆ្លាស់ឬសការេ", matches: (s) => s === "sqrt" },
+      { key: "cbrt", en: "2. Cube root conjugates", km: "២. កន្សោមឆ្លាស់ឬសគូប", matches: (s) => s === "cbrt" },
+      { key: "double_and_split", en: "3. Double conjugate & split trick", km: "៣. ឆ្លាស់ពីរជាន់ & ថែមថយតួ", matches: (s) => s === "double_and_split" },
+    ],
+  },
+  {
+    key: "trig",
+    en: "3. Trigonometric limits",
+    km: "៣. លីមីតត្រីកោណមាត្រ",
+    subtopics: [
+      { key: "sinc_standard", en: "1. Fundamental limit sin(kx)/x at 0", km: "១. លីមីតគ្រឹះ sin(kx)/x ត្រង់ 0", matches: (s) => s === "sinc_standard" },
+      { key: "change_var", en: "2. Change of variable at non-zero points", km: "២. ប្តូរអថេរត្រង់ π/2, π/3, π/4, π", matches: (s) => s === "change_var" },
+      { key: "half_angle", en: "3. Half-angle & double-angle identities", km: "៣. រូបមន្តកន្លះមុំ និងមុំទ្វេ", matches: (s) => s === "half_angle" || s === "double_angle" || s === "quadratic" },
+      { key: "sum_product", en: "4. Sum-to-product (Simpson)", km: "៤. បំប្លែងផលបូកទៅផលគុណ (Simpson)", matches: (s) => s === "sum_product" },
+      { key: "radical_trig", en: "5. Radicals mixed with trigonometry", km: "៥. កន្សោមឆ្លាស់ឬសការេចម្រុះត្រីកោណមាត្រ", matches: (s) => s === "radical_trig" },
+    ],
+  },
+  {
+    key: "exponential",
+    en: "4. Exponential limits",
+    km: "៤. លីមីតអិចស្ប៉ូណង់ស្យែល",
+    subtopics: [
+      { key: "zero", en: "1. Indeterminate form 0/0", km: "១. រាងមិនកំណត់ 0/0", matches: (s) => s === "zero" },
+      { key: "trig_combo", en: "2. Mixed with trigonometry", km: "២. រាងចម្រុះត្រីកោណមាត្រ", matches: (s) => s === "trig_combo" },
+      { key: "one_inf", en: "3. Indeterminate form 1^∞", km: "៣. រាងមិនកំណត់ 1^អនន្ត", matches: (s) => s === "one_inf" },
+      { key: "infinity", en: "4. Limits at infinity & growth dominance", km: "៤. លីមីតនៅអនន្ត និងលំដាប់កំណើន", matches: (s) => s === "infinity" },
+    ],
+  },
+  {
+    key: "logarithmic",
+    en: "5. Logarithmic limits",
+    km: "៥. លីមីតលោការីត",
+    subtopics: [
+      { key: "zero", en: "1. Indeterminate form 0/0", km: "១. រាងមិនកំណត់ 0/0", matches: (s) => s === "zero" },
+      { key: "rational", en: "2. Logarithm of rational function", km: "២. លោការីតនៃកន្សោមសនិទាន", matches: (s) => s === "rational" },
+      { key: "growth_zero", en: "3. Growth dominance at 0⁺", km: "៣. លំដាប់កំណើនត្រង់ 0⁺ (x ln x)", matches: (s) => s === "growth_zero" },
+      { key: "infinity", en: "4. Limits at infinity & growth dominance", km: "៤. លីមីតនៅអនន្ត និងលំដាប់កំណើន", matches: (s) => s === "infinity" },
+    ],
+  },
+  {
+    key: "infinity",
+    en: "6. Limits at infinity",
+    km: "៦. លីមីតនៅអនន្ត",
+    subtopics: [
+      { key: "conjugate", en: "1. Conjugate at infinity (∞ - ∞)", km: "១. គុណកន្សោមឆ្លាស់នៅអនន្ត (រាង ∞ - ∞)", matches: (s) => s === "conjugate" },
+      { key: "rational", en: "2. Rational function at infinity", km: "២. លីមីតអនុគមន៍សនិទាននៅអនន្ត", matches: (s) => s === "rational" },
+    ],
+  },
+];
+
 export default function AdminPage() {
   const { lang, t } = useLanguage();
   const [tab, setTab] = useState<Tab>("overview");
   const [topicFilter, setTopicFilter] = useState("all");
+  const [limitCategoryFilter, setLimitCategoryFilter] = useState<string>("all");
+  const [limitSubtopicFilter, setLimitSubtopicFilter] = useState<string>("all");
   const [catalog, setCatalog] = useState<FormulaCatalog | null>(null);
   const [summary, setSummary] = useState<TemplateSummary | null>(null);
   const [structuresByTopic, setStructuresByTopic] = useState<Record<string, TopicStructures>>({});
@@ -121,6 +203,101 @@ export default function AdminPage() {
   };
 
   const DIFFICULTY_ORDER = ["easy", "medium", "hard"];
+
+  function renderStructureCard(st: TemplateStructure) {
+    return (
+      <div
+        key={st.id}
+        onClick={() => setSelected(st)}
+        className="cursor-pointer bg-white border border-slate-200 rounded-lg p-4 shadow-sm transition-shadow hover:shadow-md"
+      >
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <code className="px-1.5 py-0.5 rounded bg-slate-100 text-[11px] text-slate-600">
+            {st.id}
+          </code>
+          {st.source_labels && st.source_labels.length > 0 && (
+            <span className="text-[11px] text-slate-400">
+              {st.source_labels.join(", ")}
+            </span>
+          )}
+        </div>
+        <div className="text-sm text-slate-800 overflow-x-auto bg-slate-50 rounded p-2">
+          {st.pattern_latex ? (
+            <MathText text={`\\(${st.pattern_latex}\\)`} />
+          ) : (
+            <p>{st.pattern}</p>
+          )}
+        </div>
+        {st.technique && (
+          <p className="mt-2 text-xs text-slate-500 leading-snug">
+            {st.technique}
+          </p>
+        )}
+        {(st.sample_prompt_latex || st.sample_prompt) && (
+          <div className="mt-2 text-sm text-slate-700 overflow-x-auto">
+            {st.sample_prompt_latex ? (
+              <MathText text={`\\(${st.sample_prompt_latex}\\)`} />
+            ) : (
+              <p className="whitespace-pre-line">{st.sample_prompt}</p>
+            )}
+            {(st.sample_answer_latex || st.sample_answer) && (
+              <div className="mt-1 text-slate-600">
+                <span className="text-slate-400">Answer:</span>{" "}
+                <MathText
+                  text={`\\(${st.sample_answer_latex ?? st.sample_answer}\\)`}
+                  className="inline"
+                />
+              </div>
+            )}
+          </div>
+        )}
+        {st.parts && st.parts.length > 0 && (
+          <div className="mt-3 border-t border-slate-200 pt-2 space-y-2">
+            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+              Parts & answers
+            </div>
+            {st.parts.map((p) => (
+              <div key={p.label} className="flex items-start gap-2 text-xs">
+                <code className="shrink-0 mt-0.5 px-1 py-0.5 rounded bg-slate-100 text-[11px] text-slate-600">
+                  {p.label}
+                </code>
+                <div className="min-w-0 flex-1 text-slate-700">
+                  <MathText text={kmMath(p.question_km ?? p.want ?? "")} />
+                  {p.technique && !/^[A-Za-z]/.test(p.technique.trim()) && (
+                    <div className="mt-0.5 text-[11px] leading-snug text-slate-500">
+                      <MathText text={kmMath(p.technique)} />
+                    </div>
+                  )}
+                  <div className="mt-0.5 text-slate-900">
+                    → <span>{p.answer_display ?? p.answer}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {st.graph && (
+          <details className="mt-3 border-t border-slate-200 pt-2">
+            <summary className="cursor-pointer text-xs font-medium text-slate-600 hover:text-slate-900 select-none">
+              Show graph ▾
+            </summary>
+            <div className="mt-2">
+              <FunctionGraph graph={st.graph} />
+            </div>
+          </details>
+        )}
+        {st.formula_tags && st.formula_tags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {st.formula_tags.map((t) => (
+              <code key={t} className="px-1.5 py-0.5 rounded bg-slate-100 text-[11px]">
+                {t}
+              </code>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <AdminGuard>
@@ -247,9 +424,15 @@ export default function AdminPage() {
                             {secondaryName && secondaryName !== primaryName && (
                               <span className="text-slate-500">({secondaryName})</span>
                             )}
-                            <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-xs">
-                              weight {e.weight}
-                            </span>
+                            {e.weight > 0 && (() => {
+                              const diff = e.weight <= 1 ? "easy" : e.weight <= 2 ? "medium" : "hard";
+                              const style = diff === "easy" ? "bg-emerald-100 text-emerald-800" : diff === "medium" ? "bg-amber-100 text-amber-800" : "bg-rose-100 text-rose-800";
+                              return (
+                                <span className={`px-2 py-0.5 rounded text-xs ${style}`}>
+                                  {t(`formulas_difficulty_${diff}` as const)}
+                                </span>
+                              );
+                            })()}
                           </div>
                         {e.latex && (
                           <div className="mt-2 text-slate-700">
@@ -286,6 +469,207 @@ export default function AdminPage() {
                           ? `Loading ${topic.replace("_", " ")} structures…`
                           : `Not loaded — switch to this topic to load it.`}
                       </p>
+                    ) : topic === "limit" ? (
+                      (() => {
+                        const allLimitStructures = loaded.question_types.flatMap((qt) => qt.structures);
+                        const selectedCatDef = LIMIT_CATEGORIES_CONFIG.find((c) => c.key === limitCategoryFilter);
+
+                        const getCategoryKey = (st: TemplateStructure) =>
+                          st.category || st.id.split(":")[1] || "other";
+                        const getSubfamilyKey = (st: TemplateStructure) =>
+                          st.subfamily || st.id.split(":")[2] || "";
+
+                        const visibleCategories =
+                          limitCategoryFilter === "all"
+                            ? LIMIT_CATEGORIES_CONFIG
+                            : LIMIT_CATEGORIES_CONFIG.filter((c) => c.key === limitCategoryFilter);
+
+                        return (
+                          <div className="space-y-6">
+                            {/* Main Categories Filter Bar */}
+                            <div className="bg-slate-100/70 p-3.5 rounded-xl border border-slate-200">
+                              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                                {lang === "km" ? "ជំពូកលីមីតសំខាន់ៗ" : "Limit Categories"}
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setLimitCategoryFilter("all");
+                                    setLimitSubtopicFilter("all");
+                                  }}
+                                  className={`px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 ${
+                                    limitCategoryFilter === "all"
+                                      ? "bg-amber-500 text-white font-medium shadow-sm"
+                                      : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <span>{lang === "km" ? "គ្រប់ជំពូកលីមីត" : "All Limits"}</span>
+                                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                                    limitCategoryFilter === "all" ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-600"
+                                  }`}>
+                                    {allLimitStructures.length}
+                                  </span>
+                                </button>
+                                {LIMIT_CATEGORIES_CONFIG.map((cat) => {
+                                  const count = allLimitStructures.filter((s) => getCategoryKey(s) === cat.key).length;
+                                  const isActive = limitCategoryFilter === cat.key;
+                                  return (
+                                    <button
+                                      key={cat.key}
+                                      type="button"
+                                      onClick={() => {
+                                        setLimitCategoryFilter(cat.key);
+                                        setLimitSubtopicFilter("all");
+                                      }}
+                                      className={`px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5 ${
+                                        isActive
+                                          ? "bg-amber-500 text-white font-medium shadow-sm"
+                                          : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                                      }`}
+                                    >
+                                      <span>{lang === "km" ? cat.km : cat.en}</span>
+                                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                                        isActive ? "bg-amber-600 text-white" : "bg-slate-100 text-slate-600"
+                                      }`}>
+                                        {count}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Subtopic Filter Bar when Category is selected */}
+                              {selectedCatDef && (
+                                <div className="mt-3 pt-3 border-t border-slate-200/80">
+                                  <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                                    {lang === "km" ? "វិធីសាស្ត្រដោះស្រាយ" : "Techniques / Subtopics"}
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => setLimitSubtopicFilter("all")}
+                                      className={`px-2.5 py-1 rounded-md text-xs transition-all flex items-center gap-1.5 ${
+                                        limitSubtopicFilter === "all"
+                                          ? "bg-slate-800 text-white font-medium shadow-sm"
+                                          : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                                      }`}
+                                    >
+                                      <span>{lang === "km" ? "ទាំងអស់ក្នុងជំពូកនេះ" : `All ${selectedCatDef.en}`}</span>
+                                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                                        limitSubtopicFilter === "all" ? "bg-slate-700 text-white" : "bg-slate-100 text-slate-600"
+                                      }`}>
+                                        {allLimitStructures.filter((s) => getCategoryKey(s) === selectedCatDef.key).length}
+                                      </span>
+                                    </button>
+                                    {selectedCatDef.subtopics.map((sub) => {
+                                      const count = allLimitStructures.filter(
+                                        (s) => getCategoryKey(s) === selectedCatDef.key && sub.matches(getSubfamilyKey(s))
+                                      ).length;
+                                      const isActive = limitSubtopicFilter === sub.key;
+                                      return (
+                                        <button
+                                          key={sub.key}
+                                          type="button"
+                                          onClick={() => setLimitSubtopicFilter(sub.key)}
+                                          className={`px-2.5 py-1 rounded-md text-xs transition-all flex items-center gap-1.5 ${
+                                            isActive
+                                              ? "bg-slate-800 text-white font-medium shadow-sm"
+                                              : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                                          }`}
+                                        >
+                                          <span>{lang === "km" ? sub.km : sub.en}</span>
+                                          <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                                            isActive ? "bg-slate-700 text-white" : "bg-slate-100 text-slate-600"
+                                          }`}>
+                                            {count}
+                                          </span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Categorized & Subtopic Structure Cards */}
+                            {visibleCategories.map((cat) => {
+                              const catStructs = allLimitStructures.filter((s) => getCategoryKey(s) === cat.key);
+                              if (catStructs.length === 0) return null;
+
+                              const visibleSubtopics =
+                                limitSubtopicFilter === "all"
+                                  ? cat.subtopics
+                                  : cat.subtopics.filter((s) => s.key === limitSubtopicFilter);
+
+                              return (
+                                <div key={cat.key} className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-sm">
+                                  <div className="flex items-start justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+                                    <div>
+                                      <h3 className="text-base font-semibold text-slate-800">
+                                        {lang === "km" ? cat.km : cat.en}
+                                      </h3>
+                                      <p className="text-xs text-slate-400">
+                                        {lang === "km" ? cat.en : cat.km}
+                                      </p>
+                                    </div>
+                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                                      {catStructs.length} template{catStructs.length === 1 ? "" : "s"}
+                                    </span>
+                                  </div>
+
+                                  <div className="space-y-6">
+                                    {visibleSubtopics.map((sub) => {
+                                      const subStructs = catStructs.filter((s) => sub.matches(getSubfamilyKey(s)));
+                                      if (subStructs.length === 0) return null;
+                                      return (
+                                        <div key={sub.key}>
+                                          <div className="flex items-center gap-2 mb-3">
+                                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                            <h4 className="text-sm font-semibold text-slate-700">
+                                              {lang === "km" ? sub.km : sub.en}
+                                            </h4>
+                                            <span className="text-xs text-slate-400 font-medium">
+                                              ({subStructs.length})
+                                            </span>
+                                          </div>
+                                          <div className="grid gap-3 md:grid-cols-2">
+                                            {subStructs.map(renderStructureCard)}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+
+                                    {/* Uncategorized fallback for the category */}
+                                    {limitSubtopicFilter === "all" && (() => {
+                                      const uncategorized = catStructs.filter(
+                                        (s) => !cat.subtopics.some((sub) => sub.matches(getSubfamilyKey(s)))
+                                      );
+                                      if (uncategorized.length === 0) return null;
+                                      return (
+                                        <div>
+                                          <div className="flex items-center gap-2 mb-3">
+                                            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                                            <h4 className="text-sm font-semibold text-slate-700">
+                                              {lang === "km" ? "ផ្សេងៗ" : "Other"}
+                                            </h4>
+                                            <span className="text-xs text-slate-400 font-medium">
+                                              ({uncategorized.length})
+                                            </span>
+                                          </div>
+                                          <div className="grid gap-3 md:grid-cols-2">
+                                            {uncategorized.map(renderStructureCard)}
+                                          </div>
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()
                     ) : (
                       loaded.question_types.map((qt) => (
                         <div key={qt.question_type} className="mb-6">
@@ -296,98 +680,7 @@ export default function AdminPage() {
                             </span>
                           </h3>
                           <div className="grid gap-3 md:grid-cols-2">
-                            {qt.structures.map((st) => (
-                              <div
-                                key={st.id}
-                                onClick={() => setSelected(st)}
-                                className="cursor-pointer bg-white border border-slate-200 rounded-lg p-4 shadow-sm transition-shadow hover:shadow-md"
-                              >
-                                <div className="flex items-start justify-between gap-2 mb-2">
-                                  <code className="px-1.5 py-0.5 rounded bg-slate-100 text-[11px] text-slate-600">
-                                    {st.id}
-                                  </code>
-                                  {st.source_labels.length > 0 && (
-                                    <span className="text-[11px] text-slate-400">
-                                      {st.source_labels.join(", ")}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-sm text-slate-800 overflow-x-auto bg-slate-50 rounded p-2">
-                                  {st.pattern_latex ? (
-                                    <MathText text={`\\(${st.pattern_latex}\\)`} />
-                                  ) : (
-                                    <p>{st.pattern}</p>
-                                  )}
-                                </div>
-                                {st.technique && (
-                                  <p className="mt-2 text-xs text-slate-500 leading-snug">
-                                    {st.technique}
-                                  </p>
-                                )}
-                                {(st.sample_prompt_latex || st.sample_prompt) && (
-                                  <div className="mt-2 text-sm text-slate-700 overflow-x-auto">
-                                    {st.sample_prompt_latex ? (
-                                      <MathText text={`\\(${st.sample_prompt_latex}\\)`} />
-                                    ) : (
-                                      <p className="whitespace-pre-line">{st.sample_prompt}</p>
-                                    )}
-                                    {(st.sample_answer_latex || st.sample_answer) && (
-                                      <div className="mt-1 text-slate-600">
-                                        <span className="text-slate-400">Answer:</span>{" "}
-                                        <MathText
-                                          text={`\\(${st.sample_answer_latex ?? st.sample_answer}\\)`}
-                                          className="inline"
-                                        />
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                                {st.parts && st.parts.length > 0 && (
-                                  <div className="mt-3 border-t border-slate-200 pt-2 space-y-2">
-                                    <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
-                                      Parts & answers
-                                    </div>
-                                    {st.parts.map((p) => (
-                                      <div key={p.label} className="flex items-start gap-2 text-xs">
-                                        <code className="shrink-0 mt-0.5 px-1 py-0.5 rounded bg-slate-100 text-[11px] text-slate-600">
-                                          {p.label}
-                                        </code>
-                                        <div className="min-w-0 flex-1 text-slate-700">
-                                          <MathText text={kmMath(p.question_km ?? p.want ?? "")} />
-                                          {p.technique && !/^[A-Za-z]/.test(p.technique.trim()) && (
-                                            <div className="mt-0.5 text-[11px] leading-snug text-slate-500">
-                                              <MathText text={kmMath(p.technique)} />
-                                            </div>
-                                          )}
-                                          <div className="mt-0.5 text-slate-900">
-                                            → <span>{p.answer_display ?? p.answer}</span>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                                {st.graph && (
-                                  <details className="mt-3 border-t border-slate-200 pt-2">
-                                    <summary className="cursor-pointer text-xs font-medium text-slate-600 hover:text-slate-900 select-none">
-                                      Show graph ▾
-                                    </summary>
-                                    <div className="mt-2">
-                                      <FunctionGraph graph={st.graph} />
-                                    </div>
-                                  </details>
-                                )}
-                                {st.formula_tags.length > 0 && (
-                                  <div className="mt-2 flex flex-wrap gap-1">
-                                    {st.formula_tags.map((t) => (
-                                      <code key={t} className="px-1.5 py-0.5 rounded bg-slate-100 text-[11px]">
-                                        {t}
-                                      </code>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
+                            {qt.structures.map(renderStructureCard)}
                           </div>
                         </div>
                       ))

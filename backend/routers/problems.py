@@ -192,6 +192,19 @@ async def regenerate_template_structure(
     return await services.regenerate_template_structure(structure_id)
 
 
+@me_router.post("/templates/structures/solve-custom")
+async def solve_custom_template_structure(
+    req: dict,
+    user: User = Depends(get_current_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    structure_id = req.get("structure_id")
+    params = req.get("params") or {}
+    if not structure_id:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "structure_id is required")
+    return await services.solve_custom_template_structure(structure_id, params)
+
+
 @me_router.get("/sandbox/sample")
 async def sandbox_sample(
     topic: str,

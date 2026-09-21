@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import json
+import logging
 import os
 import random
 import uuid
@@ -798,15 +799,48 @@ _STRUCT_PATTERNS = {
     ("probability", "counting"): r"\binom{n}{k},\ P(n,k),\ n!",
 }
 
+_STRUCTURE_CACHE_DIR = os.path.join(os.path.dirname(__file__), "data", "structure_cache")
+
+
+def _load_structure_cache(topic: str) -> dict | None:
+    path = os.path.join(_STRUCTURE_CACHE_DIR, f"structures_{topic}.json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict) and data.get("question_types"):
+            return data
+    except Exception as exc:
+        logging.getLogger("bacii").warning("Failed to load structure cache for %s: %s", topic, exc)
+    return None
+
+
+def _save_structure_cache(topic: str, payload: dict) -> None:
+    try:
+        os.makedirs(_STRUCTURE_CACHE_DIR, exist_ok=True)
+        path = os.path.join(_STRUCTURE_CACHE_DIR, f"structures_{topic}.json")
+        tmp_path = path + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, path)
+    except Exception as exc:
+        logging.getLogger("bacii").warning("Failed to save structure cache for %s: %s", topic, exc)
+
+
 _integral_structure_payload = None
 
 
 def _build_integral_structure_payload() -> dict:
     """Deterministic per-structure samples for the integral topic (one per
-    unique template structure). Memoized — the payload is expensive to compute
-    and identical on every call."""
+    unique template structure). Memoized and persisted to disk."""
     global _integral_structure_payload
     if _integral_structure_payload is not None:
+        return _integral_structure_payload
+
+    cached = _load_structure_cache("integral")
+    if cached is not None:
+        _integral_structure_payload = cached
         return _integral_structure_payload
 
     by_qt: dict[str, list] = {}
@@ -817,26 +851,33 @@ def _build_integral_structure_payload() -> dict:
     for qt in ("indefinite_integral", "definite_integral"):
         entries = []
         for struct in by_qt.get(qt, []):
-            sample = integral_structures.build_sample(
-                struct, seed=zlib.crc32(struct["id"].encode()) & 0xFFFFFFFF
-            )
-            solution = sample["solution"]
-            entries.append({
-                "id": struct["id"],
-                "question_type": qt,
-                "difficulty": struct["difficulty"],
-                "pattern": struct["pattern"],
-                "pattern_latex": integral_structures.build_pattern_latex(struct),
-                "sample_prompt": sample["prompt"],
-                "sample_prompt_latex": sample["prompt_latex"],
-                "sample_answer": str(solution["answer_exact"]),
-                "sample_answer_latex": solution.get("answer_latex"),
-                "formula_tags": solution.get("formula_tags", []),
-                "source_labels": struct["source_labels"],
-            })
+            try:
+                variants = integral_structures.build_integral_variants(struct, count=3)
+                sample = variants[0] if variants else integral_structures.build_sample(
+                    struct, seed=zlib.crc32(struct["id"].encode()) & 0xFFFFFFFF
+                )
+                solution = sample.get("solution", {})
+                entries.append({
+                    "id": struct["id"],
+                    "question_type": qt,
+                    "difficulty": struct["difficulty"],
+                    "pattern": struct["pattern"],
+                    "pattern_latex": integral_structures.build_pattern_latex(struct),
+                    "sample_prompt": sample["prompt"],
+                    "sample_prompt_latex": sample["prompt_latex"],
+                    "sample_answer": str(sample.get("answer_exact") or solution.get("answer_exact", "")),
+                    "sample_answer_latex": sample.get("answer_latex") or solution.get("answer_latex"),
+                    "sample_params": sample.get("params") or sample.get("sample_params"),
+                    "variants": variants,
+                    "formula_tags": sample.get("formula_tags") or solution.get("formula_tags", []),
+                    "source_labels": struct["source_labels"],
+                })
+            except Exception as exc:
+                logging.getLogger("bacii").warning("Failed to build integral sample for %s: %s", struct["id"], exc)
         question_types.append({"question_type": qt, "structures": entries})
 
     _integral_structure_payload = {"topic": "integral", "question_types": question_types}
+    _save_structure_cache("integral", _integral_structure_payload)
     return _integral_structure_payload
 
 
@@ -844,74 +885,54 @@ _limit_structure_payload = None
 
 
 def _build_limit_structure_payload() -> dict:
-    """One card per limit *technique* (not per parameterized shape — most limit
-    techniques are tied to a specific identity, not free coefficients; see
-    `limit_structures.LIMIT_TECHNIQUES`). Parameterizable techniques additionally get
-    a deterministic procedurally-generated sample; curated-only techniques show
-    one real BAC II exercise instead. Memoized like the integral payload."""
+    """One card per parameterized limit structure (mirroring integral's payload),
+    each with a deterministic sample, authentic Khmer technique label, symbolic
+    pattern, and source BAC II / textbook labels. Persisted to disk."""
     global _limit_structure_payload
     if _limit_structure_payload is not None:
         return _limit_structure_payload
 
-    curated_by_technique: dict[str, list] = {}
-    for item in limit_structures._LIMIT_CURATED_TEMPLATES:
-        curated_by_technique.setdefault(item["formula_name"], []).append(item)
+    cached = _load_structure_cache("limit")
+    if cached is not None:
+        _limit_structure_payload = cached
+        return _limit_structure_payload
 
     entries = []
-    for technique, meta in limit_structures.LIMIT_TECHNIQUES.items():
-        curated = sorted(curated_by_technique.get(technique, []), key=lambda it: it["id"])
-        source_labels = [it["id"] for it in curated]
-        entry = {
-            "id": technique,
-            # The technique's plain-language description sits under the template,
-            # the way the shape topics show their technique line.
-            "technique": meta["description"],
-            "question_type": "limit",
-            "difficulty": meta["difficulty"],
-            "parameterizable": meta["parameterizable"],
-            "description": meta["description"],
-            # Header shows the symbolic slot-form template — the limit analogue
-            # of integral's "\\int a x^2 + b x + c\\,dx" — so the card reads like
-            # the integral cards. Falls back to the description text if a
-            # technique has no authored template.
-            "pattern": meta["description"],
-            "pattern_latex": limit_structures.TEMPLATE_LATEX.get(technique),
-            "source_labels": source_labels,
-        }
-        if meta["parameterizable"]:
-            problem = generate_limit_for_technique(
-                random.Random(zlib.crc32(technique.encode()) & 0xFFFFFFFF), technique,
+    for struct in limit_structures.all_limit_structures():
+        try:
+            variants = limit_structures.build_limit_variants(struct, count=3)
+            sample = variants[0] if variants else limit_structures.build_limit_sample(
+                struct, seed=zlib.crc32(struct["id"].encode()) & 0xFFFFFFFF
             )
-            solution = solver.solve("limit", "limit", problem["params"])
-            entry.update({
-                "sample_prompt": problem["prompt"],
-                "sample_prompt_latex": problem.get("prompt_latex"),
-                "sample_answer": str(solution["answer_exact"]),
-                "sample_answer_latex": solution.get("answer_latex"),
-                "formula_tags": solution.get("formula_tags", []),
+            solution = sample.get("solution", {})
+            entries.append({
+                "id": struct["id"],
+                "question_type": "limit",
+                "category": struct.get("category"),
+                "subfamily": struct.get("subfamily"),
+                "shape": struct.get("shape"),
+                "difficulty": struct["difficulty"],
+                "parameterizable": True,
+                "description": struct.get("title_en", ""),
+                "pattern": struct["pattern"],
+                "pattern_latex": limit_structures.build_limit_pattern_latex(struct),
+                "sample_prompt": sample["prompt"],
+                "sample_prompt_latex": sample["prompt_latex"],
+                "sample_answer": str(sample.get("answer_exact") or solution.get("answer_exact", "")),
+                "sample_answer_latex": sample.get("answer_latex") or solution.get("answer_latex"),
+                "sample_params": sample.get("params") or sample.get("sample_params"),
+                "variants": variants,
+                "formula_tags": sample.get("formula_tags") or solution.get("formula_tags", []),
+                "source_labels": struct.get("source_labels", []),
             })
-        elif curated:
-            example = curated[0]
-            point = example["point"]
-            point_latex = r"+\infty" if str(point) == "oo" else latex(point)
-            expr_latex = latex(example["expr"])
-            entry.update({
-                # Render the concrete curated example as LaTeX (frontend wraps
-                # sample_prompt_latex in \\( \\)). Previously this was stuffed
-                # into sample_prompt as a raw \\(...\\) string, which the admin
-                # card printed verbatim instead of rendering as math.
-                "sample_prompt": f"lim(x -> {point}) of {example['expr']}",
-                "sample_prompt_latex": rf"\lim_{{x \to {point_latex}}} {expr_latex}",
-                "sample_answer": example["answer_latex"],
-                "sample_answer_latex": example["answer_latex"],
-                "formula_tags": [technique],
-            })
-        entries.append(entry)
+        except Exception as exc:
+            logging.getLogger("bacii").warning("Failed to build limit sample for %s: %s", struct["id"], exc)
 
     _limit_structure_payload = {
         "topic": "limit",
         "question_types": [{"question_type": "limit", "structures": entries}],
     }
+    _save_structure_cache("limit", _limit_structure_payload)
     return _limit_structure_payload
 
 
@@ -926,10 +947,22 @@ async def _build_topic_structure_payload(topic: str) -> dict:
         total_structures = sum(len(qt.get("structures", [])) for qt in cached.get("question_types", []))
         if total_structures > 0:
             return cached
+
+    disk_cached = _load_structure_cache(topic)
+    if disk_cached is not None:
+        _STRUCTURE_PAYLOAD_CACHE[topic] = disk_cached
+        if topic == "limit":
+            global _limit_structure_payload
+            _limit_structure_payload = disk_cached
+        elif topic == "integral":
+            global _integral_structure_payload
+            _integral_structure_payload = disk_cached
+        return disk_cached
+
     if topic == "integral":
-        payload = _build_integral_structure_payload()
+        payload = await asyncio.to_thread(_build_integral_structure_payload)
     elif topic == "limit":
-        payload = _build_limit_structure_payload()
+        payload = await asyncio.to_thread(_build_limit_structure_payload)
     elif topic in template_shapes.CURATED_SHAPE_TOPICS:
         payload = _build_curated_shape_payload(topic)
     else:
@@ -1163,16 +1196,85 @@ async def get_template_structures(topic: str | None = None) -> dict:
 
 
 async def regenerate_template_structure(structure_id: str) -> dict:
-    """Flush cache for a specific structure and re-generate with Gemini in real time."""
+    """Flush cache for a specific structure and re-generate in real time without wiping other cards."""
+    limit_def = next((s for s in limit_structures.all_limit_structures() if s["id"] == structure_id), None)
+    if limit_def:
+        import time
+        seed = int(time.time() * 1000) & 0xFFFFFFFF
+        variants = limit_structures.build_limit_variants(limit_def, count=3, seed=seed)
+        sample = variants[0] if variants else limit_structures.build_limit_sample(limit_def, seed=seed)
+        solution = sample.get("solution", {})
+        new_entry = {
+            "id": limit_def["id"],
+            "question_type": "limit",
+            "category": limit_def.get("category"),
+            "subfamily": limit_def.get("subfamily"),
+            "shape": limit_def.get("shape"),
+            "difficulty": limit_def["difficulty"],
+            "parameterizable": True,
+            "description": limit_def.get("title_en", ""),
+            "pattern": limit_def["pattern"],
+            "pattern_latex": limit_structures.build_limit_pattern_latex(limit_def),
+            "sample_prompt": sample["prompt"],
+            "sample_prompt_latex": sample["prompt_latex"],
+            "sample_answer": str(sample.get("answer_exact") or solution.get("answer_exact", "")),
+            "sample_answer_latex": sample.get("answer_latex") or solution.get("answer_latex"),
+            "sample_params": sample.get("params") or sample.get("sample_params"),
+            "variants": variants,
+            "formula_tags": sample.get("formula_tags") or solution.get("formula_tags", []),
+            "source_labels": limit_def.get("source_labels", []),
+        }
+        await _build_topic_structure_payload("limit")
+        global _limit_structure_payload
+        if _limit_structure_payload and _limit_structure_payload.get("question_types"):
+            for idx, st in enumerate(_limit_structure_payload["question_types"][0].get("structures", [])):
+                if st.get("id") == structure_id:
+                    _limit_structure_payload["question_types"][0]["structures"][idx] = new_entry
+                    break
+            _save_structure_cache("limit", _limit_structure_payload)
+        return {"structure": new_entry}
+
+    integral_def = next((s for s in integral_structures.all_integral_structures() if s["id"] == structure_id), None)
+    if integral_def:
+        import time
+        seed = int(time.time() * 1000) & 0xFFFFFFFF
+        variants = integral_structures.build_integral_variants(integral_def, count=3, seed=seed)
+        sample = variants[0] if variants else integral_structures.build_sample(integral_def, seed=seed)
+        solution = sample.get("solution", {})
+        new_entry = {
+            "id": integral_def["id"],
+            "question_type": integral_def["question_type"],
+            "difficulty": integral_def["difficulty"],
+            "pattern": integral_def["pattern"],
+            "pattern_latex": integral_structures.build_pattern_latex(integral_def),
+            "sample_prompt": sample["prompt"],
+            "sample_prompt_latex": sample["prompt_latex"],
+            "sample_answer": str(sample.get("answer_exact") or solution.get("answer_exact", "")),
+            "sample_answer_latex": sample.get("answer_latex") or solution.get("answer_latex"),
+            "sample_params": sample.get("params") or sample.get("sample_params"),
+            "variants": variants,
+            "formula_tags": sample.get("formula_tags") or solution.get("formula_tags", []),
+            "source_labels": integral_def["source_labels"],
+        }
+        await _build_topic_structure_payload("integral")
+        global _integral_structure_payload
+        if _integral_structure_payload and _integral_structure_payload.get("question_types"):
+            for qt in _integral_structure_payload["question_types"]:
+                for idx, st in enumerate(qt.get("structures", [])):
+                    if st.get("id") == structure_id:
+                        qt["structures"][idx] = new_entry
+                        break
+            _save_structure_cache("integral", _integral_structure_payload)
+        return {"structure": new_entry}
+
     parts = structure_id.split(":")
     topic = parts[0] if parts else "functions"
     if topic == "functions" and len(parts) >= 3:
         item_id = parts[2]
         await cache.delete(f"fn_km:study:{item_id}")
-    
-    # Invalidate topic cache in memory
-    _STRUCTURE_PAYLOAD_CACHE.pop(topic, None)
 
+    # Fallback for generic topics
+    _STRUCTURE_PAYLOAD_CACHE.pop(topic, None)
     payload = await get_template_structures(topic=topic)
     for t in payload.get("topics", []):
         for qt in t.get("question_types", []):
@@ -1180,6 +1282,84 @@ async def regenerate_template_structure(structure_id: str) -> dict:
                 if st.get("id") == structure_id:
                     return {"structure": st}
     return {"structure": None}
+
+
+async def solve_custom_template_structure(structure_id: str, params: dict) -> dict:
+    """Evaluate a template structure with custom parameters in real time."""
+    import re
+    from engine.notation import pretty_expr, pretty_point
+    from engine.topics.limit.solver import _solve_limit
+    from engine.topics.integral.solver import _solve_definite_integral, _solve_indefinite_integral
+    from sympy import latex, sympify
+
+    # 1. Limit structure
+    limit_def = next((s for s in limit_structures.all_limit_structures() if s["id"] == structure_id), None)
+    if limit_def:
+        pattern = limit_def["pattern"]
+        expr = pattern
+        for k, v in params.items():
+            expr = expr.replace("{" + str(k) + "}", str(v))
+        point_str = str(params.get("point", limit_def.get("point", "0")))
+        var = limit_def.get("var", "x")
+        solve_params = {
+            "expr": expr,
+            "point": point_str,
+            "var": var,
+            "formula_name": limit_def.get("shape", limit_def["id"]),
+            "curated_technique": limit_def.get("title_km", limit_def.get("title_en", "")),
+        }
+        solve_params.update(params)
+        sol = _solve_limit(solve_params)
+        point_disp = pretty_point(point_str)
+        prompt = f"lim({var} -> {point_disp}) of {pretty_expr(expr)}."
+        pt_sym = sol.get("point")
+        point_latex_str = (
+            r"+\infty" if point_str == "oo" else r"-\infty" if point_str == "-oo" else latex(pt_sym) if pt_sym is not None else point_str
+        )
+        expr_latex_str = latex(sol.get("given", sympify(expr)), ln_notation=True)
+        expr_latex_str = re.sub(r"([0-9]*\s*e\^\{[^\}]+\})\s*-\s*([0-9]+)\s*\+\s*([0-9]*\s*e\^\{-[^\}]+\})", r"\1 + \3 - \2", expr_latex_str)
+        expr_latex_str = re.sub(r"-\s*(\\sqrt\{[^\}]+\})\s*\+\s*(\\sqrt\{[^\}]+\})", r"\2 - \1", expr_latex_str)
+        prompt_latex = rf"\lim_{{{var} \to {point_latex_str}}} {expr_latex_str}"
+        return {
+            "prompt": prompt,
+            "prompt_latex": prompt_latex,
+            "answer_exact": str(sol.get("answer_exact", "")),
+            "answer_latex": sol.get("answer_latex") or latex(sol.get("answer_exact"), ln_notation=True),
+            "steps": sol.get("steps", []),
+        }
+
+    # 2. Integral structure
+    integral_def = next((s for s in integral_structures.all_integral_structures() if s["id"] == structure_id), None)
+    if integral_def:
+        pattern = integral_def["pattern"]
+        expr = pattern
+        for k, v in params.items():
+            expr = expr.replace("{" + str(k) + "}", str(v))
+        var = integral_def.get("var", "x")
+        qt = integral_def["question_type"]
+        if qt == "definite_integral":
+            sol = _solve_definite_integral({
+                "expr": expr,
+                "var": var,
+                "lower": str(params.get("lower", "0")),
+                "upper": str(params.get("upper", "1")),
+            })
+            prompt_latex = rf"\int_{{{params.get('lower', 0)}}}^{{{params.get('upper', 1)}}} \left({latex(sympify(expr))}\right)\,d{var}"
+        else:
+            sol = _solve_indefinite_integral({
+                "expr": expr,
+                "var": var,
+            })
+            prompt_latex = rf"\int \left({latex(sympify(expr))}\right)\,d{var}"
+        return {
+            "prompt": f"Integral of {expr}",
+            "prompt_latex": prompt_latex,
+            "answer_exact": str(sol.get("answer_exact", "")),
+            "answer_latex": sol.get("answer_latex") or latex(sol.get("answer_exact")),
+            "steps": sol.get("steps", []),
+        }
+
+    raise HTTPException(status.HTTP_404_NOT_FOUND, f"structure not found: {structure_id}")
 
 
 def _topic_structure_summary(topic: str) -> dict:
@@ -1204,16 +1384,15 @@ def _topic_structure_summary(topic: str) -> dict:
         }
 
     if topic == "limit":
-        curated_techniques = {
-            item["formula_name"] for item in limit_structures._LIMIT_CURATED_TEMPLATES
-        }
-        diffs = {meta["difficulty"] for meta in limit_structures.LIMIT_TECHNIQUES.values()}
+        structs = limit_structures.all_limit_structures()
+        diffs = {s["difficulty"] for s in structs}
+        curated_count = sum(len(s.get("source_labels", [])) for s in structs)
         return {
             "topic": topic,
-            "question_types": [{"question_type": "limit", "count": len(limit_structures.LIMIT_TECHNIQUES)}],
-            "structure_count": len(limit_structures.LIMIT_TECHNIQUES),
+            "question_types": [{"question_type": "limit", "count": len(structs)}],
+            "structure_count": len(structs),
             "difficulties": sorted(diffs),
-            "curated": len(curated_techniques),
+            "curated": curated_count,
         }
 
     if topic == "probability":

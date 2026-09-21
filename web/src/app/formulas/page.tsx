@@ -103,9 +103,13 @@ export default function FormulasPage() {
                     return (
                       <div key={e.id} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
                         <div className="flex flex-wrap items-center gap-2 text-sm">
-                          <span className="font-semibold text-slate-900">{primaryName}</span>
+                          <span className="font-semibold text-slate-900">
+                            <MathText text={primaryName} />
+                          </span>
                           {secondaryName && secondaryName !== primaryName && (
-                            <span className="text-slate-500">({secondaryName})</span>
+                            <span className="text-slate-500">
+                              (<MathText text={secondaryName} />)
+                            </span>
                           )}
                           {difficulty && (
                             <span className={`px-2 py-0.5 rounded text-xs ${DIFFICULTY_STYLES[difficulty]}`}>
