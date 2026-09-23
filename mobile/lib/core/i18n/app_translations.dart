@@ -193,6 +193,14 @@ class AppTranslations {
     'label_tangent': 'Tangent',
     'label_points': 'Points',
 
+    // Saved exercises
+    'saved_shelf_title': 'Continue Practicing',
+    'saved_see_all': 'See all',
+    'saved_empty': 'No saved exercises yet',
+    'saved_in_progress': 'In Progress',
+    'saved_completed': 'Completed',
+    'saved_parts_done': 'parts done',
+
     // Tooltips
     'tip_delete_progress': 'Delete saved progress',
     'tip_save_progress': 'Save progress for later',
@@ -417,6 +425,13 @@ class AppTranslations {
     'label_asymptotes': 'អាស៊ីមតូត',
     'label_tangent': 'បន្ទាត់ប៉ះ',
     'label_points': 'ចំណុច',
+
+    'saved_shelf_title': 'បន្តអនុវត្តលំហាត់',
+    'saved_see_all': 'មើលទាំងអស់',
+    'saved_empty': 'មិនទាន់មានលំហាត់រក្សាទុកនៅឡើយទេ',
+    'saved_in_progress': 'កំពុងដំណើរការ',
+    'saved_completed': 'បានបញ្ចប់',
+    'saved_parts_done': 'ផ្នែកបានរួចរាល់',
 
     'tip_delete_progress': 'លុបវឌ្ឍនភាពដែលបានរក្សាទុក',
     'tip_save_progress': 'រក្សាទុកវឌ្ឍនភាពសម្រាប់ពេលក្រោយ',

@@ -12,6 +12,7 @@ import '../../screens/stats/stats_screen.dart';
 import '../../screens/history/history_screen.dart';
 import '../../screens/exam/exam_screen.dart';
 import '../../screens/admin/admin_screen.dart';
+import '../../screens/saved/saved_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -51,6 +52,7 @@ final GoRouter appRouter = GoRouter(
               initialSkill: qp['skill'],
               initialFormula: qp['formula'],
               initialAttempt: qp['attempt'],
+              initialSession: qp['session'],
             );
           },
         ),
@@ -77,6 +79,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/admin',
           builder: (context, state) => const AdminScreen(),
+        ),
+        GoRoute(
+          path: '/saved',
+          builder: (context, state) => const SavedScreen(),
         ),
       ],
     ),

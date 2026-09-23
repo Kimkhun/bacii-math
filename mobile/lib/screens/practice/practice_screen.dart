@@ -159,6 +159,7 @@ class PracticeScreen extends StatefulWidget {
   final String? initialSkill;
   final String? initialFormula;
   final String? initialAttempt;
+  final String? initialSession;
 
   const PracticeScreen({
     super.key,
@@ -166,6 +167,7 @@ class PracticeScreen extends StatefulWidget {
     this.initialSkill,
     this.initialFormula,
     this.initialAttempt,
+    this.initialSession,
   });
 
   @override
@@ -286,6 +288,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
     _initStreak();
     if (widget.initialAttempt != null) {
       _loadReview(widget.initialAttempt!);
+    } else if (widget.initialSession != null) {
+      _loadSessions();
+      _resumeSession(widget.initialSession!);
     } else if (widget.initialSkill != null) {
       _loadForcedSkill(widget.initialSkill!);
     } else if (widget.initialFormula != null) {
