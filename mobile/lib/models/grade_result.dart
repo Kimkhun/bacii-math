@@ -238,6 +238,30 @@ class Explanation {
       );
 }
 
+class HintResponse {
+  final String hint;
+  final String provider;
+  final String? part;
+  final String? status;
+  final int? errorLine;
+
+  HintResponse({
+    required this.hint,
+    required this.provider,
+    this.part,
+    this.status,
+    this.errorLine,
+  });
+
+  factory HintResponse.fromJson(Map<String, dynamic> json) => HintResponse(
+        hint: json['hint'] as String? ?? '',
+        provider: json['provider'] as String? ?? '',
+        part: json['part'] as String?,
+        status: json['status'] as String?,
+        errorLine: json['error_line'] as int?,
+      );
+}
+
 class GradeResult {
   final String attemptId;
   final bool correct;

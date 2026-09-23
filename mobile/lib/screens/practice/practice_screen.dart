@@ -204,6 +204,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
   Explanation? _explanation;
   GraphGradeResult? _graphGrade;
   int _hintLevel = 0;
+  HintResponse? _teacherHint;
+  bool _hintLoading = false;
 
   bool _busy = false;
   String? _error;
@@ -331,6 +333,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
     _explanation = null;
     _graphGrade = null;
     _hintLevel = 0;
+    _teacherHint = null;
   }
 
   void _loadQuestion(Question q) {
@@ -501,6 +504,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       _error = null;
       part.result = null;
       _explanation = null;
+      _teacherHint = null;
       _graphGrade = null;
     });
 
@@ -714,32 +718,55 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   // --- hints / explanation ---
+  // Socratic hint: asks the backend for a contextual hint based on the
+  // student's current canvas/typed work, rather than revealing the full
+  // explanation one step at a time (see web commit 52f6835).
   Future<void> _showHint() async {
-    if (_explanation == null) {
-      await _fetchExplanation();
-      setState(() => _hintLevel = 1);
-      return;
-    }
-    setState(() => _hintLevel =
-        math.min(_hintLevel + 1, _explanation!.steps.isEmpty ? _hintLevel + 1 : _explanation!.steps.length));
-  }
-
-  Future<void> _fetchExplanation() async {
     final q = _question;
     final part = _active;
     if (q == null) return;
-    setState(() => _busy = true);
+    setState(() {
+      _hintLoading = true;
+      _error = null;
+    });
     try {
+      var workText = part?.workText;
+      final typedText = part?.typed.text.trim() ?? '';
+      if ((workText == null || workText.isEmpty) && typedText.isEmpty) {
+        try {
+          final ink = await part?.canvas.getImageBase64();
+          if (ink != null) {
+            final det = await _api.detect(ink);
+            part?.detect = det;
+            if (det.lines.isNotEmpty) {
+              workText = det.lines.join('\n');
+              part?.workText = workText;
+            }
+          }
+        } catch (_) {
+          // best-effort ink detect; fall through with no work text
+        }
+      }
       final lang = context.read<LanguageProvider>().currentLang;
-      final exp = await _api.explain(q.id,
-          userAnswer: part?.detect?.rawText,
-          workText: part?.workText,
-          lang: lang);
-      setState(() => _explanation = exp);
+      final res = await _api.hint(
+        q.id,
+        part: _currentPartLabel,
+        workText: workText,
+        userAnswer: typedText.isNotEmpty ? typedText : null,
+        lang: lang,
+      );
+      if (mounted) {
+        setState(() {
+          _teacherHint = res;
+          _hintLevel += 1;
+        });
+      }
     } catch (e) {
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+      if (mounted) {
+        setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+      }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) setState(() => _hintLoading = false);
     }
   }
 
@@ -1142,6 +1169,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 onTap: () => setState(() {
                   _partIndex = i;
                   _explanation = null;
+                  _teacherHint = null;
                 }),
                 child: Container(
                   margin: const EdgeInsets.only(right: 8),
@@ -1201,6 +1229,17 @@ class _PracticeScreenState extends State<PracticeScreen> {
         ),
         // pen size + tool strip (left)
         Positioned(left: 6, top: 8, child: _toolStrip(part)),
+        // Teacher (Socratic) hint panel — above the results panel so both
+        // can be visible together.
+        if (_teacherHint != null)
+          Positioned(
+            right: 6,
+            bottom: (part.result != null && _showResults) ? 280 : 70,
+            width: MediaQuery.of(context).size.width < 520
+                ? MediaQuery.of(context).size.width - 12
+                : 360,
+            child: _teacherHintPanel(lang, _teacherHint!),
+          ),
         // results panel (right, above toolbar)
         if (part.result != null && _showResults)
           Positioned(
@@ -1316,8 +1355,13 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   part.result = null;
                 });
               }),
-              _tinyBtn(lang.t('tool_hint'),
-                  onTap: _busy || _question == null ? null : _showHint),
+              _tinyBtn(
+                  _hintLoading
+                      ? (lang.isKhmer ? 'កំពុងទាញយក...' : 'Loading hint...')
+                      : lang.t('tool_hint'),
+                  onTap: _busy || _hintLoading || _question == null
+                      ? null
+                      : _showHint),
               _iconBtn(Icons.upload_outlined, _uploadImage),
               _iconBtn(Icons.remove, () => setState(() => c.setZoom(c.zoom - 0.2))),
               Padding(
@@ -1378,6 +1422,64 @@ class _PracticeScreenState extends State<PracticeScreen> {
       visualDensity: VisualDensity.compact,
       constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
       padding: EdgeInsets.zero,
+    );
+  }
+
+  Widget _teacherHintPanel(LanguageProvider lang, HintResponse hint) {
+    return Material(
+      elevation: 4,
+      borderRadius: BorderRadius.circular(12),
+      color: const Color(0xFFFFFBEB),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFFCD34D)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text('👨‍🏫', style: TextStyle(fontSize: 15)),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    lang.isKhmer ? 'ជំនួយពីគ្រូ (Teacher Hint)' : 'Teacher Hint',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Color(0xFF78350F)),
+                  ),
+                ),
+                if (hint.errorLine != null)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    margin: const EdgeInsets.only(right: 4),
+                    decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(4)),
+                    child: Text(
+                        lang.isKhmer
+                            ? 'កំហុសនៅបន្ទាត់ទី ${hint.errorLine}'
+                            : 'Line ${hint.errorLine} error',
+                        style: TextStyle(
+                            fontSize: 10, color: Colors.red.shade700)),
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 14),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  onPressed: () => setState(() => _teacherHint = null),
+                ),
+              ],
+            ),
+            const Divider(height: 12, color: Color(0xFFFCD34D)),
+            MathText(text: hint.hint),
+          ],
+        ),
+      ),
     );
   }
 

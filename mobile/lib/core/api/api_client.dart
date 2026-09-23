@@ -225,6 +225,18 @@ class ApiClient {
     return Explanation.fromJson(data as Map<String, dynamic>);
   }
 
+  Future<HintResponse> hint(String questionId,
+      {String? part, String? workText, String? userAnswer, String? lang}) async {
+    final data = await _request('/problems/hint', method: 'POST', body: {
+      'question_id': questionId,
+      if (part != null) 'part': part,
+      if (workText != null) 'work_text': workText,
+      if (userAnswer != null) 'user_answer': userAnswer,
+      if (lang != null) 'lang': lang,
+    });
+    return HintResponse.fromJson(data as Map<String, dynamic>);
+  }
+
   Future<GraphGradeResult> gradeGraph(
       String questionId, String strokesThumb) async {
     final data = await _request('/problems/grade-graph',
