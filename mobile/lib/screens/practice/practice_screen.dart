@@ -40,19 +40,18 @@ const Map<String, List<List<String>>> _typeOptions = {
     ['conjugate', 'Conjugate'],
     ['real_part', 'Real part'],
     ['imaginary_part', 'Imaginary part'],
+    ['complex_arithmetic', 'Complex arithmetic'],
+    ['complex_power', 'Powers of z'],
+    ['de_moivre_power', "De Moivre's formula"],
+    ['nth_roots', 'n-th roots'],
   ],
   'limit': [
-    ['limit:direct_substitution', 'Direct substitution'],
-    ['limit:factoring_0_0', 'Factoring (0/0)'],
-    ['limit:rationalization_conjugate_finite', 'Conjugate rationalization'],
-    ['limit:sinc_standard_limit', 'Standard limit sin(x)/x'],
-    ['limit:exponential_standard_limit', 'Standard limit (eˣ-1)/x'],
-    ['limit:rationalization_sinc_combo', 'Conjugate + sinc combo'],
-    ['limit:exponential_sinc_combo', 'Exponential + sinc combo'],
-    ['limit:half_angle_sinc_combo', 'Half-angle + sinc combo'],
-    ['limit:rational_function_infinity', 'Rational function at infinity'],
-    ['limit:conjugate_infinity', 'Conjugate at infinity'],
-    ['limit:log_limit_infinity', 'Logarithmic limit at infinity'],
+    ['limit:rational', 'Rational limits'],
+    ['limit:radical', 'Radical limits'],
+    ['limit:trig', 'Trigonometric limits'],
+    ['limit:exponential', 'Exponential limits'],
+    ['limit:logarithmic', 'Logarithmic limits'],
+    ['limit:infinity', 'Limits at infinity'],
   ],
   'integral': [
     ['definite_integral', 'Definite integral (any)'],
@@ -69,6 +68,7 @@ const Map<String, List<List<String>>> _typeOptions = {
     ['indefinite_integral:linear_argument', 'Indefinite — linear argument'],
     ['indefinite_integral:usub', 'Indefinite — u-substitution'],
     ['indefinite_integral:trig_sec', 'Indefinite — trig (sec²)'],
+    ['indefinite_integral:indefinite_sum', 'Indefinite — sum of several term types'],
   ],
   'probability': [
     ['probability:exercise_bag_split_atleast', 'Balls from a bag'],
@@ -77,25 +77,60 @@ const Map<String, List<List<String>>> _typeOptions = {
     ['probability:exercise_banknotes', 'Banknotes'],
     ['probability:exercise_pens', 'Pens'],
     ['probability:exercise_students', 'Students'],
-    ['counting', 'Counting (combinations & permutations)'],
+    ['counting', 'Counting (any)'],
+    ['counting:combination', 'Counting — combinations C(n, r)'],
+    ['counting:permutation', 'Counting — permutations P(n, r)'],
   ],
   'functions': [
     ['study', 'Curve study & area']
   ],
   'continuity': [
-    ['check_continuity', 'Check continuity / find parameter']
+    ['check_continuity', 'Continuity (any)'],
+    ['check_continuity:check_at_point', 'Check continuity at a point'],
+    ['check_continuity:find_parameter', 'Find the parameter that makes it continuous'],
   ],
   'derivatives': [
-    ['compute_derivative', 'Compute derivative']
+    ['compute_derivative', 'Compute derivative (any)'],
+    ['compute_derivative:polynomial', 'Power rule, term by term'],
+    ['compute_derivative:chain', 'Chain rule on a power'],
+    ['compute_derivative:product', 'Product rule'],
+    ['compute_derivative:quotient', 'Quotient rule'],
+    ['compute_derivative:radical', 'Chain rule through a square root'],
+    ['compute_derivative:trigonometric', 'Trigonometric derivatives'],
+    ['compute_derivative:exponential', 'Exponential derivatives'],
+    ['compute_derivative:logarithm', 'Logarithmic derivatives'],
+    ['compute_derivative:second_order', 'Second derivative'],
   ],
   'differential_equations': [
-    ['solve_ode', 'Solve differential equation']
+    ['solve_ode', 'Differential equation (any)'],
+    ['solve_ode:first_order_linear_homogeneous', "y' + ay = 0"],
+    ['solve_ode:first_order_linear_nonhomogeneous', "y' + ay = g(x)"],
+    ['solve_ode:second_order_homogeneous_constant_coeff', "y'' + by' + cy = 0"],
+    ['solve_ode:second_order_nonhomogeneous', "y'' + by' + cy = g(x)"],
   ],
   'vectors_space': [
-    ['vector_ops', 'Vector operations']
+    ['vector_ops', 'Vector operations (any)'],
+    ['vector_ops:magnitude', 'Magnitude of a vector |AB|'],
+    ['vector_ops:distance', 'Distance between two points'],
+    ['vector_ops:dot', 'Dot product AB · AC'],
+    ['vector_ops:find_m_orthogonal', 'Find m making two vectors orthogonal'],
+    ['vector_ops:cross_magnitude', 'Cross product magnitude |AB × AC|'],
+    ['vector_ops:triangle_area', 'Area of a triangle'],
+    ['vector_ops:scalar_triple_product', 'Scalar triple product u · (v × w)'],
   ],
   'conics': [
-    ['classify_conic', 'Classify conic / find feature']
+    ['classify_conic', 'Conics (any)'],
+    ['classify_conic:vertex_x', 'Parabola — vertex (x)'],
+    ['classify_conic:vertex_y', 'Parabola — vertex (y)'],
+    ['classify_conic:p', 'Parabola — focal parameter p'],
+    ['classify_conic:focus_x', 'Parabola — focus (x)'],
+    ['classify_conic:focus_y', 'Parabola — focus (y)'],
+    ['classify_conic:directrix', 'Parabola — directrix'],
+    ['classify_conic:center_x', 'Ellipse / hyperbola — centre (x)'],
+    ['classify_conic:center_y', 'Ellipse / hyperbola — centre (y)'],
+    ['classify_conic:a', 'Ellipse / hyperbola — a'],
+    ['classify_conic:b', 'Ellipse / hyperbola — b'],
+    ['classify_conic:c', 'Ellipse / hyperbola — focal distance c'],
   ],
 };
 
@@ -210,8 +245,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
         final tech = p['technique'] ?? p['formula_name'];
         return tech != null ? 'limit/limit:$tech' : null;
       case 'derivatives':
-        final order = p['order'] ?? 1;
-        return 'derivatives/compute_derivative:order_$order';
+        final tech = p['technique'];
+        return tech != null ? 'derivatives/compute_derivative:$tech' : null;
       case 'continuity':
         final isParam = p['unknown'] != null && p['unknown'] != 'None';
         return 'continuity/check_continuity:${isParam ? 'find_parameter' : 'check_at_point'}';
