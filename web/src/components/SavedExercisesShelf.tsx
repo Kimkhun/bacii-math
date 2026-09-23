@@ -136,6 +136,7 @@ export default function SavedExercisesShelf({
             s.question?.question_type.replace(/_/g, " ") ??
             "Exercise";
           const promptPreview = (s.question?.prompt ?? "").split("\n")[0] || "";
+          const promptLatexPreview = (s.question?.prompt_latex ?? "").split("\n")[0] || "";
           
           const partsTotal = Math.max(1, s.parts_total || 1);
           const partsDone = s.parts_done || 0;
@@ -182,7 +183,7 @@ export default function SavedExercisesShelf({
                 {/* Prompt preview */}
                 <div className="text-xs text-slate-700 font-medium line-clamp-2 h-9 mb-3">
                   {s.question?.prompt_latex ? (
-                    <MathText text={promptPreview} />
+                    <MathText text={`\\(${promptLatexPreview}\\)`} />
                   ) : (
                     <span>{promptPreview || "Exercise in progress..."}</span>
                   )}

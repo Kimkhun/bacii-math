@@ -257,7 +257,7 @@ export default function SavedExercisesPage() {
                     {/* Question Prompt Preview */}
                     <div className="text-xs text-slate-700 font-medium line-clamp-3 mb-4 min-h-[48px]">
                       {s.question?.prompt_latex ? (
-                        <MathText text={s.question.prompt} />
+                        <MathText text={`\\(${s.question.prompt_latex}\\)`} />
                       ) : (
                         <span>{s.question?.prompt || "Exercise in progress..."}</span>
                       )}
