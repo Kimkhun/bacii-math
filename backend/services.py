@@ -1308,9 +1308,12 @@ async def solve_custom_template_structure(structure_id: str, params: dict) -> di
             "formula_name": limit_def.get("shape", limit_def["id"]),
             "curated_technique": limit_def.get("title_km", limit_def.get("title_en", "")),
         }
+        if limit_def.get("side"):
+            solve_params["side"] = limit_def["side"]
         solve_params.update(params)
         sol = _solve_limit(solve_params)
-        point_disp = pretty_point(point_str)
+        side = solve_params.get("side") or ""
+        point_disp = pretty_point(point_str) + side
         prompt = f"lim({var} -> {point_disp}) of {pretty_expr(expr)}."
         pt_sym = sol.get("point")
         point_latex_str = (
@@ -1319,6 +1322,8 @@ async def solve_custom_template_structure(structure_id: str, params: dict) -> di
         expr_latex_str = latex(sol.get("given", sympify(expr)), ln_notation=True)
         expr_latex_str = re.sub(r"([0-9]*\s*e\^\{[^\}]+\})\s*-\s*([0-9]+)\s*\+\s*([0-9]*\s*e\^\{-[^\}]+\})", r"\1 + \3 - \2", expr_latex_str)
         expr_latex_str = re.sub(r"-\s*(\\sqrt\{[^\}]+\})\s*\+\s*(\\sqrt\{[^\}]+\})", r"\2 - \1", expr_latex_str)
+        if side:
+            point_latex_str += f"^{{{side}}}"
         prompt_latex = rf"\lim_{{{var} \to {point_latex_str}}} {expr_latex_str}"
         return {
             "prompt": prompt,
