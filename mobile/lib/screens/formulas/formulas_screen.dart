@@ -8,6 +8,16 @@ import '../../core/theme/app_theme.dart';
 import '../../models/formula.dart';
 import '../../widgets/math_text.dart';
 
+// Avoid double-wrapping a formula string that's already Khmer text or
+// already contains its own $-delimited math (mirrors web's
+// renderMathFormula in formulas/page.tsx).
+String _renderMathFormula(String s) {
+  if (s.isEmpty) return s;
+  final hasKhmer = RegExp(r'[ក-៿]').hasMatch(s);
+  if (s.contains(r'$') || hasKhmer) return s;
+  return '\$${s}\$';
+}
+
 String? _difficultyFromWeight(double weight) {
   if (weight <= 0) return null;
   if (weight == 1) return 'easy';
@@ -194,14 +204,14 @@ class _FormulasScreenState extends State<FormulasScreen> {
             ),
             if (e.latex != null && e.latex!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              MathText(text: '\$\$${e.latex}\$\$'),
+              MathText(text: _renderMathFormula(e.latex!)),
             ],
             if (e.formulas.isNotEmpty) ...[
               const SizedBox(height: 6),
               for (final f in e.formulas)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: MathText(text: '\$${f}\$'),
+                  child: MathText(text: _renderMathFormula(f)),
                 ),
             ],
           ],
