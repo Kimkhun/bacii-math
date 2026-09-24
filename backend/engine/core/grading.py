@@ -8,7 +8,7 @@ lives in ``engine.topics.functions.grader``.
 import math
 import re as _re
 
-from sympy import Add, E, Expr, expand, sympify, I, N, Symbol, binomial, im, latex, limit, oo, pi, re, simplify, sqrt
+from sympy import S, Add, E, Expr, expand, sympify, I, N, Symbol, binomial, im, latex, limit, oo, pi, re, simplify, sqrt
 from sympy import solve as sym_solve
 from sympy.parsing.sympy_parser import (
     convert_xor,
@@ -1002,6 +1002,33 @@ def _match_checkpoint(value, cp, tol, var_sym):
             return False
     return False
 
+def _has_division_by_zero(text: str) -> bool:
+    """True when some "="-separated piece of the line is a number that came out
+    undefined ('0*1/sqrt(cos(pi)+1)'): the student substituted the limit point
+    into an expression whose denominator vanishes there."""
+    for seg in text.split("="):
+        if not seg.strip():
+            continue
+        try:
+            expr = parse_answer(seg)
+        except Exception:
+            continue
+        if expr.has(S.ComplexInfinity, S.NaN):
+            return True
+    return False
+
+
+def _with_formula_names(line_results):
+    """Add a student-facing `formula_name` beside each raw `formula` tag."""
+    from ..formulas import resolve_formula
+    for r in line_results:
+        if r.get("formula"):
+            name = resolve_formula(r["formula"])["name_en"]
+            if name and name != r["formula"]:
+                r["formula_name"] = name
+    return line_results
+
+
 def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     """Deterministically check each line of a student's work against the SymPy-computed
     checkpoints for this solution. Returns the first line whose claimed value
@@ -1310,6 +1337,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
                 "correct": False,
                 "formula": target.get("formula") if target else None,
                 "expected": str(target["value"]) if target else None,
+                **({"hint": "division_by_zero"} if limit_point is not None and _has_division_by_zero(raw) else {}),
             })
             if first_error_line is None:
                 first_error_line = i
@@ -1325,7 +1353,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
             })
 
     return {
-        "line_results": line_results,
+        "line_results": _with_formula_names(line_results),
         "first_error_line": first_error_line,
         "reached_final_answer": pointer >= len(checkpoints),
         "formula_breakdown": formula_breakdown,
@@ -1420,7 +1448,7 @@ def _analyze_work_any_order(solution, params, lines, tol):
             })
 
     return {
-        "line_results": line_results,
+        "line_results": _with_formula_names(line_results),
         "first_error_line": first_error_line,
         "reached_final_answer": len(matched_checkpoints) >= len(checkpoints),
         "formula_breakdown": formula_breakdown,

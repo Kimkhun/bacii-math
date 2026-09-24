@@ -168,6 +168,7 @@ export interface StepCheckLine {
   correct?: boolean;
   matches?: string;
   formula?: string | null;
+  formula_name?: string | null;
   reason?: string;
 }
 

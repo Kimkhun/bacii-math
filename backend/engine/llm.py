@@ -465,6 +465,12 @@ def _step_check_summary(step_check: dict | None) -> str:
             if expected:
                 verdict += f" (expected value: {expected})"
             verdict += fname
+            if r.get("hint") == "division_by_zero":
+                verdict += (
+                    " — CERTAIN: this line substitutes the limit point into an expression whose "
+                    "denominator becomes 0 (undefined), so the limit is still indeterminate and "
+                    "the expression must be simplified before substituting"
+                )
         lines.append(f"  line {r['line']} (\"{r['text']}\"): {verdict}")
     if not lines:
         return ""

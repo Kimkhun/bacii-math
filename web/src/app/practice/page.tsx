@@ -549,7 +549,7 @@ function buildMarks(
         </g>
       );
     } else {
-      const label = lineRes.formula ? lineRes.formula.replaceAll("_", " ") : null;
+      const label = lineRes.formula ? (lineRes.formula_name ?? lineRes.formula.replaceAll("_", " ")) : null;
       const lfs = Math.min(Math.max(16, h * 0.5), 24);
       const lw = label ? label.length * lfs * 0.55 : 0;
       const spot = spotFor(r, 36 + lw);
@@ -2745,7 +2745,7 @@ function PracticeInner() {
                       const isError = errLine === lineNo;
                       const latex = workLatex?.[idx];
                       const lineRes = result?.step_check?.line_results.find((r) => r.line === lineNo);
-                      const formulaName = lineRes?.formula ? lineRes.formula.replaceAll("_", " ") : null;
+                      const formulaName = lineRes?.formula ? (lineRes.formula_name ?? lineRes.formula.replaceAll("_", " ")) : null;
                       return (
                         <div key={idx} className={isError ? "text-red-700 font-semibold" : "text-[#6b6558]"}>
                           {isError ? "→ " : ""}

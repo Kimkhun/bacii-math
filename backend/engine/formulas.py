@@ -194,13 +194,25 @@ _FALLBACK = {
 }
 
 
+def _structure_title(tag):
+    """Sampled limit structures tag their steps with the structure id
+    (e.g. "limit:trig:radical_cos_sin_pi"); show its English title instead."""
+    if not isinstance(tag, str) or not tag.startswith("limit:"):
+        return None
+    from .topics.limit.structures import all_limit_structures  # lazy: avoids an import cycle
+    for st in all_limit_structures():
+        if st["id"] == tag:
+            return st.get("title_en")
+    return None
+
+
 def resolve_formula(tag):
     """Return the registry entry for a tag, or a safe fallback for unknown ids so a
     future solver can never break existing questions (raw id is rendered, weight 1)."""
     entry = FORMULA_REGISTRY.get(tag)
     if entry is not None:
         return entry
-    return {**_FALLBACK, "name_en": tag}
+    return {**_FALLBACK, "name_en": _structure_title(tag) or tag}
 
 
 def formula_difficulty(tags):
