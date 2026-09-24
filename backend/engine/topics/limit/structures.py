@@ -359,6 +359,10 @@ def _sample_inf_conjugate(rng):
     b = rng.choice([-4, 2, 4])
     c = rng.choice([1, 4, 9])
     d = rng.choice([-2, 0, 2])
+    # A perfect-square radicand (b^2 == 4k^2c) collapses the root to |kx + m| and hangs SymPy.
+    while b * b == 4 * k * k * c:
+        b = rng.choice([-4, 2, 4])
+        c = rng.choice([1, 4, 9])
     return f"sqrt({k*k}*x**2 + {b}*x + {c}) - ({k}*x + ({d}))", "oo", {"k": k, "b": b, "c": c, "d": d}
 
 def _sample_inf_rational(rng):

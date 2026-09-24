@@ -67,6 +67,8 @@ def _sample_conjugate_infinity(rng):
     b = rng.randint(-9, 9)
     c = rng.randint(0, 9)
     d = rng.randint(-9, 9)
+    while b * b == 4 * k * k * c:
+        b = rng.randint(-9, 9)
     expr = f"sqrt({k * k}*x**2 + {b}*x + {c}) - ({k}*x + ({d}))"
     return expr, "oo", {"k": k, "b": b, "c": c, "d": d}
 
