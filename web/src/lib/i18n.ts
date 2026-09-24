@@ -65,6 +65,7 @@ export interface Translations {
   label_work_check: string;
   label_ref_graph: string;
   label_ref_graph_compare: string;
+  label_official_moeys_key: string;
   label_step: string;
   label_part: string;
   label_step_score: string;
@@ -294,6 +295,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     label_work_check: "Your work check",
     label_ref_graph: "Reference graph",
     label_ref_graph_compare: "Reference graph — compare with your drawing",
+    label_official_moeys_key: "View official model solution",
     label_step: "Step",
     label_part: "Part",
     label_step_score: "Step-by-step score",
@@ -512,6 +514,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     label_work_check: "ការពិនិត្យកិច្ចការរបស់អ្នក",
     label_ref_graph: "ក្រាបយោង",
     label_ref_graph_compare: "ក្រាបយោង — ប្រៀបធៀបជាមួយគំនូររបស់អ្នក",
+    label_official_moeys_key: "មើលដំណោះស្រាយគំរូផ្លូវការ (Official Model Key)",
     label_step: "ជំហានទី",
     label_part: "ផ្នែក",
     label_step_score: "ពិន្ទុតាមជំហាន",
@@ -698,15 +701,12 @@ export const QUESTION_TYPE_LABELS: Record<string, { en: string; km: string }> = 
   "limit:radical:double_and_split": { en: "Double conjugate & split trick", km: "ឆ្លាស់ពីរជាន់ & ថែមថយតួ" },
 
   "limit:trig": { en: "Trigonometric limits", km: "លីមីតត្រីកោណមាត្រ" },
-  "limit:trig:sinc_standard": { en: "Fundamental limit sin(kx)/x at 0", km: "លីមីតគ្រឹះ sin(kx)/x ត្រង់ 0" },
   "limit:trig:change_var": { en: "Change of variable at non-zero points", km: "ប្តូរអថេរត្រង់ π/2, π/3, π/4, π" },
-  "limit:trig:half_angle": { en: "Half-angle & double-angle identities", km: "រូបមន្តកន្លះមុំ និងមុំទ្វេ" },
   "limit:trig:sum_product": { en: "Sum-to-product & linear combinations", km: "បំប្លែងផលបូកទៅផលគុណ (Simpson)" },
   "limit:trig:radical_trig": { en: "Radicals mixed with trigonometry", km: "កន្សោមឆ្លាស់ឬសការេចម្រុះត្រីកោណមាត្រ" },
 
   "limit:exponential": { en: "Exponential limits", km: "លីមីតអិចស្ប៉ូណង់ស្យែល" },
   "limit:exponential:zero": { en: "Indeterminate form 0/0", km: "រាងមិនកំណត់ 0/0" },
-  "limit:exponential:trig_combo": { en: "Mixed with trigonometry", km: "រាងចម្រុះត្រីកោណមាត្រ" },
   "limit:exponential:one_inf": { en: "Indeterminate form 1^∞", km: "រាងមិនកំណត់ 1^អនន្ត" },
   "limit:exponential:infinity": { en: "Limits at infinity & growth dominance", km: "លីមីតនៅអនន្ត និងលំដាប់កំណើន" },
   "limit:exp_log": { en: "Exponential limits", km: "លីមីតអិចស្ប៉ូណង់ស្យែល" },
