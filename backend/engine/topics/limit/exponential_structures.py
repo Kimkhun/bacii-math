@@ -61,7 +61,8 @@ def _sample_expo_sin_denom(rng):
 
 def _sample_expo_sum_minus_n(rng):
     n = rng.choice([2, 3, 4])
-    return f"(e**x + e**(2*x) + e**({n}*x) - {n})/x", "0", {"n": n}
+    terms = " + ".join("e**x" if j == 1 else f"e**({j}*x)" for j in range(1, n + 1))
+    return f"({terms} - {n})/x", "0", {"n": n}
 
 def _sample_expo_power_growth_oo(rng):
     n = rng.choice([1, 2, 3])

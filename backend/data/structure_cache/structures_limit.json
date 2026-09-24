@@ -8738,14 +8738,19 @@
                   "formula": "setup_limit"
                 },
                 {
-                  "title": "Apply the technique",
-                  "detail": "ឬសការេកន្លះមុំ √(1 + cos x) / sin x ត្រង់ π",
-                  "formula": "limit:trig:radical_cos_sin_pi"
+                  "title": "Rewrite with half-angle identities",
+                  "detail": "\\(1 + \\cos x = 2\\cos^2\\tfrac{x}{2}\\) and \\(\\sin x = 2\\sin\\tfrac{x}{2}\\cos\\tfrac{x}{2}\\).",
+                  "formula": "half_angle_identity"
                 },
                 {
-                  "title": "Result",
-                  "detail": "\\(\\lim_{x \\to \\pi^-} \\frac{\\sqrt{\\cos{\\left(x \\right)} + 1}}{\\sin{\\left(x \\right)}}\\) = \\(\\frac{\\sqrt{2}}{2}\\).",
-                  "formula": "limit:trig:radical_cos_sin_pi"
+                  "title": "Take the square root using the side",
+                  "detail": "For \\(x \\to \\pi^-\\) we have \\(\\tfrac{x}{2} < \\tfrac{\\pi}{2}\\), so \\(\\cos\\tfrac{x}{2} > 0\\) and \\(\\sqrt{1 + \\cos x} = \\sqrt{2}\\cos\\tfrac{x}{2}\\) (no absolute value needed).",
+                  "formula": "one_sided_sign"
+                },
+                {
+                  "title": "Cancel and substitute",
+                  "detail": "The expression becomes \\(\\dfrac{\\sqrt{2}}{2\\sin\\tfrac{x}{2}}\\), which tends to \\(\\frac{\\sqrt{2}}{2}\\) as \\(x \\to \\pi^-\\).",
+                  "formula": "one_sided_sign"
                 }
               ]
             },
@@ -8766,14 +8771,19 @@
                   "formula": "setup_limit"
                 },
                 {
-                  "title": "Apply the technique",
-                  "detail": "ឬសការេកន្លះមុំ √(1 + cos x) / sin x ត្រង់ π",
-                  "formula": "limit:trig:radical_cos_sin_pi"
+                  "title": "Rewrite with half-angle identities",
+                  "detail": "\\(1 + \\cos x = 2\\cos^2\\tfrac{x}{2}\\) and \\(\\sin x = 2\\sin\\tfrac{x}{2}\\cos\\tfrac{x}{2}\\).",
+                  "formula": "half_angle_identity"
                 },
                 {
-                  "title": "Result",
-                  "detail": "\\(\\lim_{x \\to \\pi^-} \\frac{2 \\sqrt{\\cos{\\left(x \\right)} + 1}}{\\sin{\\left(x \\right)}}\\) = \\(\\sqrt{2}\\).",
-                  "formula": "limit:trig:radical_cos_sin_pi"
+                  "title": "Take the square root using the side",
+                  "detail": "For \\(x \\to \\pi^-\\) we have \\(\\tfrac{x}{2} < \\tfrac{\\pi}{2}\\), so \\(\\cos\\tfrac{x}{2} > 0\\) and \\(\\sqrt{1 + \\cos x} = \\sqrt{2}\\cos\\tfrac{x}{2}\\) (no absolute value needed).",
+                  "formula": "one_sided_sign"
+                },
+                {
+                  "title": "Cancel and substitute",
+                  "detail": "The expression becomes \\(2\\dfrac{\\sqrt{2}}{2\\sin\\tfrac{x}{2}}\\), which tends to \\(\\sqrt{2}\\) as \\(x \\to \\pi^-\\).",
+                  "formula": "one_sided_sign"
                 }
               ]
             }
@@ -8820,14 +8830,19 @@
                   "formula": "setup_limit"
                 },
                 {
-                  "title": "Apply the technique",
-                  "detail": "ឬសការេមុំទ្វេ √(1 - cos 2x) / sin 2x ត្រង់ π",
-                  "formula": "limit:trig:radical_cos2x_sin2x_pi"
+                  "title": "Rewrite with double-angle identities",
+                  "detail": "\\(1 - \\cos 2x = 2\\sin^2 x\\) and \\(\\sin 2x = 2\\sin x\\cos x\\).",
+                  "formula": "double_angle_identity"
                 },
                 {
-                  "title": "Result",
-                  "detail": "\\(\\lim_{x \\to \\pi^-} \\frac{2 \\sqrt{1 - \\cos{\\left(2 x \\right)}}}{\\sin{\\left(2 x \\right)}}\\) = \\(- \\sqrt{2}\\).",
-                  "formula": "limit:trig:radical_cos2x_sin2x_pi"
+                  "title": "Take the square root using the side",
+                  "detail": "For \\(x \\to \\pi^-\\) we have \\(\\sin x > 0\\), so \\(\\sqrt{2\\sin^2 x} = \\sqrt{2}\\sin x\\). From the right of \\(\\pi\\) it would be \\(-\\sqrt{2}\\sin x\\), so the two sides give opposite signs and the side must be stated.",
+                  "formula": "one_sided_sign"
+                },
+                {
+                  "title": "Cancel and substitute",
+                  "detail": "The expression becomes \\(2\\dfrac{\\sqrt{2}}{2\\cos x}\\), which tends to \\(- \\sqrt{2}\\) as \\(x \\to \\pi^-\\).",
+                  "formula": "one_sided_sign"
                 }
               ]
             },
@@ -8848,14 +8863,19 @@
                   "formula": "setup_limit"
                 },
                 {
-                  "title": "Apply the technique",
-                  "detail": "ឬសការេមុំទ្វេ √(1 - cos 2x) / sin 2x ត្រង់ π",
-                  "formula": "limit:trig:radical_cos2x_sin2x_pi"
+                  "title": "Rewrite with double-angle identities",
+                  "detail": "\\(1 - \\cos 2x = 2\\sin^2 x\\) and \\(\\sin 2x = 2\\sin x\\cos x\\).",
+                  "formula": "double_angle_identity"
                 },
                 {
-                  "title": "Result",
-                  "detail": "\\(\\lim_{x \\to \\pi^-} \\frac{\\sqrt{1 - \\cos{\\left(2 x \\right)}}}{\\sin{\\left(2 x \\right)}}\\) = \\(- \\frac{\\sqrt{2}}{2}\\).",
-                  "formula": "limit:trig:radical_cos2x_sin2x_pi"
+                  "title": "Take the square root using the side",
+                  "detail": "For \\(x \\to \\pi^-\\) we have \\(\\sin x > 0\\), so \\(\\sqrt{2\\sin^2 x} = \\sqrt{2}\\sin x\\). From the right of \\(\\pi\\) it would be \\(-\\sqrt{2}\\sin x\\), so the two sides give opposite signs and the side must be stated.",
+                  "formula": "one_sided_sign"
+                },
+                {
+                  "title": "Cancel and substitute",
+                  "detail": "The expression becomes \\(\\dfrac{\\sqrt{2}}{2\\cos x}\\), which tends to \\(- \\frac{\\sqrt{2}}{2}\\) as \\(x \\to \\pi^-\\).",
+                  "formula": "one_sided_sign"
                 }
               ]
             }
@@ -9977,10 +9997,10 @@
           "description": "Sum of exponentials minus n over x",
           "pattern": "(e**x + e**(2*x) + e**(3*x) - 3)/x",
           "pattern_latex": "\\lim_{x \\to 0} \\dfrac{e^{x} + e^{2x} + \\dots + e^{nx} - n}{x}",
-          "sample_prompt": "lim(x -> 0) of (e**x + e**(2x) + e**(2x) - 2)/x.",
-          "sample_prompt_latex": "\\lim_{x \\to 0} \\frac{2 e^{2 x} + e^{x} - 2}{x}",
-          "sample_answer": "oo",
-          "sample_answer_latex": "\\infty",
+          "sample_prompt": "lim(x -> 0) of (e**x + e**(2x) - 2)/x.",
+          "sample_prompt_latex": "\\lim_{x \\to 0} \\frac{e^{2 x} + e^{x} - 2}{x}",
+          "sample_answer": "3",
+          "sample_answer_latex": "3",
           "sample_params": {
             "n": 2
           },
@@ -9990,14 +10010,14 @@
               "params": {
                 "n": 2
               },
-              "prompt": "lim(x -> 0) of (e**x + e**(2x) + e**(2x) - 2)/x.",
-              "prompt_latex": "\\lim_{x \\to 0} \\frac{2 e^{2 x} + e^{x} - 2}{x}",
-              "answer_latex": "\\infty",
-              "answer_exact": "oo",
+              "prompt": "lim(x -> 0) of (e**x + e**(2x) - 2)/x.",
+              "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{2 x} + e^{x} - 2}{x}",
+              "answer_latex": "3",
+              "answer_exact": "3",
               "steps": [
                 {
                   "title": "Set up the limit",
-                  "detail": "\\(\\lim_{x \\to 0} \\frac{2 e^{2 x} + e^{x} - 2}{x}\\).",
+                  "detail": "\\(\\lim_{x \\to 0} \\frac{e^{2 x} + e^{x} - 2}{x}\\).",
                   "formula": "setup_limit"
                 },
                 {
@@ -10007,7 +10027,7 @@
                 },
                 {
                   "title": "Result",
-                  "detail": "\\(\\lim_{x \\to 0} \\frac{2 e^{2 x} + e^{x} - 2}{x}\\) = \\(\\infty\\).",
+                  "detail": "\\(\\lim_{x \\to 0} \\frac{e^{2 x} + e^{x} - 2}{x}\\) = \\(3\\).",
                   "formula": "limit:exponential:sum_minus_n"
                 }
               ]
@@ -10017,14 +10037,14 @@
               "params": {
                 "n": 4
               },
-              "prompt": "lim(x -> 0) of (e**x + e**(2x) + e**(4x) - 4)/x.",
-              "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{4 x} + e^{2 x} + e^{x} - 4}{x}",
-              "answer_latex": "-\\infty",
-              "answer_exact": "-oo",
+              "prompt": "lim(x -> 0) of (e**x + e**(2x) + e**(3x) + e**(4x) - 4)/x.",
+              "prompt_latex": "\\lim_{x \\to 0} \\frac{e^{4 x} + e^{3 x} + e^{2 x} + e^{x} - 4}{x}",
+              "answer_latex": "10",
+              "answer_exact": "10",
               "steps": [
                 {
                   "title": "Set up the limit",
-                  "detail": "\\(\\lim_{x \\to 0} \\frac{e^{4 x} + e^{2 x} + e^{x} - 4}{x}\\).",
+                  "detail": "\\(\\lim_{x \\to 0} \\frac{e^{4 x} + e^{3 x} + e^{2 x} + e^{x} - 4}{x}\\).",
                   "formula": "setup_limit"
                 },
                 {
@@ -10034,7 +10054,7 @@
                 },
                 {
                   "title": "Result",
-                  "detail": "\\(\\lim_{x \\to 0} \\frac{e^{4 x} + e^{2 x} + e^{x} - 4}{x}\\) = \\(-\\infty\\).",
+                  "detail": "\\(\\lim_{x \\to 0} \\frac{e^{4 x} + e^{3 x} + e^{2 x} + e^{x} - 4}{x}\\) = \\(10\\).",
                   "formula": "limit:exponential:sum_minus_n"
                 }
               ]

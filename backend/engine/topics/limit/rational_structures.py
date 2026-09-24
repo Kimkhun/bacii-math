@@ -39,7 +39,7 @@ def _sample_rat_quadratic_linear(rng):
 def _sample_rat_quadratic_quadratic(rng):
     r_shared = rng.choice([1, 2, -1, -2])
     r1 = rng.choice([3, -3, 4])
-    r2 = rng.choice([5, -4, 2])
+    r2 = rng.choice([v for v in (5, -4, 2) if v != r_shared])
     num = f"(x - {r_shared})*(x - {r1})"
     den = f"(x - {r_shared})*(x - {r2})"
     return f"({num})/({den})", str(r_shared), {"shared": r_shared}
