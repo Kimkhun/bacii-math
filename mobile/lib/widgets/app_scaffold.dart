@@ -213,6 +213,15 @@ class AppScaffold extends StatelessWidget {
                 context.go('/profile');
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.bookmark_outline_rounded),
+              title: Text(lang.t('saved_shelf_title')),
+              selected: currentRoute.startsWith('/saved'),
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/saved');
+              },
+            ),
             if (auth.user?.isAdmin == true) ...[
               const Divider(),
               ListTile(

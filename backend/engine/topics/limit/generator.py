@@ -129,10 +129,29 @@ for _tid, _meta in LIMIT_TECHNIQUES.items():
         _LIMIT_TECHNIQUES_BY_DIFFICULTY.setdefault(_meta["difficulty"], []).append(_tid)
 
 
-def _build_sampled_limit(technique, expr, point, difficulty):
-    point_latex = r"+\infty" if point == "oo" else str(point)
-    point_display = "+∞" if point == "oo" else str(point)
+def _point_latex(point):
+    """Render the limit point as LaTeX (pi -> \\pi, pi/6 -> \\frac{\\pi}{6})."""
+    try:
+        return latex(sympify(str(point)))
+    except Exception:
+        return str(point)
+
+
+def _point_display(point):
+    return str(point).replace("pi", "π")
+
+
+def _build_sampled_limit(technique, expr, point, difficulty, side=None):
+    point_latex = r"+\infty" if point == "oo" else _point_latex(point)
+    point_display = "+∞" if point == "oo" else _point_display(point)
+    if side:
+        # One-sided limit (the two-sided limit doesn't exist): the side must be
+        # shown to the student, and the solver reads params["side"] for dir=.
+        point_latex += f"^{{{side}}}"
+        point_display += side
     params = {"expr": expr, "var": "x", "point": point}
+    if side:
+        params["side"] = side
     prompt = f"lim(x → {point_display}) of {pretty_expr(expr)}"
     expr_latex = _expr_latex(expr)
     prompt_latex = rf"\lim_{{x \to {point_latex}}} {expr_latex}"
@@ -150,7 +169,7 @@ def generate_limit_for_technique(rng, technique, difficulty=None):
         raise ValueError(f"{technique} has no procedural sampler")
     expr, point, slots = sampler(rng)
     difficulty = difficulty or LIMIT_TECHNIQUES[technique]["difficulty"]
-    problem = _build_sampled_limit(technique, expr, point, difficulty)
+    problem = _build_sampled_limit(technique, expr, point, difficulty, slots.get("side"))
     problem["params"]["technique"] = technique
     problem["params"].update(slots)
     return problem
@@ -184,6 +203,13 @@ def _build_curated_limit(item, difficulty):
     return problem
 
 
+# Dropdown items that cover several structure subfamilies (mirrors the grouping
+# in web/src/app/admin/page.tsx, so /practice and /admin agree).
+_SUBFAMILY_GROUPS = {
+    ("trig", "half_angle"): {"half_angle", "double_angle", "quadratic"},
+}
+
+
 def _generate_limit(rng, difficulty, variant=None):
     if variant:
         norm_variant = variant[6:] if variant.startswith("limit:") else variant
@@ -198,7 +224,7 @@ def _generate_limit(rng, difficulty, variant=None):
             at_diff = [s for s in cat_pool if s.get("difficulty") == difficulty]
             chosen = rng.choice(at_diff or cat_pool)
             expr, point, slots = chosen["sampler"](rng)
-            prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty))
+            prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty), slots.get("side"))
             prob["params"]["technique"] = chosen["id"]
             prob["params"]["title_km"] = chosen.get("title_km")
             prob["params"]["formula_name"] = chosen.get("shape", chosen["id"])
@@ -211,9 +237,10 @@ def _generate_limit(rng, difficulty, variant=None):
             parts = variant.split(":")
             cat_part = parts[-2] if len(parts) >= 2 and parts[-2] != "limit" else None
             sub_part = parts[-1]
+            sub_set = _SUBFAMILY_GROUPS.get((cat_part, sub_part), {sub_part})
             subfam_pool = [
                 s for s in LIMIT_STRUCTURES
-                if s.get("subfamily") == sub_part and (
+                if s.get("subfamily") in sub_set and (
                     not cat_part or s.get("category") == cat_part
                     or (cat_part in ("exponential", "exp_log") and s.get("category") == "exponential")
                     or (cat_part in ("logarithmic", "log") and s.get("category") == "logarithmic")
@@ -223,7 +250,7 @@ def _generate_limit(rng, difficulty, variant=None):
             at_diff = [s for s in subfam_pool if s.get("difficulty") == difficulty]
             chosen = rng.choice(at_diff or subfam_pool)
             expr, point, slots = chosen["sampler"](rng)
-            prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty))
+            prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty), slots.get("side"))
             prob["params"]["technique"] = chosen["id"]
             prob["params"]["title_km"] = chosen.get("title_km")
             prob["params"]["formula_name"] = chosen.get("shape", chosen["id"])
@@ -235,7 +262,7 @@ def _generate_limit(rng, difficulty, variant=None):
         if matching:
             chosen = matching[0]
             expr, point, slots = chosen["sampler"](rng)
-            prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty))
+            prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty), slots.get("side"))
             prob["params"]["technique"] = chosen["id"]
             prob["params"]["title_km"] = chosen.get("title_km")
             prob["params"]["formula_name"] = chosen.get("shape", chosen["id"])
@@ -257,7 +284,7 @@ def _generate_limit(rng, difficulty, variant=None):
     if pool and rng.random() < 0.7:
         chosen = rng.choice(pool)
         expr, point, slots = chosen["sampler"](rng)
-        prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty))
+        prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty), slots.get("side"))
         prob["params"]["technique"] = chosen["id"]
         prob["params"]["title_km"] = chosen.get("title_km")
         prob["params"]["formula_name"] = chosen.get("shape", chosen["id"])
@@ -270,7 +297,7 @@ def _generate_limit(rng, difficulty, variant=None):
 
     chosen = rng.choice(LIMIT_STRUCTURES)
     expr, point, slots = chosen["sampler"](rng)
-    prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty))
+    prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty), slots.get("side"))
     prob["params"]["technique"] = chosen["id"]
     prob["params"]["title_km"] = chosen.get("title_km")
     prob["params"]["formula_name"] = chosen.get("shape", chosen["id"])

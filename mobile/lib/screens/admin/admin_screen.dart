@@ -950,8 +950,12 @@ class _CostsTabState extends State<_CostsTab> {
             runSpacing: 12,
             children: [
               _kpi("Today's cost", '\$${s.today.costUsd.toStringAsFixed(4)}',
+                  'In: \$${(s.today.promptCostUsd ?? 0).toStringAsFixed(4)} · '
+                  'Out: \$${(s.today.completionCostUsd ?? 0).toStringAsFixed(4)} · '
                   '${s.today.calls} calls'),
               _kpi('$_days-day spend', '\$${s.period.costUsd.toStringAsFixed(4)}',
+                  'In: \$${(s.period.promptCostUsd ?? 0).toStringAsFixed(4)} · '
+                  'Out: \$${(s.period.completionCostUsd ?? 0).toStringAsFixed(4)} · '
                   '${s.period.calls} requests'),
               _kpi('Total tokens', '${s.period.totalTokens}',
                   'P:${s.period.promptTokens} C:${s.period.completionTokens}'),
@@ -1008,9 +1012,14 @@ class _CostsTabState extends State<_CostsTab> {
               for (final l in _logs)
                 ListTile(
                   dense: true,
+                  onTap: () => _showLogInspector(l),
                   title: Text('${l.endpoint} · ${l.modelName}',
                       style: const TextStyle(fontSize: 12)),
-                  subtitle: Text('${l.email} · ${l.totalTokens} tok · ${l.latencyMs}ms',
+                  subtitle: Text(
+                      '${l.email} · ${l.promptTokens} in / ${l.completionTokens} out · '
+                      '\$${l.estimatedCostUsd.toStringAsFixed(5)} '
+                      '(out \$${l.completionCostUsd.toStringAsFixed(5)}) · '
+                      '${l.latencyMs}ms',
                       style: const TextStyle(fontSize: 11)),
                   trailing: Text(
                     l.success ? 'OK' : 'FAIL',
@@ -1027,6 +1036,71 @@ class _CostsTabState extends State<_CostsTab> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showLogInspector(AdminUsageLog l) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('${l.endpoint} · ${l.modelName}'),
+        content: SizedBox(
+          width: 480,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('${l.email} · ${l.createdAt}',
+                    style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                const SizedBox(height: 8),
+                Text('Tokens: ${l.promptTokens} in / ${l.completionTokens} out '
+                    '(${l.totalTokens} total)'),
+                Text('Cost: \$${l.estimatedCostUsd.toStringAsFixed(5)} total '
+                    '(in \$${l.promptCostUsd.toStringAsFixed(5)} / '
+                    'out \$${l.completionCostUsd.toStringAsFixed(5)})'),
+                Text('Latency: ${l.latencyMs}ms · '
+                    '${l.success ? "OK" : "FAIL: ${l.errorMessage ?? ""}"}'),
+                const SizedBox(height: 12),
+                const Text('Prompt', style: TextStyle(fontWeight: FontWeight.bold)),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.only(top: 4, bottom: 12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.slate100,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: SelectableText(
+                      l.promptText?.isNotEmpty == true
+                          ? l.promptText!
+                          : '(not recorded)',
+                      style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+                ),
+                const Text('Response', style: TextStyle(fontWeight: FontWeight.bold)),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.only(top: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.slate100,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: SelectableText(
+                      l.responseText?.isNotEmpty == true
+                          ? l.responseText!
+                          : '(not recorded)',
+                      style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+        ],
+      ),
     );
   }
 

@@ -8,6 +8,23 @@ import '../../core/theme/app_theme.dart';
 import '../../models/formula.dart';
 import '../../widgets/math_text.dart';
 
+// Avoid double-wrapping a formula string that's already Khmer text or
+// already contains its own $-delimited math (mirrors web's
+// renderMathFormula in formulas/page.tsx).
+String _renderMathFormula(String s) {
+  if (s.isEmpty) return s;
+  final hasKhmer = RegExp(r'[ក-៿]').hasMatch(s);
+  if (s.contains(r'$') || hasKhmer) return s;
+  return '\$${s}\$';
+}
+
+String? _difficultyFromWeight(double weight) {
+  if (weight <= 0) return null;
+  if (weight == 1) return 'easy';
+  if (weight == 2) return 'medium';
+  return 'hard';
+}
+
 class FormulasScreen extends StatefulWidget {
   const FormulasScreen({super.key});
 
@@ -150,18 +167,26 @@ class _FormulasScreenState extends State<FormulasScreen> {
                         Text('($secondary)',
                             style: const TextStyle(
                                 fontSize: 13, color: AppTheme.slate600)),
-                      if (e.weight > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                              color: AppTheme.accentAmberLight,
-                              borderRadius: BorderRadius.circular(4)),
-                          child: Text(
-                              '${lang.t('formulas_weight')} ${e.weight % 1 == 0 ? e.weight.toInt() : e.weight}',
-                              style: TextStyle(
-                                  fontSize: 11, color: Colors.amber.shade900)),
-                        ),
+                      if (_difficultyFromWeight(e.weight) != null)
+                        Builder(builder: (context) {
+                          final diff = _difficultyFromWeight(e.weight)!;
+                          final colors = {
+                            'easy': (Colors.green.shade100, Colors.green.shade800),
+                            'medium': (Colors.amber.shade100, Colors.amber.shade800),
+                            'hard': (Colors.red.shade100, Colors.red.shade800),
+                          }[diff]!;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                                color: colors.$1,
+                                borderRadius: BorderRadius.circular(4)),
+                            child: Text(
+                                lang.t('formulas_difficulty_$diff'),
+                                style: TextStyle(
+                                    fontSize: 11, color: colors.$2)),
+                          );
+                        }),
                     ],
                   ),
                 ),
@@ -179,14 +204,14 @@ class _FormulasScreenState extends State<FormulasScreen> {
             ),
             if (e.latex != null && e.latex!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              MathText(text: '\$\$${e.latex}\$\$'),
+              MathText(text: _renderMathFormula(e.latex!)),
             ],
             if (e.formulas.isNotEmpty) ...[
               const SizedBox(height: 6),
               for (final f in e.formulas)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: MathText(text: '\$${f}\$'),
+                  child: MathText(text: _renderMathFormula(f)),
                 ),
             ],
           ],

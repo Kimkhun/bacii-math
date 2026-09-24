@@ -99,7 +99,9 @@ class AppTranslations {
     'formulas_subtitle':
         'Every technique used across the practice topics — the rule, and the specific formulas under it.',
     'formulas_all_topics': 'All topics',
-    'formulas_weight': 'weight',
+    'formulas_difficulty_easy': 'Easy',
+    'formulas_difficulty_medium': 'Medium',
+    'formulas_difficulty_hard': 'Hard',
     'formulas_practice': 'Practice',
     'formulas_loading': 'Loading formulas…',
     'lesson': 'Lesson',
@@ -190,6 +192,14 @@ class AppTranslations {
     'label_asymptotes': 'Asymptotes',
     'label_tangent': 'Tangent',
     'label_points': 'Points',
+
+    // Saved exercises
+    'saved_shelf_title': 'Continue Practicing',
+    'saved_see_all': 'See all',
+    'saved_empty': 'No saved exercises yet',
+    'saved_in_progress': 'In Progress',
+    'saved_completed': 'Completed',
+    'saved_parts_done': 'parts done',
 
     // Tooltips
     'tip_delete_progress': 'Delete saved progress',
@@ -325,7 +335,9 @@ class AppTranslations {
     'formulas_subtitle':
         'បណ្តុំរូបមន្ត និងវិធីសាស្រ្តដោះស្រាយលំហាត់គណិតវិទ្យាថ្នាក់ទី១២ តាមគ្រប់ប្រធានបទ។',
     'formulas_all_topics': 'ប្រធានបទទាំងអស់',
-    'formulas_weight': 'ទម្ងន់ពិន្ទុ',
+    'formulas_difficulty_easy': 'ងាយស្រួល',
+    'formulas_difficulty_medium': 'មធ្យម',
+    'formulas_difficulty_hard': 'ពិបាក',
     'formulas_practice': 'អនុវត្ត',
     'formulas_loading': 'កំពុងផ្ទុកតារាងរូបមន្ត...',
     'lesson': 'មេរៀន',
@@ -414,6 +426,13 @@ class AppTranslations {
     'label_tangent': 'បន្ទាត់ប៉ះ',
     'label_points': 'ចំណុច',
 
+    'saved_shelf_title': 'បន្តអនុវត្តលំហាត់',
+    'saved_see_all': 'មើលទាំងអស់',
+    'saved_empty': 'មិនទាន់មានលំហាត់រក្សាទុកនៅឡើយទេ',
+    'saved_in_progress': 'កំពុងដំណើរការ',
+    'saved_completed': 'បានបញ្ចប់',
+    'saved_parts_done': 'ផ្នែកបានរួចរាល់',
+
     'tip_delete_progress': 'លុបវឌ្ឍនភាពដែលបានរក្សាទុក',
     'tip_save_progress': 'រក្សាទុកវឌ្ឍនភាពសម្រាប់ពេលក្រោយ',
     'tip_new_question': 'បង្កើតលំហាត់ថ្មី',
@@ -459,142 +478,170 @@ class AppTranslations {
 
 /// Question type labels for both languages (from web QUESTION_TYPE_LABELS).
 const Map<String, Map<String, String>> questionTypeLabels = {
+  // Complex
   'modulus': {'en': 'Modulus', 'km': 'ម៉ូឌុល'},
   'argument': {'en': 'Argument', 'km': 'អាគុយម៉ង់'},
   'conjugate': {'en': 'Conjugate', 'km': 'ចំនួនកុំផ្លិចឆ្លាស់'},
   'real_part': {'en': 'Real part', 'km': 'ផ្នែកពិត'},
   'imaginary_part': {'en': 'Imaginary part', 'km': 'ផ្នែកនិម្មិត'},
+  'complex_arithmetic': {'en': 'Complex arithmetic', 'km': 'ប្រមាណវិធីលើចំនួនកុំផ្លិច'},
+  'complex_power': {'en': 'Powers of z', 'km': 'ស្វ័យគុណនៃ z'},
+  'de_moivre_power': {'en': 'De Moivre\'s formula', 'km': 'រូបមន្តដឺម័រ'},
+  'nth_roots': {'en': 'n-th roots', 'km': 'ឫសទី n'},
+
+  // Limits (Categories & Families)
+  'limit:rational': {'en': 'Rational limits', 'km': 'លីមីតសនិទាន'},
+  'limit:rational:powers': {'en': 'Algebraic powers (squares, cubes, general)', 'km': 'រូបមន្តស្វ័យគុណ (ការេ គូប ដឺក្រេខ្ពស់)'},
+  'limit:rational:quadratics': {'en': 'Quadratic trinomials', 'km': 'បំបែកត្រីធាដឺក្រេទីពីរ'},
+  'limit:rational:binomial': {'en': 'Shifted binomials at 0', 'km': 'ពន្លាតទ្វេធាត្រង់ 0'},
+
+  'limit:radical': {'en': 'Radical limits', 'km': 'លីមីតរ៉ាឌីកាល់'},
+  'limit:radical:sqrt': {'en': 'Square root conjugates', 'km': 'កន្សោមឆ្លាស់ឬសការេ'},
+  'limit:radical:cbrt': {'en': 'Cube root conjugates', 'km': 'កន្សោមឆ្លាស់ឬសគូប'},
+  'limit:radical:double_and_split': {'en': 'Double conjugate & split trick', 'km': 'ឆ្លាស់ពីរជាន់ & ថែមថយតួ'},
+
+  'limit:trig': {'en': 'Trigonometric limits', 'km': 'លីមីតត្រីកោណមាត្រ'},
+  'limit:trig:change_var': {'en': 'Change of variable at non-zero points', 'km': 'ប្តូរអថេរត្រង់ π/2, π/3, π/4, π'},
+  'limit:trig:sum_product': {'en': 'Sum-to-product & linear combinations', 'km': 'បំប្លែងផលបូកទៅផលគុណ (Simpson)'},
+  'limit:trig:radical_trig': {'en': 'Radicals mixed with trigonometry', 'km': 'កន្សោមឆ្លាស់ឬសការេចម្រុះត្រីកោណមាត្រ'},
+
+  'limit:exponential': {'en': 'Exponential limits', 'km': 'លីមីតអិចស្ប៉ូណង់ស្យែល'},
+  'limit:exponential:zero': {'en': 'Indeterminate form 0/0', 'km': 'រាងមិនកំណត់ 0/0'},
+  'limit:exponential:one_inf': {'en': 'Indeterminate form 1^∞', 'km': 'រាងមិនកំណត់ 1^អនន្ត'},
+  'limit:exponential:infinity': {'en': 'Limits at infinity & growth dominance', 'km': 'លីមីតនៅអនន្ត និងលំដាប់កំណើន'},
+  'limit:exp_log': {'en': 'Exponential limits', 'km': 'លីមីតអិចស្ប៉ូណង់ស្យែល'},
+
+  'limit:logarithmic': {'en': 'Logarithmic limits', 'km': 'លីមីតលោការីត'},
+  'limit:logarithmic:zero': {'en': 'Indeterminate form 0/0', 'km': 'រាងមិនកំណត់ 0/0'},
+  'limit:logarithmic:rational': {'en': 'Logarithm of rational function', 'km': 'លោការីតនៃកន្សោមសនិទាន'},
+  'limit:logarithmic:growth_zero': {'en': 'Growth dominance at 0⁺', 'km': 'លំដាប់កំណើនត្រង់ 0⁺ (x ln x)'},
+  'limit:logarithmic:infinity': {'en': 'Limits at infinity & growth dominance', 'km': 'លីមីតនៅអនន្ត និងលំដាប់កំណើន'},
+
+  'limit:infinity': {'en': 'Limits at infinity', 'km': 'លីមីតនៅអនន្ត'},
+
+  'limit:rational:diff_squares_linear': {'en': 'Diff of squares (linear)', 'km': 'ផលដកការេពីរតួ (លីនេអ៊ែរ)'},
+  'limit:rational:diff_squares_quad': {'en': 'Diff of squares (factor x)', 'km': 'ផលដកការេពីរតួ (ទាញកត្តា x)'},
+  'limit:rational:diff_cubes': {'en': 'Diff of cubes', 'km': 'ផលដកគូបពីរតួ (x³ - a³)'},
+  'limit:rational:sum_cubes': {'en': 'Sum of cubes', 'km': 'ផលបូកគូបពីរតួ (x³ + a³)'},
+  'limit:rational:quad_linear': {'en': 'Quadratic (linear denom)', 'km': 'ត្រីធាដឺក្រេទីពីរ (ភាគបែងលីនេអ៊ែរ)'},
+  'limit:rational:quad_quad': {'en': 'Quadratic (cancel x-c)', 'km': 'ត្រីធាដឺក្រេទីពីរ (សម្រួលកត្តា x-c)'},
+  'limit:rational:quartic': {'en': 'Quartic difference factoring', 'km': 'ផលដកដឺក្រេទីបួន (x⁴ - a⁴)'},
+  'limit:rational:shifted_binomial': {'en': 'Shifted binomial at 0', 'km': 'ពន្លាតទ្វេធាត្រង់ 0'},
+  'limit:rational:high_degree': {'en': 'High-degree identity', 'km': 'លីមីតពហុធាដឺក្រេខ្ពស់'},
+
+  'limit:radical:sqrt_single_num': {'en': 'Sqrt conjugate (numerator)', 'km': 'កន្សោមឆ្លាស់ឬសការេនៅភាគយក'},
+  'limit:radical:sqrt_single_den': {'en': 'Sqrt conjugate (denominator)', 'km': 'កន្សោមឆ្លាស់ឬសការេនៅភាគបែង'},
+  'limit:radical:sqrt_two_radicals': {'en': 'Diff of two sqrts', 'km': 'ផលដកឬសការេពីរ'},
+  'limit:radical:sqrt_double_conjugate': {'en': 'Double sqrt conjugate', 'km': 'កន្សោមឆ្លាស់ពីរជាន់ (ភាគយកនិងភាគបែង)'},
+  'limit:radical:cbrt_single': {'en': 'Cube root conjugate', 'km': 'កន្សោមឆ្លាស់ឬសគូប'},
+  'limit:radical:split_trick': {'en': 'Mixed radical split trick', 'km': 'វិធីថែមថយចំនួនថេរបំបែកលីមីត'},
+
+  'limit:infinity:conjugate': {'en': 'Conjugate at infinity (∞ - ∞)', 'km': 'គុណកន្សោមឆ្លាស់នៅអនន្ត (រាង ∞ - ∞)'},
+  'limit:infinity:rational': {'en': 'Rational at infinity', 'km': 'លីមីតអនុគមន៍សនិទាននៅអនន្ត'},
+
+  'limit:trig:sinc_standard': {'en': 'Fundamental sinc limit sin(kx)/x', 'km': 'លីមីតគ្រឹះ sin(kx)/x'},
+  'limit:trig:half_angle': {'en': 'Half-angle trig (1 - cos(mx))/x²', 'km': 'លីមីតកន្លះមុំ (1 - cos(mx))/x²'},
+
+  'limit:exponential:diff_ratio': {'en': 'Difference of exponentials', 'km': 'ផលដកអិចស្ប៉ូណង់ស្យែលត្រង់ 0'},
+  'limit:exponential:trig_combo': {'en': 'Exponential mixed with trig', 'km': 'អិចស្ប៉ូណង់ស្យែលចម្រុះត្រីកោណមាត្រ'},
+  'limit:exponential:quad_trinomial': {'en': 'Quadratic trinomial in e^x', 'km': 'ត្រីធាអិចស្ប៉ូណង់ស្យែលត្រង់ 0'},
+  'limit:exponential:one_inf_rational': {'en': 'Form 1^∞ (Rational base)', 'km': 'រាងមិនកំណត់ 1^អនន្ត (ប្រភាគសនិទាន)'},
+  'limit:exponential:one_inf_trig': {'en': 'Form 1^∞ (Trig/Substitution)', 'km': 'រាងមិនកំណត់ 1^អនន្ត (ត្រីកោណមាត្រ)'},
+  'limit:exponential:growth_infinity': {'en': 'Exponential growth dominance', 'km': 'លីមីតនៅអនន្ត និងលំដាប់កំណើន'},
+
+  'limit:exp:standard': {'en': 'Exponential ratio (e^(ax) - 1)/(e^(bx) - 1)', 'km': 'ផលធៀបអិចស្ប៉ូណង់ស្យែល (e^(ax) - 1)/(e^(bx) - 1)'},
+  'limit:log:infinity': {'en': 'Logarithmic limit at infinity', 'km': 'លីមីតអនុគមន៍លោការីតនៅអនន្ត'},
+  'limit:euler:one_infinity': {'en': 'Indeterminate form 1^∞', 'km': 'រាងមិនកំណត់ 1^អនន្ត (ទម្រង់ចំនួន e)'},
+
+  // Limits (Legacy keys preserved for backwards compatibility)
   'limit:direct_substitution': {'en': 'Direct substitution', 'km': 'ជំនួសផ្ទាល់'},
-  'limit:factoring_0_0': {
-    'en': 'Factoring (0/0)',
-    'km': 'ដាក់ជាផលគុណកត្តា (0/0)'
-  },
-  'limit:rationalization_conjugate_finite': {
-    'en': 'Conjugate rationalization',
-    'km': 'គុណកន្សោមឆ្លាស់'
-  },
-  'limit:sinc_standard_limit': {
-    'en': 'Standard limit sin(x)/x',
-    'km': 'លីមីតគំរូ sin(x)/x'
-  },
-  'limit:exponential_standard_limit': {
-    'en': 'Standard limit (eˣ-1)/x',
-    'km': 'លីមីតគំរូ (eˣ-1)/x'
-  },
-  'limit:rationalization_sinc_combo': {
-    'en': 'Conjugate + sinc combo',
-    'km': 'កន្សោមឆ្លាស់ + sinc'
-  },
-  'limit:exponential_sinc_combo': {
-    'en': 'Exponential + sinc combo',
-    'km': 'អិចស្បូណង់ស្យែល + sinc'
-  },
-  'limit:half_angle_sinc_combo': {
-    'en': 'Half-angle + sinc combo',
-    'km': 'កន្លះមុំ + sinc'
-  },
-  'limit:rational_function_infinity': {
-    'en': 'Rational function at infinity',
-    'km': 'អនុគមន៍សនិទាននៅអនន្ត'
-  },
-  'limit:conjugate_infinity': {
-    'en': 'Conjugate at infinity',
-    'km': 'កន្សោមឆ្លាស់នៅអនន្ត'
-  },
-  'limit:log_limit_infinity': {
-    'en': 'Logarithmic limit at infinity',
-    'km': 'លីមីតលោការីតនៅអនន្ត'
-  },
-  'definite_integral': {
-    'en': 'Definite integral (any)',
-    'km': 'អាំងតេក្រាលកំណត់ (ទាំងអស់)'
-  },
-  'definite_integral:polynomial': {
-    'en': 'Definite — polynomial',
-    'km': 'អាំងតេក្រាលកំណត់ — ពហុធា'
-  },
-  'definite_integral:linear_argument': {
-    'en': 'Definite — linear argument',
-    'km': 'អាំងតេក្រាលកំណត់ — អថេរលីនេអ៊ែរ'
-  },
-  'definite_integral:mixed_sum': {
-    'en': 'Definite — mixed sum',
-    'km': 'អាំងតេក្រាលកំណត់ — ផលបូកចម្រុះ'
-  },
-  'definite_integral:trig': {
-    'en': 'Definite — trig',
-    'km': 'អាំងតេក្រាលកំណត់ — ត្រីកោណមាត្រ'
-  },
-  'definite_integral:u_substitution': {
-    'en': 'Definite — u-substitution',
-    'km': 'អាំងតេក្រាលកំណត់ — ជំនួសអថេរ u'
-  },
-  'definite_integral:by_parts': {
-    'en': 'Definite — by parts',
-    'km': 'អាំងតេក្រាលកំណត់ — ដោយផ្នែក'
-  },
-  'indefinite_integral': {
-    'en': 'Indefinite integral (any)',
-    'km': 'ព្រីមីទីវ (ទាំងអស់)'
-  },
-  'indefinite_integral:power': {
-    'en': 'Indefinite — power',
-    'km': 'ព្រីមីទីវ — ស្វ័យគុណ'
-  },
-  'indefinite_integral:expand': {
-    'en': 'Indefinite — expand',
-    'km': 'ព្រីមីទីវ — ពន្លាត'
-  },
-  'indefinite_integral:split': {
-    'en': 'Indefinite — split',
-    'km': 'ព្រីមីទីវ — បំបែកភាគយក'
-  },
-  'indefinite_integral:linear_argument': {
-    'en': 'Indefinite — linear argument',
-    'km': 'ព្រីមីទីវ — អថេរលីនេអ៊ែរ'
-  },
-  'indefinite_integral:usub': {
-    'en': 'Indefinite — u-substitution',
-    'km': 'ព្រីមីទីវ — ជំនួសអថេរ u'
-  },
-  'indefinite_integral:trig_sec': {
-    'en': 'Indefinite — trig (sec²)',
-    'km': 'ព្រីមីទីវ — ត្រីកោណមាត្រ (sec²)'
-  },
-  'probability:exercise_bag_split_atleast': {
-    'en': 'Balls from a bag',
-    'km': 'ចាប់បាល់ពីក្នុងថង់'
-  },
-  'probability:exercise_two_bag_odd_even': {
-    'en': 'Two bags of numbered balls',
-    'km': 'ថង់ពីរមានបាល់លេខ'
-  },
-  'probability:exercise_two_box_colors': {
-    'en': 'Two boxes of colors',
-    'km': 'ប្រអប់ពីរមានពណ៌'
-  },
+  'limit:factoring_0_0': {'en': 'Factoring (0/0)', 'km': 'ដាក់ជាផលគុណកត្តា (0/0)'},
+  'limit:rationalization_conjugate_finite': {'en': 'Conjugate rationalization', 'km': 'គុណកន្សោមឆ្លាស់'},
+  'limit:sinc_standard_limit': {'en': 'Fundamental limit sin(x)/x', 'km': 'លីមីតគ្រឹះ sin(x)/x'},
+  'limit:exponential_standard_limit': {'en': 'Fundamental limit (eˣ-1)/x', 'km': 'លីមីតគ្រឹះ (eˣ-1)/x'},
+  'limit:rationalization_sinc_combo': {'en': 'Conjugate + sinc combo', 'km': 'កន្សោមឆ្លាស់ + sinc'},
+  'limit:exponential_sinc_combo': {'en': 'Exponential + sinc combo', 'km': 'អិចស្បូណង់ស្យែល + sinc'},
+  'limit:half_angle_sinc_combo': {'en': 'Half-angle + sinc combo', 'km': 'កន្លះមុំ + sinc'},
+  'limit:rational_function_infinity': {'en': 'Rational function at infinity', 'km': 'អនុគមន៍សនិទាននៅអនន្ត'},
+  'limit:conjugate_infinity': {'en': 'Conjugate at infinity', 'km': 'កន្សោមឆ្លាស់នៅអនន្ត'},
+  'limit:log_limit_infinity': {'en': 'Logarithmic limit at infinity', 'km': 'លីមីតលោការីតនៅអនន្ត'},
+  'limit:trig_identity_0_0': {'en': 'Trig identity (0/0)', 'km': 'សមភាពត្រីកោណមាត្រ (0/0)'},
+  'limit:angle_addition_0_0': {'en': 'Angle-addition identity (0/0)', 'km': 'រូបមន្តផលបូកមុំ (0/0)'},
+  'limit:log_limit_zero': {'en': 'Logarithmic limit at 0', 'km': 'លីមីតលោការីតនៅ 0'},
+  'limit:indeterminate_one_infinity': {'en': 'Indeterminate form 1^∞', 'km': 'រាងមិនកំណត់ 1^∞'},
+
+  // Integrals
+  'definite_integral': {'en': 'Definite integral (any)', 'km': 'អាំងតេក្រាលកំណត់ (ទាំងអស់)'},
+  'definite_integral:polynomial': {'en': 'Definite — polynomial', 'km': 'អាំងតេក្រាលកំណត់ — ពហុធា'},
+  'definite_integral:linear_argument': {'en': 'Definite — linear argument', 'km': 'អាំងតេក្រាលកំណត់ — អថេរលីនេអ៊ែរ'},
+  'definite_integral:mixed_sum': {'en': 'Definite — mixed sum', 'km': 'អាំងតេក្រាលកំណត់ — ផលបូកចម្រុះ'},
+  'definite_integral:trig': {'en': 'Definite — trig', 'km': 'អាំងតេក្រាលកំណត់ — ត្រីកោណមាត្រ'},
+  'definite_integral:u_substitution': {'en': 'Definite — u-substitution', 'km': 'អាំងតេក្រាលកំណត់ — ជំនួសអថេរ u'},
+  'definite_integral:by_parts': {'en': 'Definite — by parts', 'km': 'អាំងតេក្រាលកំណត់ — ដោយផ្នែក'},
+  'indefinite_integral': {'en': 'Indefinite integral (any)', 'km': 'ព្រីមីទីវ (ទាំងអស់)'},
+  'indefinite_integral:power': {'en': 'Indefinite — power', 'km': 'ព្រីមីទីវ — ស្វ័យគុណ'},
+  'indefinite_integral:expand': {'en': 'Indefinite — expand', 'km': 'ព្រីមីទីវ — ពន្លាត'},
+  'indefinite_integral:split': {'en': 'Indefinite — split', 'km': 'ព្រីមីទីវ — បំបែកភាគយក'},
+  'indefinite_integral:linear_argument': {'en': 'Indefinite — linear argument', 'km': 'ព្រីមីទីវ — អថេរលីនេអ៊ែរ'},
+  'indefinite_integral:usub': {'en': 'Indefinite — u-substitution', 'km': 'ព្រីមីទីវ — ជំនួសអថេរ u'},
+  'indefinite_integral:trig_sec': {'en': 'Indefinite — trig (sec²)', 'km': 'ព្រីមីទីវ — ត្រីកោណមាត្រ (sec²)'},
+  'indefinite_integral:indefinite_sum': {'en': 'Indefinite — sum of several term types', 'km': 'ព្រីមីទីវ — ផលបូកតួច្រើនប្រភេទ'},
+
+  // Probability
+  'probability:exercise_bag_split_atleast': {'en': 'Balls from a bag', 'km': 'ចាប់បាល់ពីក្នុងថង់'},
+  'probability:exercise_two_bag_odd_even': {'en': 'Two bags of numbered balls', 'km': 'ថង់ពីរមានបាល់លេខ'},
+  'probability:exercise_two_box_colors': {'en': 'Two boxes of colors', 'km': 'ប្រអប់ពីរមានពណ៌'},
   'probability:exercise_banknotes': {'en': 'Banknotes', 'km': 'ក្រដាសប្រាក់'},
   'probability:exercise_pens': {'en': 'Pens', 'km': 'ប៊ិច'},
   'probability:exercise_students': {'en': 'Students', 'km': 'សិស្ស'},
-  'counting': {
-    'en': 'Counting (combinations & permutations)',
-    'km': 'វិភាគបន្សំ និងតម្រៀប'
-  },
+  'counting': {'en': 'Counting (any)', 'km': 'វិភាគបន្សំ និងតម្រៀប (ទាំងអស់)'},
+  'counting:combination': {'en': 'Counting — combinations C(n, r)', 'km': 'បន្សំ C(n, r)'},
+  'counting:permutation': {'en': 'Counting — permutations P(n, r)', 'km': 'ចម្លាស់ P(n, r)'},
+
+  // Other topics
   'study': {'en': 'Curve study & area', 'km': 'សិក្សាខ្សែរាងកោង និងផ្ទៃ'},
-  'check_continuity': {
-    'en': 'Check continuity / find parameter',
-    'km': 'សិក្សាភាពជាប់ / រកប៉ារ៉ាម៉ែត្រ'
-  },
-  'compute_derivative': {'en': 'Compute derivative', 'km': 'គណនាដេរីវេ'},
-  'solve_ode': {
-    'en': 'Solve differential equation',
-    'km': 'ដោះស្រាយសមីការឌីផេរ៉ង់ស្យែល'
-  },
-  'vector_ops': {'en': 'Vector operations', 'km': 'ប្រមាណវិធីលើវិចទ័រ'},
-  'classify_conic': {
-    'en': 'Classify conic / find feature',
-    'km': 'កំណត់ប្រភេទកោនិក / រកលក្ខណៈ'
-  },
+  'check_continuity': {'en': 'Continuity (any)', 'km': 'ភាពជាប់ (ទាំងអស់)'},
+  'check_continuity:check_at_point': {'en': 'Check continuity at a point', 'km': 'សិក្សាភាពជាប់ត្រង់ចំណុច'},
+  'check_continuity:find_parameter': {'en': 'Find the parameter that makes it continuous', 'km': 'រកប៉ារ៉ាម៉ែត្រដើម្បីឱ្យជាប់'},
+  'compute_derivative': {'en': 'Compute derivative (any)', 'km': 'គណនាដេរីវេ (ទាំងអស់)'},
+  'compute_derivative:polynomial': {'en': 'Power rule, term by term', 'km': 'ដេរីវេពហុធា'},
+  'compute_derivative:chain': {'en': 'Chain rule on a power', 'km': 'ដេរីវេអនុគមន៍បណ្តាក់ (ស្វ័យគុណ)'},
+  'compute_derivative:product': {'en': 'Product rule', 'km': 'ដេរីវេផលគុណ'},
+  'compute_derivative:quotient': {'en': 'Quotient rule', 'km': 'ដេរីវេផលចែក'},
+  'compute_derivative:radical': {'en': 'Chain rule through a square root', 'km': 'ដេរីវេឫសការេ'},
+  'compute_derivative:trigonometric': {'en': 'Trigonometric derivatives', 'km': 'ដេរីវេអនុគមន៍ត្រីកោណមាត្រ'},
+  'compute_derivative:exponential': {'en': 'Exponential derivatives', 'km': 'ដេរីវេអនុគមន៍អិចស្បូណង់ស្យែល'},
+  'compute_derivative:logarithm': {'en': 'Logarithmic derivatives', 'km': 'ដេរីវេអនុគមន៍លោការីត'},
+  'compute_derivative:second_order': {'en': 'Second derivative', 'km': 'ដេរីវេទីពីរ'},
+  'solve_ode': {'en': 'Differential equation (any)', 'km': 'សមីការឌីផេរ៉ង់ស្យែល (ទាំងអស់)'},
+  'solve_ode:first_order_linear_homogeneous': {'en': 'y\' + ay = 0', 'km': 'y\' + ay = 0'},
+  'solve_ode:first_order_linear_nonhomogeneous': {'en': 'y\' + ay = g(x)', 'km': 'y\' + ay = g(x)'},
+  'solve_ode:second_order_homogeneous_constant_coeff': {'en': 'y\'\' + by\' + cy = 0', 'km': 'y\'\' + by\' + cy = 0'},
+  'solve_ode:second_order_nonhomogeneous': {'en': 'y\'\' + by\' + cy = g(x)', 'km': 'y\'\' + by\' + cy = g(x)'},
+  'vector_ops': {'en': 'Vector operations (any)', 'km': 'ប្រមាណវិធីលើវិចទ័រ (ទាំងអស់)'},
+  'vector_ops:magnitude': {'en': 'Magnitude of a vector |AB|', 'km': 'ប្រវែងវិចទ័រ |AB|'},
+  'vector_ops:distance': {'en': 'Distance between two points', 'km': 'ចម្ងាយរវាងចំណុចពីរ'},
+  'vector_ops:dot': {'en': 'Dot product AB · AC', 'km': 'ផលគុណស្កាលែ AB · AC'},
+  'vector_ops:find_m_orthogonal': {'en': 'Find m making two vectors orthogonal', 'km': 'រក m ដើម្បីឱ្យវិចទ័រពីរអ័រតូកូណាល់'},
+  'vector_ops:cross_magnitude': {'en': 'Cross product magnitude |AB × AC|', 'km': 'ប្រវែងផលគុណវិចទ័រ |AB × AC|'},
+  'vector_ops:triangle_area': {'en': 'Area of a triangle', 'km': 'ក្រឡាផ្ទៃត្រីកោណ'},
+  'vector_ops:scalar_triple_product': {'en': 'Scalar triple product u · (v × w)', 'km': 'ផលគុណចម្រុះ u · (v × w)'},
+  'classify_conic': {'en': 'Conics (any)', 'km': 'កោនិក (ទាំងអស់)'},
+  'classify_conic:vertex_x': {'en': 'Parabola — vertex (x)', 'km': 'ប៉ារ៉ាបូល — កំពូល (x)'},
+  'classify_conic:vertex_y': {'en': 'Parabola — vertex (y)', 'km': 'ប៉ារ៉ាបូល — កំពូល (y)'},
+  'classify_conic:p': {'en': 'Parabola — focal parameter p', 'km': 'ប៉ារ៉ាបូល — ប៉ារ៉ាម៉ែត្រ p'},
+  'classify_conic:focus_x': {'en': 'Parabola — focus (x)', 'km': 'ប៉ារ៉ាបូល — កំណុំ (x)'},
+  'classify_conic:focus_y': {'en': 'Parabola — focus (y)', 'km': 'ប៉ារ៉ាបូល — កំណុំ (y)'},
+  'classify_conic:directrix': {'en': 'Parabola — directrix', 'km': 'ប៉ារ៉ាបូល — បន្ទាត់ប្រាប់ទិស'},
+  'classify_conic:center_x': {'en': 'Ellipse / hyperbola — centre (x)', 'km': 'អេលីប / អ៊ីពែបូល — ផ្ចិត (x)'},
+  'classify_conic:center_y': {'en': 'Ellipse / hyperbola — centre (y)', 'km': 'អេលីប / អ៊ីពែបូល — ផ្ចិត (y)'},
+  'classify_conic:a': {'en': 'Ellipse / hyperbola — a', 'km': 'អេលីប / អ៊ីពែបូល — a'},
+  'classify_conic:b': {'en': 'Ellipse / hyperbola — b', 'km': 'អេលីប / អ៊ីពែបូល — b'},
+  'classify_conic:c': {'en': 'Ellipse / hyperbola — focal distance c', 'km': 'អេលីប / អ៊ីពែបូល — ចម្ងាយកំណុំ c'},
+
+
+
+
 };
 
 String questionTypeLabel(String value, String lang) {

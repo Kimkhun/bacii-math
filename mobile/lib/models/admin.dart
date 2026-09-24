@@ -5,14 +5,23 @@ class CostToday {
   final int calls;
   final int totalTokens;
   final double costUsd;
+  final double? promptCostUsd;
+  final double? completionCostUsd;
 
-  CostToday(
-      {required this.calls, required this.totalTokens, required this.costUsd});
+  CostToday({
+    required this.calls,
+    required this.totalTokens,
+    required this.costUsd,
+    this.promptCostUsd,
+    this.completionCostUsd,
+  });
 
   factory CostToday.fromJson(Map<String, dynamic> json) => CostToday(
         calls: json['calls'] as int? ?? 0,
         totalTokens: json['total_tokens'] as int? ?? 0,
         costUsd: (json['cost_usd'] as num?)?.toDouble() ?? 0,
+        promptCostUsd: (json['prompt_cost_usd'] as num?)?.toDouble(),
+        completionCostUsd: (json['completion_cost_usd'] as num?)?.toDouble(),
       );
 }
 
@@ -22,6 +31,8 @@ class CostPeriod {
   final int completionTokens;
   final int totalTokens;
   final double costUsd;
+  final double? promptCostUsd;
+  final double? completionCostUsd;
   final double avgLatencyMs;
 
   CostPeriod({
@@ -30,6 +41,8 @@ class CostPeriod {
     required this.completionTokens,
     required this.totalTokens,
     required this.costUsd,
+    this.promptCostUsd,
+    this.completionCostUsd,
     required this.avgLatencyMs,
   });
 
@@ -39,6 +52,8 @@ class CostPeriod {
         completionTokens: json['completion_tokens'] as int? ?? 0,
         totalTokens: json['total_tokens'] as int? ?? 0,
         costUsd: (json['cost_usd'] as num?)?.toDouble() ?? 0,
+        promptCostUsd: (json['prompt_cost_usd'] as num?)?.toDouble(),
+        completionCostUsd: (json['completion_cost_usd'] as num?)?.toDouble(),
         avgLatencyMs: (json['avg_latency_ms'] as num?)?.toDouble() ?? 0,
       );
 }
@@ -48,12 +63,16 @@ class CostByEndpoint {
   final int calls;
   final int totalTokens;
   final double costUsd;
+  final double? promptCostUsd;
+  final double? completionCostUsd;
 
   CostByEndpoint({
     required this.endpoint,
     required this.calls,
     required this.totalTokens,
     required this.costUsd,
+    this.promptCostUsd,
+    this.completionCostUsd,
   });
 
   factory CostByEndpoint.fromJson(Map<String, dynamic> json) => CostByEndpoint(
@@ -61,6 +80,8 @@ class CostByEndpoint {
         calls: json['calls'] as int? ?? 0,
         totalTokens: json['total_tokens'] as int? ?? 0,
         costUsd: (json['cost_usd'] as num?)?.toDouble() ?? 0,
+        promptCostUsd: (json['prompt_cost_usd'] as num?)?.toDouble(),
+        completionCostUsd: (json['completion_cost_usd'] as num?)?.toDouble(),
       );
 }
 
@@ -69,12 +90,16 @@ class CostByModel {
   final int calls;
   final int totalTokens;
   final double costUsd;
+  final double? promptCostUsd;
+  final double? completionCostUsd;
 
   CostByModel({
     required this.modelName,
     required this.calls,
     required this.totalTokens,
     required this.costUsd,
+    this.promptCostUsd,
+    this.completionCostUsd,
   });
 
   factory CostByModel.fromJson(Map<String, dynamic> json) => CostByModel(
@@ -82,6 +107,8 @@ class CostByModel {
         calls: json['calls'] as int? ?? 0,
         totalTokens: json['total_tokens'] as int? ?? 0,
         costUsd: (json['cost_usd'] as num?)?.toDouble() ?? 0,
+        promptCostUsd: (json['prompt_cost_usd'] as num?)?.toDouble(),
+        completionCostUsd: (json['completion_cost_usd'] as num?)?.toDouble(),
       );
 }
 
@@ -154,6 +181,10 @@ class AdminUsageLog {
   final int completionTokens;
   final int totalTokens;
   final double estimatedCostUsd;
+  final double promptCostUsd;
+  final double completionCostUsd;
+  final String? promptText;
+  final String? responseText;
   final int latencyMs;
   final bool success;
   final String? errorMessage;
@@ -170,6 +201,10 @@ class AdminUsageLog {
     required this.completionTokens,
     required this.totalTokens,
     required this.estimatedCostUsd,
+    this.promptCostUsd = 0,
+    this.completionCostUsd = 0,
+    this.promptText,
+    this.responseText,
     required this.latencyMs,
     required this.success,
     this.errorMessage,
@@ -187,6 +222,11 @@ class AdminUsageLog {
         completionTokens: json['completion_tokens'] as int? ?? 0,
         totalTokens: json['total_tokens'] as int? ?? 0,
         estimatedCostUsd: (json['estimated_cost_usd'] as num?)?.toDouble() ?? 0,
+        promptCostUsd: (json['prompt_cost_usd'] as num?)?.toDouble() ?? 0,
+        completionCostUsd:
+            (json['completion_cost_usd'] as num?)?.toDouble() ?? 0,
+        promptText: json['prompt_text'] as String?,
+        responseText: json['response_text'] as String?,
         latencyMs: json['latency_ms'] as int? ?? 0,
         success: json['success'] as bool? ?? false,
         errorMessage: json['error_message'] as String?,
