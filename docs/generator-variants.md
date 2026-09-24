@@ -56,11 +56,11 @@ identity only collapses cleanly at x = π/3; swapping coefficients on a sinc
 limit doesn't teach anything new the way swapping integral coefficients does).
 Each registry entry is flagged `parameterizable` or not:
 
-- **11 parameterizable techniques** each have a sampler in `generator/limits.py`
+- **11 parameterizable techniques** each have a sampler in `engine/topics/limit/generator.py` (samplers in the `*_structures.py` files)
   (`_LIMIT_SAMPLERS`) that picks *constrained*, not free, parameters — e.g.
   `conjugate_infinity` requires the sqrt's leading coefficient to be a perfect
   square and derives the answer from the other slots — plus a matching
-  narration handler in `solver/limits.py` (`_LIMIT_TECHNIQUE_HANDLERS`) that derives
+  narration handler in `engine/topics/limit/solver.py` (`_LIMIT_TECHNIQUE_HANDLERS`) that derives
   the actual algebra for those specific numbers at request time (not
   hardcoded prose): `direct_substitution`, `factoring_0_0`,
   `rational_function_infinity`, `sinc_standard_limit`,
@@ -81,7 +81,7 @@ loaded into `structures._LIMIT_CURATED_TEMPLATES` at import time) and otherwise
 picks a random *parameterizable* technique for that difficulty and samples a fresh
 instance. Curated params carry `formula_name` + the exam-authored technique text;
 procedural params carry an explicit `technique` id + its slot values
-(e.g. `{"technique": "sinc_standard_limit", "k": 6, "c": 3}`) — `solver/limits.py`
+(e.g. `{"technique": "sinc_standard_limit", "k": 6, "c": 3}`) — `engine/topics/limit/solver.py`
 dispatches on whichever is present rather than re-inferring the shape from the expression.
 
 | Difficulty | Parameterizable techniques | Curated-only techniques |

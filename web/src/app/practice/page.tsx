@@ -181,7 +181,7 @@ function parseFullProblem(
 // *technique*/*scenario* one level below question_type (limit's techniques,
 // probability's scenario catalog, integral's per-kind variants), the value is
 // encoded as "<question_type>:<variant>" — see splitTypeValue().
-export const LIMIT_CATEGORIES = [
+const LIMIT_CATEGORIES = [
   { value: "any", en: "All limit categories", km: "គ្រប់ជំពូកលីមីត" },
   { value: "rational", en: "1. Rational limits", km: "១. លីមីតសនិទាន" },
   { value: "radical", en: "2. Radical limits", km: "២. លីមីតរ៉ាឌីកាល់" },
@@ -191,7 +191,7 @@ export const LIMIT_CATEGORIES = [
   { value: "infinity", en: "6. Limits at infinity", km: "៦. លីមីតនៅអនន្ត" },
 ];
 
-export const LIMIT_SUBTOPICS: Record<string, { value: string; labelEn: string; labelKm: string }[]> = {
+const LIMIT_SUBTOPICS: Record<string, { value: string; labelEn: string; labelKm: string }[]> = {
   rational: [
     { value: "limit:rational", labelEn: "All rational limits", labelKm: "សនិទានទាំងអស់" },
     { value: "limit:rational:powers", labelEn: "1. Algebraic identities (squares, cubes, powers)", labelKm: "១. រូបមន្តស្វ័យគុណ (ការេ គូប ដឺក្រេខ្ពស់)" },

@@ -108,6 +108,9 @@ async def _write_usage_log(
         log.warning("Failed to record api usage log: %s", exc)
 
 
+_pending_tasks: set = set()
+
+
 def record_api_usage(
     user_id: uuid.UUID | str | None,
     endpoint: str,
@@ -127,7 +130,7 @@ def record_api_usage(
     """
     try:
         loop = asyncio.get_running_loop()
-        loop.create_task(
+        task = loop.create_task(
             _write_usage_log(
                 user_id=user_id,
                 endpoint=endpoint,
@@ -142,6 +145,9 @@ def record_api_usage(
                 response_text=response_text,
             )
         )
+        # The loop only weakly references tasks; hold one until it finishes.
+        _pending_tasks.add(task)
+        task.add_done_callback(_pending_tasks.discard)
     except RuntimeError:
         # If running outside an active event loop (e.g. sync worker thread)
         asyncio.run(

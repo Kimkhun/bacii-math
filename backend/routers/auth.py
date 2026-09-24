@@ -3,6 +3,7 @@ import uuid
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import security
@@ -27,7 +28,11 @@ async def signup(body: UserCreate, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status.HTTP_409_CONFLICT, "Email already registered")
     user = User(email=email, hashed_password=security.hash_password(body.password))
     db.add(user)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:  # concurrent signup with the same email
+        await db.rollback()
+        raise HTTPException(status.HTTP_409_CONFLICT, "Email already registered")
     await db.refresh(user)
     return {"user": UserOut.model_validate(user), **_token_pair(user.id).model_dump()}
 
@@ -42,12 +47,15 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/refresh")
-async def refresh(body: RefreshRequest):
+async def refresh(body: RefreshRequest, db: AsyncSession = Depends(get_db)):
     try:
         payload = security.decode_token(body.refresh_token, expected_type="refresh")
-    except jwt.PyJWTError:
+        user_id = uuid.UUID(payload["sub"])
+    except (jwt.PyJWTError, KeyError, ValueError):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired refresh token")
-    return _token_pair(uuid.UUID(payload["sub"]))
+    if await db.get(User, user_id) is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
+    return _token_pair(user_id)
 
 
 @router.get("/me", response_model=UserOut)
