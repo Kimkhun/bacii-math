@@ -1,4 +1,5 @@
 import json
+import logging
 
 import redis.asyncio as redis
 
@@ -15,11 +16,18 @@ def _get_client() -> redis.Redis:
 
 
 async def get_explanation(key: str) -> str | None:
-    return await _get_client().get(key)
+    try:
+        return await _get_client().get(key)
+    except Exception as exc:  # a cache outage must never break grading
+        logging.getLogger("bacii").warning("explanation cache read failed: %s", exc)
+        return None
 
 
 async def set_explanation(key: str, value: str) -> None:
-    await _get_client().setex(key, settings.explanation_cache_ttl_seconds, value)
+    try:
+        await _get_client().setex(key, settings.explanation_cache_ttl_seconds, value)
+    except Exception as exc:
+        logging.getLogger("bacii").warning("explanation cache write failed: %s", exc)
 
 
 async def get_km_solution(key: str) -> dict | None:
@@ -44,11 +52,19 @@ async def delete(key: str) -> None:
 
 
 async def allow_gemini(user_id: str) -> bool:
+    """Per-user Gemini rate limit. INCR and EXPIRE run in one transaction so a
+    crash between them can't leave a counter with no TTL (which would lock the
+    user out forever). If Redis is down, deny Gemini (callers fall back to the
+    deterministic path) rather than failing the whole request."""
     key = f"ratelimit:gemini:{user_id}"
-    r = _get_client()
-    count = await r.incr(key)
-    if count == 1:
-        await r.expire(key, 60)
+    try:
+        pipe = _get_client().pipeline(transaction=True)
+        pipe.incr(key)
+        pipe.expire(key, 60, nx=True)
+        count, _ = await pipe.execute()
+    except Exception as exc:
+        logging.getLogger("bacii").warning("rate-limit store unavailable: %s", exc)
+        return False
     return count <= settings.gemini_rate_limit_per_minute
 
 

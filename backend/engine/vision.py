@@ -335,6 +335,8 @@ async def detect_math(data: bytes, user_id: any = None) -> dict:
     cleaned = _strip_code_fence(raw_response)
     try:
         parsed = json.loads(cleaned)
+        if not isinstance(parsed, dict):
+            raise json.JSONDecodeError("expected a JSON object", cleaned, 0)
     except json.JSONDecodeError:
         parsed = {
             "raw_text": cleaned.strip(),

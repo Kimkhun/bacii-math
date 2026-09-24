@@ -33,12 +33,14 @@ async def update_models(
     admin: User = Depends(get_current_admin_user),
 ):
     """Dynamically switch active models in Redis across all workers."""
+    if req.vision_provider not in ("gemini", "ollama", "fallback"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "vision_provider must be gemini, ollama or fallback")
     await set_system_model_settings(
         text_model=req.text_model,
         vision_model=req.vision_model,
         vision_provider=req.vision_provider,
     )
-    return {"status": "ok", "settings": req.dict()}
+    return {"status": "ok", "settings": req.model_dump()}
 
 
 @router.get("/costs/summary")

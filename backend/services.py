@@ -69,8 +69,8 @@ async def persist_problem(db: AsyncSession, problem: dict) -> dict:
         spec=problem["params"],
         prompt=problem["prompt"],
         prompt_latex=problem.get("prompt_latex"),
-        z_display=problem["z_display"],
-        expected_answer=str(solution["answer_exact"]),
+        z_display=str(problem["z_display"])[:100],
+        expected_answer=str(solution["answer_exact"])[:255],
         expected_decimal=solution["answer_decimal"] if isinstance(solution["answer_decimal"], float) else None,
         source=problem["source"],
         formula_tags=formula_tags,
@@ -200,7 +200,8 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
         user_id=user.id,
         question_id=question.id,
         user_answer=user_answer,
-        parsed_answer=result.get("given"),
+        # parsed_answer is String(255); a multi-part "A: ..; B: .." summary can exceed it.
+        parsed_answer=(result.get("given") or None) and str(result["given"])[:255],
         correct=result["correct"],
         reason=result["reason"],
         work_text=work_text,
@@ -754,7 +755,7 @@ async def get_template_inventory() -> dict:
                         for attempt in range(6):
                             try:
                                 cand = await generator.generate(
-                                    topic, diff, seed=hash((topic, qt, diff, variant, attempt)) & 0xFFFFFFFF,
+                                    topic, diff, seed=zlib.crc32(f"{topic}:{qt}:{diff}:{variant}:{attempt}".encode()) & 0xFFFFFFFF,
                                     question_type=qt, generation_mode="templates", variant=variant,
                                 )
                             except Exception:
@@ -1290,7 +1291,7 @@ async def solve_custom_template_structure(structure_id: str, params: dict) -> di
     from engine.notation import pretty_expr, pretty_point
     from engine.topics.limit.solver import _solve_limit
     from engine.topics.integral.solver import _solve_definite_integral, _solve_indefinite_integral
-    from sympy import latex, sympify
+    from sympy import sympify
 
     # 1. Limit structure
     limit_def = next((s for s in limit_structures.all_limit_structures() if s["id"] == structure_id), None)
@@ -1743,9 +1744,12 @@ def sandbox_grade(topic: str, question_type: str, params: dict, lines: list[str]
 async def submit_exam(exam_id: str, answers: dict[str, str]) -> dict:
     _load_exam(exam_id)  # 404s on an unknown exam_id before grading
     params_by_question = _EXAM_PARAMS.get(exam_id, {})
-    lines_by_question = {
-        int(q_no): text.split("\n") for q_no, text in answers.items() if text.strip()
-    }
+    try:
+        lines_by_question = {
+            int(q_no): text.split("\n") for q_no, text in answers.items() if text.strip()
+        }
+    except ValueError:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "answer keys must be question numbers")
     result = mark_full_exam(exam_id, params_by_question, lines_by_question)
     return _fractions_to_float(result)
 
