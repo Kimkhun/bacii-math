@@ -161,6 +161,61 @@ def _logarithmic_standard_limit_checkpoints(x, point, expr, formula):
     return cps
 
 
+def _one_sided_radical_steps(kind, params, var, x, point_latex, expr, result):
+    """Narration + checkpoint for the two sqrt(trig)/sin limits at pi^-: the
+    radical only simplifies once the sign of sin (or cos of the half angle) on
+    the left of pi is spelled out, which is why the side matters."""
+    k = params.get("k", 1)
+    kpre = f"{k}" if k != 1 else ""
+    if kind == "half":
+        reduced = k * sqrt(2) / (2 * sin(x / 2))
+        steps = [
+            _limit_step(
+                "Rewrite with half-angle identities",
+                f"\\(1 + \\cos {var} = 2\\cos^2\\tfrac{{{var}}}{{2}}\\) and \\(\\sin {var} = 2\\sin\\tfrac{{{var}}}{{2}}\\cos\\tfrac{{{var}}}{{2}}\\).",
+                "half_angle_identity",
+            ),
+            _limit_step(
+                "Take the square root using the side",
+                f"For \\({var} \\to \\pi^-\\) we have \\(\\tfrac{{{var}}}{{2}} < \\tfrac{{\\pi}}{{2}}\\), so \\(\\cos\\tfrac{{{var}}}{{2}} > 0\\) and "
+                f"\\(\\sqrt{{1 + \\cos {var}}} = \\sqrt{{2}}\\cos\\tfrac{{{var}}}{{2}}\\) (no absolute value needed).",
+                "one_sided_sign",
+            ),
+            _limit_step(
+                "Cancel and substitute",
+                f"The expression becomes \\({kpre}\\dfrac{{\\sqrt{{2}}}}{{2\\sin\\tfrac{{{var}}}{{2}}}}\\), which tends to {inline_latex(result)} as \\({var} \\to \\pi^-\\).",
+                "one_sided_sign",
+            ),
+        ]
+    else:
+        reduced = k * sqrt(2) / (2 * cos(x))
+        steps = [
+            _limit_step(
+                "Rewrite with double-angle identities",
+                f"\\(1 - \\cos 2{var} = 2\\sin^2 {var}\\) and \\(\\sin 2{var} = 2\\sin {var}\\cos {var}\\).",
+                "double_angle_identity",
+            ),
+            _limit_step(
+                "Take the square root using the side",
+                f"For \\({var} \\to \\pi^-\\) we have \\(\\sin {var} > 0\\), so \\(\\sqrt{{2\\sin^2 {var}}} = \\sqrt{{2}}\\sin {var}\\). "
+                f"From the right of \\(\\pi\\) it would be \\(-\\sqrt{{2}}\\sin {var}\\), so the two sides give opposite signs and the side must be stated.",
+                "one_sided_sign",
+            ),
+            _limit_step(
+                "Cancel and substitute",
+                f"The expression becomes \\({kpre}\\dfrac{{\\sqrt{{2}}}}{{2\\cos {var}}}\\), which tends to {inline_latex(result)} as \\({var} \\to \\pi^-\\).",
+                "one_sided_sign",
+            ),
+        ]
+    return steps, reduced
+
+
+_ONE_SIDED_RADICAL_KINDS = {
+    "limit:trig:radical_cos_sin_pi": "half",
+    "limit:trig:radical_cos2x_sin2x_pi": "double",
+}
+
+
 def _curated_limit_steps(params, var, x, point, point_latex, expr, result):
     """Curated real BAC II exercise: SymPy still computes `result` (the graded
     answer); the exam-authored technique text narrates the steps instead of a
@@ -171,6 +226,14 @@ def _curated_limit_steps(params, var, x, point, point_latex, expr, result):
     deriver for `rationalization_conjugate_finite`) so correct intermediate
     work verifies instead of only the final answer."""
     formula = params["formula_name"]
+    if formula in _ONE_SIDED_RADICAL_KINDS:
+        steps, reduced = _one_sided_radical_steps(
+            _ONE_SIDED_RADICAL_KINDS[formula], params, var, x, point_latex, expr, result,
+        )
+        return steps, [
+            {"label": "simplified form", "value": reduced, "formula": formula},
+            {"label": "final value", "value": result, "formula": formula},
+        ]
     steps = [_limit_step(
         "Apply the technique", params.get("curated_technique", ""), formula,
     )]
