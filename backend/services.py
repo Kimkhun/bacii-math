@@ -290,13 +290,8 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
     # tip are produced by `explain_question` (POST /problems/explain), which the
     # client starts in the background right after a wrong answer.
     if not result["correct"]:
-        # The deterministic solution steps (no LLM) so the panel is never empty.
-        resp["explanation"] = {
-            "content": _steps_text(question, lang=lang),
-            "provider": "deterministic",
-            "intervened": False,
-            "trigger": "incorrect",
-        }
+        # Deliberately no solution text here: the student sees the verdict and
+        # their per-line marks first, and only gets the solution when they ask.
         if work_text and not _work_usable(step_check):
             unread_msg = "មិនអាចអានជំហានសរសេរដៃរបស់អ្នកបានច្បាស់លាស់។ សូមសាកល្បងសរសេរម្តងទៀត។" if lang == "km" else WORK_UNREADABLE_MSG
             resp["work_check"] = {"content": unread_msg, "provider": "system"}

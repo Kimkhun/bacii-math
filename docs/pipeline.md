@@ -34,9 +34,8 @@ answer+work ──grade──▶  grader.grade()        (exact/numeric/angle/ind
                         → persisted: work_text, step_check, lines_boxes,
                                      formula_breakdown
                                   │
-                          (no LLM in /problems/grade: verdict, marks and
-                           points are all SymPy; a wrong answer also gets the
-                           deterministic solution steps immediately)
+                          (no LLM and no solution text in /problems/grade:
+                           verdict, marks and points are all SymPy)
                                   │
                           wrong answer → the web client starts, in the
                           background, POST /problems/explain (attempt_id):
@@ -95,8 +94,8 @@ answer+work ──grade──▶  grader.grade()        (exact/numeric/angle/ind
 ## 5. Explanations & work checks (`services.py`, `engine/llm.py`)
 
 - `/problems/grade` never calls an LLM. It returns the SymPy verdict, step
-  check, rubric score and, for wrong answers, the deterministic `build_text`
-  steps (`provider: "deterministic"`).
+  check and rubric score. It does not return the solution text: the student
+  sees the verdict and marks first and gets the solution only via Explain.
 - `/problems/explain` (`explain_question`) produces everything LLM-written:
   the narration, the `work_check` and, for the functions topic, the tutor tip
   (+ official part solution). The independent calls run with `asyncio.gather`.
