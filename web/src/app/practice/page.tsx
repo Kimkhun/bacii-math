@@ -704,13 +704,23 @@ function PracticeInner() {
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   // The LLM explanation is prepared in the background right after a wrong
   // answer (see startExplain); the Explain button just awaits that request.
+  // Requests are kept per "attemptId:lang" (in flight or resolved), so returning
+  // to a part, or clicking again, never re-asks the server; a failed request is
+  // dropped so the next click retries it.
   const [explaining, setExplaining] = useState(false);
-  const [explainedFor, setExplainedFor] = useState<string | null>(null);
-  const explainRef = useRef<{ attemptId: string; promise: Promise<Explanation> } | null>(null);
+  // Key of the explanation currently shown: hides the Explain button once it is
+  // displayed, and brings it back if the UI language changes.
+  const [explainedKey, setExplainedKey] = useState<string | null>(null);
+  const explainRequests = useRef<Map<string, Promise<Explanation>>>(new Map());
+  const explainViewKey = useRef<string | null>(null); // the explanation the student is waiting for
   const resetExplain = () => {
-    explainRef.current = null;
+    explainViewKey.current = null;
     setExplaining(false);
-    setExplainedFor(null);
+    setExplainedKey(null);
+  };
+  const clearExplainRequests = () => {
+    explainRequests.current.clear();
+    resetExplain();
   };
   const [graphGrade, setGraphGrade] = useState<GraphGradeResult | null>(null);
   const [hintLevel, setHintLevel] = useState(0);
@@ -941,7 +951,7 @@ function PracticeInner() {
     setMarksByPart(Array(m).fill(null));
     setLinePopsByPart(Array(m).fill(null));
     setExplanation(null);
-    resetExplain();
+    clearExplainRequests();
     setTeacherHint(null);
     setHintLevel(0);
     setAmbiguityQueue(null);
@@ -1971,31 +1981,37 @@ function PracticeInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  const explainKey = (attemptId: string) => `${attemptId}:${lang}`;
+
   const startExplain = (attemptId: string, answer: string, work: string | undefined, part: string | undefined) => {
     if (!question) return null;
+    const key = explainKey(attemptId);
+    const existing = explainRequests.current.get(key);
+    if (existing) return existing;
     const promise = api.explain(question.id, answer || undefined, work, lang, attemptId, part);
-    promise.catch(() => {}); // surfaced when the student clicks Explain
-    explainRef.current = { attemptId, promise };
-    return explainRef.current;
+    explainRequests.current.set(key, promise);
+    // A failed request must not be reused: drop it so the next click retries.
+    promise.catch(() => {
+      if (explainRequests.current.get(key) === promise) explainRequests.current.delete(key);
+    });
+    return promise;
   };
 
   const showExplanation = async () => {
     if (!question || !result?.attempt_id) return;
     const partIdx = partIndex;
+    const key = explainKey(result.attempt_id);
+    explainViewKey.current = key;
     setExplaining(true);
     try {
-      // Reuse the request started right after grading; only start a new one if
-      // the part was switched (reset) since. Awaiting an already-finished
-      // request is instant.
-      let entry = explainRef.current;
-      if (!entry || entry.attemptId !== result.attempt_id) {
-        entry = startExplain(
-          result.attempt_id, result.given ?? detected ?? "", workText ?? undefined, currentPart ?? undefined
-        );
-      }
-      if (!entry) return;
-      const exp = await entry.promise;
-      if (explainRef.current?.attemptId !== entry.attemptId) return; // stale: part changed meanwhile
+      // Reuse the request started right after grading (or an earlier click);
+      // awaiting an already-finished request is instant.
+      const promise = startExplain(
+        result.attempt_id, result.given ?? detected ?? "", workText ?? undefined, currentPart ?? undefined
+      );
+      if (!promise) return;
+      const exp = await promise;
+      if (explainViewKey.current !== key) return; // stale: part/check/question changed meanwhile
       // The tutor tip lives on the result card (with the official part solution);
       // keep it out of the explanation card so it is not shown twice.
       setResultByPart((prev) => {
@@ -2011,11 +2027,13 @@ function PracticeInner() {
         return next;
       });
       setExplanation({ ...exp, teacher_feedback: null });
-      setExplainedFor(entry.attemptId);
+      setExplainedKey(key);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Explain failed");
+      if (explainViewKey.current === key) {
+        setError(err instanceof Error ? err.message : "Explain failed");
+      }
     } finally {
-      setExplaining(false);
+      if (explainViewKey.current === key) setExplaining(false);
     }
   };
 
@@ -2635,10 +2653,12 @@ function PracticeInner() {
                 )
               )}
               <div className="mt-1 text-xs text-[#8a857b]">{t("label_reason")}: {result.reason}</div>
-              {!result.correct &&
-                result.attempt_id &&
-                explainedFor !== result.attempt_id &&
-                !(explanation && explanation.provider !== "deterministic") && (
+              {result.attempt_id &&
+                (!result.correct ||
+                  question?.topic === "functions" ||
+                  (result.rubric_score != null && result.rubric_score.earned < result.rubric_score.possible)) &&
+                explainedKey !== explainKey(result.attempt_id) &&
+                !(explainedKey === null && explanation && explanation.provider !== "deterministic") && (
                   <button
                     type="button"
                     onClick={showExplanation}
@@ -2828,7 +2848,7 @@ function PracticeInner() {
                   {explanation.steps?.length ? (
                     <div className="space-y-1.5 mb-2">
                       <div className="text-xs font-medium text-[#8a857b] uppercase">{t("label_solution")}</div>
-                      {explanation.steps.slice(0, hintLevel || explanation.steps.length).map((s) => (
+                      {explanation.steps.slice(0, (explainedKey ? 0 : hintLevel) || explanation.steps.length).map((s) => (
                         <div key={s.step_order} className="flex gap-1.5">
                           <span className="font-medium text-[#23272e] whitespace-nowrap">{t("label_step")} {s.step_order}:</span>
                           <MathText text={s.detail} className="text-[#3f3c35]" />
@@ -2836,7 +2856,7 @@ function PracticeInner() {
                       ))}
                     </div>
                   ) : null}
-                  {(!hintLevel || hintLevel >= (explanation.steps?.length ?? 0)) && (
+                  {(explainedKey || !hintLevel || hintLevel >= (explanation.steps?.length ?? 0)) && (
                     <MathText text={explanation.content} className="whitespace-pre-wrap" />
                   )}
                   {explanation.teacher_feedback?.content && (

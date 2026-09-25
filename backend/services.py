@@ -375,17 +375,21 @@ async def explain_question(
     labels = [str(p.get("label")) for p in spec.get("parts", [])] if isinstance(spec.get("parts"), list) else []
     is_multi = len(labels) > 1
     if not part and user_answer and labels:
-        # The student may have prefixed their answer with a part label.
+        # The student may have prefixed their answer with a part label. A combined
+        # submission ("A: 1; B: 2") labels several parts, so it names no single part.
         import re as _re
         for lab in labels:
             if _re.match(rf"^\s*{_re.escape(lab)}\s*[:=]", user_answer.strip()):
-                part = lab
+                if len(grader.parse_multi_answers(user_answer, labels)) <= 1:
+                    part = lab
                 break
     if part and part not in labels:
         part = None
 
     steps_text = _steps_text(question, lang=lang)
-    trigger = "incorrect" if attempt_id is not None else "manual"
+    # "incorrect" only for a wrong attempt; a correct one that the student asked
+    # about (weak steps, tutor tip) is a manual request.
+    trigger = "incorrect" if (attempt_id is not None and not attempt.correct) else "manual"
 
     step_check = None
     result: dict = {}
@@ -397,7 +401,15 @@ async def explain_question(
         if question.topic == "functions":
             result["graph_check"] = grader.grade_graph_check(spec, work_text.split("\n"))
 
-    allowed = await cache.allow_gemini(str(user.id))
+    # The work comment and tutor tip always call the LLM, so they need a rate-limit
+    # slot up front. Without an answer only the narration runs, which is usually a
+    # cache hit; leave `allowed` unset so `_build_explanation` takes a slot only on
+    # a real miss (cached explanations must not burn the per-minute budget).
+    allowed = await cache.allow_gemini(str(user.id)) if user_answer else None
+    if attempt_id is not None:
+        # One saved explanation per attempt: a repeat request replaces the old one
+        # (the delete is rolled back with everything else if this request fails).
+        await db.execute(delete(Explanation).where(Explanation.attempt_id == attempt_id))
     # Khmer reference solution first (functions topic only): it may itself call
     # Gemini on a cache miss, and it shares the DB session, so it is not run
     # concurrently with the calls below.
@@ -424,15 +436,21 @@ async def explain_question(
     async def _tutor_tip():
         if not (allowed and sol_km and user_answer):
             return None, None
-        # Correctness was decided by SymPy at grade time; recompute it cheaply here.
-        try:
-            if is_multi and part:
-                verdict = grader.grade_part(question.topic, question.question_type, spec, part, user_answer)
-            else:
-                verdict = grader.grade(question.topic, question.question_type, spec, user_answer)
-            is_correct = bool(verdict["correct"])
-        except Exception:
-            is_correct = False
+        # Correctness was decided by SymPy at grade time and stored on the attempt.
+        # Never re-grade a multi-part question as a whole here: the whole-question
+        # grader can take minutes on a combined answer and would block the server.
+        if attempt_id is not None:
+            is_correct = bool(attempt.correct)
+        else:
+            try:
+                if is_multi and part:
+                    is_correct = bool(grader.grade_part(question.topic, question.question_type, spec, part, user_answer)["correct"])
+                elif is_multi:
+                    is_correct = False
+                else:
+                    is_correct = bool(grader.grade(question.topic, question.question_type, spec, user_answer)["correct"])
+            except Exception:
+                is_correct = False
         return await llm.check_rubric_feedback(
             question_text=question.prompt,
             user_submission=work_text or user_answer,
@@ -562,7 +580,9 @@ async def get_attempt(db, user, attempt_id) -> dict:
             for s in rows.scalars()
         ]
 
-    expl_rows = await db.execute(select(Explanation).where(Explanation.attempt_id == attempt.id))
+    expl_rows = await db.execute(
+        select(Explanation).where(Explanation.attempt_id == attempt.id).order_by(Explanation.created_at.desc())
+    )
     explanations = [
         {"provider": e.provider, "content": e.content, "trigger": e.trigger, "created_at": e.created_at}
         for e in expl_rows.scalars()

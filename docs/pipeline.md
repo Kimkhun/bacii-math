@@ -96,17 +96,31 @@ answer+work ──grade──▶  grader.grade()        (exact/numeric/angle/ind
 - `/problems/grade` never calls an LLM. It returns the SymPy verdict, step
   check and rubric score. It does not return the solution text: the student
   sees the verdict and marks first and gets the solution only via Explain.
+- **When the web offers Explain:** on every wrong answer (the request is
+  prefetched in the background right after grading), and, on demand only, on a
+  correct answer that scored below full rubric points and on any functions
+  part (that is where the tutor tip lives). Requests are kept per
+  `attemptId:lang`, so revisiting a part or clicking twice never asks again, a
+  failed request is dropped so the next click retries, and switching the UI
+  language brings the button back to get the explanation in the new language.
 - `/problems/explain` (`explain_question`) produces everything LLM-written:
   the narration, the `work_check` and, for the functions topic, the tutor tip
   (+ official part solution). The independent calls run with `asyncio.gather`.
   The web client fires it right after a wrong answer and keeps the promise;
   the Explain button awaits it. Passing `attempt_id` links the stored
-  `Explanation` to the attempt so history shows it.
+  `Explanation` to the attempt so history shows it; a repeat call for the
+  same attempt replaces the saved one (one per attempt). `trigger` is
+  `incorrect` only for a wrong attempt. Correctness for the tutor tip comes from
+  the verdict stored on the attempt: never re-grade a multi-part question as a
+  whole there (the whole-question grader can hang for minutes on a combined
+  answer and blocks the event loop).
 - The narration is student-independent and cached in Redis
   (`explain:{topic}:{type}:{spec}:{lang}:{steps digest}`); the student's own
   answer is never put in that prompt, so one student's answer cannot leak to
   another through the cache. Per-student commentary comes from `work_check`.
-- Gemini rate limit: `allow_gemini` (default 10/min/user).
+- Gemini rate limit: `allow_gemini` (default 10/min/user). A slot is taken only
+  when an LLM call is really needed (a cached explanation with no answer to
+  comment on costs none).
 - Provider chain: Gemini → Ollama → deterministic text (never blocks grading).
 - OCR (`llm.gemini_vision_generate`) runs with thinking off (`thinking_budget=0`):
   transcription needs no reasoning and the call is about 2x faster.
