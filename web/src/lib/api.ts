@@ -193,6 +193,7 @@ export interface Explanation {
   trigger: string;
   work_check?: { content: string; provider: string } | null;
   teacher_feedback?: { content: string; provider: string } | null;
+  official_part_solution?: string | null;
   step_check?: StepCheck | null;
   steps?: { step_order: number; title: string; detail: string; formula?: string | null }[];
   graph?: GraphSpec | null;
@@ -770,8 +771,18 @@ export const api = {
       method: "POST",
       body: { question_id, user_answer, work_text, lines_boxes, part, hints_used, strokes, strokes_thumb, lang },
     }),
-  explain: (question_id: string, user_answer?: string, work_text?: string, lang?: string) =>
-    request<Explanation>("/problems/explain", { method: "POST", body: { question_id, user_answer, work_text, lang } }),
+  explain: (
+    question_id: string,
+    user_answer?: string,
+    work_text?: string,
+    lang?: string,
+    attempt_id?: string,
+    part?: string
+  ) =>
+    request<Explanation>("/problems/explain", {
+      method: "POST",
+      body: { question_id, user_answer, work_text, lang, attempt_id, part },
+    }),
   hint: (question_id: string, part?: string, work_text?: string, user_answer?: string, lang?: string) =>
     request<HintResponse>("/problems/hint", { method: "POST", body: { question_id, part, work_text, user_answer, lang } }),
   saveProgress: (

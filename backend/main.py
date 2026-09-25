@@ -1,3 +1,5 @@
+import sys
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
@@ -7,6 +9,13 @@ from core.config import settings
 from db import SessionLocal
 from models import User
 from routers import admin, auth, problems, profile, vision
+
+# SymPy work runs in worker threads (engine/concurrency.py, 2 workers). A shorter GIL
+# switch interval lets the event loop take its turn more often. Measured over HTTP with
+# 8 concurrent heavy users (health-check worst / heavy users' total time):
+#   inline (old)  1978 ms / 13.9 s      5 ms  422 ms / 13.3 s
+#   2 ms (chosen)  163 ms / 18.1 s      1 ms   92 ms / 23.2 s
+sys.setswitchinterval(0.002)
 
 app = FastAPI(title="BACII Math Engine", version="0.2.0")
 

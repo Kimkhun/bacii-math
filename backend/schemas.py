@@ -84,6 +84,10 @@ class ExplainRequest(BaseModel):
     user_answer: str | None = None
     work_text: str | None = None
     lang: str = "en"
+    # Links the stored explanation to a graded attempt (shows up in history).
+    attempt_id: uuid.UUID | None = None
+    # Sub-part label for multi-part exercises graded progressively.
+    part: str | None = None
 
 
 class HintRequest(BaseModel):

@@ -41,6 +41,8 @@ export interface Translations {
   btn_check_answer: string;
   btn_checking: string;
   btn_hint: string;
+  btn_explain: string;
+  label_explaining: string;
   btn_clear: string;
   btn_undo: string;
   btn_redo: string;
@@ -272,6 +274,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     btn_check_answer: "Check answer",
     btn_checking: "Checking…",
     btn_hint: "Hint",
+    btn_explain: "Explain",
+    label_explaining: "Preparing explanation…",
     btn_clear: "Clear",
     btn_undo: "Undo",
     btn_redo: "Redo",
@@ -491,6 +495,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     btn_check_answer: "ពិនិត្យចម្លើយ",
     btn_checking: "កំពុងពិនិត្យ...",
     btn_hint: "ជំនួយ",
+    btn_explain: "ពន្យល់",
+    label_explaining: "កំពុងរៀបចំការពន្យល់…",
     btn_clear: "សម្អាត",
     btn_undo: "ថយក្រោយ",
     btn_redo: "ទៅមុខ",

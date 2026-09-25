@@ -216,6 +216,31 @@ _ONE_SIDED_RADICAL_KINDS = {
 }
 
 
+def _derived_technique_text(formula, var, x, point_latex, expr):
+    """Narration for a limit that has no authored technique text (exercises built
+    from technique templates rather than the curated exam JSON): the technique's
+    catalogue name plus, when SymPy can simplify the expression, that simplification.
+    Never blank, and only says what SymPy actually computed."""
+    from engine.formulas import resolve_formula
+
+    parts = []
+    name = (resolve_formula(formula).get("name_en") or "").strip()
+    if name and name != formula:
+        parts.append(f"{name}.")
+    try:
+        simplified = simplify(cancel(expr))
+        if simplified != expr:
+            parts.append(
+                f"Simplify \\({latex(expr, ln_notation=True)}\\) to "
+                f"\\({latex(simplified, ln_notation=True)}\\) before taking the limit."
+            )
+    except Exception:
+        pass
+    if not parts:
+        parts.append(f"Evaluate \\(\\lim_{{{var} \\to {point_latex}}}\\) with the technique for this form.")
+    return " ".join(parts)
+
+
 def _curated_limit_steps(params, var, x, point, point_latex, expr, result):
     """Curated real BAC II exercise: SymPy still computes `result` (the graded
     answer); the exam-authored technique text narrates the steps instead of a
@@ -234,9 +259,10 @@ def _curated_limit_steps(params, var, x, point, point_latex, expr, result):
             {"label": "simplified form", "value": reduced, "formula": formula},
             {"label": "final value", "value": result, "formula": formula},
         ]
-    steps = [_limit_step(
-        "Apply the technique", params.get("curated_technique", ""), formula,
-    )]
+    technique = (params.get("curated_technique") or "").strip() or _derived_technique_text(
+        formula, var, x, point_latex, expr,
+    )
+    steps = [_limit_step("Apply the technique", technique, formula)]
     if params.get("curated_formula_latex"):
         steps.append(_limit_step(
             "Key identity used", f"\\({params['curated_formula_latex']}\\)", formula,

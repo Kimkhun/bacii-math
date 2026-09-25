@@ -34,12 +34,16 @@ answer+work ──grade──▶  grader.grade()        (exact/numeric/angle/ind
                         → persisted: work_text, step_check, lines_boxes,
                                      formula_breakdown
                                   │
-                          if incorrect:
-                              explanation: deterministic text →
-                                  Gemini/Ollama narration (Redis-cached,
-                                  rate-limited 10/min/user)
-                              work_check: LLM anchored on step_check
-                                  ("could not verify" lines are hints, not law)
+                          (no LLM and no solution text in /problems/grade:
+                           verdict, marks and points are all SymPy)
+                                  │
+                          wrong answer → the web client starts, in the
+                          background, POST /problems/explain (attempt_id):
+                              narration   (Gemini/Ollama, Redis-cached)
+                              work_check  (LLM anchored on step_check)
+                              teacher tip (functions topic)
+                          run concurrently; the "Explain" button shows them
+                          (instantly if finished, else the student waits)
 ```
 
 ## 1. Generation
@@ -89,12 +93,37 @@ answer+work ──grade──▶  grader.grade()        (exact/numeric/angle/ind
 
 ## 5. Explanations & work checks (`services.py`, `engine/llm.py`)
 
-- Deterministic `build_text` is always available; Gemini narrates it in
-  friendlier language when allowed.
-- Explanation cache: Redis key `explain:{topic}:{question_type}:{spec}` —
-  identical questions never re-bill Gemini.
-- Gemini rate limit: `allow_gemini` (default 10/min/user).
+- `/problems/grade` never calls an LLM. It returns the SymPy verdict, step
+  check and rubric score. It does not return the solution text: the student
+  sees the verdict and marks first and gets the solution only via Explain.
+- **When the web offers Explain:** on every wrong answer (the request is
+  prefetched in the background right after grading), and, on demand only, on a
+  correct answer that scored below full rubric points and on any functions
+  part (that is where the tutor tip lives). Requests are kept per
+  `attemptId:lang`, so revisiting a part or clicking twice never asks again, a
+  failed request is dropped so the next click retries, and switching the UI
+  language brings the button back to get the explanation in the new language.
+- `/problems/explain` (`explain_question`) produces everything LLM-written:
+  the narration, the `work_check` and, for the functions topic, the tutor tip
+  (+ official part solution). The independent calls run with `asyncio.gather`.
+  The web client fires it right after a wrong answer and keeps the promise;
+  the Explain button awaits it. Passing `attempt_id` links the stored
+  `Explanation` to the attempt so history shows it; a repeat call for the
+  same attempt replaces the saved one (one per attempt). `trigger` is
+  `incorrect` only for a wrong attempt. Correctness for the tutor tip comes from
+  the verdict stored on the attempt: never re-grade a multi-part question as a
+  whole there (the whole-question grader can hang for minutes on a combined
+  answer and blocks the event loop).
+- The narration is student-independent and cached in Redis
+  (`explain:{topic}:{type}:{spec}:{lang}:{steps digest}`); the student's own
+  answer is never put in that prompt, so one student's answer cannot leak to
+  another through the cache. Per-student commentary comes from `work_check`.
+- Gemini rate limit: `allow_gemini` (default 10/min/user). A slot is taken only
+  when an LLM call is really needed (a cached explanation with no answer to
+  comment on costs none).
 - Provider chain: Gemini → Ollama → deterministic text (never blocks grading).
+- OCR (`llm.gemini_vision_generate`) runs with thinking off (`thinking_budget=0`):
+  transcription needs no reasoning and the call is about 2x faster.
 
 ## 6. Canvas feedback (web)
 
@@ -174,3 +203,28 @@ Formula content lives OUTSIDE the DB in each topic's `backend/engine/topics/<top
 - Deployment & env matrix (partially in CLAUDE.md).
 - Exam-bank offline pipeline end-to-end (data → verify script → playable).
 - Audio/streak system details (sounds.ts: Web Audio synthesis, streak keys).
+
+## 8. Concurrency: SymPy never runs on the event loop
+
+SymPy is synchronous pure Python. Called straight from an `async def` it froze
+the whole server for as long as it ran (one slow request stalled everyone, and
+a hang froze it for minutes). All solving, grading, step-checking, rubric
+scoring, generation and OCR image prep now run in worker threads:
+
+- `engine/concurrency.py` `run_in_thread` (engine layer, no web imports): at
+  most 2 worker threads at once; used by `dispatch.generate`, `hints`, `vision`.
+- `core/offload.py` `run_cpu` (web layer): the same, plus a 45 s wait limit that
+  turns a runaway computation into an HTTP 504. A thread cannot be killed, so a
+  truly runaway job keeps its worker until it ends (a killable worker process
+  would be needed to bound that fully).
+- `main.py` sets a 2 ms GIL switch interval so the loop gets its turn often.
+  Measured with 8 concurrent heavy users: worst health-check latency 1978 ms
+  before, 163 ms now; the heavy users' total time went from 13.9 s to 18.1 s.
+
+`scripts/verify_robustness.py` checks this, junk-answer grading and empty steps.
+
+Grading robustness: `grade()` recurses on values extracted from an unparseable
+answer; it must never recurse on a candidate identical to its input (it used to,
+so any answer like `?!` or `3 +` ended in a RecursionError or a minutes-long
+hang). Recursion is also depth-limited.
+
