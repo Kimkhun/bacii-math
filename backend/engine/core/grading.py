@@ -1506,7 +1506,7 @@ def grade_part(topic, question_type, params, label, user_answer, tolerance=None)
         "all_complete": correct and str(solution.get("target_label")) == str(label),
     }
 
-def grade(topic, question_type, params, user_answer, tolerance=None):
+def grade(topic, question_type, params, user_answer, tolerance=None, _depth=0):
     tol = tolerance if tolerance is not None else _DEFAULT_TOL
     solution = solve(topic, question_type, params)
     expected = solution["answer_exact"]
@@ -1570,13 +1570,20 @@ def grade(topic, question_type, params, user_answer, tolerance=None):
         # (or w = ...)") rather than a bare value: judge every value it
         # asserts. All of them must be correct, so hedging a wrong answer
         # alongside a right one never passes.
-        candidates = _answer_candidates(user_answer)
+        # A candidate identical to the input adds nothing (`_answer_candidates`
+        # falls back to the whole text when no clause matches) and grading it again
+        # would recurse forever, re-solving the exercise every time: any unparseable
+        # answer ("?!", "3 +") used to end in a RecursionError or a minutes-long hang.
+        given_text = (user_answer or "").strip()
+        candidates = (
+            [c for c in _answer_candidates(user_answer) if c.strip() != given_text]
+            if _depth < 2 else []
+        )
         if candidates:
-            verdicts = [grade(topic, question_type, params, c, tolerance) for c in candidates]
+            verdicts = [grade(topic, question_type, params, c, tolerance, _depth + 1) for c in candidates]
             if all(v["correct"] for v in verdicts):
                 return verdicts[0]
-            if len(candidates) > 1 or candidates[0] != user_answer:
-                return next(v for v in verdicts if not v["correct"])
+            return next(v for v in verdicts if not v["correct"])
         return {
             "correct": False,
             "reason": f"could not parse answer: {exc}",
