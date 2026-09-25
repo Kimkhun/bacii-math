@@ -7,10 +7,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Run as an unprivileged user rather than root. chown so the app can still
-# write the structure-cache files it regenerates under /app.
-RUN useradd --create-home --uid 10001 appuser && chown -R appuser:appuser /app
-USER appuser
+# NOTE: run as a non-root user in the PRODUCTION image only. The dev compose
+# bind-mounts host ./backend into /app, so a non-root process can't write the
+# host-owned files it regenerates (structure cache). See SECURITY.md #12.
 
 EXPOSE 8000
 

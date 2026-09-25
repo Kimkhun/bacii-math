@@ -242,12 +242,17 @@ compromise. The Compose file also runs the backend with `uvicorn --reload` and
 the web app with `next dev`, mounting source into the containers — appropriate
 for development, not production.
 
-**Fix:** Both Dockerfiles now create/use an unprivileged user.
+**Fix / status:** Non-root must be applied in the **production** image, not the
+dev image. The provided Dockerfiles are built by the dev `docker-compose.yml`,
+which bind-mounts host source into `/app`; a non-root process then cannot write
+host-owned build artifacts (e.g. Next's `.next/` cache), so forcing `USER` there
+crashes the container. Both Dockerfiles carry a note pointing here instead.
 
 **Operator note:** the provided `docker-compose.yml` is a development
-configuration (hot-reload + source mounts). For production, run the backend
-without `--reload`, build the web app (`next build` / `next start`), and drop the
-source bind-mounts.
+configuration (hot-reload + source mounts). For production, use a separate build
+that: runs the backend without `--reload`, builds the web app
+(`next build` / `next start`), drops the source bind-mounts, and adds a non-root
+`USER` (safe once there is no host bind-mount to write through).
 
 ---
 

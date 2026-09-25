@@ -12,9 +12,10 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# The node:20-alpine image ships an unprivileged "node" user; run as it.
-RUN chown -R node:node /app
-USER node
+# NOTE: run as a non-root user in the PRODUCTION image only. This Dockerfile is
+# used by the dev compose, which bind-mounts host ./web into /app; a non-root
+# process then can't write host-owned build artifacts (e.g. .next/), so the
+# container crashes on startup. See SECURITY.md #12 for the production guidance.
 
 EXPOSE 3000
 
