@@ -232,7 +232,9 @@ def _solve_part_domain(params, x, expr, part):
             {"title": "Locate the boundary points",
              "detail": f"Numerator \\(u=0\\) at \\({', '.join(str(b) for b in boundaries)}\\) — build the sign table of \\(u\\).",
              "formula": "sign_table"},
-            {"title": "Read the sign table", "detail": part.get("technique", ""), "formula": "sign_table"},
+            {"title": "Read the sign table",
+             "detail": part.get("technique") or "Keep the values for which \\(u > 0\\).",
+             "formula": "sign_table"},
             {"title": "Conclusion", "detail": f"The domain is \\(D = {display}\\).", "formula": "sign_table"},
         ]
         checkpoints = [{"label": "domain", "value": ivs, "formula": "sign_table"}]
@@ -283,7 +285,10 @@ def _solve_part_parity(params, x, expr, part):
     steps = [
         {"title": "Compute g(-x)",
          "detail": f"\\(g(-x) = {latex(gm)}\\).", "formula": "log_quotient_rule"},
-        {"title": "Rewrite using log rules", "detail": part.get("technique", ""), "formula": "log_reciprocal"},
+        {"title": "Rewrite using log rules",
+         "detail": part.get("technique")
+         or "Use \\(\\ln(1/A) = -\\ln(A)\\) and \\(\\ln(A) - \\ln(B) = \\ln(A/B)\\) to compare \\(g(-x)\\) with \\(g(x)\\).",
+         "formula": "log_reciprocal"},
         {"title": "Conclusion",
          "detail": f"\\(g(-x) + g(x) = 0\\), i.e. \\(g(-x) = -g(x)\\), so \\(g\\) is {verdict}.",
          "formula": "parity_definition"},
@@ -535,7 +540,9 @@ def _solve_part_position(params, x, expr, part):
          "detail": f"\\(f(x) - y = {inline_latex(diff_expr)}\\).",
          "formula": "position_asymptote"},
         {"title": "Sign of the difference",
-         "detail": part.get("technique", ""), "formula": "position_asymptote"},
+         "detail": part.get("technique")
+         or f"Study the sign of \\({inline_latex(diff_expr)}\\) on the domain of \\(f\\).",
+         "formula": "position_asymptote"},
         {"title": "Conclusion",
          "detail": f"\\(C\\) lies above \\(d\\) when the difference is positive, i.e. on \\({display}\\).",
          "formula": "position_asymptote"},
@@ -614,7 +621,9 @@ def _solve_part_derivative_product(params, x, expr, part):
         {"title": "Apply the product rule",
          "detail": f"\\(h(x) = x\\,g(x)\\), so \\(h'(x) = g(x) + x\\,g'(x)\\).",
          "formula": "product_rule"},
-        {"title": "Substitute g and g'", "detail": part.get("technique", ""), "formula": "derivative_ln"},
+        {"title": "Substitute g and g'",
+         "detail": part.get("technique") or f"Substitute \\(g\\) and \\(g'\\) into \\(h'(x)\\) and simplify.",
+         "formula": "derivative_ln"},
         {"title": "Result", "detail": f"\\(h'(x) = {inline_latex(der)}\\).", "formula": "product_rule"},
     ]
     checkpoints = [{"label": "h'(x)", "value": der, "formula": "product_rule"}]
@@ -637,7 +646,8 @@ def _solve_part_integral(params, x, expr, part):
     h_lower = simplify(h.subs(x, lower))
     steps = [
         {"title": "Rewrite the integrand",
-         "detail": part.get("technique", ""), "formula": "antiderivative_reciprocal_ln"},
+         "detail": part.get("technique") or f"The integrand is \\(g({var}) = {inline_latex(expr)}\\).",
+         "formula": "antiderivative_reciprocal_ln"},
         {"title": "Integrate",
          "detail": f"\\(\\int_{{{latex(lower)}}}^{{{latex(upper)}}} g\\,d{var} = [h({var})]_{{{latex(lower)}}}^{{{latex(upper)}}} + 3[\\ln|{var}^2-9|]_{{{latex(lower)}}}^{{{latex(upper)}}}\\).",
          "formula": "antiderivative_reciprocal_ln"},
