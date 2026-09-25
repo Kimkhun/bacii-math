@@ -5,8 +5,10 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_DB=${POSTGRES_DB:-bacii}
+    # Bound to loopback only: the backend reaches Postgres over the compose
+    # network (host "postgres"), so the port never needs to face the outside.
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -17,8 +19,10 @@ services:
 
   redis:
     image: redis:7
+    # Loopback only — Redis has no auth here and holds the model config, the
+    # explanation cache and the rate-limit counters. Never expose it publicly.
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
 
   backend:
     build: ./backend
@@ -31,6 +35,9 @@ services:
       redis:
         condition: service_started
     environment:
+      # Set ENVIRONMENT=production to make the backend refuse the dev-default
+      # JWT_SECRET / ADMIN_PASSWORD / postgres password (see core.security).
+      - ENVIRONMENT=${ENVIRONMENT:-development}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-bacii}
       - REDIS_URL=redis://redis:6379/0
       - JWT_SECRET=${JWT_SECRET:-dev-secret-change-me}

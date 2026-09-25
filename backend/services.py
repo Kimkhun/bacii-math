@@ -45,9 +45,16 @@ def _work_usable(step_check: dict | None) -> bool:
     return bool(step_check) and any(r.get("checked") for r in step_check.get("line_results", []))
 
 
-async def create_question(db: AsyncSession, req: GenerateRequest) -> dict:
+async def create_question(db: AsyncSession, req: GenerateRequest, user=None) -> dict:
+    # Gemini generation mode proposes a problem with a billed LLM call, so it
+    # draws from the per-user Gemini budget; templates mode is free (pure SymPy).
+    generation_mode = req.generation_mode
+    if generation_mode == "gemini":
+        allowed = await cache.allow_gemini(str(user.id)) if user else False
+        if not allowed:
+            generation_mode = "templates"
     problem = await generator.generate(
-        req.topic, req.difficulty, req.seed, req.question_type, req.generation_mode, variant=req.variant
+        req.topic, req.difficulty, req.seed, req.question_type, generation_mode, variant=req.variant
     )
     return await persist_problem(db, problem)
 
@@ -499,6 +506,8 @@ async def hint_question(
     question = await db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
+    # Hints can call Gemini, so they draw from the same per-user budget.
+    allowed = await cache.allow_gemini(str(user.id)) if user else False
     return await hints.generate_hint(
         topic=question.topic,
         question_type=question.question_type,
@@ -508,6 +517,7 @@ async def hint_question(
         work_text=work_text,
         lang=lang,
         user_id=user.id if user else None,
+        allow_gemini=allowed,
     )
 
 

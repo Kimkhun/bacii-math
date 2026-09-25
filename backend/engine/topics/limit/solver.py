@@ -216,6 +216,17 @@ _ONE_SIDED_RADICAL_KINDS = {
 }
 
 
+# Above this exponent the "simplify to ..." narration is skipped. Year-style exponents
+# ((x**2023 + 1)/(x**2015 + 1)) cancel to a ~2,000-term quotient that simplify() does not
+# finish in any useful time, pinning a worker thread (a thread cannot be killed, so it
+# outlives the request timeout), and that quotient is no help to a student anyway.
+_MAX_NARRATED_EXPONENT = 20
+
+
+def _has_huge_power(expr):
+    return any(p.exp.is_Integer and abs(p.exp) > _MAX_NARRATED_EXPONENT for p in expr.atoms(Pow))
+
+
 def _derived_technique_text(formula, var, x, point_latex, expr):
     """Narration for a limit that has no authored technique text (exercises built
     from technique templates rather than the curated exam JSON): the technique's
@@ -228,7 +239,7 @@ def _derived_technique_text(formula, var, x, point_latex, expr):
     if name and name != formula:
         parts.append(f"{name}.")
     try:
-        simplified = simplify(cancel(expr))
+        simplified = expr if _has_huge_power(expr) else simplify(cancel(expr))
         if simplified != expr:
             parts.append(
                 f"Simplify \\({latex(expr, ln_notation=True)}\\) to "

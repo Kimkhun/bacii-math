@@ -11,10 +11,15 @@ import re
 import httpx
 from PIL import Image
 
-from cache import get_system_model_settings
+from cache import allow_gemini, get_system_model_settings
 from core.config import settings
 from engine import llm
 from engine.concurrency import run_in_thread
+
+# Pillow decompression-bomb guard: a tiny highly-compressed PNG can otherwise
+# decode to hundreds of millions of pixels and exhaust RAM. Canvas exports are
+# small; 25 MP is far above any real submission and well under Pillow's default.
+Image.MAX_IMAGE_PIXELS = 25_000_000
 
 PROMPT = r"""You are reading a student's HANDWRITTEN MATH WORK on a canvas. There may be just
 one line (the final answer alone) or several lines (scratch work leading up to a final answer),
@@ -317,7 +322,20 @@ async def detect_math(data: bytes, user_id: any = None) -> dict:
     raw_response: str | None = None
     provider = "ollama"
 
+    # Every Gemini vision call is billed, so it is subject to the same per-user
+    # rate limit as explanations. A denied call is not a failure — for the
+    # cloud-only "gemini" provider we surface a rate_limited result; for
+    # "fallback" the local Ollama path already handled it (or failed on its own).
+    async def _gemini_allowed() -> bool:
+        return await allow_gemini(str(user_id)) if user_id is not None else False
+
     if vision_provider == "gemini":
+        if not await _gemini_allowed():
+            return _finalize(
+                {"raw_text": "", "latex": "", "tokens": [], "confidence": 0.0,
+                 "error": "rate_limited", "parse_error": True},
+                "gemini", crop,
+            )
         raw_response = await _gemini_generate(image_b64, user_id=user_id)
         provider = "gemini"
     elif vision_provider == "fallback":
@@ -325,6 +343,12 @@ async def detect_math(data: bytes, user_id: any = None) -> dict:
             raw_response = await _ollama_generate(image_b64)
             provider = "ollama"
         except Exception:
+            if not await _gemini_allowed():
+                return _finalize(
+                    {"raw_text": "", "latex": "", "tokens": [], "confidence": 0.0,
+                     "error": "rate_limited", "parse_error": True},
+                    "gemini", crop,
+                )
             raw_response = await _gemini_generate(image_b64, user_id=user_id)
             provider = "gemini"
     else:

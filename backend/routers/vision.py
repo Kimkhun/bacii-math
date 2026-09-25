@@ -1,4 +1,5 @@
 import base64
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -36,4 +37,6 @@ async def detect(
     try:
         return await vision.detect_math(data, user_id=user.id)
     except Exception as exc:
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"vision detection failed: {exc}")
+        # Log the detail server-side; don't echo internal error text to clients.
+        logging.getLogger("bacii").warning("vision detection failed: %s", exc)
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "vision detection failed")

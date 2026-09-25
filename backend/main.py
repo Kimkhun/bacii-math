@@ -2,7 +2,7 @@ import sys
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from core import security
 from core.config import settings
@@ -16,6 +16,9 @@ from routers import admin, auth, problems, profile, vision
 #   inline (old)  1978 ms / 13.9 s      5 ms  422 ms / 13.3 s
 #   2 ms (chosen)  163 ms / 18.1 s      1 ms   92 ms / 23.2 s
 sys.setswitchinterval(0.002)
+
+# Refuse to boot in production with a known dev-default secret.
+security.assert_secure()
 
 app = FastAPI(title="BACII Math Engine", version="0.2.0")
 
@@ -38,16 +41,17 @@ async def seed_admin_user() -> None:
         else:
             user.hashed_password = hashed
             user.is_admin = True
+        # Exactly one admin: strip is_admin from anyone else who somehow has it
+        # (e.g. ADMIN_EMAIL was rotated to a new address). Without this, the old
+        # admin would keep their privileges forever.
+        await db.execute(
+            update(User).where(User.email != email, User.is_admin.is_(True)).values(is_admin=False)
+        )
         await db.commit()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000", "http://127.0.0.1:3000",
-        "http://localhost:3016", "http://127.0.0.1:3016",
-        "http://localhost:3017", "http://127.0.0.1:3017",
-        "http://172.20.10.6:3016", "http://172.20.10.6:3017",
-    ],
+    allow_origins=settings.cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
