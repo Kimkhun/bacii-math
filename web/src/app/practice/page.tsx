@@ -702,6 +702,16 @@ function PracticeInner() {
   const [linePopsByPart, setLinePopsByPart] = useState<(ReactNode[] | null)[]>([]);
 
   const [explanation, setExplanation] = useState<Explanation | null>(null);
+  // The LLM explanation is prepared in the background right after a wrong
+  // answer (see startExplain); the Explain button just awaits that request.
+  const [explaining, setExplaining] = useState(false);
+  const [explainedFor, setExplainedFor] = useState<string | null>(null);
+  const explainRef = useRef<{ attemptId: string; promise: Promise<Explanation> } | null>(null);
+  const resetExplain = () => {
+    explainRef.current = null;
+    setExplaining(false);
+    setExplainedFor(null);
+  };
   const [graphGrade, setGraphGrade] = useState<GraphGradeResult | null>(null);
   const [hintLevel, setHintLevel] = useState(0);
   const [teacherHint, setTeacherHint] = useState<HintResponse | null>(null);
@@ -931,6 +941,7 @@ function PracticeInner() {
     setMarksByPart(Array(m).fill(null));
     setLinePopsByPart(Array(m).fill(null));
     setExplanation(null);
+    resetExplain();
     setTeacherHint(null);
     setHintLevel(0);
     setAmbiguityQueue(null);
@@ -944,6 +955,7 @@ function PracticeInner() {
     }
     setPartIndex(i);
     setExplanation(null);
+    resetExplain();
     setTeacherHint(null);
     setError("");
     const secIdx = sections.findIndex((s) => s.partIndices.includes(i));
@@ -1507,6 +1519,9 @@ function PracticeInner() {
         setPartIndex((i) => Math.min(i + 1, partLabels.length - 1));
       }
       if (res.explanation) setExplanation(res.explanation);
+      // Grade is SymPy-only and already answered. Start the slow LLM explanation
+      // now so it is (usually) ready by the time the student clicks Explain.
+      if (!res.correct && res.attempt_id) startExplain(res.attempt_id, answer, work, currentPart ?? undefined);
       if (question.topic === "functions" && res.graph) {
         const thumb = activeCanvas()?.getInkSnapshot();
         if (thumb) {
@@ -1595,6 +1610,7 @@ function PracticeInner() {
     setError("");
     setResult(null);
     setExplanation(null);
+    resetExplain();
     setGraphGrade(null);
     setMarks(null);
     setLinePops(null);
@@ -1955,16 +1971,51 @@ function PracticeInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  const startExplain = (attemptId: string, answer: string, work: string | undefined, part: string | undefined) => {
+    if (!question) return null;
+    const promise = api.explain(question.id, answer || undefined, work, lang, attemptId, part);
+    promise.catch(() => {}); // surfaced when the student clicks Explain
+    explainRef.current = { attemptId, promise };
+    return explainRef.current;
+  };
+
   const showExplanation = async () => {
-    if (!question) return;
-    setBusy(true);
+    if (!question || !result?.attempt_id) return;
+    const partIdx = partIndex;
+    setExplaining(true);
     try {
-      const exp = await api.explain(question.id, detected ?? undefined, workText ?? undefined, lang);
-      setExplanation(exp);
+      // Reuse the request started right after grading; only start a new one if
+      // the part was switched (reset) since. Awaiting an already-finished
+      // request is instant.
+      let entry = explainRef.current;
+      if (!entry || entry.attemptId !== result.attempt_id) {
+        entry = startExplain(
+          result.attempt_id, result.given ?? detected ?? "", workText ?? undefined, currentPart ?? undefined
+        );
+      }
+      if (!entry) return;
+      const exp = await entry.promise;
+      if (explainRef.current?.attemptId !== entry.attemptId) return; // stale: part changed meanwhile
+      // The tutor tip lives on the result card (with the official part solution);
+      // keep it out of the explanation card so it is not shown twice.
+      setResultByPart((prev) => {
+        const next = [...prev];
+        const r = next[partIdx];
+        if (r) {
+          next[partIdx] = {
+            ...r,
+            teacher_feedback: exp.teacher_feedback ?? r.teacher_feedback,
+            official_part_solution: exp.official_part_solution ?? r.official_part_solution,
+          };
+        }
+        return next;
+      });
+      setExplanation({ ...exp, teacher_feedback: null });
+      setExplainedFor(entry.attemptId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Explain failed");
     } finally {
-      setBusy(false);
+      setExplaining(false);
     }
   };
 
@@ -2584,6 +2635,19 @@ function PracticeInner() {
                 )
               )}
               <div className="mt-1 text-xs text-[#8a857b]">{t("label_reason")}: {result.reason}</div>
+              {!result.correct &&
+                result.attempt_id &&
+                explainedFor !== result.attempt_id &&
+                !(explanation && explanation.provider !== "deterministic") && (
+                  <button
+                    type="button"
+                    onClick={showExplanation}
+                    disabled={explaining}
+                    className="mt-2 rounded-md border border-[#c9c5b8] bg-white px-3 py-1.5 text-xs font-medium text-[#3f3c35] shadow-sm hover:bg-[#f4f2ec] disabled:opacity-70"
+                  >
+                    {explaining ? t("label_explaining") : t("btn_explain")}
+                  </button>
+                )}
               {result.rubric_score && (
                 <div className="mt-2 rounded-md border border-[#e4e2db] bg-[#faf9f6] p-2.5">
                   <div className="flex items-center justify-between text-xs font-semibold text-[#3f3c35]">

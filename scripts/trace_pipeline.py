@@ -119,13 +119,13 @@ class Span:
         return max(0.0, self.ms - sum(c.ms for c in self.children))
 
 
-MAIN_TASK = None
+SUPPRESS: contextvars.ContextVar[bool] = contextvars.ContextVar("suppress_spans", default=False)
 
 
 def _begin(name, note=""):
-    if MAIN_TASK is not None and asyncio.current_task() is not MAIN_TASK:
-        # Fire-and-forget background work (e.g. the api_usage_logs write) runs in
-        # its own task, off the student's critical path: don't pollute the timeline.
+    if SUPPRESS.get():
+        # Fire-and-forget background work (the api_usage_logs write) runs off the
+        # student's critical path: don't pollute the timeline with it.
         dummy = Span(name, 0, None, note)
         return dummy, _STACK.set(_STACK.get())
     stack = _STACK.get()
@@ -274,6 +274,17 @@ def install_hooks():
     wrap(services, "km_solution_for_question", "svc.km_solution_for_question")
     wrap(services, "record_skill_progress", "svc.record_skill_progress")
     wrap(services, "_upsert_session", "svc._upsert_session")
+
+    # ---- background usage-log writer: keep it out of the timeline ---------
+    from engine import pricing
+
+    orig_write = pricing._write_usage_log
+
+    async def quiet_write(*a, **kw):
+        SUPPRESS.set(True)  # this task has its own context copy
+        return await orig_write(*a, **kw)
+
+    pricing._write_usage_log = quiet_write
 
     # ---- database --------------------------------------------------------
     wrap(AsyncSession, "get", "db.get", note_fn=lambda s, m, *_, **__: getattr(m, "__name__", str(m)))
@@ -445,8 +456,6 @@ async def main(args):
     from models import Question
     from schemas import GenerateRequest
 
-    global MAIN_TASK
-    MAIN_TASK = asyncio.current_task()
     install_hooks()
     out_dir = Path(CONTAINER_OUT)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -499,13 +508,20 @@ async def main(args):
             # 3. grade -----------------------------------------------------
             spans_g, tg0, ms_g, res = await run_stage("STAGE 2: GRADE  (services.grade_question)", do_grade)
 
-            repeat = None
-            if not args.no_repeat and not res.get("correct"):
-                repeat = await run_stage("STAGE 2b: GRADE AGAIN, same input (cache warm)", do_grade)
+            # 4. explain: the client starts this in the background right after a wrong answer
+            async def do_explain():
+                return await services.explain_question(
+                    db, user, question.id, answer, work, lang=args.lang, attempt_id=res["attempt_id"])
+
+            expl = repeat = None
+            if not res.get("correct"):
+                expl = await run_stage("STAGE 3: EXPLAIN  (services.explain_question, background)", do_explain)
+                if not args.no_repeat:
+                    repeat = await run_stage("STAGE 3b: EXPLAIN AGAIN, same input (cache warm)", do_explain)
 
             student_wait = ms_o + ms_g
             summary.append((scenario, res.get("correct"), ms_o, ms_g, student_wait,
-                            repeat[2] if repeat else None))
+                            expl[2] if expl else None, repeat[2] if repeat else None))
 
             # ---- report section ------------------------------------------
             s = [f"## Scenario: {scenario}", ""]
@@ -515,14 +531,16 @@ async def main(args):
                   f"Expected answer (SymPy): `{question.expected_answer}`", "",
                   f"**Student waits after pressing Check: OCR {ms_o:.0f} ms + grade {ms_g:.0f} ms "
                   f"= {student_wait:.0f} ms**"
-                  + (f"  (re-grade with warm cache: {repeat[2]:.0f} ms)" if repeat else ""), ""]
+                  + (f"  (explanation prepared in background: {expl[2]:.0f} ms; again with warm cache: {repeat[2]:.0f} ms)"
+                     if expl and repeat else (f"  (explanation prepared in background: {expl[2]:.0f} ms)" if expl else "")), ""]
 
             s += ["### Input", "", f"![work]({img_name})", "", "Text rendered into the image:", fence("\n".join(lines)), ""]
 
             for title, (sp_list, t0, tot) in [
                 ("Stage 1 - OCR", (spans_o, to0, ms_o)),
-                ("Stage 2 - Grade + feedback + persist", (spans_g, tg0, ms_g)),
-            ] + ([("Stage 2b - Same grade again (Redis cache warm)", (repeat[0], repeat[1], repeat[2]))] if repeat else []):
+                ("Stage 2 - Grade (SymPy only) + persist", (spans_g, tg0, ms_g)),
+            ] + ([("Stage 3 - Explain (background, LLM)", (expl[0], expl[1], expl[2]))] if expl else []) \
+              + ([("Stage 3b - Explain again (Redis cache warm)", (repeat[0], repeat[1], repeat[2]))] if repeat else []):
                 s += [f"### {title}: {tot:.0f} ms", "", "**Timeline** (indent = nested call; self = time not spent in child calls)", "",
                       timeline_table(sp_list, t0), "", breakdown_table(sp_list, tot), "",
                       "**LLM calls in this stage**", "", llm_details(sp_list, vision.PROMPT), ""]
@@ -537,6 +555,14 @@ async def main(args):
                 if isinstance(res.get(key), dict):
                     s += [f"**{key}** (provider `{res[key].get('provider')}`):", "", fence(res[key].get("content", "")), ""]
             s += ["Full JSON:", fence(jdump(short(res, 600)), "json"), ""]
+            if expl:
+                s += ["### Data: explain response (shown when the student clicks Explain)", ""]
+                for key in ("content", "work_check", "teacher_feedback"):
+                    val = expl[3].get(key)
+                    if isinstance(val, dict):
+                        s += [f"**{key}** (provider `{val.get('provider')}`):", "", fence(val.get("content", "")), ""]
+                    elif val:
+                        s += [f"**{key}** (provider `{expl[3].get('provider')}`):", "", fence(val), ""]
             sections.append("\n".join(s))
 
     head = [
@@ -545,11 +571,11 @@ async def main(args):
         f"- handwriting: {'real image ' + args.image if args.image else 'synthetic (solution text rendered with a font; OCR timing realistic, accuracy is not)'}",
         "- measured in-process: excludes browser export/upload/download/render", "",
         "## Summary (ms)", "",
-        "| scenario | correct | OCR | grade | **student waits** | re-grade (cache warm) |",
-        "|---|---|---:|---:|---:|---:|",
+        "| scenario | correct | OCR | grade | **student waits** | explain (background) | explain (cache warm) |",
+        "|---|---|---:|---:|---:|---:|---:|",
     ]
-    for sc, ok, o, g, w, rg in summary:
-        head.append(f"| {sc} | {ok} | {o:.0f} | {g:.0f} | **{w:.0f}** | {f'{rg:.0f}' if rg is not None else '-'} |")
+    for sc, ok, o, g, w, ex, rg in summary:
+        head.append(f"| {sc} | {ok} | {o:.0f} | {g:.0f} | **{w:.0f}** | {f'{ex:.0f}' if ex is not None else '-'} | {f'{rg:.0f}' if rg is not None else '-'} |")
     head.append("")
     path = out_dir / f"pipeline-{stamp}.md"
     path.write_text("\n".join(head + sections), encoding="utf-8")
@@ -563,6 +589,6 @@ if __name__ == "__main__":
     ap.add_argument("--lang", default="en", choices=["en", "km"])
     ap.add_argument("--scenarios", default="correct,wrong", help="comma list of: correct, wrong")
     ap.add_argument("--image")
-    ap.add_argument("--no-repeat", action="store_true", help="skip the warm-cache re-grade of wrong answers")
+    ap.add_argument("--no-repeat", action="store_true", help="skip the warm-cache second explain of wrong answers")
     ap.add_argument("--container", default=None)  # consumed by host mode
     asyncio.run(main(ap.parse_args()))

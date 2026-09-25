@@ -128,6 +128,10 @@ def _steps_text(question: Question, lang: str = "en") -> str:
 
 
 async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, steps_text=None, allow_gemini=None, context=None, lang: str = "en") -> dict:
+    # `context` (the student's answer) is deliberately NOT sent to the narration:
+    # the result is cached by question only, so a student-specific prompt would
+    # leak one student's answer into everyone else's cached explanation. The
+    # per-student commentary comes from `llm.check_work` instead.
     steps_text = steps_text or _steps_text(question, lang=lang)
     content = steps_text
     provider = "deterministic"
@@ -146,7 +150,7 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
         else:
             if allow_gemini is None:
                 allow_gemini = await cache.allow_gemini(str(user.id))
-            text, got_provider = await llm.narrate(steps_text, allow_gemini=allow_gemini, context=context, user_id=user.id, lang=lang)
+            text, got_provider = await llm.narrate(steps_text, allow_gemini=allow_gemini, context=None, user_id=user.id, lang=lang)
             if text:
                 content, provider, intervened = text, got_provider, True
                 if got_provider == "gemini":
@@ -161,6 +165,30 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
         trigger=trigger,
     ))
     return {"content": content, "provider": provider, "intervened": intervened, "trigger": trigger}
+
+
+async def _functions_km_solution(db, user, question, part: str | None):
+    """Khmer reference solution for a functions-topic question (may call Gemini on
+    a cache miss). Returns (solution_km, official_part_solution): the whole-question
+    text, and the single-part text when `part` is given. Both None on any failure."""
+    if question.topic != "functions":
+        return None, None
+    try:
+        km_res = await km_solution_for_question(db, user, question.id)
+        if not km_res:
+            return None, None
+        parts_list = (km_res.get("raw_km") or {}).get("parts") or []
+        if part:
+            part_obj = next((p for p in parts_list if str(p.get("label")) == str(part)), None)
+            if not part_obj:
+                part_obj = next((p for p in parts_list if str(p.get("label")).startswith(str(part))), None)
+            if part_obj:
+                part_km = _render_single_km_part(part_obj)
+                return part_km, part_km
+        return km_res.get("solution_km"), None
+    except Exception as exc:
+        logging.getLogger("bacii").warning("Failed to fetch km_solution for %s: %s", question.id, exc)
+        return None, None
 
 
 async def grade_question(db, user, question_id, user_answer, work_text=None, lines_boxes=None, part=None, hints_used=0, strokes=None, strokes_thumb=None, lang: str = "en") -> dict:
@@ -257,72 +285,21 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
     if question.topic == "functions" and work_text:
         resp["graph_check"] = grader.grade_graph_check(question.spec, work_text.split("\n"))
 
-    allowed = await cache.allow_gemini(str(user.id))
-    sol_km = None
-    target_part_km = None
-    if question.topic == "functions":
-        try:
-            km_res = await km_solution_for_question(db, user, question.id)
-            if km_res:
-                raw_km = km_res.get("raw_km") or {}
-                parts_list = raw_km.get("parts") or []
-                if is_multi and part:
-                    part_obj = next(
-                        (p for p in parts_list if str(p.get("label")) == str(part)),
-                        None,
-                    )
-                    if not part_obj:
-                        part_obj = next(
-                            (p for p in parts_list if str(p.get("label")).startswith(str(part))),
-                            None,
-                        )
-                    if part_obj:
-                        target_part_km = _render_single_km_part(part_obj)
-                        sol_km = target_part_km
-                        resp["official_part_solution"] = target_part_km
-                if not sol_km:
-                    sol_km = km_res.get("solution_km")
-        except Exception as exc:
-            import logging
-            logging.getLogger("bacii").warning("Failed to fetch km_solution for %s: %s", question.id, exc)
-
+    # No LLM work happens in the grade request: the verdict, per-line marks and
+    # points above are all SymPy. The LLM explanation, mistake feedback and tutor
+    # tip are produced by `explain_question` (POST /problems/explain), which the
+    # client starts in the background right after a wrong answer.
     if not result["correct"]:
-        steps_text = _steps_text(question, lang=lang)
-        context = {
-            "question_text": question.prompt,
-            "part": result.get("part") if is_multi else None,
-            "user_answer": user_answer,
-            "expected": result.get("expected"),
+        # The deterministic solution steps (no LLM) so the panel is never empty.
+        resp["explanation"] = {
+            "content": _steps_text(question, lang=lang),
+            "provider": "deterministic",
+            "intervened": False,
+            "trigger": "incorrect",
         }
-        resp["explanation"] = await _build_explanation(
-            db, user, question, attempt.id, "incorrect", use_ai=True, steps_text=steps_text,
-            allow_gemini=allowed, context=context, lang=lang,
-        )
         if work_text and not _work_usable(step_check):
             unread_msg = "មិនអាចអានជំហានសរសេរដៃរបស់អ្នកបានច្បាស់លាស់។ សូមសាកល្បងសរសេរម្តងទៀត។" if lang == "km" else WORK_UNREADABLE_MSG
             resp["work_check"] = {"content": unread_msg, "provider": "system"}
-        else:
-            check, provider = await llm.check_work(
-                question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
-                allow_gemini=allowed, step_check=step_check, lang=lang, user_id=user.id,
-            )
-            if check:
-                resp["work_check"] = {"content": check, "provider": provider}
-
-    if allowed and sol_km:
-        rubric_tip, provider = await llm.check_rubric_feedback(
-            question_text=question.prompt,
-            user_submission=work_text or user_answer or "",
-            correct_solution_km=sol_km,
-            is_correct=result["correct"],
-            allow_gemini=allowed,
-            step_check=step_check,
-            user_id=user.id,
-            lang=lang,
-            part_label=part if (is_multi and part) else None,
-        )
-        if rubric_tip:
-            resp["teacher_feedback"] = {"content": rubric_tip, "provider": provider}
 
     # Update the hidden skill trackers behind the student's profile. Runs on
     # every attempt (right or wrong) — a correct answer is exactly as much
@@ -380,50 +357,119 @@ async def grade_graph_drawing(db, user, question_id, strokes_thumb: str) -> dict
 
 
 
-async def explain_question(db, user, question_id, user_answer=None, work_text=None, lang: str = "en") -> dict:
+async def explain_question(
+    db, user, question_id, user_answer=None, work_text=None, lang: str = "en",
+    attempt_id=None, part: str | None = None,
+) -> dict:
+    """Everything LLM-generated about a submission: the narrated solution, the
+    comment on the student's own work, and (functions topic) the tutor tip.
+
+    Called by the client in the background right after a wrong answer, so the
+    grade request itself stays SymPy-only. The independent LLM calls run
+    concurrently. `attempt_id` links the stored explanation to the attempt so it
+    shows up in history."""
     question = await db.get(Question, question_id)
     if question is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Question not found")
+    if attempt_id is not None:
+        attempt = await db.get(Attempt, attempt_id)
+        if attempt is None or attempt.user_id != user.id or attempt.question_id != question.id:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Attempt not found")
+
+    spec = question.spec or {}
+    labels = [str(p.get("label")) for p in spec.get("parts", [])] if isinstance(spec.get("parts"), list) else []
+    is_multi = len(labels) > 1
+    if not part and user_answer and labels:
+        # The student may have prefixed their answer with a part label.
+        import re as _re
+        for lab in labels:
+            if _re.match(rf"^\s*{_re.escape(lab)}\s*[:=]", user_answer.strip()):
+                part = lab
+                break
+    if part and part not in labels:
+        part = None
+
     steps_text = _steps_text(question, lang=lang)
-    context = {"question_text": question.prompt, "part": None, "user_answer": user_answer, "expected": None}
-    if user_answer:
-        spec = question.spec or {}
-        labels = [str(p.get("label")) for p in spec.get("parts", [])] if isinstance(spec.get("parts"), list) else []
-        if labels:
-            # The student may have prefixed their answer with a part label.
-            import re as _re
-            for lab in labels:
-                if _re.match(rf"^\s*{_re.escape(lab)}\s*[:=]", user_answer.strip()):
-                    context["part"] = lab
-                    break
-    result = await _build_explanation(db, user, question, None, "manual", use_ai=True, steps_text=steps_text, context=context, lang=lang)
+    trigger = "incorrect" if attempt_id is not None else "manual"
+
+    step_check = None
+    result: dict = {}
+    if user_answer and work_text:
+        step_check = grader.analyze_work(
+            question.topic, question.question_type, spec, work_text.split("\n")
+        )
+        result["step_check"] = step_check
+        if question.topic == "functions":
+            result["graph_check"] = grader.grade_graph_check(spec, work_text.split("\n"))
+
+    allowed = await cache.allow_gemini(str(user.id))
+    # Khmer reference solution first (functions topic only): it may itself call
+    # Gemini on a cache miss, and it shares the DB session, so it is not run
+    # concurrently with the calls below.
+    sol_km, official_part = await _functions_km_solution(db, user, question, part if is_multi else None)
+    if official_part:
+        result["official_part_solution"] = official_part
+
+    async def _narration():
+        return await _build_explanation(
+            db, user, question, attempt_id, trigger, use_ai=True, steps_text=steps_text,
+            allow_gemini=allowed, lang=lang,
+        )
+
+    async def _work_comment():
+        if not user_answer:
+            return None, None
+        if work_text and not _work_usable(step_check):
+            return None, "unreadable"
+        return await llm.check_work(
+            question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
+            allow_gemini=allowed, step_check=step_check, lang=lang, user_id=user.id,
+        )
+
+    async def _tutor_tip():
+        if not (allowed and sol_km and user_answer):
+            return None, None
+        # Correctness was decided by SymPy at grade time; recompute it cheaply here.
+        try:
+            if is_multi and part:
+                verdict = grader.grade_part(question.topic, question.question_type, spec, part, user_answer)
+            else:
+                verdict = grader.grade(question.topic, question.question_type, spec, user_answer)
+            is_correct = bool(verdict["correct"])
+        except Exception:
+            is_correct = False
+        return await llm.check_rubric_feedback(
+            question_text=question.prompt,
+            user_submission=work_text or user_answer,
+            correct_solution_km=sol_km,
+            is_correct=is_correct,
+            allow_gemini=allowed,
+            step_check=step_check,
+            user_id=user.id,
+            lang=lang,
+            part_label=part if (is_multi and part) else None,
+        )
+
+    explanation, (check, check_provider), (tip, tip_provider) = await asyncio.gather(
+        _narration(), _work_comment(), _tutor_tip()
+    )
+
+    result.update(explanation)
     rows = await db.execute(select(Step).where(Step.question_id == question.id).order_by(Step.step_order))
     result["steps"] = [
         {"step_order": s.step_order, "title": s.title, "detail": s.detail, "formula": s.formula}
         for s in rows.scalars()
     ]
-    sol = solver.solve(question.topic, question.question_type, question.spec)
+    sol = solver.solve(question.topic, question.question_type, spec)
     result["graph"] = sol.get("graph")
     result["variation_table"] = next((p.get("variation_table") for p in sol.get("parts", []) if p.get("variation_table")), None)
-    if user_answer:
-        allowed = await cache.allow_gemini(str(user.id))
-        step_check = None
-        if work_text:
-            step_check = grader.analyze_work(
-                question.topic, question.question_type, question.spec, work_text.split("\n")
-            )
-            result["step_check"] = step_check
-            if question.topic == "functions":
-                result["graph_check"] = grader.grade_graph_check(question.spec, work_text.split("\n"))
-        if work_text and not _work_usable(step_check):
-            result["work_check"] = {"content": WORK_UNREADABLE_MSG, "provider": "system"}
-        else:
-            check, provider = await llm.check_work(
-                question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
-                allow_gemini=allowed, step_check=step_check, lang=lang, user_id=user.id,
-            )
-            if check:
-                result["work_check"] = {"content": check, "provider": provider}
+    if check_provider == "unreadable":
+        unread_msg = "មិនអាចអានជំហានសរសេរដៃរបស់អ្នកបានច្បាស់លាស់។ សូមសាកល្បងសរសេរម្តងទៀត។" if lang == "km" else WORK_UNREADABLE_MSG
+        result["work_check"] = {"content": unread_msg, "provider": "system"}
+    elif check:
+        result["work_check"] = {"content": check, "provider": check_provider}
+    if tip:
+        result["teacher_feedback"] = {"content": tip, "provider": tip_provider}
     await db.commit()
     return result
 

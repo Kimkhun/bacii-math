@@ -34,12 +34,17 @@ answer+work ──grade──▶  grader.grade()        (exact/numeric/angle/ind
                         → persisted: work_text, step_check, lines_boxes,
                                      formula_breakdown
                                   │
-                          if incorrect:
-                              explanation: deterministic text →
-                                  Gemini/Ollama narration (Redis-cached,
-                                  rate-limited 10/min/user)
-                              work_check: LLM anchored on step_check
-                                  ("could not verify" lines are hints, not law)
+                          (no LLM in /problems/grade: verdict, marks and
+                           points are all SymPy; a wrong answer also gets the
+                           deterministic solution steps immediately)
+                                  │
+                          wrong answer → the web client starts, in the
+                          background, POST /problems/explain (attempt_id):
+                              narration   (Gemini/Ollama, Redis-cached)
+                              work_check  (LLM anchored on step_check)
+                              teacher tip (functions topic)
+                          run concurrently; the "Explain" button shows them
+                          (instantly if finished, else the student waits)
 ```
 
 ## 1. Generation
@@ -89,12 +94,23 @@ answer+work ──grade──▶  grader.grade()        (exact/numeric/angle/ind
 
 ## 5. Explanations & work checks (`services.py`, `engine/llm.py`)
 
-- Deterministic `build_text` is always available; Gemini narrates it in
-  friendlier language when allowed.
-- Explanation cache: Redis key `explain:{topic}:{question_type}:{spec}` —
-  identical questions never re-bill Gemini.
+- `/problems/grade` never calls an LLM. It returns the SymPy verdict, step
+  check, rubric score and, for wrong answers, the deterministic `build_text`
+  steps (`provider: "deterministic"`).
+- `/problems/explain` (`explain_question`) produces everything LLM-written:
+  the narration, the `work_check` and, for the functions topic, the tutor tip
+  (+ official part solution). The independent calls run with `asyncio.gather`.
+  The web client fires it right after a wrong answer and keeps the promise;
+  the Explain button awaits it. Passing `attempt_id` links the stored
+  `Explanation` to the attempt so history shows it.
+- The narration is student-independent and cached in Redis
+  (`explain:{topic}:{type}:{spec}:{lang}:{steps digest}`); the student's own
+  answer is never put in that prompt, so one student's answer cannot leak to
+  another through the cache. Per-student commentary comes from `work_check`.
 - Gemini rate limit: `allow_gemini` (default 10/min/user).
 - Provider chain: Gemini → Ollama → deterministic text (never blocks grading).
+- OCR (`llm.gemini_vision_generate`) runs with thinking off (`thinking_budget=0`):
+  transcription needs no reasoning and the call is about 2x faster.
 
 ## 6. Canvas feedback (web)
 

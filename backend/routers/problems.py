@@ -73,7 +73,10 @@ async def explain(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await services.explain_question(db, user, req.question_id, req.user_answer, req.work_text, lang=req.lang)
+    return await services.explain_question(
+        db, user, req.question_id, req.user_answer, req.work_text, lang=req.lang,
+        attempt_id=req.attempt_id, part=req.part,
+    )
 
 
 @router.post("/hint")
