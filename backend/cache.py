@@ -68,6 +68,24 @@ async def allow_gemini(user_id: str) -> bool:
     return count <= settings.gemini_rate_limit_per_minute
 
 
+async def auth_rate_limit(subject: str, limit: int = 10, window_seconds: int = 60) -> bool:
+    """Fixed-window limiter for auth endpoints (login/signup), keyed by client
+    IP and target email. Returns True while under `limit` attempts per window.
+    If Redis is unavailable it fails OPEN (returns True) so a cache outage can't
+    lock every user out of signing in — brute-force protection is best-effort,
+    not a hard dependency of authentication."""
+    key = f"ratelimit:auth:{subject}"
+    try:
+        pipe = _get_client().pipeline(transaction=True)
+        pipe.incr(key)
+        pipe.expire(key, window_seconds, nx=True)
+        count, _ = await pipe.execute()
+    except Exception as exc:
+        logging.getLogger("bacii").warning("auth rate-limit store unavailable: %s", exc)
+        return True
+    return count <= limit
+
+
 async def get_system_model_settings() -> dict:
     """Read dynamic model settings from Redis with fallbacks to environment variables."""
     r = _get_client()

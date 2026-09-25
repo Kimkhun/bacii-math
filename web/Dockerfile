@@ -12,6 +12,10 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# The node:20-alpine image ships an unprivileged "node" user; run as it.
+RUN chown -R node:node /app
+USER node
+
 EXPOSE 3000
 
 CMD ["npm", "run", "dev"]

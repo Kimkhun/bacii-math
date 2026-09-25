@@ -23,7 +23,7 @@ async def generate(
     db: AsyncSession = Depends(get_db),
 ):
     try:
-        return await services.create_question(db, req)
+        return await services.create_question(db, req, user)
     except ValueError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))
 

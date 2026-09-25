@@ -4,6 +4,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # "development" (default) or "production". In production the app refuses to
+    # start on any known dev-default secret (see core.security.assert_secure).
+    environment: str = "development"
+
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/bacii"
     redis_url: str = "redis://localhost:6379/0"
 
@@ -34,6 +38,18 @@ class Settings(BaseSettings):
 
     gemini_rate_limit_per_minute: int = 10
     explanation_cache_ttl_seconds: int = 86400
+
+    # Comma-separated list of browser origins allowed to call the API with
+    # credentials. Defaults to local dev; set CORS_ORIGINS in production.
+    cors_origins: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,"
+        "http://localhost:3016,http://127.0.0.1:3016,"
+        "http://localhost:3017,http://127.0.0.1:3017"
+    )
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     # Hard cap on each Gemini (Vertex) call so a slow/hanging request can't
     # stall the Gemini -> Ollama -> deterministic fallback chain (seconds).

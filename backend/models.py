@@ -28,6 +28,9 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255))
     plan: Mapped[str] = mapped_column(String(20), nullable=False, server_default="free")
     is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    # Incremented to revoke every outstanding token for this user (a token's
+    # `ver` claim must match this to authenticate). See core.security.
+    token_version: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

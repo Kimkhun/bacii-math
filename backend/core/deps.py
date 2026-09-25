@@ -26,11 +26,15 @@ async def get_current_user(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
     try:
         payload = security.decode_token(credentials.credentials, expected_type="access")
-    except jwt.PyJWTError:
+        user_id = uuid.UUID(payload["sub"])
+    except (jwt.PyJWTError, KeyError, ValueError):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired access token")
-    user = await db.get(User, uuid.UUID(payload["sub"]))
+    user = await db.get(User, user_id)
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
+    # Reject tokens minted before the user's version was bumped (revocation).
+    if payload.get("ver", 0) != user.token_version:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token has been revoked")
     return user
 
 

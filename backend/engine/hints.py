@@ -197,6 +197,7 @@ async def generate_hint(
     work_text: str | None = None,
     lang: str = "km",
     user_id: Any = None,
+    allow_gemini: bool = True,
 ) -> dict:
     """Generate a contextual teacher hint based on student's current work."""
     try:
@@ -218,7 +219,7 @@ async def generate_hint(
     )
 
     hint_text, provider = await llm._generate_with_fallback(
-        prompt, allow_gemini=True, endpoint="hint", user_id=user_id
+        prompt, allow_gemini=allow_gemini, endpoint="hint", user_id=user_id
     )
 
     if not hint_text:

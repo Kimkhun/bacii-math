@@ -31,6 +31,55 @@ _TRANS = standard_transformations + (implicit_multiplication_application, conver
 
 _DEFAULT_TOL = 1e-4
 
+# --- Untrusted-input safety guard -------------------------------------------
+#
+# `parse_expr` compiles and evaluates its input as a Python expression. On its
+# own that means a student's answer (typed, or read off their handwriting by the
+# OCR) is arbitrary code: attribute walks like ``().__class__`` reach the object
+# graph, and a small nested power like ``a^b^c`` expands to a number big enough
+# to pin a CPU/RAM for minutes. `parse_answer` is reached by every graded
+# endpoint (/problems/grade, /explain, /hint, exam submit), so it must reject
+# these shapes *before* handing the text to the parser.
+#
+# We only ever need arithmetic here: digits, the operators + - * / ^, function
+# CALLS (sqrt, sin, binomial, ...), symbols and decimal points. None of that
+# needs attribute access, dunders, or `lambda`, so refusing them costs no real
+# answer any expressiveness.
+_MAX_EXPR_LEN = 512
+# `__`  → dunder walks;  ``.`` touching a name → attribute access (a bare
+# decimal point sits between digits, so it is not matched);  lambda/backslash-
+# escapes → other code paths.
+_UNSAFE_TOKEN_RE = _re.compile(
+    r"__"
+    r"|(?<=[A-Za-z0-9_)\]])\s*\.\s*(?=[A-Za-z_])"
+    r"|\blambda\b"
+)
+# ``a^b^c`` / ``a**b**c`` — a power whose exponent is itself a power. Written
+# with tiny digits it still evaluates to an astronomically large integer, so it
+# is the classic CAS denial-of-service. Two power operators separated by only a
+# numeric operand (no +-*/ between them, which would break the nesting) is the
+# tell; a plain sum of powers like ``x^2 + y^2`` never matches.
+_POWER_TOWER_RE = _re.compile(r"(?:\*\*|\^)\s*\(?\s*\d+\s*\)?\s*(?:\*\*|\^)")
+# A single power with a very large literal exponent (``2^100000``) — also a
+# memory bomb, and never a real BAC II answer.
+_BIG_EXPONENT_RE = _re.compile(r"(?:\*\*|\^)\s*\(?\s*\d{4,}")
+
+
+def _reject_unsafe_expr(text: str) -> None:
+    """Raise ValueError if `text` is not a plain arithmetic expression. Called
+    on every user-supplied string before it reaches SymPy's evaluating parser."""
+    if len(text) > _MAX_EXPR_LEN:
+        raise ValueError("expression too long")
+    if _UNSAFE_TOKEN_RE.search(text):
+        raise ValueError("unsupported syntax in expression")
+    if _POWER_TOWER_RE.search(text) or _BIG_EXPONENT_RE.search(text):
+        raise ValueError("exponent too large")
+
+
+def _safe_parse_expr(text: str):
+    _reject_unsafe_expr(text)
+    return parse_expr(text, local_dict=_LOCAL, transformations=_TRANS)
+
 # Leading limit notation from the OCR, e.g. "lim_{x -> -2} (x^2-4)/(x+2)" or
 # "lim(x->-2) (x^2-4)/(x+2)" or "lim_{x \to -2} (...)": strip it so the
 # expression itself can be parsed and checked.
@@ -189,7 +238,7 @@ def parse_answer(text):
     text = _COMB_NOTATION.sub(r"binomial(\1, \2)", text)
     text = _re.sub(r"\binf(?:inity)?\b", "oo", text)
     try:
-        return parse_expr(text, local_dict=_LOCAL, transformations=_TRANS)
+        return _safe_parse_expr(text)
     except Exception:
         # The OCR "raw_text" final answer is meant to be the bare value (e.g.
         # "36"), but the model sometimes echoes the whole equation instead
@@ -200,7 +249,7 @@ def parse_answer(text):
         if "=" in text:
             rhs = text.rsplit("=", 1)[1].strip()
             if rhs:
-                return parse_expr(rhs, local_dict=_LOCAL, transformations=_TRANS)
+                return _safe_parse_expr(rhs)
         raise
 
 def _numeric_close(user, expected, tol):
