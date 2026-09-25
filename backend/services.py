@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sympy import latex
 
 import cache
+from core.offload import run_cpu
 from engine import explainer, formulas, generator, grader, llm, solver
 from engine.core import coaching, lessons, mastery, skills, template_shapes
 from engine import hints
@@ -53,7 +54,7 @@ async def create_question(db: AsyncSession, req: GenerateRequest) -> dict:
 
 async def persist_problem(db: AsyncSession, problem: dict) -> dict:
     """Store a generated problem + its SymPy solution as a new Question row."""
-    solution = solver.solve(problem["topic"], problem["question_type"], problem["params"])
+    solution = await run_cpu(solver.solve, problem["topic"], problem["question_type"], problem["params"])
 
     formula_tags = solution.get("formula_tags") or []
     if not formula_tags or not solution.get("checkpoints"):
@@ -132,7 +133,7 @@ async def _build_explanation(db, user, question, attempt_id, trigger, use_ai, st
     # the result is cached by question only, so a student-specific prompt would
     # leak one student's answer into everyone else's cached explanation. The
     # per-student commentary comes from `llm.check_work` instead.
-    steps_text = steps_text or _steps_text(question, lang=lang)
+    steps_text = steps_text or await run_cpu(_steps_text, question, lang=lang)
     content = steps_text
     provider = "deterministic"
     intervened = False
@@ -209,7 +210,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
             part_val = grader.last_value_of_lines(segments.get(part, []))
             if part_val:
                 user_answer = part_val
-        result = grader.grade_part(question.topic, question.question_type, spec, part, user_answer)
+        result = await run_cpu(grader.grade_part, question.topic, question.question_type, spec, part, user_answer)
     elif is_multi:
         labels = [str(p.get("label")) for p in spec["parts"]]
         submissions = grader.parse_multi_answers(user_answer, labels)
@@ -220,9 +221,9 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
                     value = grader.last_value_of_lines(segments[label])
                     if value:
                         submissions[label] = value
-        result = grader.grade_multi(question.topic, question.question_type, spec, submissions)
+        result = await run_cpu(grader.grade_multi, question.topic, question.question_type, spec, submissions)
     else:
-        result = grader.grade(question.topic, question.question_type, spec, user_answer)
+        result = await run_cpu(grader.grade, question.topic, question.question_type, spec, user_answer)
 
     attempt = Attempt(
         user_id=user.id,
@@ -258,8 +259,8 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
 
     step_check = None
     if work_text:
-        step_check = grader.analyze_work(
-            question.topic, question.question_type, question.spec, work_text.split("\n")
+        step_check = await run_cpu(
+            grader.analyze_work, question.topic, question.question_type, question.spec, work_text.split("\n")
         )
         if is_multi:
             step_check = {**step_check, "parts": result.get("parts")}
@@ -274,8 +275,8 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
                 # against the full multi-part rubric would score every OTHER
                 # part 0 (never attempted, not merely wrong), so restrict the
                 # rubric to the part actually being graded.
-                rubric_result = score_work(
-                    question.topic, question.question_type, spec, work_text.split("\n"),
+                rubric_result = await run_cpu(
+                    score_work, question.topic, question.question_type, spec, work_text.split("\n"),
                     question_points=10, part_label=part if is_multi and part else None,
                 )
                 resp["rubric_score"] = _fractions_to_float(rubric_result)
@@ -283,7 +284,7 @@ async def grade_question(db, user, question_id, user_answer, work_text=None, lin
                 pass
 
     if question.topic == "functions" and work_text:
-        resp["graph_check"] = grader.grade_graph_check(question.spec, work_text.split("\n"))
+        resp["graph_check"] = await run_cpu(grader.grade_graph_check, question.spec, work_text.split("\n"))
 
     # No LLM work happens in the grade request: the verdict, per-line marks and
     # points above are all SymPy. The LLM explanation, mistake feedback and tutor
@@ -386,7 +387,7 @@ async def explain_question(
     if part and part not in labels:
         part = None
 
-    steps_text = _steps_text(question, lang=lang)
+    steps_text = await run_cpu(_steps_text, question, lang=lang)
     # "incorrect" only for a wrong attempt; a correct one that the student asked
     # about (weak steps, tutor tip) is a manual request.
     trigger = "incorrect" if (attempt_id is not None and not attempt.correct) else "manual"
@@ -394,12 +395,12 @@ async def explain_question(
     step_check = None
     result: dict = {}
     if user_answer and work_text:
-        step_check = grader.analyze_work(
-            question.topic, question.question_type, spec, work_text.split("\n")
+        step_check = await run_cpu(
+            grader.analyze_work, question.topic, question.question_type, spec, work_text.split("\n")
         )
         result["step_check"] = step_check
         if question.topic == "functions":
-            result["graph_check"] = grader.grade_graph_check(spec, work_text.split("\n"))
+            result["graph_check"] = await run_cpu(grader.grade_graph_check, spec, work_text.split("\n"))
 
     # The work comment and tutor tip always call the LLM, so they need a rate-limit
     # slot up front. Without an answer only the narration runs, which is usually a
@@ -444,11 +445,11 @@ async def explain_question(
         else:
             try:
                 if is_multi and part:
-                    is_correct = bool(grader.grade_part(question.topic, question.question_type, spec, part, user_answer)["correct"])
+                    is_correct = bool((await run_cpu(grader.grade_part, question.topic, question.question_type, spec, part, user_answer))["correct"])
                 elif is_multi:
                     is_correct = False
                 else:
-                    is_correct = bool(grader.grade(question.topic, question.question_type, spec, user_answer)["correct"])
+                    is_correct = bool((await run_cpu(grader.grade, question.topic, question.question_type, spec, user_answer))["correct"])
             except Exception:
                 is_correct = False
         return await llm.check_rubric_feedback(
@@ -473,7 +474,7 @@ async def explain_question(
         {"step_order": s.step_order, "title": s.title, "detail": s.detail, "formula": s.formula}
         for s in rows.scalars()
     ]
-    sol = solver.solve(question.topic, question.question_type, spec)
+    sol = await run_cpu(solver.solve, question.topic, question.question_type, spec)
     result["graph"] = sol.get("graph")
     result["variation_table"] = next((p.get("variation_table") for p in sol.get("parts", []) if p.get("variation_table")), None)
     if check_provider == "unreadable":
@@ -530,7 +531,7 @@ async def get_question(db, question_id) -> dict:
         "formula_tags": question.formula_tags or [],
         "formula_difficulty": formulas.formula_difficulty(question.formula_tags or []) if question.formula_tags else None,
         "steps": steps,
-        "graph": solver.solve(question.topic, question.question_type, question.spec).get("graph"),
+        "graph": (await run_cpu(solver.solve, question.topic, question.question_type, question.spec)).get("graph"),
     }
 
 
@@ -1113,7 +1114,7 @@ async def km_solution_for_question(db: AsyncSession, user: User, question_id: uu
         km_data = await cache.get_km_solution(f"fn_km:study:{source_id}")
         if not km_data:
             try:
-                solution = solver.solve("functions", "study", spec)
+                solution = await run_cpu(solver.solve, "functions", "study", spec)
                 km_facts = solution.get("km_facts")
                 km_data = await _km_solution_for(f"fn_km:study:{source_id}", km_facts)
             except Exception as e:
@@ -1811,7 +1812,7 @@ async def submit_exam(exam_id: str, answers: dict[str, str]) -> dict:
         }
     except ValueError:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "answer keys must be question numbers")
-    result = mark_full_exam(exam_id, params_by_question, lines_by_question)
+    result = await run_cpu(mark_full_exam, exam_id, params_by_question, lines_by_question)
     return _fractions_to_float(result)
 
 

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import services
 from core.deps import get_current_admin_user, get_current_user, get_db
+from core.offload import run_cpu
 from models import User
 from schemas import (
     ExamSubmitRequest, ExplainRequest, GenerateRequest, GradeGraphRequest, GradeRequest, HintRequest, ReplayRequest,
@@ -233,7 +234,7 @@ async def sandbox_solve(
     req: SandboxSolveRequest,
     user: User = Depends(get_current_admin_user),
 ):
-    return services.sandbox_solve(req.topic, req.question_type, req.params)
+    return await run_cpu(services.sandbox_solve, req.topic, req.question_type, req.params)
 
 
 @me_router.post("/sandbox/grade")
@@ -241,4 +242,4 @@ async def sandbox_grade(
     req: SandboxGradeRequest,
     user: User = Depends(get_current_admin_user),
 ):
-    return services.sandbox_grade(req.topic, req.question_type, req.params, req.lines.split("\n"))
+    return await run_cpu(services.sandbox_grade, req.topic, req.question_type, req.params, req.lines.split("\n"))

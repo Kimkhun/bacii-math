@@ -15,6 +15,7 @@ import logging
 from typing import Any
 
 from . import grader, llm, solver
+from .concurrency import run_in_thread
 from .notation import pretty_expr
 
 log = logging.getLogger(__name__)
@@ -199,14 +200,14 @@ async def generate_hint(
 ) -> dict:
     """Generate a contextual teacher hint based on student's current work."""
     try:
-        solution = solver.solve(topic, question_type, spec)
+        solution = await run_in_thread(solver.solve, topic, question_type, spec)
     except Exception as e:
         log.warning("solve failed in generate_hint: %s", e)
         solution = {}
 
     part_ctx = _extract_part_context(spec, solution, part)
     work_lines = [ln.strip() for ln in (work_text or "").split("\n") if ln.strip()]
-    diagnosis = _diagnose_work(topic, question_type, spec, work_lines)
+    diagnosis = await run_in_thread(_diagnose_work, topic, question_type, spec, work_lines)
 
     prompt = _build_hint_prompt(
         question_prompt=question_prompt,

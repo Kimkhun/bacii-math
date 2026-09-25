@@ -14,6 +14,7 @@ from PIL import Image
 from cache import get_system_model_settings
 from core.config import settings
 from engine import llm
+from engine.concurrency import run_in_thread
 
 PROMPT = r"""You are reading a student's HANDWRITTEN MATH WORK on a canvas. There may be just
 one line (the final answer alone) or several lines (scratch work leading up to a final answer),
@@ -300,11 +301,15 @@ def _finalize(parsed: dict, provider: str, crop: dict | None = None) -> dict:
 
 
 async def detect_math(data: bytes, user_id: any = None) -> dict:
-    with Image.open(io.BytesIO(data)) as raw:
-        processed, crop = _preprocess(raw.convert("RGB"))
-        buf = io.BytesIO()
-        processed.save(buf, format="PNG")
-        image_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+    def _prepare():
+        with Image.open(io.BytesIO(data)) as raw:
+            processed, crop = _preprocess(raw.convert("RGB"))
+            buf = io.BytesIO()
+            processed.save(buf, format="PNG")
+            return base64.b64encode(buf.getvalue()).decode("utf-8"), crop
+
+    # Decode/crop/upscale/encode is CPU-bound: keep it off the event loop.
+    image_b64, crop = await run_in_thread(_prepare)
 
     sys_models = await get_system_model_settings()
     vision_provider = sys_models.get("vision_provider") or settings.vision_provider

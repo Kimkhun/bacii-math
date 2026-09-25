@@ -35,6 +35,7 @@ from ..topics.probability.generator import _generate_probability
 from ..topics.probability.solver import _solve_probability
 from ..topics.vectors_space.generator import _generate_vectors_space
 from ..topics.vectors_space.solver import _solve_vector_ops
+from ..concurrency import run_in_thread
 from .shared import QUESTION_TYPES_BY_TOPIC
 
 
@@ -102,10 +103,9 @@ def _generate_expr_templates(topic, difficulty, seed, question_type, variant=Non
         return _generate_indefinite(rng, difficulty, variant)
     return _generate_integral(rng, difficulty, variant)
 
-async def generate(topic="complex", difficulty="medium", seed=None, question_type=None, generation_mode="templates", variant=None):
-    if topic not in TOPICS:
-        raise ValueError(f"unknown topic: {topic}")
-
+def _generate_sync(topic, difficulty, seed, question_type, generation_mode, variant):
+    """Every template generator is synchronous SymPy work; `generate` runs this in
+    a worker thread so it never blocks the event loop."""
     if topic == "probability":
         if question_type == "counting":
             return _generate_counting(random.Random(seed), difficulty, variant)
@@ -135,11 +135,21 @@ async def generate(topic="complex", difficulty="medium", seed=None, question_typ
     if topic in ("limit", "integral"):
         return _generate_expr_templates(topic, difficulty, seed, question_type, variant)
 
-    if generation_mode == "gemini":
+    return _generate_templates(difficulty, seed, question_type)
+
+
+async def generate(topic="complex", difficulty="medium", seed=None, question_type=None, generation_mode="templates", variant=None):
+    if topic not in TOPICS:
+        raise ValueError(f"unknown topic: {topic}")
+
+    if topic == "complex" and generation_mode == "gemini":
+        # The Gemini proposal is real async I/O; SymPy re-validation happens inside.
         problem = await _generate_gemini(difficulty)
         if problem is not None:
             return problem
-    return _generate_templates(difficulty, seed, question_type)
+    return await run_in_thread(
+        _generate_sync, topic, difficulty, seed, question_type, generation_mode, variant,
+    )
 
 
 # ---------------------------------------------------------------------------

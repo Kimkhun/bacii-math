@@ -203,3 +203,28 @@ Formula content lives OUTSIDE the DB in each topic's `backend/engine/topics/<top
 - Deployment & env matrix (partially in CLAUDE.md).
 - Exam-bank offline pipeline end-to-end (data → verify script → playable).
 - Audio/streak system details (sounds.ts: Web Audio synthesis, streak keys).
+
+## 8. Concurrency: SymPy never runs on the event loop
+
+SymPy is synchronous pure Python. Called straight from an `async def` it froze
+the whole server for as long as it ran (one slow request stalled everyone, and
+a hang froze it for minutes). All solving, grading, step-checking, rubric
+scoring, generation and OCR image prep now run in worker threads:
+
+- `engine/concurrency.py` `run_in_thread` (engine layer, no web imports): at
+  most 2 worker threads at once; used by `dispatch.generate`, `hints`, `vision`.
+- `core/offload.py` `run_cpu` (web layer): the same, plus a 45 s wait limit that
+  turns a runaway computation into an HTTP 504. A thread cannot be killed, so a
+  truly runaway job keeps its worker until it ends (a killable worker process
+  would be needed to bound that fully).
+- `main.py` sets a 2 ms GIL switch interval so the loop gets its turn often.
+  Measured with 8 concurrent heavy users: worst health-check latency 1978 ms
+  before, 163 ms now; the heavy users' total time went from 13.9 s to 18.1 s.
+
+`scripts/verify_robustness.py` checks this, junk-answer grading and empty steps.
+
+Grading robustness: `grade()` recurses on values extracted from an unparseable
+answer; it must never recurse on a candidate identical to its input (it used to,
+so any answer like `?!` or `3 +` ended in a RecursionError or a minutes-long
+hang). Recursion is also depth-limited.
+
