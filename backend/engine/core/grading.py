@@ -1062,20 +1062,32 @@ def _has_division_by_zero(text: str) -> bool:
             expr = parse_answer(seg)
         except Exception:
             continue
-        if expr.has(S.ComplexInfinity, S.NaN):
+        if hasattr(expr, "has") and expr.has(S.ComplexInfinity, S.NaN):
             return True
     return False
 
 
 def _with_formula_names(line_results):
-    """Add a student-facing `formula_name` beside each raw `formula` tag."""
+    """Add a student-facing `formula_name` beside each raw `formula` tag,
+    prioritizing authentic Khmer names (name_km) when present."""
     from ..formulas import resolve_formula
     for r in line_results:
         if r.get("formula"):
-            name = resolve_formula(r["formula"])["name_en"]
+            info = resolve_formula(r["formula"])
+            name_km = info.get("name_km")
+            name_en = info.get("name_en")
+            name = name_km if (name_km and str(name_km).strip()) else name_en
             if name and name != r["formula"]:
                 r["formula_name"] = name
     return line_results
+
+
+def _deduce_limit_transition(prev_expr, curr_expr, var_sym, limit_point, target_val=None):
+    try:
+        from ..topics.limit.rules import deduce_limit_step
+        return deduce_limit_step(prev_expr, curr_expr, var_sym, limit_point, target_val)
+    except Exception:
+        return None
 
 
 def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
@@ -1119,6 +1131,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     pointer = 0
     first_error_line = None
     matched_checkpoints = set()
+    last_valid_expr = given_expr
 
     var_sym = Symbol(params.get("var", "x"))
     for i, raw in enumerate(lines, 1):
@@ -1275,8 +1288,10 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
         if not had_equals:
             try:
                 if bool(value.free_symbols):
-                    line_results.append({"line": i, "text": raw, "checked": False, "reason": "label"})
-                    continue
+                    matches_cp = any(_match_checkpoint(value, cp, tol, var_sym) for cp in checkpoints[pointer:])
+                    if not matches_cp:
+                        line_results.append({"line": i, "text": raw, "checked": False, "reason": "label"})
+                        continue
             except AttributeError:
                 pass
 
@@ -1315,6 +1330,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
                 "expected": str(checkpoints[matched_idx]["value"]),
             })
             pointer = matched_idx + 1
+            last_valid_expr = checkpoints[matched_idx]["value"]
         elif pointer > 0 and _match_checkpoint(value, checkpoints[pointer - 1], tol, var_sym):
             # Restates a value already reached (e.g. an unevaluated expression
             # line immediately followed by its evaluated form) — not a new
@@ -1336,13 +1352,22 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
                 "expected": str(aux_hit["value"]), "restated": True,
             })
         elif symbolic_value and given_expr is not None and _equivalent_exact(value, given_expr, var_sym):
-            # An algebraic rewrite of the given expression ('= lim -2*(e^(-2x)-1)/(-2x)
-            # / (4*(e^(4x)-1)/(4x))') — equal to the given, just not in the
-            # structurally identical form the early `value == given_expr`
-            # check catches. Checked only after every checkpoint match has
-            # failed, so a symbolic checkpoint that happens to simplify to the
-            # given (a cancelled factored form) is still credited first.
-            line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
+            # An algebraic rewrite of the given expression:
+            # If for limits, this rewrite exercises a specific Bac II formula (e.g. half-angle,
+            # trig identity, factoring, conjugate), credit it rather than discarding as a restatement.
+            if topic == "limit" and (rule_deduced := _deduce_limit_transition(last_valid_expr, value, var_sym, limit_point, solution.get("answer_exact"))):
+                line_results.append({
+                    "line": i,
+                    "text": raw,
+                    "checked": True,
+                    "correct": True,
+                    "matches": rule_deduced.get("label"),
+                    "formula": rule_deduced.get("formula"),
+                    "expected": str(value),
+                })
+                last_valid_expr = value
+            else:
+                line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
         elif had_equals and _is_var_point_declaration(lhs, value_str, params.get("var", "x")):
             # 'x = 0' (Step 1: substitute x = 0 directly) names the
             # substitution point rather than asserting a computed value.
@@ -1377,6 +1402,20 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
             # letters, on a problem whose every checkpoint is a concrete
             # number — nothing here to verify, so it can't be wrong.
             line_results.append({"line": i, "text": raw, "checked": False, "reason": "definition"})
+        elif topic == "limit" and (rule_deduced := _deduce_limit_transition(last_valid_expr, value, var_sym, limit_point, solution.get("answer_exact"))):
+            line_results.append({
+                "line": i,
+                "text": raw,
+                "checked": True,
+                "correct": True,
+                "matches": rule_deduced.get("label"),
+                "formula": rule_deduced.get("formula"),
+                "compound_formulas": rule_deduced.get("compound_formulas"),
+                "expected": str(value),
+            })
+            last_valid_expr = value
+            if _equivalent_exact(value, solution["answer_exact"], var_sym):
+                pointer = len(checkpoints)
         else:
             target = checkpoints[pointer] if pointer < len(checkpoints) else None
             line_results.append({
@@ -1392,14 +1431,36 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
                 first_error_line = i
 
     formula_breakdown = []
+    seen_formulas = set()
     for idx, cp in enumerate(checkpoints):
-        if cp.get("formula"):
+        f_tag = cp.get("formula")
+        if f_tag:
+            seen_formulas.add(f_tag)
             formula_breakdown.append({
-                "formula": cp["formula"],
+                "formula": f_tag,
                 "label": cp["label"],
-                "reached": idx in matched_checkpoints,
-                "line": next((r["line"] for r in line_results if r.get("matches") == cp["label"]), None),
+                "reached": idx in matched_checkpoints or any(r.get("correct") and (r.get("formula") == f_tag or f_tag in (r.get("compound_formulas") or [])) for r in line_results),
+                "line": next((r["line"] for r in line_results if (r.get("formula") == f_tag or f_tag in (r.get("compound_formulas") or [])) and r.get("correct")), None),
             })
+    for r in line_results:
+        f_tag = r.get("formula")
+        if r.get("correct") and f_tag and f_tag not in seen_formulas and f_tag != "unclassified_valid":
+            seen_formulas.add(f_tag)
+            formula_breakdown.append({
+                "formula": f_tag,
+                "label": r.get("matches") or f_tag,
+                "reached": True,
+                "line": r.get("line"),
+            })
+        for c_tag in r.get("compound_formulas") or []:
+            if r.get("correct") and c_tag and c_tag not in seen_formulas and c_tag != "unclassified_valid":
+                seen_formulas.add(c_tag)
+                formula_breakdown.append({
+                    "formula": c_tag,
+                    "label": c_tag,
+                    "reached": True,
+                    "line": r.get("line"),
+                })
 
     return {
         "line_results": _with_formula_names(line_results),

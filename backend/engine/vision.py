@@ -237,7 +237,7 @@ def preprocess_bytes(data: bytes) -> bytes:
     with Image.open(io.BytesIO(data)) as raw:
         image, _ = _preprocess(raw.convert("RGB"))
         buf = io.BytesIO()
-        image.save(buf, format="PNG")
+        image.save(buf, format="WEBP", quality=95)
         return buf.getvalue()
 
 
@@ -260,7 +260,7 @@ async def _ollama_generate(image_b64: str) -> str:
 
 async def _gemini_generate(image_b64: str, user_id: any = None) -> str | None:
     image_bytes = base64.b64decode(image_b64)
-    return await llm.gemini_vision_generate(PROMPT, image_bytes, user_id=user_id)
+    return await llm.gemini_vision_generate(PROMPT, image_bytes, mime_type="image/webp", user_id=user_id)
 
 
 def _finalize(parsed: dict, provider: str, crop: dict | None = None) -> dict:
@@ -306,11 +306,12 @@ def _finalize(parsed: dict, provider: str, crop: dict | None = None) -> dict:
 
 
 async def detect_math(data: bytes, user_id: any = None) -> dict:
+<<<<<<< Updated upstream
     def _prepare():
         with Image.open(io.BytesIO(data)) as raw:
             processed, crop = _preprocess(raw.convert("RGB"))
             buf = io.BytesIO()
-            processed.save(buf, format="PNG")
+            processed.save(buf, format="WEBP", quality=95)
             return base64.b64encode(buf.getvalue()).decode("utf-8"), crop
 
     # Decode/crop/upscale/encode is CPU-bound: keep it off the event loop.

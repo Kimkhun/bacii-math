@@ -563,9 +563,11 @@ function PartBlock({
 
 export default function StructureModal({
   structure: initialStructure,
+  topic,
   onClose,
 }: {
   structure: Structure;
+  topic?: string;
   onClose: () => void;
 }) {
   const [structure, setStructure] = useState<Structure>(initialStructure);
@@ -755,10 +757,23 @@ export default function StructureModal({
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <a
+              href={`/practice?template=${encodeURIComponent(structure.id)}${topic ? `&topic=${encodeURIComponent(topic)}` : ""}${structure.difficulty ? `&difficulty=${encodeURIComponent(structure.difficulty)}` : ""}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 transition shadow-sm"
+              title="Practice this template directly on canvas"
+            >
+              <svg className="w-3.5 h-3.5 text-amber-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                <path d="m15 5 4 4" />
+              </svg>
+              <span>Practice</span>
+            </a>
             <button
               onClick={handleRegenerate}
               disabled={regenerating}
-              className="flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50 transition shadow-sm"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition shadow-sm"
               title="Re-run SymPy verification + live Gemini AI narration"
             >
               <span className={regenerating ? "animate-spin" : ""}>🔄</span>

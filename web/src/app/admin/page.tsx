@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AdminGuard from "@/components/AdminGuard";
 import AdminSandbox from "@/components/AdminSandbox";
 import FunctionGraph from "@/components/FunctionGraph";
@@ -106,6 +107,7 @@ const LIMIT_CATEGORIES_CONFIG: LimitCategoryDef[] = [
 ];
 
 export default function AdminPage() {
+  const router = useRouter();
   const { lang, t } = useLanguage();
   const [tab, setTab] = useState<Tab>("overview");
   const [topicFilter, setTopicFilter] = useState("all");
@@ -212,9 +214,44 @@ export default function AdminPage() {
         className="cursor-pointer bg-white border border-slate-200 rounded-lg p-4 shadow-sm transition-shadow hover:shadow-md"
       >
         <div className="flex items-start justify-between gap-2 mb-2">
-          <code className="px-1.5 py-0.5 rounded bg-slate-100 text-[11px] text-slate-600">
-            {st.id}
-          </code>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <code className="px-1.5 py-0.5 rounded bg-slate-100 text-[11px] text-slate-600">
+              {st.id}
+            </code>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const tp =
+                  topicFilter !== "all"
+                    ? topicFilter
+                    : st.id.includes(":")
+                    ? st.id.split(":")[0]
+                    : "limit";
+                router.push(
+                  `/practice?template=${encodeURIComponent(st.id)}&topic=${encodeURIComponent(
+                    tp
+                  )}&difficulty=${encodeURIComponent(st.difficulty || "medium")}`
+                );
+              }}
+              className="px-2 py-0.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition flex items-center gap-1 text-[11px] font-semibold shadow-xs"
+              title="Practice this template directly on canvas"
+            >
+              <svg
+                className="w-3 h-3 text-amber-700 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                <path d="m15 5 4 4" />
+              </svg>
+              <span>{lang === "km" ? "អនុវត្ត" : "Practice"}</span>
+            </button>
+          </div>
           {st.source_labels && st.source_labels.length > 0 && (
             <span className="text-[11px] text-slate-400">
               {st.source_labels.join(", ")}
@@ -692,7 +729,11 @@ export default function AdminPage() {
         )}
       </div>
       {selected && (
-        <StructureModal structure={selected} onClose={() => setSelected(null)} />
+        <StructureModal
+          structure={selected}
+          topic={topicFilter !== "all" ? topicFilter : undefined}
+          onClose={() => setSelected(null)}
+        />
       )}
     </AdminGuard>
   );

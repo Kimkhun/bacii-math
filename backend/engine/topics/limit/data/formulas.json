@@ -22,47 +22,6 @@
       "n>m \\Rightarrow \\pm\\infty"
     ]
   },
-  "sinc_standard_limit": {
-    "name_en": "Standard limit sin(x)/x",
-    "name_km": "លីមីតគ្រឹះ $\\sin x / x = 1$",
-    "weight": 2,
-    "group": "limit",
-    "latex": "\\lim_{x\\to 0}\\frac{\\sin x}{x} = 1",
-    "formulas": [
-      "\\lim_{x\\to 0}\\frac{\\sin kx}{kx}=1",
-      "\\lim_{x\\to 0}\\frac{\\tan x}{x}=1",
-      "\\lim_{x\\to 0}\\frac{1-\\cos x}{x^2}=\\frac{1}{2}"
-    ]
-  },
-  "exponential_standard_limit": {
-    "name_en": "Standard limit (eˣ−1)/x",
-    "name_km": "លីមីតគ្រឹះ (eˣ - 1)/x = 1",
-    "weight": 2,
-    "group": "limit",
-    "latex": "\\lim_{x\\to 0}\\frac{e^{x}-1}{x} = 1",
-    "formulas": [
-      "\\lim_{x\\to 0}\\frac{e^{x}-1}{x}=1",
-      "\\lim_{x\\to 0}\\frac{e^{ax}-1}{x}=a",
-      "\\lim_{x\\to 0}\\frac{e^{ax}-e^{bx}}{x}=a-b",
-      "\\lim_{x\\to 0}\\frac{a^{x}-1}{x}=\\ln a",
-      "\\lim_{u\\to 0}\\frac{e^{u}-1}{u}=1"
-    ]
-  },
-  "exponential_infinity_growth": {
-    "name_en": "Exponential limits at infinity & growth dominance",
-    "name_km": "លីមីតអិចស្ប៉ូណង់ស្យែលនៅអនន្ត និងលំដាប់កំណើន",
-    "weight": 2,
-    "group": "limit",
-    "latex": "\\lim_{x\\to+\\infty}\\frac{e^x}{x^n} = +\\infty",
-    "formulas": [
-      "\\lim_{x\\to+\\infty} e^x = +\\infty",
-      "\\lim_{x\\to-\\infty} e^x = 0",
-      "\\lim_{x\\to+\\infty} \\frac{e^x}{x} = +\\infty",
-      "\\lim_{x\\to+\\infty} \\frac{x}{e^x} = 0",
-      "\\lim_{x\\to+\\infty} \\frac{e^x}{x^n} = +\\infty \\quad (n > 0)",
-      "\\lim_{x\\to+\\infty} \\frac{x^n}{e^x} = 0 \\quad (n > 0)"
-    ]
-  },
   "rationalization_conjugate_finite": {
     "name_en": "Rationalise with the conjugate",
     "name_km": "គុណកន្សោមឆ្លាស់បំបាត់រ៉ាឌីកាល់",
@@ -83,102 +42,6 @@
       "\\lim_{x\\to\\infty}\\left(\\sqrt{a^2x^2+bx+c}-(ax+d)\\right)=\\frac{b-2ad}{2a}"
     ]
   },
-  "trig_identity_0_0": {
-    "name_en": "Trig identity on a 0/0 form",
-    "name_km": "រូបមន្តត្រីកោណមាត្ររាងមិនកំណត់ 0/0",
-    "weight": 2,
-    "group": "limit",
-    "latex": "\\sin^2 x + \\cos^2 x = 1",
-    "formulas": [
-      "1-\\cos 2x = 2\\sin^2 x",
-      "\\sin 2x = 2\\sin x\\cos x"
-    ]
-  },
-  "angle_addition_0_0": {
-    "name_en": "Angle-addition identity",
-    "name_km": "រូបមន្តបូកមុំត្រីកោណមាត្រ 0/0",
-    "weight": 2,
-    "group": "limit",
-    "latex": "\\sin(a\\pm b) = \\sin a\\cos b \\pm \\cos a\\sin b",
-    "formulas": [
-      "\\cos(a\\pm b)=\\cos a\\cos b \\mp \\sin a\\sin b",
-      "\\sin x-\\sqrt3\\cos x = 2\\sin\\left(x-\\frac{\\pi}{3}\\right)"
-    ]
-  },
-  "rationalization_sinc_combo": {
-    "name_en": "Conjugate + sin(x)/x combined",
-    "name_km": "កន្សោមឆ្លាស់ និង sinc ចម្រុះ",
-    "weight": 3,
-    "group": "limit",
-    "latex": "\\lim_{x\\to 0}\\frac{\\sqrt{a+x}-\\sqrt{a-x}}{\\sin kx}",
-    "formulas": [
-      "\\frac{\\sqrt{A}-\\sqrt{B}}{C}=\\frac{A-B}{C(\\sqrt{A}+\\sqrt{B})}",
-      "\\lim_{x\\to 0}\\frac{\\sin kx}{kx}=1"
-    ]
-  },
-  "exponential_sinc_combo": {
-    "name_en": "Exponential + sin(x)/x combined",
-    "name_km": "អិចស្បូណង់ស្យែល និង sinc ចម្រុះ",
-    "weight": 3,
-    "group": "limit",
-    "latex": "\\lim_{x\\to 0}\\frac{(e^{ax}+e^{-ax})\\sin^2 kx}{2x^2}",
-    "formulas": [
-      "\\lim_{x\\to 0}\\frac{\\sin kx}{kx}=1",
-      "e^{0}=1"
-    ]
-  },
-  "half_angle_sinc_combo": {
-    "name_en": "Half-angle + sin(x)/x combined",
-    "name_km": "រូបមន្តកន្លះមុំ និង sinc ចម្រុះ",
-    "weight": 3,
-    "group": "limit",
-    "latex": "1-\\cos mx = 2\\sin^2\\frac{mx}{2}",
-    "formulas": [
-      "\\lim_{x\\to 0}\\frac{1-\\cos mx}{x^2}=\\frac{m^2}{2}",
-      "\\lim_{x\\to 0}\\frac{\\sin kx}{kx}=1"
-    ]
-  },
-  "log_properties": {
-    "name_en": "Properties of natural logarithms",
-    "name_km": "លក្ខណៈលោការីតនេពែ",
-    "weight": 1,
-    "group": "limit",
-    "latex": "\\ln(xy) = \\ln x + \\ln y, \\quad \\ln\\left(\\frac{x}{y}\\right) = \\ln x - \\ln y",
-    "formulas": [
-      "\\ln 1 = 0, \\quad \\ln e = 1",
-      "\\ln e^x = x, \\quad e^{\\ln x} = x \\quad (x > 0)",
-      "\\alpha\\ln x = \\ln x^\\alpha",
-      "\\ln(xy) = \\ln x + \\ln y",
-      "\\ln\\left(\\frac{x}{y}\\right) = \\ln x - \\ln y"
-    ]
-  },
-  "log_limit_zero": {
-    "name_en": "Standard logarithmic limit at 0",
-    "name_km": "លីមីតគ្រឹះលោការីតត្រង់ 0",
-    "weight": 2,
-    "group": "limit",
-    "latex": "\\lim_{x\\to 0}\\frac{\\ln(1+x)}{x} = 1",
-    "formulas": [
-      "\\lim_{x\\to 0}\\frac{\\ln(x+1)}{x} = 1",
-      "\\lim_{x\\to 0}\\frac{\\ln(1+kx)}{x} = k",
-      "\\lim_{u\\to 0}\\frac{\\ln(1+u(x))}{u(x)} = 1"
-    ]
-  },
-  "log_limit_infinity": {
-    "name_en": "Logarithmic limits at infinity & 0⁺ growth dominance",
-    "name_km": "លីមីតលោការីតនៅអនន្ត និងត្រង់ 0⁺",
-    "weight": 3,
-    "group": "limit",
-    "latex": "\\lim_{x\\to+\\infty}\\frac{\\ln x}{x^n} = 0",
-    "formulas": [
-      "\\lim_{x\\to+\\infty}\\ln x = +\\infty",
-      "\\lim_{x\\to 0^+}\\ln x = -\\infty",
-      "\\lim_{x\\to 0^+} x^n\\ln x = 0 \\quad (n > 0)",
-      "\\lim_{x\\to+\\infty}\\frac{x^n}{\\ln x} = +\\infty \\quad (n > 0)",
-      "\\lim_{x\\to+\\infty}\\frac{\\ln x}{x^n} = 0 \\quad (n > 0)",
-      "\\lim_{x\\to+\\infty}[\\ln(ax+b)-\\ln(cx+d)] = \\ln\\left(\\frac{a}{c}\\right)"
-    ]
-  },
   "indeterminate_one_infinity": {
     "name_en": "Indeterminate form 1^∞ (Euler's number e)",
     "name_km": "លីមីតរាងមិនកំណត់ 1^∞ (ចំនួន e)",
@@ -193,75 +56,302 @@
       "\\lim [f(x)]^{g(x)} = e^{\\lim g(x)(f(x)-1)}"
     ]
   },
+  "sinc_standard_limit": {
+    "name_en": "Limit formulas of trigonometric functions",
+    "name_km": "រូបមន្តលីមីតនៃអនុគមន៍ត្រីកោណមាត្រ",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\lim_{x\\to 0}\\frac{\\sin x}{x} = 1",
+    "formulas": [
+      "\\lim_{x\\to 0}\\frac{\\sin x}{x} = 1",
+      "\\lim_{x\\to 0}\\frac{\\tan x}{x} = 1",
+      "\\lim_{u\\to 0}\\frac{\\sin u}{u} = 1",
+      "\\lim_{u\\to 0}\\frac{\\tan u}{u} = 1",
+      "\\lim_{x\\to 0}\\frac{1-\\cos x}{x} = 0",
+      "\\lim_{x\\to 0}\\frac{\\cos x - 1}{x} = 0"
+    ]
+  },
+  "exponential_standard_limit": {
+    "name_en": "Limit formulas of exponential functions",
+    "name_km": "រូបមន្តលីមីតនៃអនុគមន៍អិចប៉ូណង់ស្យែល",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\lim_{x\\to 0}\\frac{e^{x}-1}{x} = 1",
+    "formulas": [
+      "\\lim_{x\\to+\\infty} e^x = +\\infty",
+      "\\lim_{x\\to-\\infty} e^x = 0",
+      "\\lim_{x\\to+\\infty}\\frac{x^n}{e^x} = 0 \\quad (n > 0)",
+      "\\lim_{x\\to+\\infty}\\frac{e^x}{x^n} = +\\infty \\quad (n > 0)",
+      "\\lim_{x\\to 0}\\frac{e^{x}-1}{x} = 1",
+      "\\lim_{x\\to 0}\\frac{a^{x}-1}{x} = \\ln a"
+    ]
+  },
+  "log_limit_zero": {
+    "name_en": "Limit formulas of logarithmic functions",
+    "name_km": "រូបមន្តលីមីតនៃអនុគមន៍ឡូការីតនេពែ",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\lim_{x\\to 0}\\frac{\\ln(1+x)}{x} = 1",
+    "formulas": [
+      "\\lim_{x\\to+\\infty}\\ln x = +\\infty",
+      "\\lim_{x\\to 0^+}\\ln x = -\\infty",
+      "\\lim_{x\\to+\\infty}\\frac{\\ln x}{x} = 0",
+      "\\lim_{x\\to 0^+} x\\ln x = 0",
+      "\\lim_{x\\to+\\infty}\\frac{\\ln x}{x^n} = 0 \\quad (n \\ge 0)",
+      "\\lim_{x\\to 0^+} x^n\\ln x = 0"
+    ]
+  },
   "trig_double_angle": {
-    "name_en": "Double-angle trigonometric identities",
-    "name_km": "រូបមន្តមុំទ្វេត្រីកោណមាត្រ",
+    "name_en": "Double-angle formulas",
+    "name_km": "រូបមន្តទ្វេមុំ",
     "weight": 2,
     "group": "limit",
-    "latex": "\\cos 2x = \\cos^2 x - \\sin^2 x, \\quad \\sin 2x = 2\\sin x \\cos x",
+    "latex": "\\sin 2\\alpha = 2\\sin\\alpha\\cos\\alpha",
     "formulas": [
-      "\\cos 2x = \\cos^2 x - \\sin^2 x",
-      "\\cos 2x = 2\\cos^2 x - 1",
-      "\\cos 2x = 1 - 2\\sin^2 x",
-      "\\sin 2x = 2\\sin x \\cos x",
-      "\\tan 2x = \\frac{2\\tan x}{1 - \\tan^2 x}"
-    ]
-  },
-  "trig_addition_subtraction": {
-    "name_en": "Addition and subtraction formulas",
-    "name_km": "រូបមន្តផលបូក និងផលដកត្រីកោណមាត្រ",
-    "weight": 2,
-    "group": "limit",
-    "latex": "\\sin(a \\pm b) = \\sin a \\cos b \\pm \\sin b \\cos a",
-    "formulas": [
-      "\\sin(a + b) = \\sin a \\cos b + \\sin b \\cos a",
-      "\\sin(a - b) = \\sin a \\cos b - \\sin b \\cos a",
-      "\\cos(a + b) = \\cos a \\cos b - \\sin a \\sin b",
-      "\\cos(a - b) = \\cos a \\cos b + \\sin a \\sin b",
-      "\\tan(a \\pm b) = \\frac{\\tan a \\pm \\tan b}{1 \\mp \\tan a \\tan b}"
-    ]
-  },
-  "trig_sum_to_product": {
-    "name_en": "Sum-to-product identities (Simpson formulas)",
-    "name_km": "រូបមន្តបំប្លែងផលបូកទៅជាផលគុណ",
-    "weight": 2,
-    "group": "limit",
-    "latex": "\\cos p - \\cos q = -2\\sin\\frac{p+q}{2}\\sin\\frac{p-q}{2}",
-    "formulas": [
-      "\\cos p + \\cos q = 2\\cos\\frac{p+q}{2}\\cos\\frac{p-q}{2}",
-      "\\cos p - \\cos q = -2\\sin\\frac{p+q}{2}\\sin\\frac{p-q}{2}",
-      "\\sin p + \\sin q = 2\\sin\\frac{p+q}{2}\\cos\\frac{p-q}{2}",
-      "\\sin p - \\sin q = 2\\sin\\frac{p-q}{2}\\cos\\frac{p+q}{2}",
-      "\\sin x \\pm \\sqrt{3}\\cos x = 2\\sin\\left(x \\pm \\frac{\\pi}{3}\\right)"
-    ]
-  },
-  "trig_reduction_identities": {
-    "name_en": "Reduction and associated angle identities",
-    "name_km": "រូបមន្តមុំបំពេញ និងមុំបន្ថែម",
-    "weight": 2,
-    "group": "limit",
-    "latex": "\\sin\\left(\\frac{\\pi}{2} - x\\right) = \\cos x, \\quad \\sin(\\pi - x) = \\sin x",
-    "formulas": [
-      "\\sin\\left(\\frac{\\pi}{2} \\pm x\\right) = \\cos x",
-      "\\cos\\left(\\frac{\\pi}{2} \\pm x\\right) = \\mp \\sin x",
-      "\\tan\\left(\\frac{\\pi}{2} \\pm x\\right) = \\mp \\cot x",
-      "\\sin(\\pi - x) = \\sin x, \\quad \\sin(\\pi + x) = -\\sin x",
-      "\\cos(\\pi \\pm x) = -\\cos x",
-      "\\tan(\\pi \\pm x) = \\pm \\tan x"
+      "\\sin 2\\alpha = 2\\sin\\alpha\\cos\\alpha",
+      "\\cos 2\\alpha = \\cos^2\\alpha - \\sin^2\\alpha = 1 - 2\\sin^2\\alpha = 2\\cos^2\\alpha - 1",
+      "\\tan 2\\alpha = \\frac{2\\tan\\alpha}{1 - \\tan^2\\alpha} = \\frac{2}{\\cot\\alpha - \\tan\\alpha}",
+      "\\cot 2\\alpha = \\frac{\\cot^2\\alpha - 1}{2\\cot\\alpha} = \\frac{\\cot\\alpha - \\tan\\alpha}{2}"
     ]
   },
   "trig_half_angle": {
-    "name_en": "Half-angle and power-reduction identities",
-    "name_km": "រូបមន្តកន្លះមុំ និងបញ្ចុះដឺក្រេ",
+    "name_en": "Half-angle formulas",
+    "name_km": "រូបមន្តកន្លះមុំ",
     "weight": 1,
     "group": "limit",
-    "latex": "1 - \\cos \\alpha = 2\\sin^2\\frac{\\alpha}{2}, \\quad 1 + \\cos \\alpha = 2\\cos^2\\frac{\\alpha}{2}",
+    "latex": "1 - \\cos\\alpha = 2\\sin^2\\frac{\\alpha}{2}",
     "formulas": [
-      "1 - \\cos \\alpha = 2\\sin^2\\frac{\\alpha}{2}",
-      "1 + \\cos \\alpha = 2\\cos^2\\frac{\\alpha}{2}",
-      "\\sin^2 \\alpha = \\frac{1 - \\cos 2\\alpha}{2}",
-      "\\cos^2 \\alpha = \\frac{1 + \\cos 2\\alpha}{2}",
-      "\\lim_{x\\to 0}\\frac{1 - \\cos x}{x^2} = \\frac{1}{2}"
+      "\\sin\\alpha = 2\\sin\\frac{\\alpha}{2}\\cos\\frac{\\alpha}{2}",
+      "1 - \\cos\\alpha = 2\\sin^2\\frac{\\alpha}{2}",
+      "1 - \\cos 2\\alpha = 2\\sin^2\\alpha",
+      "1 + \\cos\\alpha = 2\\cos^2\\frac{\\alpha}{2}"
+    ]
+  },
+  "trig_fundamental_relations": {
+    "name_en": "Essential relationships",
+    "name_km": "ទំនាក់ទំនងសំខាន់ៗ",
+    "weight": 1,
+    "group": "limit",
+    "latex": "\\sin^2\\alpha + \\cos^2\\alpha = 1",
+    "formulas": [
+      "\\sin^2\\alpha + \\cos^2\\alpha = 1",
+      "\\tan\\alpha \\cdot \\cot\\alpha = 1",
+      "\\tan\\alpha = \\frac{\\sin\\alpha}{\\cos\\alpha}",
+      "\\cot\\alpha = \\frac{\\cos\\alpha}{\\sin\\alpha}"
+    ]
+  },
+  "trig_triple_quad_angle": {
+    "name_en": "Triple-angle formulas",
+    "name_km": "រូបមន្តត្រីមុំ",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\sin 3\\alpha = 3\\sin\\alpha - 4\\sin^3\\alpha",
+    "formulas": [
+      "\\sin 3\\alpha = 3\\sin\\alpha - 4\\sin^3\\alpha",
+      "\\sin 4\\alpha = 4\\sin\\alpha\\cos\\alpha - 8\\sin^3\\alpha\\cos\\alpha",
+      "\\cos 3\\alpha = 4\\cos^3\\alpha - 3\\cos\\alpha",
+      "\\cos 4\\alpha = 8\\cos^4\\alpha - 8\\cos^2\\alpha + 1",
+      "\\tan 3\\alpha = \\frac{3\\tan\\alpha - \\tan^3\\alpha}{1 - 3\\tan^2\\alpha}",
+      "\\cot 3\\alpha = \\frac{\\cot^3\\alpha - 3\\cot\\alpha}{3\\cot^2\\alpha - 1}"
+    ]
+  },
+  "trig_power_reducing": {
+    "name_en": "Reduction and power-reducing formulas",
+    "name_km": "រូបមន្តបន្ថយគណនីត្រីកោណមាត្រ",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\sin^2\\alpha = \\frac{1-\\cos 2\\alpha}{2}",
+    "formulas": [
+      "\\sin^2\\alpha = \\frac{1-\\cos 2\\alpha}{2}",
+      "\\cos^2\\alpha = \\frac{1+\\cos 2\\alpha}{2}",
+      "\\sin^3\\alpha = \\frac{3\\sin\\alpha - \\sin 3\\alpha}{4}",
+      "\\cos^3\\alpha = \\frac{3\\cos\\alpha + \\cos 3\\alpha}{4}",
+      "\\sin^4\\alpha = \\frac{\\cos 4\\alpha - 4\\cos 2\\alpha + 3}{8}",
+      "\\cos^4\\alpha = \\frac{\\cos 4\\alpha + 4\\cos 2\\alpha + 3}{8}",
+      "\\sin^5\\alpha = \\frac{10\\sin\\alpha - 5\\sin 3\\alpha + \\sin 5\\alpha}{16}",
+      "\\cos^5\\alpha = \\frac{10\\cos\\alpha + 5\\cos 3\\alpha + \\cos 5\\alpha}{16}"
+    ]
+  },
+  "trig_sum_difference": {
+    "name_en": "Sum and difference formulas",
+    "name_km": "រូបមន្តផលបូកនិងផលដកត្រីកោណមាត្រ",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\sin(\\alpha \\pm \\beta) = \\sin\\alpha\\cos\\beta \\pm \\sin\\beta\\cos\\alpha",
+    "formulas": [
+      "\\sin(\\alpha + \\beta) = \\sin\\alpha\\cos\\beta + \\sin\\beta\\cos\\alpha",
+      "\\sin(\\alpha - \\beta) = \\sin\\alpha\\cos\\beta - \\sin\\beta\\cos\\alpha",
+      "\\cos(\\alpha + \\beta) = \\cos\\alpha\\cos\\beta - \\sin\\alpha\\sin\\beta",
+      "\\cos(\\alpha - \\beta) = \\cos\\alpha\\cos\\beta + \\sin\\alpha\\sin\\beta",
+      "\\tan(\\alpha + \\beta) = \\frac{\\tan\\alpha + \\tan\\beta}{1 - \\tan\\alpha\\tan\\beta}",
+      "\\tan(\\alpha - \\beta) = \\frac{\\tan\\alpha - \\tan\\beta}{1 + \\tan\\alpha\\tan\\beta}",
+      "\\cot(\\alpha + \\beta) = \\frac{1 - \\tan\\alpha\\tan\\beta}{\\tan\\alpha + \\tan\\beta}",
+      "\\cot(\\alpha - \\beta) = \\frac{1 + \\tan\\alpha\\tan\\beta}{\\tan\\alpha - \\tan\\beta}"
+    ]
+  },
+  "trig_sum_to_product": {
+    "name_en": "Sum-to-product formulas",
+    "name_km": "រូបមន្តបម្លែងផលបូក",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\cos\\alpha - \\cos\\beta = -2\\sin\\frac{\\alpha+\\beta}{2}\\sin\\frac{\\alpha-\\beta}{2}",
+    "formulas": [
+      "\\sin\\alpha + \\sin\\beta = 2\\sin\\frac{\\alpha+\\beta}{2}\\cos\\frac{\\alpha-\\beta}{2}",
+      "\\sin\\alpha - \\sin\\beta = 2\\cos\\frac{\\alpha+\\beta}{2}\\sin\\frac{\\alpha-\\beta}{2}",
+      "\\cos\\alpha + \\cos\\beta = 2\\cos\\frac{\\alpha+\\beta}{2}\\cos\\frac{\\alpha-\\beta}{2}",
+      "\\cos\\alpha - \\cos\\beta = -2\\sin\\frac{\\alpha+\\beta}{2}\\sin\\frac{\\alpha-\\beta}{2}"
+    ]
+  },
+  "trig_periodicity": {
+    "name_en": "Relationship between alpha and alpha + 2k*pi",
+    "name_km": "ទំនាក់ទំនងរវាង \\alpha និង \\alpha + 2k\\pi",
+    "weight": 1,
+    "group": "limit",
+    "latex": "\\sin(\\alpha + 2k\\pi) = \\sin\\alpha",
+    "formulas": [
+      "\\sin(\\alpha + 2k\\pi) = \\sin\\alpha",
+      "\\cos(\\alpha + 2k\\pi) = \\cos\\alpha",
+      "\\tan(\\alpha + 2k\\pi) = \\tan\\alpha",
+      "\\cot(\\alpha + 2k\\pi) = \\cot\\alpha"
+    ]
+  },
+  "trig_opposite_angles": {
+    "name_en": "Opposite angles alpha and -alpha",
+    "name_km": "មុំផ្ទុយគ្នា \\alpha និង -\\alpha",
+    "weight": 1,
+    "group": "limit",
+    "latex": "\\sin(-\\alpha) = -\\sin\\alpha",
+    "formulas": [
+      "\\sin(-\\alpha) = -\\sin\\alpha",
+      "\\cos(-\\alpha) = \\cos\\alpha",
+      "\\tan(-\\alpha) = -\\tan\\alpha",
+      "\\cot(-\\alpha) = -\\cot\\alpha"
+    ]
+  },
+  "trig_angles_sum_pi": {
+    "name_en": "Angles with sum pi",
+    "name_km": "មុំដែលមានផលបូកស្មើ \\pi",
+    "weight": 1,
+    "group": "limit",
+    "latex": "\\sin(\\pi + \\alpha) = -\\sin\\alpha",
+    "formulas": [
+      "\\sin(\\pi + \\alpha) = -\\sin\\alpha",
+      "\\cos(\\pi + \\alpha) = -\\cos\\alpha",
+      "\\tan(\\pi + \\alpha) = \\tan\\alpha",
+      "\\cot(\\pi + \\alpha) = \\cot\\alpha"
+    ]
+  },
+  "trig_supplementary_angles": {
+    "name_en": "Supplementary angles",
+    "name_km": "មុំបំពេញបន្ថែម",
+    "weight": 1,
+    "group": "limit",
+    "latex": "\\sin(\\pi - \\alpha) = \\sin\\alpha",
+    "formulas": [
+      "\\sin(\\pi - \\alpha) = \\sin\\alpha",
+      "\\cos(\\pi - \\alpha) = -\\cos\\alpha",
+      "\\tan(\\pi - \\alpha) = -\\tan\\alpha",
+      "\\cot(\\pi - \\alpha) = -\\cot\\alpha"
+    ]
+  },
+  "trig_complementary_angles": {
+    "name_en": "Complementary angles pi/2 - alpha",
+    "name_km": "មុំបំពេញ \\frac{\\pi}{2} - \\alpha",
+    "weight": 1,
+    "group": "limit",
+    "latex": "\\sin(\\frac{\\pi}{2} - \\alpha) = \\cos\\alpha",
+    "formulas": [
+      "\\sin(\\frac{\\pi}{2} - \\alpha) = \\cos\\alpha",
+      "\\cos(\\frac{\\pi}{2} - \\alpha) = \\sin\\alpha",
+      "\\tan(\\frac{\\pi}{2} - \\alpha) = \\cot\\alpha",
+      "\\cot(\\frac{\\pi}{2} - \\alpha) = \\tan\\alpha"
+    ]
+  },
+  "trig_angles_sum_half_pi": {
+    "name_en": "Angles with sum pi/2",
+    "name_km": "មុំដែលមានផលបូកស្មើ \\frac{\\pi}{2}",
+    "weight": 1,
+    "group": "limit",
+    "latex": "\\sin(\\frac{\\pi}{2} + \\alpha) = \\cos\\alpha",
+    "formulas": [
+      "\\sin(\\frac{\\pi}{2} + \\alpha) = \\cos\\alpha",
+      "\\cos(\\frac{\\pi}{2} + \\alpha) = -\\sin\\alpha",
+      "\\tan(\\frac{\\pi}{2} + \\alpha) = -\\cot\\alpha",
+      "\\cot(\\frac{\\pi}{2} + \\alpha) = -\\tan\\alpha"
+    ]
+  },
+  "trig_special_angles_table": {
+    "name_en": "Table of special angles for trigonometric functions",
+    "name_km": "តារាងមុំពិសេសនៃអនុគមន៍ត្រីកោណមាត្រ",
+    "weight": 1,
+    "group": "limit",
+    "latex": "0^\\circ, 30^\\circ, 45^\\circ, 60^\\circ, 90^\\circ, 120^\\circ, 135^\\circ, 150^\\circ, 180^\\circ",
+    "formulas": [
+      "\\sin(0)=0, \\sin(30^\\circ)=\\frac{1}{2}, \\sin(45^\\circ)=\\frac{\\sqrt{2}}{2}, \\sin(60^\\circ)=\\frac{\\sqrt{3}}{2}, \\sin(90^\\circ)=1",
+      "\\cos(0)=1, \\cos(30^\\circ)=\\frac{\\sqrt{3}}{2}, \\cos(45^\\circ)=\\frac{\\sqrt{2}}{2}, \\cos(60^\\circ)=\\frac{1}{2}, \\cos(90^\\circ)=0",
+      "\\tan(0)=0, \\tan(30^\\circ)=\\frac{\\sqrt{3}}{3}, \\tan(45^\\circ)=1, \\tan(60^\\circ)=\\sqrt{3}",
+      "\\cot(30^\\circ)=\\sqrt{3}, \\cot(45^\\circ)=1, \\cot(60^\\circ)=\\frac{\\sqrt{3}}{3}, \\cot(90^\\circ)=0"
+    ]
+  },
+  "euler_identify_form": {
+    "name_en": "Identify indeterminate form 1^inf",
+    "name_km": "ផ្ទៀងផ្ទាត់រាងមិនកំណត់ 1^អនន្ត",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\lim [f(x)]^{g(x)} \\to 1^{\\infty}",
+    "formulas": [
+      "\\lim [f(x)]^{g(x)} \\to 1^{\\infty}"
+    ]
+  },
+  "euler_base_minus_one": {
+    "name_en": "Compute base deviation f(x) - 1",
+    "name_km": "គណនា f(x) - 1",
+    "weight": 2,
+    "group": "limit",
+    "latex": "u(x) = f(x) - 1",
+    "formulas": [
+      "u(x) = f(x) - 1"
+    ]
+  },
+  "euler_exponent_limit": {
+    "name_en": "Evaluate exponent product limit",
+    "name_km": "គណនាលីមីតស្វ័យគុណ g(x)(f(x) - 1)",
+    "weight": 3,
+    "group": "limit",
+    "latex": "L = \\lim g(x)(f(x) - 1)",
+    "formulas": [
+      "L = \\lim g(x)(f(x) - 1)"
+    ]
+  },
+  "euler_final_exp": {
+    "name_en": "Conclude with exponential result e^L",
+    "name_km": "សន្និដ្ឋានតម្លៃលីមីតចុងក្រោយ e^L",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\lim [f(x)]^{g(x)} = e^L",
+    "formulas": [
+      "\\lim [f(x)]^{g(x)} = e^L"
+    ]
+  },
+  "limit_power_identity": {
+    "name_en": "Power difference limit identity",
+    "name_km": "រូបមន្តលីមីតស្វ័យគុណ x^n - a^n",
+    "weight": 2,
+    "group": "limit",
+    "latex": "\\lim_{x\\to a}\\frac{x^n-a^n}{x-a} = n a^{n-1}",
+    "formulas": [
+      "\\lim_{x\\to a}\\frac{x^n-a^n}{x-a} = n a^{n-1}",
+      "\\lim_{x\\to a}\\frac{x^p-a^p}{x^q-a^q} = \\frac{p a^{p-1}}{q a^{q-1}}"
+    ]
+  },
+  "unclassified_valid": {
+    "name_en": "Valid algebraic step",
+    "name_km": "ជំហានពិជគណិតត្រឹមត្រូវ (មិនទាន់ចាត់ថ្នាក់)",
+    "weight": 1,
+    "group": "limit",
+    "latex": "A = B",
+    "formulas": [
+      "A = B"
     ]
   }
 }

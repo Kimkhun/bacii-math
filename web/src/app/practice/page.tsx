@@ -725,6 +725,7 @@ function PracticeInner() {
   const [graphGrade, setGraphGrade] = useState<GraphGradeResult | null>(null);
   const [hintLevel, setHintLevel] = useState(0);
   const [teacherHint, setTeacherHint] = useState<HintResponse | null>(null);
+  const [hintMinimized, setHintMinimized] = useState(false);
   const [ambiguityQueue, setAmbiguityQueue] = useState<AmbiguousLine[] | null>(null);
   const [ambiguityResolved, setAmbiguityResolved] = useState<Record<number, DisambiguationCandidate>>({});
   const [error, setError] = useState("");
@@ -750,6 +751,7 @@ function PracticeInner() {
   const [reviewMode, setReviewMode] = useState(false);
   const [practicingFormula, setPracticingFormula] = useState<{ id: string; name: string } | null>(null);
   const [practicingSkill, setPracticingSkill] = useState<{ key: string; label: string } | null>(null);
+  const [practicingTemplate, setPracticingTemplate] = useState<{ id: string; label: string } | null>(null);
   // Lesson pop-up toggle: the on/off "Lesson" button on the canvas page shows
   // the same authored lesson (LessonModal) that the profile's Topic Mastery uses.
   const [showLesson, setShowLesson] = useState(false);
@@ -757,12 +759,12 @@ function PracticeInner() {
   const searchParams = useSearchParams();
 
   // Autosave configuration and tracking
-  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "writing" | "saving" | "saved">("idle");
   const isDirtyRef = useRef(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const autoSaveDebounceMs = useMemo(() => {
     const envVal = Number(process.env.NEXT_PUBLIC_AUTOSAVE_DEBOUNCE_MS);
-    return !isNaN(envVal) && envVal > 0 ? envVal : 5000;
+    return !isNaN(envVal) && envVal > 0 ? envVal : 1500;
   }, []);
   const performAutoSaveRef = useRef<(options?: { keepalive?: boolean }) => Promise<void>>(async () => {});
 
@@ -803,6 +805,7 @@ function PracticeInner() {
   const setTyped = (v: string) => {
     setAt(setTypedByPart, partIndex, v);
     isDirtyRef.current = true;
+    setAutoSaveStatus("writing");
     triggerAutoSaveDebounce();
   };
   const setDetected = (v: string | null) => setAt(setDetectedByPart, partIndex, v);
@@ -953,6 +956,7 @@ function PracticeInner() {
     setExplanation(null);
     clearExplainRequests();
     setTeacherHint(null);
+    setHintMinimized(false);
     setHintLevel(0);
     setAmbiguityQueue(null);
     setAmbiguityResolved({});
@@ -1139,6 +1143,56 @@ function PracticeInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  // Forced template practice: /practice?template=<id> (from admin template cards
+  // or structure modal). Generates an authentic problem directly from that template.
+  useEffect(() => {
+    const templateId = searchParams.get("template") || searchParams.get("structure");
+    if (!templateId) return;
+    (async () => {
+      setError("");
+      setBusy(true);
+      try {
+        const paramTopic = searchParams.get("topic");
+        const paramDiff = searchParams.get("difficulty") || "medium";
+        const resolvedTopic =
+          paramTopic || (templateId.includes(":") ? templateId.split(":")[0] : "limit");
+
+        let qType = resolvedTopic;
+        if (resolvedTopic === "integral") {
+          if (templateId.startsWith("indefinite_") || templateId.startsWith("curated_")) {
+            qType = "indefinite_integral";
+          } else {
+            qType = "definite_integral";
+          }
+        } else if (resolvedTopic === "limit") {
+          qType = "limit";
+        }
+
+        const cfg: SessionConfig = {
+          mode: "templates",
+          topic: resolvedTopic,
+          questionType: `${qType}:${templateId}`,
+          difficulty: paramDiff,
+        };
+
+        setMode(cfg.mode);
+        setTopic(cfg.topic);
+        setQuestionType(cfg.questionType);
+        setDifficulty(cfg.difficulty);
+
+        const q = await api.generate("templates", cfg.difficulty, cfg.topic, qType, templateId);
+        loadQuestion(q);
+        setPracticingTemplate({ id: templateId, label: templateId });
+        router.replace("/practice");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to start template practice");
+      } finally {
+        setBusy(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const selectTool = (t: CanvasTool) => {
     setTool(t);
     canvasRefs.current.forEach((c) => c?.setTool(t));
@@ -1205,6 +1259,7 @@ function PracticeInner() {
     setCanUndo(activeCanvas()?.canUndo() ?? false);
     setCanRedo(activeCanvas()?.canRedo() ?? false);
     isDirtyRef.current = true;
+    setAutoSaveStatus("writing");
     triggerAutoSaveDebounce();
   };
 
@@ -1401,9 +1456,20 @@ function PracticeInner() {
     setPracticingFormula(null);
     setPracticingSkill(null);
     try {
-      const cfg: SessionConfig = { mode, topic, questionType, difficulty };
-      const q = await generateQuestion(cfg);
-      loadQuestion(q);
+      if (practicingTemplate) {
+        const qType =
+          topic === "integral"
+            ? practicingTemplate.id.startsWith("indefinite_") || practicingTemplate.id.startsWith("curated_")
+              ? "indefinite_integral"
+              : "definite_integral"
+            : topic;
+        const q = await api.generate("templates", difficulty, topic, qType, practicingTemplate.id);
+        loadQuestion(q);
+      } else {
+        const cfg: SessionConfig = { mode, topic, questionType, difficulty };
+        const q = await generateQuestion(cfg);
+        loadQuestion(q);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate");
     } finally {
@@ -1621,6 +1687,7 @@ function PracticeInner() {
     setResult(null);
     setExplanation(null);
     resetExplain();
+    setHintMinimized(true);
     setGraphGrade(null);
     setMarks(null);
     setLinePops(null);
@@ -1858,6 +1925,9 @@ function PracticeInner() {
       window.removeEventListener("pagehide", handleSave);
       window.removeEventListener("blur", handleSave);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (isDirtyRef.current) {
+        performAutoSaveRef.current({ keepalive: true });
+      }
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
   }, []);
@@ -2044,19 +2114,19 @@ function PracticeInner() {
     setError("");
     try {
       let wt = workText;
-      if (!wt && !typed.trim()) {
-        const ink = activeCanvas()?.getImageBase64();
-        if (ink) {
-          try {
-            const det = await api.detect(ink);
-            setDetectResult(det);
-            if (det.lines?.length) {
-              wt = det.lines.join("\n");
-              setWorkText(wt);
-            }
-          } catch {
-            // best-effort ink detect
+      const ink = activeCanvas()?.getImageBase64();
+      if (ink && !typed.trim()) {
+        try {
+          const det = await api.detect(ink);
+          setDetectResult(det);
+          if (det.lines?.length) {
+            wt = det.lines.join("\n");
+            setWorkText(wt);
+            setWorkTextByPart((prev) => ({ ...prev, [partIndex]: wt }));
+            setDetectResultByPart((prev) => ({ ...prev, [partIndex]: det }));
           }
+        } catch {
+          // best-effort ink detect, fallback to existing wt
         }
       }
       const res = await api.hint(
@@ -2067,6 +2137,7 @@ function PracticeInner() {
         lang
       );
       setTeacherHint(res);
+      setHintMinimized(false);
       setHintLevel((n) => n + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Hint failed");
@@ -2408,6 +2479,25 @@ function PracticeInner() {
                 )}
               </>
             )}
+            {practicingTemplate && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 border border-amber-300 text-amber-900 text-xs font-semibold shadow-xs">
+                <svg className="w-3.5 h-3.5 text-amber-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                  <path d="m15 5 4 4" />
+                </svg>
+                <span className="max-w-[140px] truncate" title={practicingTemplate.id}>
+                  {practicingTemplate.id}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPracticingTemplate(null)}
+                  className="text-amber-600 hover:text-amber-950 font-bold ml-1 text-xs"
+                  title={lang === "km" ? "ចាកចេញពីការអនុវត្តគំរូនេះ" : "Exit template practice"}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
             {streak > 0 && (
               <span
                 className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-xs font-semibold whitespace-nowrap"
@@ -2446,6 +2536,16 @@ function PracticeInner() {
                     {lang === "km" ? "កំពុងរក្សាទុក..." : "Saving..."}
                   </span>
                 </div>
+              ) : autoSaveStatus === "writing" ? (
+                <div
+                  title={lang === "km" ? "កំពុងសរសេរ... (មិនទាន់រក្សាទុក)" : "Writing... (unsaved)"}
+                  className="flex items-center gap-1.5 px-2 py-1 text-xs text-amber-600 select-none whitespace-nowrap font-medium"
+                >
+                  <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="hidden sm:inline">
+                    {lang === "km" ? "កំពុងសរសេរ..." : "Writing..."}
+                  </span>
+                </div>
               ) : (
                 <Link
                   href="/saved"
@@ -2471,7 +2571,9 @@ function PracticeInner() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="m9 13 2 2 4-4" />
                   </svg>
                   <span className="hidden sm:inline">
-                    {lang === "km" ? "បានរក្សាទុក" : "Saved"}
+                    {autoSaveStatus === "saved"
+                      ? lang === "km" ? "បានរក្សាទុក" : "Saved"
+                      : lang === "km" ? "បានរក្សាទុក" : "Saved"}
                   </span>
                 </Link>
               )
@@ -2534,29 +2636,52 @@ function PracticeInner() {
         {/* Right-side results / explanation panel */}
         <div className="fixed right-3 bottom-24 z-10 w-[calc(100vw-1.5rem)] sm:w-96 max-h-[55vh] overflow-y-auto pointer-events-auto space-y-3">
           {teacherHint && (
-            <div className="rounded-xl p-3.5 border border-amber-300 bg-amber-50/95 backdrop-blur shadow-lg animate-in fade-in duration-200">
-              <div className="flex items-center justify-between mb-1.5 pb-1.5 border-b border-amber-200/80">
-                <div className="flex items-center gap-1.5 font-bold text-amber-900 text-xs">
-                  <span className="text-base">👨‍🏫</span>
-                  <span>{lang === "km" ? "ជំនួយពីគ្រូ (Teacher Hint)" : "Teacher Hint"}</span>
-                  {teacherHint.error_line && (
-                    <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-semibold">
-                      {lang === "km" ? `កំហុសនៅបន្ទាត់ទី ${teacherHint.error_line}` : `Line ${teacherHint.error_line} error`}
-                    </span>
-                  )}
-                </div>
+            hintMinimized ? (
+              <div className="flex justify-end">
                 <button
-                  onClick={() => setTeacherHint(null)}
-                  className="text-amber-700 hover:text-amber-950 text-xs font-bold px-1.5 py-0.5 rounded hover:bg-amber-200/60 transition-colors"
-                  title={lang === "km" ? "បិទ" : "Close"}
+                  onClick={() => setHintMinimized(false)}
+                  className="rounded-xl px-3 py-1.5 border border-amber-300 bg-amber-50/95 backdrop-blur shadow-md flex items-center gap-2 text-xs font-semibold text-amber-900 hover:bg-amber-100 transition-all cursor-pointer animate-in fade-in duration-150"
+                  title={lang === "km" ? "បើកជំនួយពីគ្រូឡើងវិញ" : "Show Teacher Hint"}
                 >
-                  ✕
+                  <span className="text-sm">👨‍🏫</span>
+                  <span>{lang === "km" ? "ជំនួយពីគ្រូ" : "Teacher Hint"}</span>
+                  <span className="text-amber-700 font-bold ml-1">▲</span>
                 </button>
               </div>
-              <div className="text-xs text-amber-950 font-medium leading-relaxed">
-                <MathText text={teacherHint.hint} />
+            ) : (
+              <div className="rounded-xl p-3.5 border border-amber-300 bg-amber-50/95 backdrop-blur shadow-lg animate-in fade-in duration-200">
+                <div className="flex items-center justify-between mb-1.5 pb-1.5 border-b border-amber-200/80">
+                  <div className="flex items-center gap-1.5 font-bold text-amber-900 text-xs">
+                    <span className="text-base">👨‍🏫</span>
+                    <span>{lang === "km" ? "ជំនួយពីគ្រូ (Teacher Hint)" : "Teacher Hint"}</span>
+                    {teacherHint.error_line && (
+                      <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-semibold">
+                        {lang === "km" ? `កំហុសនៅបន្ទាត់ទី ${teacherHint.error_line}` : `Line ${teacherHint.error_line} error`}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setHintMinimized(true)}
+                      className="text-amber-700 hover:text-amber-950 text-xs font-bold px-1.5 py-0.5 rounded hover:bg-amber-200/60 transition-colors"
+                      title={lang === "km" ? "បង្រួម" : "Minimize"}
+                    >
+                      ▼
+                    </button>
+                    <button
+                      onClick={() => setTeacherHint(null)}
+                      className="text-amber-700 hover:text-amber-950 text-xs font-bold px-1.5 py-0.5 rounded hover:bg-amber-200/60 transition-colors"
+                      title={lang === "km" ? "បិទ" : "Close"}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <div className="text-xs text-amber-950 font-medium leading-relaxed">
+                  <MathText text={teacherHint.hint} />
+                </div>
               </div>
-            </div>
+            )
           )}
 
           {result && (

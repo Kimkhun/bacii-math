@@ -1953,7 +1953,8 @@ const Canvas = forwardRef<
         octx.fillStyle = "#ffffff";
         octx.fillRect(0, 0, W, H);
         octx.drawImage(getInkCanvas(), 0, 0, W, H);
-        return off.toDataURL("image/png").split(",")[1];
+        const dataUrl = off.toDataURL("image/webp", 0.95);
+        return dataUrl.split(",")[1];
       },
       getInkSnapshot: () => {
         // Same ink layer as getImageBase64(), but with a transparent

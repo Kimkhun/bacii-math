@@ -59,39 +59,17 @@ _FORMULA_REGISTRY_BUILTIN = {
         "group": "complex",
     },
     # --- limits ---
-    "setup_limit": {
-        "name_en": "Set up the limit",
-        "latex": r"\lim_{x \to a} f(x)",
-        "weight": 0,
-        "group": "limit",
-    },
     "direct_substitution": {
         "name_en": "Direct substitution",
+        "name_km": "ជំនួសតម្លៃផ្ទាល់",
         "latex": r"\lim_{x \to a} f(x) = f(a)",
-        "weight": 1,
-        "group": "limit",
-    },
-    "factor_difference_of_squares": {
-        "name_en": "Factor a difference of squares",
-        "latex": r"x^2 - a^2 = (x - a)(x + a)",
         "weight": 1,
         "group": "limit",
     },
     "cancel_common_factor": {
         "name_en": "Cancel a common factor",
+        "name_km": "សម្រួលកត្តារួម",
         "latex": r"\frac{(x-a)P(x)}{(x-a)} = P(x)",
-        "weight": 1,
-        "group": "limit",
-    },
-    "divide_highest_power": {
-        "name_en": "Divide by the highest power",
-        "latex": r"\lim_{x\to\infty} \frac{P(x)}{Q(x)} = \lim_{x\to\infty}\frac{P/x^n}{Q/x^n}",
-        "weight": 1,
-        "group": "limit",
-    },
-    "leading_coefficient_ratio": {
-        "name_en": "Leading coefficient ratio",
-        "latex": r"\lim_{x\to\infty} \frac{ax^n}{bx^n} = \frac{a}{b}",
         "weight": 1,
         "group": "limit",
     },
@@ -206,10 +184,23 @@ def _structure_title(tag):
     return None
 
 
+_ALIASES = {
+    "factor_difference_of_squares": "factoring_0_0",
+    "divide_highest_power": "rational_function_infinity",
+    "leading_coefficient_ratio": "rational_function_infinity",
+    "setup_limit": "direct_substitution",
+    "trig_identity_0_0": "trig_half_angle",
+    "half_angle_identity": "trig_half_angle",
+    "double_angle_identity": "trig_double_angle",
+    "one_sided_sign": "rationalization_conjugate_finite",
+}
+
+
 def resolve_formula(tag):
     """Return the registry entry for a tag, or a safe fallback for unknown ids so a
     future solver can never break existing questions (raw id is rendered, weight 1)."""
-    entry = FORMULA_REGISTRY.get(tag)
+    canonical_tag = _ALIASES.get(tag, tag)
+    entry = FORMULA_REGISTRY.get(canonical_tag) or FORMULA_REGISTRY.get(tag)
     if entry is not None:
         return entry
     return {**_FALLBACK, "name_en": _structure_title(tag) or tag}

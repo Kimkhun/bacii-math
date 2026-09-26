@@ -741,7 +741,10 @@ async def get_progress(db: AsyncSession, user, session_id) -> dict:
     labels = []
     if question is not None and isinstance(question.spec.get("parts"), list):
         labels = [str(p.get("label")) for p in question.spec["parts"] if p.get("label")]
-    ordered = {lab: parts.get(lab) or {} for lab in labels}
+    if not labels:
+        ordered = parts
+    else:
+        ordered = {lab: parts.get(lab) or {} for lab in labels}
     return {
         "id": session.id,
         "status": session.status,

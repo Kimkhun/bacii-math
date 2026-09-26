@@ -62,6 +62,7 @@ async def _gemini_generate(
     tools: list | None = None,
     endpoint: str = "narration",
     user_id: any = None,
+    thinking_budget: int | None = None,
 ) -> any:
     sys_models = await get_system_model_settings()
     model = sys_models.get("text_model") or settings.gemini_model
@@ -73,16 +74,29 @@ async def _gemini_generate(
             response_mime_type="application/json", response_schema=response_schema
         )
     else:
-        config = types.GenerateContentConfig(response_mime_type="application/json") if json_mode else None
+        config = types.GenerateContentConfig(response_mime_type="application/json") if json_mode else types.GenerateContentConfig()
 
-    t0 = time.perf_counter()
-    try:
-        resp = await asyncio.wait_for(
+    if thinking_budget is not None:
+        config.thinking_config = types.ThinkingConfig(thinking_budget=thinking_budget)
+
+    async def _call(cfg):
+        return await asyncio.wait_for(
             _gemini_client().aio.models.generate_content(
-                model=model, contents=prompt, config=config
+                model=model, contents=prompt, config=cfg
             ),
             timeout=settings.gemini_timeout_seconds,
         )
+
+    t0 = time.perf_counter()
+    try:
+        try:
+            resp = await _call(config)
+        except Exception as exc:
+            if "thinking" in str(exc).lower() and thinking_budget is not None:
+                config.thinking_config = None
+                resp = await _call(config)
+            else:
+                raise
         latency_ms = int((time.perf_counter() - t0) * 1000)
 
         # Extract real token usage
@@ -263,10 +277,11 @@ async def _generate_with_fallback(
     allow_gemini: bool = True,
     endpoint: str = "narration",
     user_id: any = None,
+    thinking_budget: int | None = None,
 ) -> tuple[str | None, str | None]:
     if allow_gemini:
         try:
-            text = (await _gemini_generate(prompt, endpoint=endpoint, user_id=user_id)).strip()
+            text = (await _gemini_generate(prompt, endpoint=endpoint, user_id=user_id, thinking_budget=thinking_budget)).strip()
             if text:
                 return text, "gemini"
         except Exception:

@@ -219,7 +219,7 @@ async def generate_hint(
     )
 
     hint_text, provider = await llm._generate_with_fallback(
-        prompt, allow_gemini=allow_gemini, endpoint="hint", user_id=user_id
+        prompt, allow_gemini=allow_gemini, endpoint="hint", user_id=user_id, thinking_budget=0
     )
 
     if not hint_text:
