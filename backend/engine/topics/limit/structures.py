@@ -798,3 +798,10 @@ def build_limit_variants(struct, count=3, seed=None):
     return variants
 
 
+def structure_by_id(sid: str) -> dict | None:
+    for s in all_limit_structures():
+        if s["id"] == sid:
+            return s
+    return None
+
+

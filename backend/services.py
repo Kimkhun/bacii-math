@@ -30,7 +30,7 @@ from engine.topics.integral.generator import (
     _INTEGRAL_VARIANT_BY_DIFFICULTY,
 )
 from engine.topics.limit import structures as limit_structures
-from engine.topics.limit.generator import _build_curated_limit, generate_limit_for_technique
+from engine.topics.limit.generator import generate_limit_for_technique
 from engine.topics.probability import scenarios
 from models import Attempt, Explanation, Question, SkillState, Step, StudySession, User
 from schemas import GenerateRequest, SaveProgressRequest
@@ -1690,21 +1690,16 @@ async def sandbox_structure_sample(topic: str, question_type: str, structure_id:
     seed = random.randint(0, 0xFFFFFFFF)
     try:
         if topic == "limit":
-            meta = limit_structures.LIMIT_TECHNIQUES.get(structure_id)
-            if meta is None:
-                raise HTTPException(status.HTTP_400_BAD_REQUEST, f"unknown structure_id: {structure_id}")
-            if meta["parameterizable"]:
-                problem = generate_limit_for_technique(random.Random(seed), structure_id)
+            struct = limit_structures.structure_by_id(structure_id)
+            if struct is not None:
+                sample = limit_structures.build_limit_sample(struct, seed=seed)
+                params, prompt, prompt_latex = sample["params"], sample["prompt"], sample.get("prompt_latex")
             else:
-                pool = [t for t in limit_structures._LIMIT_CURATED_TEMPLATES
-                        if t["formula_name"] == structure_id]
-                if not pool:
-                    raise HTTPException(
-                        status.HTTP_400_BAD_REQUEST, f"no curated exercises for technique: {structure_id}"
-                    )
-                item = random.Random(seed).choice(pool)
-                problem = _build_curated_limit(item, meta["difficulty"])
-            params, prompt, prompt_latex = problem["params"], problem["prompt"], problem.get("prompt_latex")
+                meta = limit_structures.LIMIT_TECHNIQUES.get(structure_id)
+                if meta is None:
+                    raise HTTPException(status.HTTP_400_BAD_REQUEST, f"unknown structure_id: {structure_id}")
+                problem = generate_limit_for_technique(random.Random(seed), structure_id)
+                params, prompt, prompt_latex = problem["params"], problem["prompt"], problem.get("prompt_latex")
         elif topic == "integral":
             struct = integral_structures.structure_by_id(structure_id)
             if struct is None:

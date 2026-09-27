@@ -90,7 +90,84 @@ def _sample_log_euler_diff_oo(rng):
     return f"{c}*x*(ln(x + {k}) - ln(x))", "oo", {"c": c, "k": k}
 
 
+def _sample_log_diff_linear_terms(rng):
+    a = rng.choice([1, 2, 3])
+    b = rng.choice([1, 2])
+    c = rng.choice([2, 3])
+    return f"(ln(1 + {a}*x) - {c}*ln(1 - {b}*x))/x", "0", {"a": a, "b": b, "c": c}
+
+
+def _sample_log_sum_linear_terms(rng):
+    a = rng.choice([2, 3])
+    b = rng.choice([3, 4, 5])
+    c1 = rng.choice([2, 3])
+    c2 = rng.choice([2, 3])
+    return f"({c1}*ln(1 - {a}*x) + {c2}*ln(1 + {b}*x))/x", "0", {"a": a, "b": b, "c1": c1, "c2": c2}
+
+
+def _sample_log_mixed_linear_quad(rng):
+    a = rng.choice([2, 3, 4])
+    b = rng.choice([3, 4, 5])
+    return f"(x*ln(1 + {a}*x) + {b}*ln(1 + x**2))/x**2", "0", {"a": a, "b": b}
+
+
+def _sample_log_quad_diff_ratio(rng):
+    a = rng.choice([2, 4, 6])
+    b = rng.choice([2, 4])
+    k = rng.choice([2, 3])
+    return f"(ln(1 + {a}*x**2) - x*ln(1 - {b}*x))/({k}*x**2)", "0", {"a": a, "b": b, "k": k}
+
+
+def _sample_log_trig_sin_combo(rng):
+    a = rng.choice([2, 3])
+    b = rng.choice([2, 3])
+    c = rng.choice([2, 3])
+    return f"(ln(1 + {a}*sin(x)) - {c}*ln(1 - sin({b}*x)))/x", "0", {"a": a, "b": b, "c": c}
+
+
+def _sample_log_quad_cos_half_angle(rng):
+    a = rng.choice([1, 2, 3])
+    b = rng.choice([2, 4])
+    return f"ln(2 + {a}*x**2 - cos({b}*x))/x**2", "0", {"a": a, "b": b}
+
+
+def _sample_log_sinc_cos_half_angle(rng):
+    a = rng.choice([2, 3, 4])
+    b = rng.choice([2, 4])
+    return f"ln(2 + x*sin({a}*x) - cos({b}*x))/x**2", "0", {"a": a, "b": b}
+
+
+def _sample_log_exp_cos_combo(rng):
+    a = rng.choice([2, 4])
+    return f"ln(2*e**(x**2) - cos({a}*x))/x**2", "0", {"a": a}
+
+
+def _sample_log_exp_neg_cos_combo(rng):
+    a = rng.choice([2, 4])
+    return f"ln(2 - e**(-x**2)*cos({a}*x))/x**2", "0", {"a": a}
+
+
+def _sample_log_cos_product_combo(rng):
+    a = rng.choice([2, 4])
+    b = rng.choice([2, 4])
+    return f"ln(2 - cos({a}*x)*cos({b}*x))/x**2", "0", {"a": a, "b": b}
+
+
+def _sample_log_diff_rational_oo(rng):
+    a = rng.choice([2, 3, 4])
+    b = rng.choice([1, 2])
+    return f"ln(x + {a}) - ln(x) - {b}/(x + {a}) + 1/4", "oo", {"a": a, "b": b}
+
+
+def _sample_log_linear_minus_log_oo(rng):
+    a = rng.choice([2, 3])
+    b = rng.choice([5, 7, 9])
+    c = rng.choice([7, 11, 13])
+    return f"{a}*x - {b} - {c}*ln(x)", "oo", {"a": a, "b": b, "c": c}
+
+
 LOGARITHMIC_STRUCTURES = [
+
     {
         "id": "limit:logarithmic:sum_oo",
         "question_type": "limit",
@@ -346,4 +423,185 @@ LOGARITHMIC_STRUCTURES = [
         "sampler": _sample_log_euler_diff_oo,
         "source_labels": ["log_42"],
     },
+    {
+        "id": "limit:logarithmic:diff_linear_terms",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "zero",
+        "title_km": "ផលដកលោការីតលីនេអ៊ែរ ((ln(1+ax) - c ln(1-bx))/x)",
+        "title_en": "Difference of linear logarithmic terms (ln(1+ax) - c ln(1-bx))/x",
+        "difficulty": "hard",
+        "pattern": "(ln(1 + {a}*x) - {c}*ln(1 - {b}*x))/x",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{\ln(1 + a x) - c\ln(1 - b x)}{x}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_log_diff_linear_terms,
+        "source_labels": ["p98_1a", "log_25"],
+    },
+    {
+        "id": "limit:logarithmic:sum_linear_terms",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "zero",
+        "title_km": "ផលបូកលោការីតលីនេអ៊ែរ ((c₁ln(1-ax) + c₂ln(1+bx))/x)",
+        "title_en": "Sum of linear logarithmic terms (c1 ln(1-ax) + c2 ln(1+bx))/x",
+        "difficulty": "hard",
+        "pattern": "({c1}*ln(1 - {a}*x) + {c2}*ln(1 + {b}*x))/x",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{c_1\ln(1 - a x) + c_2\ln(1 + b x)}{x}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_log_sum_linear_terms,
+        "source_labels": ["p98_1b", "log_26"],
+    },
+    {
+        "id": "limit:logarithmic:mixed_linear_quad",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "zero",
+        "title_km": "លោការីតចម្រុះការ៉េ ((x ln(1+ax) + b ln(1+x²))/x²)",
+        "title_en": "Mixed linear and quadratic log limit (x ln(1+ax) + b ln(1+x^2))/x^2",
+        "difficulty": "hard",
+        "pattern": "(x*ln(1 + {a}*x) + {b}*ln(1 + x**2))/x**2",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{x\ln(1 + a x) + b\ln(1 + x^{2})}{x^{2}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_log_mixed_linear_quad,
+        "source_labels": ["p98_1c", "log_27"],
+    },
+    {
+        "id": "limit:logarithmic:quad_diff_ratio",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "zero",
+        "title_km": "ផលដកលោការីតការ៉េលើ x² ((ln(1+ax²) - x ln(1-bx))/(kx²))",
+        "title_en": "Difference of quadratic logs over x^2 (ln(1+ax^2) - x ln(1-bx))/(kx^2)",
+        "difficulty": "hard",
+        "pattern": "(ln(1 + {a}*x**2) - x*ln(1 - {b}*x))/({k}*x**2)",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{\ln(1 + a x^{2}) - x\ln(1 - b x)}{k x^{2}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_log_quad_diff_ratio,
+        "source_labels": ["p98_1d", "log_28"],
+    },
+    {
+        "id": "limit:logarithmic:trig_sin_combo",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "zero",
+        "title_km": "លោការីតចម្រុះអនុគមន៍ស៊ីនុស ((ln(1+a sin x) - c ln(1-sin bx))/x)",
+        "title_en": "Logarithmic with sine combination (ln(1+a sin x) - c ln(1-sin bx))/x",
+        "difficulty": "hard",
+        "pattern": "(ln(1 + {a}*sin(x)) - {c}*ln(1 - sin({b}*x)))/x",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{\ln(1 + a\sin x) - c\ln(1 - \sin(b x))}{x}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_log_trig_sin_combo,
+        "source_labels": ["p98_1e", "log_29"],
+    },
+    {
+        "id": "limit:logarithmic:quad_cos_half_angle",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "zero",
+        "title_km": "លោការីតនិងកូស៊ីនុសកន្លះមុំ ln(2 + ax² - cos bx)/x²",
+        "title_en": "Logarithmic with cosine half-angle ln(2 + ax^2 - cos bx)/x^2",
+        "difficulty": "hard",
+        "pattern": "ln(2 + {a}*x**2 - cos({b}*x))/x**2",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{\ln(2 + a x^{2} - \cos(b x))}{x^{2}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_log_quad_cos_half_angle,
+        "source_labels": ["p98_1f", "log_30"],
+    },
+    {
+        "id": "limit:logarithmic:sinc_cos_half_angle",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "zero",
+        "title_km": "លោការីតចម្រុះស៊ីនុសនិងកូស៊ីនុស ln(2 + x sin ax - cos bx)/x²",
+        "title_en": "Logarithmic with sinc and cosine ln(2 + x sin ax - cos bx)/x^2",
+        "difficulty": "hard",
+        "pattern": "ln(2 + x*sin({a}*x) - cos({b}*x))/x**2",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{\ln(2 + x\sin(a x) - \cos(b x))}{x^{2}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_log_sinc_cos_half_angle,
+        "source_labels": ["p98_1g", "log_31"],
+    },
+    {
+        "id": "limit:logarithmic:exp_cos_combo",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "zero",
+        "title_km": "លោការីតចម្រុះអិចស្ប៉ូណង់ស្យែលនិងកូស៊ីនុស ln(2e^(x²) - cos ax)/x²",
+        "title_en": "Logarithmic with exponential and cosine ln(2e^(x^2) - cos ax)/x^2",
+        "difficulty": "hard",
+        "pattern": "ln(2*e**(x**2) - cos({a}*x))/x**2",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{\ln(2e^{x^{2}} - \cos(a x))}{x^{2}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_log_exp_cos_combo,
+        "source_labels": ["p98_1h", "log_32"],
+    },
+    {
+        "id": "limit:logarithmic:exp_neg_cos_combo",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "zero",
+        "title_km": "លោការីតចម្រុះអិចស្ប៉ូណង់ស្យែលអវិជ្ជមាន ln(2 - e^(-x²)cos ax)/x²",
+        "title_en": "Logarithmic with decaying exponential ln(2 - e^(-x^2)cos ax)/x^2",
+        "difficulty": "hard",
+        "pattern": "ln(2 - e**(-x**2)*cos({a}*x))/x**2",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{\ln(2 - e^{-x^{2}}\cos(a x))}{x^{2}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_log_exp_neg_cos_combo,
+        "source_labels": ["p98_1i", "log_33"],
+    },
+    {
+        "id": "limit:logarithmic:cos_product_combo",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "zero",
+        "title_km": "លោការីតចម្រុះផលគុណកូស៊ីនុស ln(2 - cos ax cos bx)/x²",
+        "title_en": "Logarithmic with cosine product ln(2 - cos ax cos bx)/x^2",
+        "difficulty": "hard",
+        "pattern": "ln(2 - cos({a}*x)*cos({b}*x))/x**2",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{\ln(2 - \cos(a x)\cos(b x))}{x^{2}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_log_cos_product_combo,
+        "source_labels": ["p98_1j", "log_34"],
+    },
+    {
+        "id": "limit:logarithmic:diff_rational_oo",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "rational",
+        "title_km": "ផលដកលោការីតនិងសនិទាននៅ +∞ (ln(x+a) - ln x - b/(x+a) + c)",
+        "title_en": "Logarithmic difference with rational tail at +infinity",
+        "difficulty": "hard",
+        "pattern": "ln(x + {a}) - ln(x) - {b}/(x + {a}) + 1/4",
+        "pattern_latex": r"\lim_{x \to +\infty} \left(\ln(x + a) - \ln x - \dfrac{b}{x + a} + \dfrac{1}{4}\right)",
+        "point": "oo",
+        "var": "x",
+        "sampler": _sample_log_diff_rational_oo,
+        "source_labels": ["2014e", "log_35"],
+    },
+    {
+        "id": "limit:logarithmic:linear_minus_log_oo",
+        "question_type": "limit",
+        "category": "logarithmic",
+        "subfamily": "infinity",
+        "title_km": "ផលដកលីនេអ៊ែរនិងលោការីតនៅ +∞ (ax - b - c ln x)",
+        "title_en": "Linear growth minus logarithm at +infinity (ax - b - c ln x)",
+        "difficulty": "medium",
+        "pattern": "{a}*x - {b} - {c}*ln(x)",
+        "pattern_latex": r"\lim_{x \to +\infty} \left(a x - b - c\ln x\right)",
+        "point": "oo",
+        "var": "x",
+        "sampler": _sample_log_linear_minus_log_oo,
+        "source_labels": ["2021c", "log_36"],
+    },
 ]
+

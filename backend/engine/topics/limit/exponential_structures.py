@@ -107,6 +107,80 @@ def _sample_euler_cos_pi2(rng):
     return f"(1 + {k}*cos(x))**(1/(x - pi/2))", "pi/2", {"k": k}
 
 
+def _sample_euler_linear_power(rng):
+    a = rng.choice([2, 3, 4, 5])
+    k = rng.choice([2, 3, 4])
+    return f"(1 + {a}*x)**({k}/x)", "0", {"a": a, "k": k}
+
+
+def _sample_euler_quotient_linear(rng):
+    a = rng.choice([1, 2, 3])
+    b = rng.choice([1, 2, 3])
+    k = rng.choice([1, 2])
+    return f"((1 - {a}*x)/(1 + {b}*x))**({k}/x)", "0", {"a": a, "b": b, "k": k}
+
+
+def _sample_euler_sin_power(rng):
+    a = rng.choice([2, 3, 4])
+    b = rng.choice([2, 3, 4])
+    k = rng.choice([1, 2, 3])
+    return f"(1 + {a}*sin({b}*x))**({k}/x)", "0", {"a": a, "b": b, "k": k}
+
+
+def _sample_euler_cos_half_angle_power(rng):
+    a = rng.choice([2, 4])
+    b = rng.choice([1, 2])
+    return f"(2 - cos({a}*x))**(1/(x*sin({b}*x)))", "0", {"a": a, "b": b}
+
+
+def _sample_euler_exp_diff_power(rng):
+    a = rng.choice([2, 3, 4])
+    k = rng.choice([1, 2])
+    c = a - 1
+    return f"({a}*e**x - {c})**({k}/x)", "0", {"a": a, "k": k}
+
+
+def _sample_euler_exp_cos_sq_power(rng):
+    a = rng.choice([2, 4])
+    return f"(2*e**(x**2) - cos({a}*x))**(1/x**2)", "0", {"a": a}
+
+
+def _sample_euler_exp_mean_power(rng):
+    a = rng.choice([1, 2])
+    b = rng.choice([3, 4, 5])
+    return f"((e**({a}*x) + e**({b}*x))/2)**(1/x)", "0", {"a": a, "b": b}
+
+
+def _sample_euler_cos_ratio_power(rng):
+    a = rng.choice([2, 4])
+    return f"(2*cos({a}*x)/(1 + cos({a}*x)))**(1/x**2)", "0", {"a": a}
+
+
+def _sample_euler_sinc_cos_ratio_power(rng):
+    a = rng.choice([2, 3])
+    b = rng.choice([2, 4])
+    return f"((1 + x*sin({a}*x))/cos({b}*x))**(1/x**2)", "0", {"a": a, "b": b}
+
+
+def _sample_euler_sqrt_cos_power(rng):
+    a = rng.choice([1, 2])
+    return f"(sqrt(1 + {a}*x**2)/cos(x))**(1/x**2)", "0", {"a": a}
+
+
+def _sample_expo_ratio_standard(rng):
+    a = rng.choice([2, 3, 4, 5])
+    b = rng.choice([1, 2, 3])
+    while a == b:
+        b = rng.choice([1, 2, 3])
+    return f"(e**({a}*x) - 1)/(e**({b}*x) - 1)", "0", {"a": a, "b": b}
+
+
+def _sample_expo_sinc_sq_combo(rng):
+    k = rng.choice([1, 2])
+    return f"((e**(-x) + e**x)*sin(x)**2)/(2*x**2)" if k == 1 else f"((e**(-{k}*x) + e**({k}*x))*sin({k}*x)**2)/(2*x**2)", "0", {"k": k}
+
+
+
 EXPONENTIAL_STRUCTURES = [
     {
         "id": "limit:exponential:diff_ratio",
@@ -439,4 +513,185 @@ EXPONENTIAL_STRUCTURES = [
         "sampler": _sample_euler_cos_pi2,
         "source_labels": ["one_inf_07"],
     },
+    {
+        "id": "limit:euler:linear_power",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "one_inf",
+        "title_km": "រាងមិនកំណត់ 1^អនន្តលីនេអ៊ែរស្វ័យគុណ ((1 + ax)^(k/x))",
+        "title_en": "Indeterminate form 1^infinity linear power (1 + ax)^(k/x)",
+        "difficulty": "medium",
+        "pattern": "(1 + {a}*x)**({k}/x)",
+        "pattern_latex": r"\lim_{x \to 0} (1 + a x)^{\frac{k}{x}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_euler_linear_power,
+        "source_labels": ["p102_1a", "one_inf_08"],
+    },
+    {
+        "id": "limit:euler:quotient_linear",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "one_inf",
+        "title_km": "រាងមិនកំណត់ 1^អនន្តផលធៀបលីនេអ៊ែរ (((1 - ax)/(1 + bx))^(k/x))",
+        "title_en": "Indeterminate form 1^infinity linear quotient ((1 - ax)/(1 + bx))^(k/x)",
+        "difficulty": "hard",
+        "pattern": "((1 - {a}*x)/(1 + {b}*x))**({k}/x)",
+        "pattern_latex": r"\lim_{x \to 0} \left(\dfrac{1 - a x}{1 + b x}\right)^{\frac{k}{x}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_euler_quotient_linear,
+        "source_labels": ["p102_1b", "one_inf_09"],
+    },
+    {
+        "id": "limit:euler:sin_power",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "one_inf",
+        "title_km": "រាងមិនកំណត់ 1^អនន្តចម្រុះស៊ីនុស ((1 + a sin bx)^(k/x))",
+        "title_en": "Indeterminate form 1^infinity sine power (1 + a sin bx)^(k/x)",
+        "difficulty": "hard",
+        "pattern": "(1 + {a}*sin({b}*x))**({k}/x)",
+        "pattern_latex": r"\lim_{x \to 0} (1 + a\sin(b x))^{\frac{k}{x}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_euler_sin_power,
+        "source_labels": ["p102_1c", "one_inf_10"],
+    },
+    {
+        "id": "limit:euler:cos_half_angle_power",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "one_inf",
+        "title_km": "រាងមិនកំណត់ 1^អនន្តកូស៊ីនុសកន្លះមុំ ((2 - cos ax)^(1/(x sin bx)))",
+        "title_en": "Indeterminate form 1^infinity cosine half-angle (2 - cos ax)^(1/(x sin bx))",
+        "difficulty": "hard",
+        "pattern": "(2 - cos({a}*x))**(1/(x*sin({b}*x)))",
+        "pattern_latex": r"\lim_{x \to 0} (2 - \cos(a x))^{\frac{1}{x\sin(b x)}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_euler_cos_half_angle_power,
+        "source_labels": ["p102_1d", "one_inf_11"],
+    },
+    {
+        "id": "limit:euler:exp_diff_power",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "one_inf",
+        "title_km": "រាងមិនកំណត់ 1^អនន្តអិចស្ប៉ូណង់ស្យែលដកថេរ ((a e^x - (a-1))^(k/x))",
+        "title_en": "Indeterminate form 1^infinity exponential difference ((a e^x - (a-1))^(k/x))",
+        "difficulty": "hard",
+        "pattern": "({a}*e**x - ({a}-1))**({k}/x)",
+        "pattern_latex": r"\lim_{x \to 0} (a e^{x} - (a - 1))^{\frac{k}{x}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_euler_exp_diff_power,
+        "source_labels": ["p102_1e", "one_inf_12"],
+    },
+    {
+        "id": "limit:euler:exp_cos_sq_power",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "one_inf",
+        "title_km": "រាងមិនកំណត់ 1^អនន្តអិចស្ប៉ូណង់ស្យែលនិងកូស៊ីនុស ((2e^(x²) - cos ax)^(1/x²))",
+        "title_en": "Indeterminate form 1^infinity exponential and cosine ((2e^(x^2) - cos ax)^(1/x^2))",
+        "difficulty": "hard",
+        "pattern": "(2*e**(x**2) - cos({a}*x))**(1/x**2)",
+        "pattern_latex": r"\lim_{x \to 0} (2e^{x^{2}} - \cos(a x))^{\frac{1}{x^{2}}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_euler_exp_cos_sq_power,
+        "source_labels": ["p102_1f", "one_inf_13"],
+    },
+    {
+        "id": "limit:euler:exp_mean_power",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "one_inf",
+        "title_km": "រាងមិនកំណត់ 1^អនន្តមធ្យមអិចស្ប៉ូណង់ស្យែល (((eᵃˣ + eᵇˣ)/2)^(1/x))",
+        "title_en": "Indeterminate form 1^infinity exponential mean ((e^(ax) + e^(bx))/2)^(1/x)",
+        "difficulty": "hard",
+        "pattern": "((e**({a}*x) + e**({b}*x))/2)**(1/x)",
+        "pattern_latex": r"\lim_{x \to 0} \left(\dfrac{e^{a x} + e^{b x}}{2}\right)^{\frac{1}{x}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_euler_exp_mean_power,
+        "source_labels": ["p102_1g", "one_inf_14"],
+    },
+    {
+        "id": "limit:euler:cos_ratio_power",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "one_inf",
+        "title_km": "រាងមិនកំណត់ 1^អនន្តផលធៀបកូស៊ីនុស ((2cos ax / (1 + cos ax))^(1/x²))",
+        "title_en": "Indeterminate form 1^infinity cosine ratio ((2cos ax / (1 + cos ax))^(1/x^2))",
+        "difficulty": "hard",
+        "pattern": "(2*cos({a}*x)/(1 + cos({a}*x)))**(1/x**2)",
+        "pattern_latex": r"\lim_{x \to 0} \left(\dfrac{2\cos(a x)}{1 + \cos(a x)}\right)^{\frac{1}{x^{2}}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_euler_cos_ratio_power,
+        "source_labels": ["p102_1h", "one_inf_15"],
+    },
+    {
+        "id": "limit:euler:sinc_cos_ratio_power",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "one_inf",
+        "title_km": "រាងមិនកំណត់ 1^អនន្តស៊ីនុសលើកូស៊ីនុស ((1 + x sin ax)/cos bx)^(1/x²)",
+        "title_en": "Indeterminate form 1^infinity sinc over cosine ((1 + x sin ax)/cos bx)^(1/x^2)",
+        "difficulty": "hard",
+        "pattern": "((1 + x*sin({a}*x))/cos({b}*x))**(1/x**2)",
+        "pattern_latex": r"\lim_{x \to 0} \left(\dfrac{1 + x\sin(a x)}{\cos(b x)}\right)^{\frac{1}{x^{2}}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_euler_sinc_cos_ratio_power,
+        "source_labels": ["p102_1i", "one_inf_16"],
+    },
+    {
+        "id": "limit:euler:sqrt_cos_power",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "one_inf",
+        "title_km": "រាងមិនកំណត់ 1^អនន្តឫសការ៉េលើកូស៊ីនុស ((√(1 + ax²)/cos x)^(1/x²))",
+        "title_en": "Indeterminate form 1^infinity sqrt over cosine ((sqrt(1 + ax^2)/cos x)^(1/x^2))",
+        "difficulty": "hard",
+        "pattern": "(sqrt(1 + {a}*x**2)/cos(x))**(1/x**2)",
+        "pattern_latex": r"\lim_{x \to 0} \left(\dfrac{\sqrt{1 + a x^{2}}}{\cos x}\right)^{\frac{1}{x^{2}}}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_euler_sqrt_cos_power,
+        "source_labels": ["p102_1j", "one_inf_17"],
+    },
+    {
+        "id": "limit:exponential:ratio_standard",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "zero",
+        "title_km": "ផលធៀបអិចស្ប៉ូណង់ស្យែលគ្រឹះ ((eᵃˣ - 1)/(eᵇˣ - 1))",
+        "title_en": "Ratio of standard exponential limits (e^{ax} - 1)/(e^{bx} - 1)",
+        "difficulty": "medium",
+        "pattern": "(e**({a}*x) - 1)/(e**({b}*x) - 1)",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{e^{a x} - 1}{e^{b x} - 1}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_expo_ratio_standard,
+        "source_labels": ["2025b", "exp_14"],
+    },
+    {
+        "id": "limit:exponential:sinc_sq_combo",
+        "question_type": "limit",
+        "category": "exponential",
+        "subfamily": "trig_combo",
+        "title_km": "អិចស្ប៉ូណង់ស្យែលចម្រុះស៊ីនុសការ៉េ (((e⁻ˣ + eˣ)sin² x)/(2x²))",
+        "title_en": "Exponential sum with squared sinc ((e^{-x} + e^x)sin^2 x)/(2x^2)",
+        "difficulty": "medium",
+        "pattern": "((e**(-x) + e**x)*sin(x)**2)/(2*x**2)",
+        "pattern_latex": r"\lim_{x \to 0} \dfrac{(e^{-x} + e^{x})\sin^2 x}{2x^2}",
+        "point": "0",
+        "var": "x",
+        "sampler": _sample_expo_sinc_sq_combo,
+        "source_labels": ["2014d", "exp_15"],
+    },
 ]
+

@@ -28,7 +28,7 @@ from ...core.shared import _calc_locals, _formula_tags, inline_latex
 def _limit_step(title, detail, formula):
     if isinstance(detail, str):
         detail = detail.replace(r"\log", r"\ln")
-    return {"title": title, "detail": detail, "formula": formula}
+    return {"title": "", "detail": detail, "formula": None}
 
 
 def _has_radical(e):
@@ -159,52 +159,48 @@ def _logarithmic_standard_limit_checkpoints(x, point, expr, formula):
 
 
 def _one_sided_radical_steps(kind, params, var, x, point_latex, expr, result):
-    """Narration + checkpoint for the two sqrt(trig)/sin limits at pi^-: the
-    radical only simplifies once the sign of sin (or cos of the half angle) on
-    the left of pi is spelled out, which is why the side matters."""
     k = params.get("k", 1)
     kpre = f"{k}" if k != 1 else ""
     if kind == "half":
         reduced = k * sqrt(2) / (2 * sin(x / 2))
         steps = [
             _limit_step(
-                "Rewrite with half-angle identities",
-                f"\\(1 + \\cos {var} = 2\\cos^2\\tfrac{{{var}}}{{2}}\\) and \\(\\sin {var} = 2\\sin\\tfrac{{{var}}}{{2}}\\cos\\tfrac{{{var}}}{{2}}\\).",
-                "half_angle_identity",
+                "",
+                rf"\[ \lim_{{{var} \to \pi^-}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+                None,
             ),
             _limit_step(
-                "Take the square root using the side",
-                f"For \\({var} \\to \\pi^-\\) we have \\(\\tfrac{{{var}}}{{2}} < \\tfrac{{\\pi}}{{2}}\\), so \\(\\cos\\tfrac{{{var}}}{{2}} > 0\\) and "
-                f"\\(\\sqrt{{1 + \\cos {var}}} = \\sqrt{{2}}\\cos\\tfrac{{{var}}}{{2}}\\) (no absolute value needed).",
-                "one_sided_sign",
+                "",
+                rf"\[ = \lim_{{{var} \to \pi^-}} \dfrac{{\sqrt{{2\cos^2\frac{{{var}}}{{2}}}}}}{{2\sin\frac{{{var}}}{{2}}\cos\frac{{{var}}}{{2}}}} \]",
+                None,
             ),
             _limit_step(
-                "Cancel and substitute",
-                f"The expression becomes \\({kpre}\\dfrac{{\\sqrt{{2}}}}{{2\\sin\\tfrac{{{var}}}{{2}}}}\\), which tends to {inline_latex(result)} as \\({var} \\to \\pi^-\\).",
-                "one_sided_sign",
+                "",
+                rf"\[ = \lim_{{{var} \to \pi^-}} {kpre}\dfrac{{\sqrt{{2}}}}{{2\sin\frac{{{var}}}{{2}}}} = {latex(result)} \]",
+                None,
             ),
         ]
     else:
         reduced = k * sqrt(2) / (2 * cos(x))
         steps = [
             _limit_step(
-                "Rewrite with double-angle identities",
-                f"\\(1 - \\cos 2{var} = 2\\sin^2 {var}\\) and \\(\\sin 2{var} = 2\\sin {var}\\cos {var}\\).",
-                "double_angle_identity",
+                "",
+                rf"\[ \lim_{{{var} \to \pi^-}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+                None,
             ),
             _limit_step(
-                "Take the square root using the side",
-                f"For \\({var} \\to \\pi^-\\) we have \\(\\sin {var} > 0\\), so \\(\\sqrt{{2\\sin^2 {var}}} = \\sqrt{{2}}\\sin {var}\\). "
-                f"From the right of \\(\\pi\\) it would be \\(-\\sqrt{{2}}\\sin {var}\\), so the two sides give opposite signs and the side must be stated.",
-                "one_sided_sign",
+                "",
+                rf"\[ = \lim_{{{var} \to \pi^-}} \dfrac{{\sqrt{{2\sin^2 {var}}}}}{{2\sin {var}\cos {var}}} \]",
+                None,
             ),
             _limit_step(
-                "Cancel and substitute",
-                f"The expression becomes \\({kpre}\\dfrac{{\\sqrt{{2}}}}{{2\\cos {var}}}\\), which tends to {inline_latex(result)} as \\({var} \\to \\pi^-\\).",
-                "one_sided_sign",
+                "",
+                rf"\[ = \lim_{{{var} \to \pi^-}} {kpre}\dfrac{{\sqrt{{2}}}}{{2\cos {var}}} = {latex(result)} \]",
+                None,
             ),
         ]
     return steps, reduced
+
 
 
 _ONE_SIDED_RADICAL_KINDS = {
@@ -264,15 +260,14 @@ def _rational_limit_steps_checkpoints(params, var, x, point, point_latex, expr, 
         if deg_num > 6 or deg_den > 6:
             steps = [
                 _limit_step(
-                    "Verify indeterminate form 0/0 (ផ្ទៀងផ្ទាត់រាងមិនកំណត់ 0/0)",
-                    rf"Substituting \({var} = {point_latex}\) into numerator and denominator gives \(\dfrac{{0}}{{0}}\), an indeterminate form.",
-                    "setup_limit",
+                    "",
+                    rf"\[ \lim_{{{var} \to {point_latex}}} \dfrac{{{latex(num)}}}{{{latex(den)}}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+                    None,
                 ),
                 _limit_step(
-                    "Divide numerator and denominator by (x - a) (ចែកភាគយកនិងភាគបែងនឹង x - a)",
-                    rf"Use the Bac II power limit identity \(\lim_{{{var} \to {point_latex}}} \dfrac{{{var}^n - ({point_latex})^n}}{{{var} - ({point_latex})}} = n({point_latex})^{{n-1}}\):"
+                    "",
                     rf"\[ \dfrac{{{latex(num)}}}{{{latex(den)}}} = \dfrac{{\frac{{{latex(num)}}}{{{var} - ({point_latex})}}}}{{\frac{{{latex(den)}}}{{{var} - ({point_latex})}}}} \]",
-                    "limit_power_identity",
+                    None,
                 ),
             ]
             d_num = diff(num, x)
@@ -280,16 +275,14 @@ def _rational_limit_steps_checkpoints(params, var, x, point, point_latex, expr, 
             val_num = d_num.subs(x, point)
             val_den = d_den.subs(x, point)
             steps.append(_limit_step(
-                "Evaluate numerator and denominator limits independently (គណនាលីមីតភាគយកនិងភាគបែង)",
-                rf"Calculate each derivative limit:"
-                rf"\[ \lim_{{{var} \to {point_latex}}} \dfrac{{{latex(num)}}}{{{var} - ({point_latex})}} = {latex(val_num)}, \quad "
-                rf"\lim_{{{var} \to {point_latex}}} \dfrac{{{latex(den)}}}{{{var} - ({point_latex})}} = {latex(val_den)} \]",
-                "limit_power_identity",
+                "",
+                rf"\[ \lim_{{{var} \to {point_latex}}} \dfrac{{{latex(num)}}}{{{var} - ({point_latex})}} = {latex(val_num)}, \quad \lim_{{{var} \to {point_latex}}} \dfrac{{{latex(den)}}}{{{var} - ({point_latex})}} = {latex(val_den)} \]",
+                None,
             ))
             steps.append(_limit_step(
-                "Compute the quotient of limits (គណនាតម្លៃចុងក្រោយ)",
-                rf"Therefore, \(\lim_{{{var} \to {point_latex}}} \dfrac{{{latex(num)}}}{{{latex(den)}}} = \dfrac{{{latex(val_num)}}}{{{latex(val_den)}}} = {latex(result)}\).",
-                "limit_power_identity",
+                "",
+                rf"\[ \lim_{{{var} \to {point_latex}}} \dfrac{{{latex(num)}}}{{{latex(den)}}} = \dfrac{{{latex(val_num)}}}{{{latex(val_den)}}} = {latex(result)} \]",
+                None,
             ))
             checkpoints = [
                 {"label": "numerator limit", "value": val_num, "formula": "limit_power_identity"},
@@ -306,9 +299,9 @@ def _rational_limit_steps_checkpoints(params, var, x, point, point_latex, expr, 
 
         steps = [
             _limit_step(
-                "Try direct substitution (ជំនួសតម្លៃផ្ទាល់)",
-                rf"Substituting \({var} = {point_latex}\) gives \(0/0\), an indeterminate form, so we factor and simplify.",
-                "setup_limit",
+                "",
+                rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+                None,
             ),
         ]
         checkpoints = []
@@ -317,25 +310,23 @@ def _rational_limit_steps_checkpoints(params, var, x, point, point_latex, expr, 
             num_f = factor(num)
             den_f = factor(den)
             steps.append(_limit_step(
-                "Factor numerator and denominator (ដាក់ជាផលគុណកត្តា)",
-                rf"\[ {latex(expr)} = \dfrac{{{latex(num_f)}}}{{{latex(den_f)}}} \]",
-                formula,
+                "",
+                rf"\[ = \dfrac{{{latex(num_f)}}}{{{latex(den_f)}}} \]",
+                None,
             ))
             checkpoints.append({"label": "factored form", "value": num_f / den_f, "formula": formula})
         except Exception:
             pass
 
         steps.append(_limit_step(
-            "Cancel common vanishing factor (សម្រួលកត្តារួម)",
-            rf"Cancel the vanishing factor to simplify:"
+            "",
             rf"\[ = {latex(cancelled)} \]",
-            "cancel_common_factor",
+            None,
         ))
         steps.append(_limit_step(
-            "Evaluate by direct substitution (ជំនួសតម្លៃផ្ទាល់)",
-            rf"Substitute \({var} = {point_latex}\):"
+            "",
             rf"\[ \lim_{{{var} \to {point_latex}}} {latex(cancelled)} = {latex(sub_val)} \]",
-            "direct_substitution",
+            None,
         ))
         checkpoints.extend([
             {"label": "cancelled form", "value": cancelled, "formula": "cancel_common_factor"},
@@ -356,9 +347,9 @@ def _radical_limit_steps_checkpoints(params, var, x, point, point_latex, expr, r
             sub_limits = []
             steps = [
                 _limit_step(
-                    "Try direct substitution",
-                    rf"Substituting \({var} = {point_latex}\) gives \(0/0\), an indeterminate form.",
-                    "setup_limit",
+                    "",
+                    rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+                    None,
                 )
             ]
             branch_strs = []
@@ -371,26 +362,14 @@ def _radical_limit_steps_checkpoints(params, var, x, point, point_latex, expr, r
                 branch_strs.append(rf"\dfrac{{{latex(t)} {sign_str}}}{{{latex(den)}}}")
 
             steps.append(_limit_step(
-                "Separate into partial limits by adding and subtracting constants",
-                rf"Split into independent rationalizable fractions:"
-                rf"\[ {latex(expr)} = {' + '.join(branch_strs)} \]",
-                "rationalization_conjugate_finite",
+                "",
+                rf"\[ = {' + '.join(branch_strs)} \]",
+                None,
             ))
             steps.append(_limit_step(
-                "Multiply each fraction by its conjugate factor",
-                rf"Multiply each branch by its corresponding conjugate (for square root: \(\sqrt{{A}}+B\); for cube root: \(A^{{2/3}} + A^{{1/3}}B + B^2\)).",
-                "rationalization_conjugate_finite",
-            ))
-            steps.append(_limit_step(
-                "Cancel the common vanishing factor and evaluate each branch",
-                rf"Cancelling the vanishing factor \({var} - {point_latex}\) gives partial limits: "
-                + " and ".join(rf"\({latex(val)}\)" for val in sub_limits) + ".",
-                "cancel_common_factor",
-            ))
-            steps.append(_limit_step(
-                "Sum partial limits to obtain final result",
-                rf"The total limit is \({' + '.join(latex(val) for val in sub_limits)} = {latex(result)}\).",
-                "direct_substitution",
+                "",
+                rf"\[ = {' + '.join(latex(val) for val in sub_limits)} = {latex(result)} \]",
+                None,
             ))
             checkpoints = [{"label": "final value", "value": result, "formula": formula}]
             return steps, checkpoints
@@ -400,25 +379,15 @@ def _radical_limit_steps_checkpoints(params, var, x, point, point_latex, expr, r
         if cbrt_atoms:
             steps = [
                 _limit_step(
-                    "Try direct substitution",
-                    rf"Substituting \({var} = {point_latex}\) gives \(0/0\), an indeterminate form.",
-                    "setup_limit",
+                    "",
+                    rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+                    None,
                 ),
                 _limit_step(
-                    "Apply difference of cubes identity (រូបមន្តផលដកគូប)",
-                    rf"Use the identity \(a - b = \dfrac{{a^3 - b^3}}{{a^2 + ab + b^2}}\) by multiplying numerator and denominator by the quadratic conjugate factor.",
-                    "rationalization_conjugate_finite",
+                    "",
+                    rf"\[ = {latex(result)} \]",
+                    None,
                 ),
-                _limit_step(
-                    "Cancel the common vanishing factor",
-                    rf"Cancel the vanishing factor \({var} - {point_latex}\) between numerator and denominator.",
-                    "cancel_common_factor",
-                ),
-                _limit_step(
-                    "Evaluate by direct substitution",
-                    rf"Substitute \({var} = {point_latex}\): the limit evaluates to \({latex(result)}\).",
-                    "direct_substitution",
-                )
             ]
             checkpoints = [{"label": "final value", "value": result, "formula": formula}]
             return steps, checkpoints
@@ -427,21 +396,15 @@ def _radical_limit_steps_checkpoints(params, var, x, point, point_latex, expr, r
         if point == 1 and expr.has(Pow):
             steps = [
                 _limit_step(
-                    "Try direct substitution",
-                    rf"Substituting \({var} = 1\) gives \(0/0\), an indeterminate form.",
-                    "setup_limit",
+                    "",
+                    rf"\[ \lim_{{{var} \to 1}} \dfrac{{{latex(num)}}}{{{latex(den)}}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+                    None,
                 ),
                 _limit_step(
-                    "Divide numerator and denominator by the variable difference",
-                    rf"Divide numerator and denominator by \({var} - 1\) to recognize standard derivative / limit forms:"
-                    rf"\[ \dfrac{{{latex(num)}}}{{{latex(den)}}} = \dfrac{{\frac{{{latex(num)}}}{{{var} - 1}}}}{{\frac{{{latex(den)}}}{{{var} - 1}}}} \]",
-                    "rationalization_conjugate_finite",
+                    "",
+                    rf"\[ = \lim_{{{var} \to 1}} \dfrac{{\frac{{{latex(num)}}}{{{var} - 1}}}}{{\frac{{{latex(den)}}}{{{var} - 1}}}} = {latex(result)} \]",
+                    None,
                 ),
-                _limit_step(
-                    "Evaluate limit of numerator and denominator",
-                    rf"Since \(\lim_{{{var} \to 1}} \dfrac{{{var}^p - 1}}{{{var} - 1}} = p\), the ratio evaluates to \({latex(result)}\).",
-                    "direct_substitution",
-                )
             ]
             checkpoints = [{"label": "final value", "value": result, "formula": formula}]
             return steps, checkpoints
@@ -452,19 +415,19 @@ def _radical_limit_steps_checkpoints(params, var, x, point, point_latex, expr, r
             cancelled = cps[0]["value"]
             steps = [
                 _limit_step(
-                    "Multiply and divide by the conjugate",
-                    f"Direct substitution gives \\(0/0\\). Multiply the numerator and denominator by the conjugate.",
-                    formula,
+                    "",
+                    rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+                    None,
                 ),
                 _limit_step(
-                    "Simplify and cancel the common factor",
-                    f"After expanding the conjugate and cancelling, the expression becomes {inline_latex(cancelled)}.",
-                    formula,
+                    "",
+                    rf"\[ = \lim_{{{var} \to {point_latex}}} {latex(cancelled)} \]",
+                    None,
                 ),
                 _limit_step(
-                    "Evaluate by direct substitution",
-                    f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(cancelled)}\\) = {inline_latex(result)}.",
-                    formula,
+                    "",
+                    rf"\[ = {latex(result)} \]",
+                    None,
                 ),
             ]
             checkpoints = [
@@ -479,27 +442,323 @@ def _radical_limit_steps_checkpoints(params, var, x, point, point_latex, expr, r
     # Generic radical fallback
     steps = [
         _limit_step(
-            "Multiply by conjugate expression (គុណនឹងកន្សោមឆ្លាស់)",
-            rf"Multiply numerator and denominator by the conjugate expression to rationalize the indeterminate form \(0/0\):"
-            rf"\[ {latex(expr, ln_notation=True)} \]",
-            "rationalization_conjugate_finite",
+            "",
+            rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr, ln_notation=True)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
         ),
         _limit_step(
-            "Cancel common vanishing factor and evaluate",
-            rf"Cancel the common factor and evaluate as \({var} \to {point_latex}\) to obtain \({latex(result)}\).",
-            "direct_substitution",
-        )
+            "",
+            rf"\[ = {latex(result)} \]",
+            None,
+        ),
     ]
+
     checkpoints = [{"label": "final value", "value": result, "formula": formula}]
     return steps, checkpoints
 
 
+def _sakhon_trig_steps(formula, params, var, expr, result):
+    steps = []
+    checkpoints = [{"label": "final value", "value": result, "formula": formula}]
+
+    if formula == "limit:trig:sinc_linear_combo":
+        c1 = params.get("c1", 3)
+        c2 = params.get("c2", 2)
+        c3 = params.get("c3", 1)
+        k1 = params.get("k1", 1)
+        k2 = params.get("k2", 2)
+        k3 = params.get("k3", 3)
+        t1 = f"{c1}\\sin {var}" if k1 == 1 else f"{c1}\\sin({k1}{var})"
+        t2 = f"{c2}\\sin({k2}{var})" if c2 != 1 else f"\\sin({k2}{var})"
+        t3 = f"{c3}\\sin({k3}{var})" if c3 != 1 else f"\\sin({k3}{var})"
+        steps.append(_limit_step(
+            "",
+            rf"\[ A = \lim_{{{var} \to 0}} \dfrac{{{t1} - {t2} + {t3}}}{{{var}}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{{t1}}}{{{var}}} - \lim_{{{var} \to 0}} \dfrac{{{t2}}}{{{var}}} + \lim_{{{var} \to 0}} \dfrac{{{t3}}}{{{var}}} \]",
+            None,
+        ))
+        k1_term = rf"{c1}\lim_{{{var} \to 0}} \dfrac{{\sin {var}}}{{{var}}}" if k1 == 1 else rf"{c1 * k1}\lim_{{{var} \to 0}} \dfrac{{\sin({k1}{var})}}{{{k1}{var}}}"
+        k2_term = rf"{c2 * k2}\lim_{{{var} \to 0}} \dfrac{{\sin({k2}{var})}}{{{k2}{var}}}"
+        k3_term = rf"{c3 * k3}\lim_{{{var} \to 0}} \dfrac{{\sin({k3}{var})}}{{{k3}{var}}}"
+        steps.append(_limit_step(
+            "",
+            rf"\[ = {k1_term} - {k2_term} + {k3_term} = {c1*k1} - {c2*k2} + {c3*k3} = {latex(result)} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ A = \lim_{{{var} \to 0}} \dfrac{{{t1} - {t2} + {t3}}}{{{var}}} = {latex(result)} \]",
+            None,
+        ))
+        return steps, checkpoints
+
+    if formula == "limit:trig:sinc_triple_product":
+        a = params.get("a", 2)
+        b = params.get("b", 3)
+        c = params.get("c", 4)
+        steps.append(_limit_step(
+            "",
+            rf"\[ B = \lim_{{{var} \to 0}} \dfrac{{\sin({a}{var})\sin({b}{var})\sin({c}{var})}}{{{var}^3}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{\sin({a}{var})}}{{{var}}} \times \lim_{{{var} \to 0}} \dfrac{{\sin({b}{var})}}{{{var}}} \times \lim_{{{var} \to 0}} \dfrac{{\sin({c}{var})}}{{{var}}} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = {a}\lim_{{{var} \to 0}} \dfrac{{\sin({a}{var})}}{{{a}{var}}} \times {b}\lim_{{{var} \to 0}} \dfrac{{\sin({b}{var})}}{{{b}{var}}} \times {c}\lim_{{{var} \to 0}} \dfrac{{\sin({c}{var})}}{{{c}{var}}} = {a} \times {b} \times {c} = {latex(result)} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ B = \lim_{{{var} \to 0}} \dfrac{{\sin({a}{var})\sin({b}{var})\sin({c}{var})}}{{{var}^3}} = {latex(result)} \]",
+            None,
+        ))
+        return steps, checkpoints
+
+    if formula == "limit:trig:sinc_quadratic_combo":
+        a = params.get("a", 3)
+        b = params.get("b", 5)
+        d = params.get("d", 7)
+        steps.append(_limit_step(
+            "",
+            rf"\[ C = \lim_{{{var} \to 0}} \dfrac{{\sin^2({a}{var}) + {var}\sin({b}{var})}}{{{d}{var}^2}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \dfrac{{1}}{{{d}}} \lim_{{{var} \to 0}} \left( \dfrac{{\sin^2({a}{var})}}{{{var}^2}} + \dfrac{{\sin({b}{var})}}{{{var}}} \right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \dfrac{{1}}{{{d}}} \lim_{{{var} \to 0}} \left[ \left(\dfrac{{\sin({a}{var})}}{{{a}{var}}} \times {a}\right)^2 + \dfrac{{\sin({b}{var})}}{{{b}{var}}} \times {b} \right] = \dfrac{{{a**2} + {b}}}{{{d}}} = {latex(result)} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ C = \lim_{{{var} \to 0}} \dfrac{{\sin^2({a}{var}) + {var}\sin({b}{var})}}{{{d}{var}^2}} = {latex(result)} \]",
+            None,
+        ))
+        return steps, checkpoints
+
+    if formula == "limit:trig:sinc_power_sum":
+        a = params.get("a", 1)
+        b = params.get("b", 2)
+        p = params.get("p", 3)
+        steps.append(_limit_step(
+            "",
+            rf"\[ D = \lim_{{{var} \to 0}} \dfrac{{\sin^{{{p}}}({a}{var}) + \sin^{{{p}}}({b}{var})}}{{{var}^{{{p}}}}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \left( \dfrac{{\sin^{{{p}}}({a}{var})}}{{{var}^{{{p}}}}} + \dfrac{{\sin^{{{p}}}({b}{var})}}{{{var}^{{{p}}}}} \right) \]",
+            None,
+        ))
+        term_a = rf"\left(\dfrac{{\sin {var}}}{{{var}}}\right)^{{{p}}}" if a == 1 else rf"\left(\dfrac{{\sin({a}{var})}}{{{a}{var}}} \times {a}\right)^{{{p}}}"
+        term_b = rf"\left(\dfrac{{\sin({b}{var})}}{{{b}{var}}} \times {b}\right)^{{{p}}}"
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \left[ {term_a} + {term_b} \right] = {a**p} + {b**p} = {latex(result)} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ D = \lim_{{{var} \to 0}} \dfrac{{\sin^{{{p}}}({a}{var}) + \sin^{{{p}}}({b}{var})}}{{{var}^{{{p}}}}} = {latex(result)} \]",
+            None,
+        ))
+        return steps, checkpoints
+
+    if formula == "limit:trig:sinc_rational_product":
+        a = params.get("a", 3)
+        b = params.get("b", 4)
+        k = params.get("k", 6)
+        c = params.get("c", 8)
+        steps.append(_limit_step(
+            "",
+            rf"\[ E = \lim_{{{var} \to 0}} \dfrac{{\sin^3({a}{var})\sin^2({b}{var})}}{{{k}{var}^4\sin({c}{var})}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \dfrac{{1}}{{{k}}} \lim_{{{var} \to 0}} \left( \dfrac{{\sin^3({a}{var})}}{{{var}^3}} \times \dfrac{{\sin^2({b}{var})}}{{{var}^2}} \times \dfrac{{{var}}}{{\sin({c}{var})}} \right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \dfrac{{1}}{{{k}}} \lim_{{{var} \to 0}} \left[ \left(\dfrac{{\sin({a}{var})}}{{{a}{var}}} \times {a}\right)^3 \left(\dfrac{{\sin({b}{var})}}{{{b}{var}}} \times {b}\right)^2 \times \dfrac{{{c}{var}}}{{\sin({c}{var})}} \times \dfrac{{1}}{{{c}}} \right] = \dfrac{{{a}^3 \times {b}^2}}{{{k} \times {c}}} = {latex(result)} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ E = \lim_{{{var} \to 0}} \dfrac{{\sin^3({a}{var})\sin^2({b}{var})}}{{{k}{var}^4\sin({c}{var})}} = {latex(result)} \]",
+            None,
+        ))
+        return steps, checkpoints
+
+    if formula == "limit:trig:half_angle_cubed":
+        k = params.get("k", 2)
+        half_var = rf"{k//2}{var}" if (k % 2 == 0 and k > 2) else (f"{var}" if k == 2 else rf"\dfrac{{{k}{var}}}{{2}}")
+        half_sinc = rf"\left(\dfrac{{\sin {var}}}{{{var}}}\right)^2" if half_var == var else rf"\left(\dfrac{{\sin({half_var})}}{{{half_var}}} \times \dfrac{{{k}}}{{2}}\right)^2"
+        steps.append(_limit_step(
+            "",
+            rf"\[ F = \lim_{{{var} \to 0}} \dfrac{{1 - \cos^3({k}{var})}}{{{var}^2}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{(1 - \cos({k}{var}))(1 + \cos({k}{var}) + \cos^2({k}{var}))}}{{{var}^2}} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{2\sin^2({half_var})(1 + \cos({k}{var}) + \cos^2({k}{var}))}}{{{var}^2}} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = 2\lim_{{{var} \to 0}} \left[ {half_sinc} (1 + \cos({k}{var}) + \cos^2({k}{var})) \right] = 2 \times 3 = {latex(result)} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ F = \lim_{{{var} \to 0}} \dfrac{{1 - \cos^3({k}{var})}}{{{var}^2}} = {latex(result)} \]",
+            None,
+        ))
+        return steps, checkpoints
+
+    if formula == "limit:trig:cos_linear_combo":
+        a = params.get("a", 2)
+        b = params.get("b", 4)
+        c1 = params.get("c1", 3)
+        c2 = params.get("c2", 2)
+        half_a = rf"{a//2}{var}" if (a % 2 == 0 and a > 2) else (f"{var}" if a == 2 else rf"\dfrac{{{a}{var}}}{{2}}")
+        half_b = rf"{b//2}{var}" if (b % 2 == 0 and b > 2) else (f"{var}" if b == 2 else rf"\dfrac{{{b}{var}}}{{2}}")
+        coeff_sin_a = 2 * c1
+        coeff_sin_b = 2 * c2
+        term_g_a = rf"{coeff_sin_a}\left(\dfrac{{\sin {var}}}{{{var}}}\right)^2" if half_a == var else rf"{coeff_sin_a}\left(\dfrac{{\sin({half_a})}}{{{half_a}}} \times \dfrac{{{a}}}{{2}}\right)^2"
+        term_g_b = rf"{coeff_sin_b}\left(\dfrac{{\sin({half_b})}}{{{half_b}}} \times {b//2}\right)^2" if half_b != var else rf"{coeff_sin_b}\left(\dfrac{{\sin {var}}}{{{var}}}\right)^2"
+        val_a = coeff_sin_a * (1 if half_a == var else (a // 2) ** 2)
+        val_b = coeff_sin_b * ((b // 2) ** 2 if half_b != var else 1)
+        steps.append(_limit_step(
+            "",
+            rf"\[ G = \lim_{{{var} \to 0}} \dfrac{{1 - {c1}\cos({a}{var}) + {c2}\cos({b}{var})}}{{{var}^2}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{{c1}(1 - \cos({a}{var})) - {c2}(1 - \cos({b}{var}))}}{{{var}^2}} = \lim_{{{var} \to 0}} \dfrac{{{coeff_sin_a}\sin^2({half_a}) - {coeff_sin_b}\sin^2({half_b})}}{{{var}^2}} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \left[ {term_g_a} - {term_g_b} \right] = {val_a} - {val_b} = {latex(result)} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ G = \lim_{{{var} \to 0}} \dfrac{{1 - {c1}\cos({a}{var}) + {c2}\cos({b}{var})}}{{{var}^2}} = {latex(result)} \]",
+            None,
+        ))
+        return steps, checkpoints
+
+    if formula == "limit:trig:cos_sum_pair":
+        a = params.get("a", 2)
+        b = params.get("b", 4)
+        half_a = rf"{a//2}{var}" if (a % 2 == 0 and a > 2) else (f"{var}" if a == 2 else rf"\dfrac{{{a}{var}}}{{2}}")
+        half_b = rf"{b//2}{var}" if (b % 2 == 0 and b > 2) else (f"{var}" if b == 2 else rf"\dfrac{{{b}{var}}}{{2}}")
+        term_h_a = rf"\left(\dfrac{{\sin {var}}}{{{var}}}\right)^2" if half_a == var else rf"\left(\dfrac{{\sin({half_a})}}{{{half_a}}} \times \dfrac{{{a}}}{{2}}\right)^2"
+        term_h_b = rf"\left(\dfrac{{\sin({half_b})}}{{{half_b}}} \times {b//2}\right)^2"
+        val_h_a = 1 if half_a == var else (a // 2) ** 2
+        val_h_b = (b // 2) ** 2
+        steps.append(_limit_step(
+            "",
+            rf"\[ H = \lim_{{{var} \to 0}} \dfrac{{2 - \cos({a}{var}) - \cos({b}{var})}}{{{var}^2}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{(1 - \cos({a}{var})) + (1 - \cos({b}{var}))}}{{{var}^2}} = \lim_{{{var} \to 0}} \dfrac{{2\sin^2({half_a}) + 2\sin^2({half_b})}}{{{var}^2}} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = 2\lim_{{{var} \to 0}} \left[ {term_h_a} + {term_h_b} \right] = 2({val_h_a} + {val_h_b}) = {latex(result)} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ H = \lim_{{{var} \to 0}} \dfrac{{2 - \cos({a}{var}) - \cos({b}{var})}}{{{var}^2}} = {latex(result)} \]",
+            None,
+        ))
+        return steps, checkpoints
+
+    if formula == "limit:trig:tan_sin_combo":
+        c = params.get("c", 2)
+        a = params.get("a", 3)
+        b = params.get("b", 1)
+        coeff_tan = c * a
+        steps.append(_limit_step(
+            "",
+            rf"\[ I = \lim_{{{var} \to 0}} \dfrac{{{c}\tan({a}{var}) - \sin({var})}}{{{var}}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \left( \dfrac{{{c}\tan({a}{var})}}{{{var}}} - \dfrac{{\sin({var})}}{{{var}}} \right) = \lim_{{{var} \to 0}} \left( {coeff_tan} \times \dfrac{{\tan({a}{var})}}{{{a}{var}}} - \dfrac{{\sin({var})}}{{{var}}} \right) = {coeff_tan} - 1 = {latex(result)} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ I = \lim_{{{var} \to 0}} \dfrac{{{c}\tan({a}{var}) - \sin({var})}}{{{var}}} = {latex(result)} \]",
+            None,
+        ))
+        return steps, checkpoints
+
+    if formula == "limit:trig:tan_triple_angle":
+        steps.append(_limit_step(
+            "",
+            rf"\[ J = \lim_{{{var} \to 0}} \dfrac{{3\tan {var} - \tan(3{var})}}{{{var}^3}} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{3\tan {var} - \dfrac{{3\tan {var} - \tan^3 {var}}}{{1 - 3\tan^2 {var}}}}}{{{var}^3}} = \lim_{{{var} \to 0}} \dfrac{{-8\tan^3 {var}}}{{{var}^3(1 - 3\tan^2 {var})}} \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ = -8\lim_{{{var} \to 0}} \dfrac{{\left(\dfrac{{\tan {var}}}{{{var}}}\right)^3}}{{1 - 3\tan^2 {var}}} = -8 \]",
+            None,
+        ))
+        steps.append(_limit_step(
+            "",
+            rf"\[ J = \lim_{{{var} \to 0}} \dfrac{{3\tan {var} - \tan(3{var})}}{{{var}^3}} = -8 \]",
+            None,
+        ))
+        return steps, checkpoints
+
+    return None
+
+
+
 def _trig_limit_steps_checkpoints(params, var, x, point, point_latex, expr, result, formula):
+    sakhon = _sakhon_trig_steps(formula, params, var, expr, result)
+    if sakhon is not None:
+        return sakhon
+
     steps = [
         _limit_step(
-            "Try direct substitution",
-            f"Substituting \\({var} = {point_latex}\\) gives \\(0/0\\), an indeterminate form, so we use trigonometric identities.",
-            "direct_substitution",
+            "",
+            rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr, ln_notation=True)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
         )
     ]
     checkpoints = []
@@ -512,22 +771,19 @@ def _trig_limit_steps_checkpoints(params, var, x, point, point_latex, expr, resu
             half_arg = arg / 2
             transformed = expr.subs(cos_atoms[0], 1 - 2*sin(half_arg)**2)
             steps.append(_limit_step(
-                "Apply half-angle formula (រូបមន្តកន្លះមុំ)",
-                rf"Use \(1 - \cos({latex(arg)}) = 2\sin^2\left({latex(half_arg)}\right)\):"
-                rf"\[ {latex(expr, ln_notation=True)} = {latex(transformed, ln_notation=True)} \]",
-                "trig_half_angle",
-            ))
-            checkpoints.append({"label": "half-angle transformed form", "value": transformed, "formula": "trig_half_angle"})
-            steps.append(_limit_step(
-                "Normalize to fundamental limit (រូបមន្តលីមីតត្រីកោណមាត្រគ្រឹះ)",
-                rf"Reorganize into the standard form \(\lim_{{u \to 0}} \dfrac{{\sin u}}{{u}} = 1\):"
-                rf"\[ = {latex(result)} \cdot \left[\dfrac{{\sin\left({latex(half_arg)}\right)}}{{{latex(half_arg)}}}\right]^2 \]",
-                "limit_sin_x_over_x",
+                "",
+                rf"\[ = {latex(transformed, ln_notation=True)} \]",
+                None,
             ))
             steps.append(_limit_step(
-                "Evaluate limit (គណនាតម្លៃចុងក្រោយ)",
-                rf"Since \(\lim_{{{var} \to 0}} \dfrac{{\sin({latex(half_arg)})}}{{{latex(half_arg)}}} = 1\), the limit is \({latex(result)}\).",
-                "direct_substitution",
+                "",
+                rf"\[ = {latex(result)} \cdot \left[\dfrac{{\sin\left({latex(half_arg)}\right)}}{{{latex(half_arg)}}}\right]^2 = {latex(result)} \]",
+                None,
+            ))
+            steps.append(_limit_step(
+                "",
+                rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr, ln_notation=True)} = {latex(result)} \]",
+                None,
             ))
             checkpoints.append({"label": "final value", "value": result, "formula": "direct_substitution"})
             return steps, checkpoints
@@ -536,15 +792,14 @@ def _trig_limit_steps_checkpoints(params, var, x, point, point_latex, expr, resu
     if (point == 0 or point == S.Zero) and expr.has(sin) and not expr.has(cos):
         num, den = expr.as_numer_denom()
         steps.append(_limit_step(
-            "Divide by the variable to isolate fundamental trigonometric limits",
-            rf"Divide numerator and denominator by \({var}\) to apply \(\lim_{{u \to 0}} \dfrac{{\sin u}}{{u}} = 1\):"
+            "",
             rf"\[ \dfrac{{{latex(num)}}}{{{latex(den)}}} = \dfrac{{\frac{{{latex(num)}}}{{{var}}}}}{{\frac{{{latex(den)}}}{{{var}}}}} \]",
-            "limit_sin_x_over_x",
+            None,
         ))
         steps.append(_limit_step(
-            "Apply fundamental trigonometric limit (រូបមន្តលីមីតត្រីកោណមាត្រគ្រឹះ)",
-            rf"Since \(\lim_{{u \to 0}} \dfrac{{\sin u}}{{u}} = 1\), evaluating each factor yields \({latex(result)}\).",
-            "limit_sin_x_over_x",
+            "",
+            rf"\[ = {latex(result)} \]",
+            None,
         ))
         checkpoints.append({"label": "final value", "value": result, "formula": "limit_sin_x_over_x"})
         return steps, checkpoints
@@ -554,35 +809,30 @@ def _trig_limit_steps_checkpoints(params, var, x, point, point_latex, expr, resu
     if cos2_atoms:
         cos2_term = cos2_atoms[0]
         if expr.has(sin) and not (expr.has(cos) and len(expr.atoms(cos)) > 1):
-            identity_latex = rf"\cos(2{var}) = 1 - 2\sin^2({var})"
             expanded_expr = expr.subs(cos2_term, 1 - 2*sin(x)**2)
         elif expr.has(cos) and len(expr.atoms(cos)) > 1 and not expr.has(sin):
-            identity_latex = rf"\cos(2{var}) = 2\cos^2({var}) - 1"
             expanded_expr = expr.subs(cos2_term, 2*cos(x)**2 - 1)
         else:
-            identity_latex = rf"\cos(2{var}) = \cos^2({var}) - \sin^2({var})"
             expanded_expr = expr.subs(cos2_term, cos(x)**2 - sin(x)**2)
 
         steps.append(_limit_step(
-            "Apply double-angle formula (រូបមន្តមុំទ្វេ)",
-            rf"Use the double-angle identity \({identity_latex}\):"
-            rf"\[ {latex(expr, ln_notation=True)} = {latex(expanded_expr, ln_notation=True)} \]",
-            "trig_double_angle",
+            "",
+            rf"\[ = {latex(expanded_expr, ln_notation=True)} \]",
+            None,
         ))
         cancelled = cancel(expanded_expr)
         if cancelled != expanded_expr:
             steps.append(_limit_step(
-                "Factor and cancel common vanishing factor (សម្រួលកត្តារួម)",
-                rf"Factor numerator and denominator, then cancel the common vanishing factor:"
+                "",
                 rf"\[ = {latex(cancelled, ln_notation=True)} \]",
-                "cancel_common_factor",
+                None,
+            ))
+            steps.append(_limit_step(
+                "",
+                rf"\[ \lim_{{{var} \to {point_latex}}} {latex(cancelled, ln_notation=True)} = {latex(result)} \]",
+                None,
             ))
             checkpoints.append({"label": "cancelled form", "value": cancelled, "formula": "cancel_common_factor"})
-            steps.append(_limit_step(
-                "Evaluate by direct substitution (ជំនួសតម្លៃផ្ទាល់)",
-                rf"Substitute \({var} = {point_latex}\): the limit evaluates to \({latex(result)}\).",
-                "direct_substitution",
-            ))
             checkpoints.append({"label": "final value", "value": result, "formula": "direct_substitution"})
             return steps, checkpoints
 
@@ -593,74 +843,86 @@ def _trig_limit_steps_checkpoints(params, var, x, point, point_latex, expr, resu
             rewritten_den = den.subs(cos(x)**2, 1 - sin(x)**2)
             num_f = factor(num)
             steps.append(_limit_step(
-                "Apply Pythagorean identity (រូបមន្តគ្រឹះត្រីកោណមាត្រ)",
-                rf"Use \(\cos^2({var}) = 1 - \sin^2({var}) = (1 - \sin {var})(1 + \sin {var})\):"
+                "",
                 rf"\[ \dfrac{{{latex(num)}}}{{{latex(den)}}} = \dfrac{{{latex(num_f)}}}{{(1 - \sin {var})(1 + \sin {var})}} \]",
-                "trig_fundamental_relations",
+                None,
             ))
             checkpoints.append({"label": "factored form", "value": num_f / (1 - sin(x)**2), "formula": "trig_fundamental_relations"})
             cancelled = cancel(num / rewritten_den)
             if cancelled != expr:
                 steps.append(_limit_step(
-                    r"Cancel common vanishing factor (សម្រួលកត្តារួម)",
-                    rf"Cancel the vanishing factor \((1 - \sin {var})\):"
+                    "",
                     rf"\[ = {latex(cancelled, ln_notation=True)} \]",
-                    "cancel_common_factor",
+                    None,
+                ))
+                steps.append(_limit_step(
+                    "",
+                    rf"\[ \lim_{{{var} \to {point_latex}}} {latex(cancelled, ln_notation=True)} = {latex(result)} \]",
+                    None,
                 ))
                 checkpoints.append({"label": "cancelled form", "value": cancelled, "formula": "cancel_common_factor"})
-                steps.append(_limit_step(
-                    "Evaluate by direct substitution (ជំនួសតម្លៃផ្ទាល់)",
-                    rf"Substitute \({var} = {point_latex}\):"
-                    rf"\[ \lim_{{{var} \to {point_latex}}} {latex(cancelled, ln_notation=True)} = {latex(result)} \]",
-                    "direct_substitution",
-                ))
                 checkpoints.append({"label": "final value", "value": result, "formula": "direct_substitution"})
                 return steps, checkpoints
         elif den.has(sin) and not den.has(cos) and num.has(cos):
             rewritten_den = den.subs(sin(x)**2, 1 - cos(x)**2)
             num_f = factor(num)
             steps.append(_limit_step(
-                "Apply Pythagorean identity (រូបមន្តគ្រឹះត្រីកោណមាត្រ)",
-                rf"Use \(\sin^2({var}) = 1 - \cos^2({var}) = (1 - \cos {var})(1 + \cos {var})\):"
+                "",
                 rf"\[ \dfrac{{{latex(num)}}}{{{latex(den)}}} = \dfrac{{{latex(num_f)}}}{{(1 - \cos {var})(1 + \cos {var})}} \]",
-                "trig_fundamental_relations",
+                None,
             ))
             checkpoints.append({"label": "factored form", "value": num_f / (1 - cos(x)**2), "formula": "trig_fundamental_relations"})
             cancelled = cancel(num / rewritten_den)
             if cancelled != expr:
                 steps.append(_limit_step(
-                    r"Cancel common vanishing factor (សម្រួលកត្តារួម)",
-                    rf"Cancel the vanishing factor \((1 - \cos {var})\):"
+                    "",
                     rf"\[ = {latex(cancelled, ln_notation=True)} \]",
-                    "cancel_common_factor",
+                    None,
+                ))
+                steps.append(_limit_step(
+                    "",
+                    rf"\[ \lim_{{{var} \to {point_latex}}} {latex(cancelled, ln_notation=True)} = {latex(result)} \]",
+                    None,
                 ))
                 checkpoints.append({"label": "cancelled form", "value": cancelled, "formula": "cancel_common_factor"})
-                steps.append(_limit_step(
-                    "Evaluate by direct substitution (ជំនួសតម្លៃផ្ទាល់)",
-                    rf"Substitute \({var} = {point_latex}\):"
-                    rf"\[ \lim_{{{var} \to {point_latex}}} {latex(cancelled, ln_notation=True)} = {latex(result)} \]",
-                    "direct_substitution",
-                ))
                 checkpoints.append({"label": "final value", "value": result, "formula": "direct_substitution"})
                 return steps, checkpoints
 
-    # 5. Change of variable at non-zero points (t = point - x or t = x - point)
+    # 5. Change of variable at non-zero points (t = x - point or t = point - x)
     if point != 0 and point != S.Zero:
+        num, den = expr.as_numer_denom()
+        try:
+            den_f = factor(den)
+            if den_f != den:
+                steps.append(_limit_step(
+                    "",
+                    rf"\[ = \lim_{{{var} \to {point_latex}}} \dfrac{{{latex(num)}}}{{{latex(den_f)}}} \]",
+                    None,
+                ))
+        except Exception:
+            pass
+
+        t = Symbol("t")
+        try:
+            sub_expr = expr.subs(x, t + point)
+            sub_expr_f = factor(sub_expr)
+            steps.append(_limit_step(
+                "",
+                rf"\[ = \lim_{{t \to 0}} {latex(sub_expr_f, ln_notation=True)} \]",
+                None,
+            ))
+        except Exception:
+            pass
+
         steps.append(_limit_step(
-            "Change of variable (ប្តូរអថេរ)",
-            rf"Let \(t = {point_latex} - {var}\) (or \(t = {var} - {point_latex}\)). As \({var} \to {point_latex}\), \(t \to 0\).",
-            "trig_associated_angles",
+            "",
+            rf"\[ = {latex(result)} \]",
+            None,
         ))
         steps.append(_limit_step(
-            "Apply associated angle formulas and reduction (រូបមន្តមុំភ្ជាប់)",
-            rf"Express trigonometric terms in terms of \(t\) and simplify around \(t = 0\):"
-            rf"\[ {latex(expr, ln_notation=True)} \]",
-            "trig_associated_angles",
-        ))
-        steps.append(_limit_step(
-            "Evaluate limit (គណនាតម្លៃចុងក្រោយ)",
-            rf"Evaluating the transformed expression as \(t \to 0\) yields \({latex(result)}\).",
-            "limit_sin_x_over_x",
+            "",
+            rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr, ln_notation=True)} = {latex(result)} \]",
+            None,
         ))
         checkpoints.append({"label": "final value", "value": result, "formula": "limit_sin_x_over_x"})
         return steps, checkpoints
@@ -670,15 +932,14 @@ def _trig_limit_steps_checkpoints(params, var, x, point, point_latex, expr, resu
         simp = simplify(expr)
         if simp != expr and not simp.has(oo, -oo) and simp.subs(x, point).is_finite:
             steps.append(_limit_step(
-                "Simplify trigonometric expression",
-                rf"Using trigonometric identities, simplify the expression:"
-                rf"\[ {latex(expr, ln_notation=True)} = {latex(simp, ln_notation=True)} \]",
-                formula,
+                "",
+                rf"\[ = {latex(simp, ln_notation=True)} \]",
+                None,
             ))
             steps.append(_limit_step(
-                "Evaluate by direct substitution (ជំនួសតម្លៃផ្ទាល់)",
-                rf"Substitute \({var} = {point_latex}\): the limit evaluates to \({latex(result)}\).",
-                "direct_substitution",
+                "",
+                rf"\[ \lim_{{{var} \to {point_latex}}} {latex(simp, ln_notation=True)} = {latex(result)} \]",
+                None,
             ))
             checkpoints.append({"label": "simplified form", "value": simp, "formula": formula})
             checkpoints.append({"label": "final value", "value": result, "formula": "direct_substitution"})
@@ -688,11 +949,13 @@ def _trig_limit_steps_checkpoints(params, var, x, point, point_latex, expr, resu
 
     # Honest unclassified fallback
     steps.append(_limit_step(
-        "Evaluate algebraic steps",
-        rf"Transform the expression using Bac II trigonometric identities to evaluate as \({var} \to {point_latex}\):"
-        rf"\[ {latex(expr, ln_notation=True)} = {latex(result)} \]",
-        "unclassified_valid",
+        "",
+        rf"\[ = {latex(result)} \]",
+        None,
     ))
+    checkpoints.append({"label": "final value", "value": result, "formula": "unclassified_valid"})
+    return steps, checkpoints
+
     checkpoints.append({"label": "final value", "value": result, "formula": "unclassified_valid"})
     return steps, checkpoints
 
@@ -702,10 +965,9 @@ def _euler_limit_steps_checkpoints(params, var, x, point, point_latex, expr, res
     checkpoints = []
 
     steps.append(_limit_step(
-        "Verify indeterminate form 1^inf (ផ្ទៀងផ្ទាត់រាងមិនកំណត់ 1^អនន្ត)",
-        rf"Substituting \({var} = {point_latex}\) into \({latex(expr, ln_notation=True)}\) gives the indeterminate form \(1^\infty\). "
-        rf"We use the fundamental Euler limit formula \(\lim [f({var})]^{{g({var})}} = e^{{\lim g({var})(f({var}) - 1)}}\).",
-        "euler_identify_form",
+        "",
+        rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr, ln_notation=True)} \quad \left(\text{{រាងមិនកំណត់ }} 1^\infty\right) \]",
+        None,
     ))
 
     base, pwr = expr.as_base_exp()
@@ -714,9 +976,9 @@ def _euler_limit_steps_checkpoints(params, var, x, point, point_latex, expr, res
     L = limit(prod, x, point)
 
     steps.append(_limit_step(
-        "Compute base deviation f(x) - 1 (គណនាផលដកគោល f(x) - 1)",
-        rf"Subtract \(1\) from the base: \(f({var}) - 1 = {latex(base, ln_notation=True)} - 1 = {latex(u, ln_notation=True)}\).",
-        "euler_base_minus_one",
+        "",
+        rf"\[ f({var}) - 1 = {latex(base, ln_notation=True)} - 1 = {latex(u, ln_notation=True)} \]",
+        None,
     ))
     checkpoints.append({"label": "base minus one", "value": u, "formula": "euler_base_minus_one"})
 
@@ -728,31 +990,27 @@ def _euler_limit_steps_checkpoints(params, var, x, point, point_latex, expr, res
             half_arg = arg / 2
             sub_transformed = prod.subs(cos_terms[0], 1 - 2*sin(half_arg)**2)
             steps.append(_limit_step(
-                "Transform exponent limit using half-angle identity (បំលែងលីមីតស្វ័យគុណតាមរូបមន្តកន្លះមុំ)",
-                rf"Use \(\cos({latex(arg)}) - 1 = -2\sin^2\left({latex(half_arg)}\right)\):"
+                "",
                 rf"\[ g({var})(f({var}) - 1) = {latex(prod, ln_notation=True)} = {latex(sub_transformed, ln_notation=True)} \]",
-                "trig_half_angle",
+                None,
             ))
             checkpoints.append({"label": "exponent transformed form", "value": sub_transformed, "formula": "trig_half_angle"})
             steps.append(_limit_step(
-                "Evaluate exponent limit using fundamental trig limit (គណនាលីមីតស្វ័យគុណ)",
-                rf"Since \(\lim_{{u \to 0}} \dfrac{{\sin u}}{{u}} = 1\), evaluating the exponent limit gives:"
+                "",
                 rf"\[ L = \lim_{{{var} \to 0}} \left[{latex(sub_transformed, ln_notation=True)}\right] = {latex(L)} \]",
-                "limit_sin_x_over_x",
+                None,
             ))
     elif prod.has(sin) and (point == 0 or point == S.Zero):
         steps.append(_limit_step(
-            "Evaluate exponent limit using fundamental trig limit (គណនាលីមីតស្វ័យគុណ)",
-            rf"Using \(\lim_{{u \to 0}} \dfrac{{\sin u}}{{u}} = 1\):"
+            "",
             rf"\[ L = \lim_{{{var} \to 0}} g({var})(f({var}) - 1) = \lim_{{{var} \to 0}} \left({latex(pwr, ln_notation=True)} \cdot {latex(u, ln_notation=True)}\right) = {latex(L)} \]",
-            "limit_sin_x_over_x",
+            None,
         ))
     else:
         steps.append(_limit_step(
-            "Evaluate exponent product limit (គណនាលីមីតស្វ័យគុណ g(x)(f(x) - 1))",
-            rf"Multiply by the exponent and evaluate the limit:"
+            "",
             rf"\[ L = \lim_{{{var} \to {point_latex}}} g({var})(f({var}) - 1) = \lim_{{{var} \to {point_latex}}} \left({latex(pwr, ln_notation=True)} \cdot {latex(u, ln_notation=True)}\right) = {latex(L)} \]",
-            "euler_exponent_limit",
+            None,
         ))
 
     checkpoints.append({"label": "exponent limit", "value": L, "formula": "euler_exponent_limit"})
@@ -761,10 +1019,11 @@ def _euler_limit_steps_checkpoints(params, var, x, point, point_latex, expr, res
     res_latex = latex(result)
     conclusion_eq = f"{exp_L_latex} = {res_latex}" if exp_L_latex != res_latex else exp_L_latex
     steps.append(_limit_step(
-        "Conclude with exponential result (សន្និដ្ឋានតម្លៃលីមីតចុងក្រោយ)",
-        rf"Therefore, \(\lim_{{{var} \to {point_latex}}} {latex(expr, ln_notation=True)} = {conclusion_eq}\).",
-        "euler_final_exp",
+        "",
+        rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr, ln_notation=True)} = {conclusion_eq} \]",
+        None,
     ))
+
     checkpoints.append({"label": "final value", "value": result, "formula": "euler_final_exp"})
 
     return steps, checkpoints
@@ -781,51 +1040,50 @@ def _infinity_limit_steps_checkpoints(params, var, x, point, point_latex, expr, 
 def _exponential_limit_steps_checkpoints(params, var, x, point, point_latex, expr, result, formula):
     steps = [
         _limit_step(
-            "Try direct substitution",
-            f"Substituting \\({var} = {point_latex}\\) gives an indeterminate form, so we rewrite using standard exponential limits.",
-            "direct_substitution",
+            "",
+            rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr, ln_notation=True)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
         )
     ]
     checkpoints = []
     if point == 0 or point == S.Zero:
         steps.append(_limit_step(
-            "Isolate standard exponential limit (លីមីតអិចស្ប៉ូណង់ស្យែលគ្រឹះ)",
-            rf"Divide numerator and denominator by \({var}\) to apply \(\lim_{{u \to 0}} \dfrac{{e^u - 1}}{{u}} = 1\):"
-            rf"\[ {latex(expr, ln_notation=True)} \]",
-            "exponential_standard_limit",
+            "",
+            rf"\[ = {latex(expr, ln_notation=True)} \]",
+            None,
         ))
         cps = _exponential_standard_limit_checkpoints(x, point, expr, formula)
         checkpoints.extend(cps)
     steps.append(_limit_step(
-        "Evaluate limit (គណនាតម្លៃចុងក្រោយ)",
-        rf"Evaluating the exponential limits gives \({latex(result)}\).",
-        formula,
+        "",
+        rf"\[ = {latex(result)} \]",
+        None,
     ))
     checkpoints.append({"label": "final value", "value": result, "formula": formula})
     return steps, checkpoints
 
 
 def _logarithmic_limit_steps_checkpoints(params, var, x, point, point_latex, expr, result, formula):
+    tag = r"\dfrac{0}{0}" if (point == 0 or point == S.Zero) else r"\dfrac{\infty}{\infty}"
     steps = [
         _limit_step(
-            "Try direct substitution",
-            f"Substituting \\({var} = {point_latex}\\) gives an indeterminate form, so we rewrite using logarithmic properties.",
-            "direct_substitution",
+            "",
+            rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr, ln_notation=True)} \quad \left(\text{{រាងមិនកំណត់ }} {tag}\right) \]",
+            None,
         )
     ]
     checkpoints = []
     steps.append(_limit_step(
-        "Reorganize using logarithmic properties",
-        rf"Rewrite the expression into standard logarithmic limit form:"
-        rf"\[ {latex(expr, ln_notation=True)} \]",
-        "log_limit_infinity" if (point == oo or point == -oo) else "log_limit_zero",
+        "",
+        rf"\[ = {latex(expr, ln_notation=True)} \]",
+        None,
     ))
     cps = _logarithmic_standard_limit_checkpoints(x, point, expr, formula)
     checkpoints.extend(cps)
     steps.append(_limit_step(
-        "Evaluate limit (គណនាតម្លៃចុងក្រោយ)",
-        rf"Evaluating the logarithmic limits gives \({latex(result)}\).",
-        formula,
+        "",
+        rf"\[ = {latex(result)} \]",
+        None,
     ))
     checkpoints.append({"label": "final value", "value": result, "formula": formula})
     return steps, checkpoints
@@ -885,21 +1143,23 @@ def _curated_limit_steps(params, var, x, point, point_latex, expr, result):
         if log_res is not None:
             return log_res
 
-    technique = (
-        (params.get("curated_technique") or "").strip()
-        or params.get("title_km")
-        or _derived_technique_text(formula, var, x, point_latex, expr)
-    )
-    steps = [_limit_step("Apply the technique", technique, formula)]
-    if params.get("curated_formula_latex"):
-        steps.append(_limit_step(
-            "Key identity used", f"\\({params['curated_formula_latex']}\\)", formula,
-        ))
-    steps.append(_limit_step(
-        "Result",
-        f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr, ln_notation=True)}\\) = {inline_latex(result)}.",
-        formula,
-    ))
+    tag = r"\dfrac{0}{0}"
+    if point in (oo, -oo):
+        tag = r"\dfrac{\infty}{\infty}"
+    steps = [
+        _limit_step(
+            "",
+            rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr, ln_notation=True)} \quad \left(\text{{រាងមិនកំណត់ }} {tag}\right) \]",
+            None,
+        )
+    ]
+    try:
+        simp = cancel(expr)
+        if simp != expr and not _has_huge_power(expr):
+            steps.append(_limit_step("", rf"\[ = \lim_{{{var} \to {point_latex}}} {latex(simp, ln_notation=True)} \]", None))
+    except Exception:
+        pass
+    steps.append(_limit_step("", rf"\[ = {latex(result)} \]", None))
     checkpoints = []
     if formula == "rationalization_conjugate_finite" or formula.startswith("limit:radical:"):
         checkpoints.extend(_rationalization_conjugate_checkpoints(x, point, expr, formula))
@@ -924,9 +1184,9 @@ def _curated_limit_steps(params, var, x, point, point_latex, expr, result):
 def _handle_direct_substitution(params, var, x, point, point_latex, expr, result):
     direct = simplify(expr.subs(x, point))
     steps = [_limit_step(
-        "Evaluate by direct substitution",
-        f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr)}\\) = {inline_latex(direct)}.",
-        "direct_substitution",
+        "",
+        rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr)} = {latex(direct)} \]",
+        None,
     )]
     checkpoints = [{"label": "substituted value", "value": direct, "formula": "direct_substitution"}]
     return steps, checkpoints
@@ -946,24 +1206,24 @@ def _handle_factoring_0_0(params, var, x, point, point_latex, expr, result):
     sub_val = simplify(cancelled.subs(x, point))
     steps = [
         _limit_step(
-            "Try direct substitution",
-            f"Substituting \\({var} = {point_latex}\\) into {inline_latex(expr)} gives \\(0/0\\), an indeterminate form, so we factor.",
-            "setup_limit",
+            "",
+            rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
         ),
         _limit_step(
-            "Factor the expression",
-            f"{inline_latex(expr)} = \\(\\dfrac{{{latex(num_f)}}}{{{latex(den_f)}}}\\).",
-            "factor_difference_of_squares",
+            "",
+            rf"\[ = \lim_{{{var} \to {point_latex}}} \dfrac{{{latex(num_f)}}}{{{latex(den_f)}}} \]",
+            None,
         ),
         _limit_step(
-            "Cancel the common factor",
-            f"\\(\\dfrac{{{latex(num_f)}}}{{{latex(den_f)}}}\\) = {inline_latex(cancelled)}.",
-            "cancel_common_factor",
+            "",
+            rf"\[ = \lim_{{{var} \to {point_latex}}} {latex(cancelled)} \]",
+            None,
         ),
         _limit_step(
-            "Evaluate by direct substitution",
-            f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(cancelled)}\\) = {inline_latex(sub_val)}.",
-            "direct_substitution",
+            "",
+            rf"\[ = {latex(sub_val)} \]",
+            None,
         ),
     ]
     checkpoints = [
@@ -981,14 +1241,19 @@ def _handle_rational_function_infinity(params, var, x, point, point_latex, expr,
     ratio = limit(divided, x, oo)
     steps = [
         _limit_step(
-            "Divide numerator and denominator by the highest power",
-            f"{inline_latex(expr)} = {inline_latex(divided)}.",
-            "divide_highest_power",
+            "",
+            rf"\[ \lim_{{{var} \to \infty}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{\infty}}{{\infty}}\right) \]",
+            None,
         ),
         _limit_step(
-            "Take the limit of the resulting ratio",
-            f"\\(\\lim_{{{var} \\to \\infty}} {latex(divided)}\\) = {inline_latex(ratio)}.",
-            "leading_coefficient_ratio",
+            "",
+            rf"\[ = \lim_{{{var} \to \infty}} {latex(divided)} \]",
+            None,
+        ),
+        _limit_step(
+            "",
+            rf"\[ = {latex(ratio)} \]",
+            None,
         ),
     ]
     checkpoints = [
@@ -1004,14 +1269,19 @@ def _handle_sinc_standard_limit(params, var, x, point, point_latex, expr, result
     coeff_prefix = f"{c} \\cdot " if c != 1 else ""
     steps = [
         _limit_step(
-            "Rewrite so the sine's argument matches the denominator",
-            f"{inline_latex(expr)} = \\({coeff_prefix}{k} \\cdot \\dfrac{{\\sin({kx})}}{{{kx}}}\\).",
-            "sinc_standard_limit",
+            "",
+            rf"\[ \lim_{{{var} \to 0}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
         ),
         _limit_step(
-            "Apply the standard sinc limit",
-            f"As \\({var} \\to 0\\), \\(\\dfrac{{\\sin({kx})}}{{{kx}}} \\to 1\\), so the limit is {inline_latex(result)}.",
-            "sinc_standard_limit",
+            "",
+            rf"\[ = {coeff_prefix}{k} \lim_{{{var} \to 0}} \dfrac{{\sin({kx})}}{{{kx}}} \]",
+            None,
+        ),
+        _limit_step(
+            "",
+            rf"\[ = {latex(result)} \]",
+            None,
         ),
     ]
     rewritten = c * k * sin(k * x) / (k * x)
@@ -1026,14 +1296,19 @@ def _handle_exponential_standard_limit(params, var, x, point, point_latex, expr,
     a, b = params["a"], params["b"]
     steps = [
         _limit_step(
-            "Divide numerator and denominator by the variable",
-            f"{inline_latex(expr)} = \\(\\dfrac{{(e^{{{a}{var}}}-1)/{var}}}{{(e^{{{b}{var}}}-1)/{var}}}\\).",
-            "exponential_standard_limit",
+            "",
+            rf"\[ \lim_{{{var} \to 0}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
         ),
         _limit_step(
-            "Apply the standard exponential limit",
-            f"As \\({var} \\to 0\\), \\(\\dfrac{{e^{{k{var}}}-1}}{{{var}}} \\to k\\) for any constant \\(k\\), so this ratio \\(\\to \\dfrac{{{a}}}{{{b}}}\\) = {inline_latex(result)}.",
-            "exponential_standard_limit",
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{\frac{{e^{{{a}{var}}}-1}}{{{var}}}}}{{\frac{{e^{{{b}{var}}}-1}}{{{var}}}}} \]",
+            None,
+        ),
+        _limit_step(
+            "",
+            rf"\[ = \dfrac{{{a}}}{{{b}}} = {latex(result)} \]",
+            None,
         ),
     ]
     checkpoints = _exponential_standard_limit_checkpoints(x, point, expr, "exponential_standard_limit")
@@ -1050,19 +1325,24 @@ def _handle_conjugate_infinity(params, var, x, point, point_latex, expr, result)
     divided = expand(numerator / x) / expand(conjugate / x)
     steps = [
         _limit_step(
-            "Multiply and divide by the conjugate",
-            f"Multiply and divide by \\({latex(conjugate)}\\): {inline_latex(expr)} = \\(\\dfrac{{{latex(numerator)}}}{{{latex(conjugate)}}}\\).",
-            "conjugate_infinity",
+            "",
+            rf"\[ \lim_{{{var} \to \infty}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \infty - \infty\right) \]",
+            None,
         ),
         _limit_step(
-            "Divide numerator and denominator by the dominant power",
-            f"\\(\\dfrac{{{latex(numerator)}}}{{{latex(conjugate)}}}\\) = {inline_latex(divided)}.",
-            "divide_highest_power",
+            "",
+            rf"\[ = \lim_{{{var} \to \infty}} \dfrac{{{latex(numerator)}}}{{{latex(conjugate)}}} \]",
+            None,
         ),
         _limit_step(
-            "Take the limit of the resulting ratio",
-            f"\\(\\lim_{{{var} \\to \\infty}} {latex(divided)}\\) = {inline_latex(result)}.",
-            "leading_coefficient_ratio",
+            "",
+            rf"\[ = \lim_{{{var} \to \infty}} {latex(divided)} \]",
+            None,
+        ),
+        _limit_step(
+            "",
+            rf"\[ = {latex(result)} \]",
+            None,
         ),
     ]
     checkpoints = [
@@ -1080,20 +1360,24 @@ def _handle_rationalization_conjugate_finite(params, var, x, point, point_latex,
     cancelled = expand(poly_ratio) * conjugate
     steps = [
         _limit_step(
-            "Multiply and divide by the conjugate",
-            f"Since \\(\\sqrt{{{point_latex}+{c}}} = {d}\\), this is \\(0/0\\). Multiply and divide by \\({latex(conjugate)}\\): "
-            f"{inline_latex(expr)} = \\(\\dfrac{{{latex(numerator_poly)} \\cdot ({latex(conjugate)})}}{{{var}-{p}}}\\).",
-            "rationalization_conjugate_finite",
+            "",
+            rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
         ),
         _limit_step(
-            "Cancel the common factor",
-            f"\\(\\dfrac{{{latex(numerator_poly)}}}{{{var}-{p}}} = {latex(poly_ratio)}\\), so the expression simplifies to {inline_latex(cancelled)}.",
-            "cancel_common_factor",
+            "",
+            rf"\[ = \lim_{{{var} \to {point_latex}}} \dfrac{{{latex(numerator_poly)} \cdot ({latex(conjugate)})}}{{{var}-{p}}} \]",
+            None,
         ),
         _limit_step(
-            "Evaluate by direct substitution",
-            f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(cancelled)}\\) = {inline_latex(result)}.",
-            "direct_substitution",
+            "",
+            rf"\[ = \lim_{{{var} \to {point_latex}}} {latex(cancelled)} \]",
+            None,
+        ),
+        _limit_step(
+            "",
+            rf"\[ = {latex(result)} \]",
+            None,
         ),
     ]
     checkpoints = [
@@ -1110,21 +1394,24 @@ def _handle_rationalization_sinc_combo(params, var, x, point, point_latex, expr,
     part2 = limit(1 / conjugate, x, 0)
     steps = [
         _limit_step(
-            "Multiply and divide by the conjugate",
-            f"Multiply and divide by \\({latex(conjugate)}\\): {inline_latex(expr)} = "
-            f"\\(\\dfrac{{2{var}}}{{\\sin({k}{var}) \\cdot ({latex(conjugate)})}}\\).",
-            "rationalization_sinc_combo",
+            "",
+            rf"\[ \lim_{{{var} \to 0}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
         ),
         _limit_step(
-            "Split into a sinc limit and a continuous factor",
-            f"\\(\\dfrac{{2{var}}}{{\\sin({k}{var})}} \\to {latex(part1)}\\) and "
-            f"\\(\\dfrac{{1}}{{{latex(conjugate)}}} \\to {latex(part2)}\\) as \\({var} \\to 0\\).",
-            "rationalization_sinc_combo",
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{2{var}}}{{\sin({k}{var}) \cdot ({latex(conjugate)})}} \]",
+            None,
         ),
         _limit_step(
-            "Multiply the two limits",
-            f"{inline_latex(part1)} \\(\\cdot\\) {inline_latex(part2)} = {inline_latex(result)}.",
-            "rationalization_sinc_combo",
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{2{var}}}{{\sin({k}{var})}} \times \lim_{{{var} \to 0}} \dfrac{{1}}{{{latex(conjugate)}}} \]",
+            None,
+        ),
+        _limit_step(
+            "",
+            rf"\[ = {latex(result)} \]",
+            None,
         ),
     ]
     checkpoints = [
@@ -1141,20 +1428,19 @@ def _handle_exponential_sinc_combo(params, var, x, point, point_latex, expr, res
     sinc_sq = limit(sin(k * x)**2 / x**2, x, 0)
     steps = [
         _limit_step(
-            "Split into a continuous factor and a sinc-squared limit",
-            f"{inline_latex(expr)} = \\(\\dfrac{{(e^{{{a}{var}}}+e^{{-{a}{var}}})}}{{2}} \\cdot \\dfrac{{\\sin^2({k}{var})}}{{{var}^2}}\\).",
-            "exponential_sinc_combo",
+            "",
+            rf"\[ \lim_{{{var} \to 0}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
         ),
         _limit_step(
-            "Evaluate each factor",
-            f"As \\({var} \\to 0\\): the continuous factor \\(\\to {latex(continuous_val)}/2\\), and "
-            f"\\(\\dfrac{{\\sin^2({k}{var})}}{{{var}^2}} \\to {latex(sinc_sq)}\\).",
-            "exponential_sinc_combo",
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{(e^{{{a}{var}}}+e^{{-{a}{var}}})}}{{2}} \times \lim_{{{var} \to 0}} \dfrac{{\sin^2({k}{var})}}{{{var}^2}} \]",
+            None,
         ),
         _limit_step(
-            "Multiply the two limits",
-            f"\\(\\dfrac{{{latex(continuous_val)}}}{{2}} \\cdot {latex(sinc_sq)}\\) = {inline_latex(result)}.",
-            "exponential_sinc_combo",
+            "",
+            rf"\[ = {latex(result)} \]",
+            None,
         ),
     ]
     checkpoints = [
@@ -1167,26 +1453,25 @@ def _handle_exponential_sinc_combo(params, var, x, point, point_latex, expr, res
 
 def _handle_half_angle_sinc_combo(params, var, x, point, point_latex, expr, result):
     k, m = params["k"], params["m"]
-    part1 = limit(sin(k * x) / x, x, 0)
-    part2 = limit((1 - cos(m * x)) / x**2, x, 0)
     steps = [
         _limit_step(
-            "Split into a sinc limit and a half-angle limit",
-            f"{inline_latex(expr)} = \\(\\dfrac{{\\sin({k}{var})}}{{{var}}} \\cdot \\dfrac{{1-\\cos({m}{var})}}{{{var}^2}}\\).",
-            "half_angle_sinc_combo",
+            "",
+            rf"\[ \lim_{{{var} \to 0}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \dfrac{{0}}{{0}}\right) \]",
+            None,
         ),
         _limit_step(
-            "Evaluate each factor",
-            f"As \\({var} \\to 0\\): \\(\\dfrac{{\\sin({k}{var})}}{{{var}}} \\to {latex(part1)}\\), and "
-            f"\\(\\dfrac{{1-\\cos({m}{var})}}{{{var}^2}} \\to {latex(part2)}\\).",
-            "half_angle_sinc_combo",
+            "",
+            rf"\[ = \lim_{{{var} \to 0}} \dfrac{{\sin({k}{var})}}{{{var}}} \times \lim_{{{var} \to 0}} \dfrac{{1-\\cos({m}{var})}}{{{var}^2}} \]",
+            None,
         ),
         _limit_step(
-            "Multiply the two limits",
-            f"{inline_latex(part1)} \\(\\cdot\\) {inline_latex(part2)} = {inline_latex(result)}.",
-            "half_angle_sinc_combo",
+            "",
+            rf"\[ = {latex(result)} \]",
+            None,
         ),
     ]
+    part1 = limit(sin(k * x) / x, x, 0)
+    part2 = limit((1 - cos(m * x)) / x**2, x, 0)
     checkpoints = [
         {"label": "sinc factor", "value": part1, "formula": "half_angle_sinc_combo"},
         {"label": "half-angle factor", "value": part2, "formula": "half_angle_sinc_combo"},
@@ -1200,20 +1485,19 @@ def _handle_log_limit_infinity(params, var, x, point, point_latex, expr, result)
     coeff_prefix = f"{c} \\cdot " if c != 1 else ""
     steps = [
         _limit_step(
-            "Rewrite the log difference as a single logarithm",
-            f"{inline_latex(expr)} = \\({coeff_prefix}{var} \\ln\\!\\left(1+\\dfrac{{{k}}}{{{var}}}\\right)\\).",
-            "log_limit_infinity",
+            "",
+            rf"\[ \lim_{{{var} \to \infty}} {latex(expr)} \quad \left(\text{{រាងមិនកំណត់ }} \infty \times 0\right) \]",
+            None,
         ),
         _limit_step(
-            "Reduce to the standard log limit",
-            f"With \\(u = {k}/{var} \\to 0\\), \\({var}\\ln(1+{k}/{var}) = {k} \\cdot \\dfrac{{\\ln(1+u)}}{{u}} \\to {k}\\) "
-            f"since \\(\\dfrac{{\\ln(1+u)}}{{u}} \\to 1\\).",
-            "log_limit_infinity",
+            "",
+            rf"\[ = {coeff_prefix}{k} \lim_{{{var} \to \infty}} \dfrac{{\ln(1 + \frac{{{k}}}{{{var}}})}}{{\frac{{{k}}}{{{var}}}}} \]",
+            None,
         ),
         _limit_step(
-            "Multiply by the remaining coefficient",
-            f"The limit is {inline_latex(result)}.",
-            "log_limit_infinity",
+            "",
+            rf"\[ = {latex(result)} \]",
+            None,
         ),
     ]
     rewritten = c * x * log(1 + k / x)
@@ -1222,6 +1506,7 @@ def _handle_log_limit_infinity(params, var, x, point, point_latex, expr, result)
         {"label": "final value", "value": result, "formula": "log_limit_infinity"},
     ]
     return steps, checkpoints
+
 
 
 _LIMIT_TECHNIQUE_HANDLERS = {
@@ -1248,7 +1533,7 @@ def _legacy_inferred_steps(var, x, point, point_latex, expr, result):
             return _handle_rational_function_infinity({}, var, x, point, point_latex, expr, result)
         except Exception:
             return [
-                _limit_step("Evaluate the limit at infinity", f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr)} = {latex(result)}\\).", "direct_substitution")
+                _limit_step("", rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr)} = {latex(result)} \]", None)
             ], [{"label": "final value", "value": result, "formula": "direct_substitution"}]
     try:
         direct = simplify(expr.subs(x, point))
@@ -1282,14 +1567,6 @@ def _solve_limit(params):
 
     point_latex = latex(point) + ("^" + ("+" if side == "+" else "-") if side else "")
 
-    steps = [
-        _limit_step(
-            "Set up the limit",
-            f"\\(\\lim_{{{var} \\to {point_latex}}} {latex(expr, ln_notation=True)}\\).",
-            "setup_limit",
-        ),
-    ]
-
     formula_name = params.get("formula_name") or params.get("structure_id")
     if formula_name:
         params["formula_name"] = formula_name
@@ -1301,7 +1578,18 @@ def _solve_limit(params):
             more_steps, checkpoints = handler(params, var, x, point, point_latex, expr, result)
         else:
             more_steps, checkpoints = _legacy_inferred_steps(var, x, point, point_latex, expr, result)
-    steps.extend(more_steps)
+
+    if more_steps:
+        steps = more_steps
+    else:
+        steps = [
+            _limit_step(
+                "",
+                rf"\[ \lim_{{{var} \to {point_latex}}} {latex(expr, ln_notation=True)} = {latex(result)} \]",
+                None,
+            ),
+        ]
+
 
     try:
         decimal = float(N(result, 8))

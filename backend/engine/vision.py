@@ -306,7 +306,6 @@ def _finalize(parsed: dict, provider: str, crop: dict | None = None) -> dict:
 
 
 async def detect_math(data: bytes, user_id: any = None) -> dict:
-<<<<<<< Updated upstream
     def _prepare():
         with Image.open(io.BytesIO(data)) as raw:
             processed, crop = _preprocess(raw.convert("RGB"))

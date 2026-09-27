@@ -2970,20 +2970,23 @@ function PracticeInner() {
               )}
               {explanation && (
                 <div className="text-sm leading-relaxed">
-                  {explanation.steps?.length ? (
+                  {/* Show full explanation content if available; otherwise show steps without duplicating */}
+                  {explanation.content ? (
                     <div className="space-y-1.5 mb-2">
                       <div className="text-xs font-medium text-[#8a857b] uppercase">{t("label_solution")}</div>
-                      {explanation.steps.slice(0, (explainedKey ? 0 : hintLevel) || explanation.steps.length).map((s) => (
+                      <MathText text={explanation.content} className="whitespace-pre-wrap" />
+                    </div>
+                  ) : explanation.steps?.length ? (
+                    <div className="space-y-1.5 mb-2">
+                      <div className="text-xs font-medium text-[#8a857b] uppercase">{t("label_solution")}</div>
+                      {explanation.steps.slice(0, hintLevel || explanation.steps.length).map((s) => (
                         <div key={s.step_order} className="flex gap-1.5">
-                          <span className="font-medium text-[#23272e] whitespace-nowrap">{t("label_step")} {s.step_order}:</span>
+                          {s.title && <span className="font-medium text-[#23272e] whitespace-nowrap">{t("label_step")} {s.step_order}:</span>}
                           <MathText text={s.detail} className="text-[#3f3c35]" />
                         </div>
                       ))}
                     </div>
                   ) : null}
-                  {(explainedKey || !hintLevel || hintLevel >= (explanation.steps?.length ?? 0)) && (
-                    <MathText text={explanation.content} className="whitespace-pre-wrap" />
-                  )}
                   {explanation.teacher_feedback?.content && (
                     <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-950 shadow-sm">
                       <div className="flex items-center gap-1.5 font-semibold text-amber-800 mb-1">

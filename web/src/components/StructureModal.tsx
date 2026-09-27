@@ -977,7 +977,7 @@ export default function StructureModal({
                         </div>
                       )}
                       {step.detail && (
-                        <div className="pl-7 text-sm text-slate-700 leading-relaxed">
+                        <div className={step.title ? "pl-7 text-sm text-slate-700 leading-relaxed" : "text-sm text-slate-700 leading-relaxed"}>
                           <MathText text={kmMath(step.detail)} />
                         </div>
                       )}
