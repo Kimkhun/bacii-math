@@ -1,4 +1,4 @@
-"""Limit generation: 50% curated real BAC II exercises / 50% procedural technique samplers."""
+"""Limit generation: procedural technique samplers, parameterized per structure/technique."""
 from sympy import expand, latex, oo, sympify
 
 from engine.core.expr_shared import _build_expr_problem, _expr_latex, _fmt_poly

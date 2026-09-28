@@ -1467,13 +1467,16 @@ def _topic_structure_summary(topic: str) -> dict:
     if topic == "limit":
         structs = limit_structures.all_limit_structures()
         diffs = {s["difficulty"] for s in structs}
-        curated_count = sum(len(s.get("source_labels", [])) for s in structs)
+        # Every limit exercise is procedurally sampled (no verbatim curated
+        # replay pool) — `source_labels` only tags which real exam problem(s)
+        # a sampler's shape was modeled on, so it's not counted as "curated"
+        # here (that word means literal exam replay for every other topic).
         return {
             "topic": topic,
             "question_types": [{"question_type": "limit", "count": len(structs)}],
             "structure_count": len(structs),
             "difficulties": sorted(diffs),
-            "curated": curated_count,
+            "curated": 0,
         }
 
     if topic == "probability":
