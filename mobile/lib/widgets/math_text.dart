@@ -66,11 +66,17 @@ class MathText extends StatelessWidget {
         mathContent = mathContent.substring(1, mathContent.length - 1).trim();
       }
 
-      segments.add(_MathSegment(
-        text: mathContent,
-        isMath: true,
-        isDisplay: isDisplay,
-      ));
+      // A top-level `\\` is a line break (multi-line exam prompts); flutter_math
+      // can't parse it in inline math. Inside \begin{...} it belongs to the
+      // environment, so leave those alone.
+      final lines = mathContent.contains(r'\begin{')
+          ? [mathContent]
+          : mathContent.split(RegExp(r'\\\\(\[[^\]]*\])?'));
+      for (int li = 0; li < lines.length; li++) {
+        if (li > 0) segments.add(_MathSegment.lineBreak());
+        final line = lines[li].trim();
+        if (line.isNotEmpty) segments.addAll(_splitKhmerText(line, isDisplay));
+      }
 
       lastIndex = match.end;
     }
@@ -83,6 +89,60 @@ class MathText extends StatelessWidget {
     }
 
     return segments;
+  }
+
+  static final RegExp _khmer = RegExp('[\u1780-\u17FF\u19E0-\u19FF]');
+
+  /// flutter_math lays glyphs out one by one, which breaks Khmer shaping, so
+  /// a `\text{...}` run containing Khmer is pulled out of the TeX and shown as
+  /// plain text between the math pieces (like web's latexToMixedText).
+  /// `\left`/`\right` are dropped from split math since a delimiter pair may
+  /// now straddle two pieces.
+  static List<_MathSegment> _splitKhmerText(String math, bool isDisplay) {
+    if (!math.contains(r'\text{') || !_khmer.hasMatch(math)) {
+      return [_MathSegment(text: math, isMath: true, isDisplay: isDisplay)];
+    }
+    final out = <_MathSegment>[];
+    void addMath(String m) {
+      var cleaned = m
+          .replaceAll(RegExp(r'\\(left|right)\s*\.'), '')
+          .replaceAll(RegExp(r'\\(left|right)(?![a-zA-Z])'), '')
+          .trim();
+      // A control space (`\ `) before the removed text leaves a lone `\`.
+      if (cleaned.endsWith(r'\')) cleaned = cleaned.substring(0, cleaned.length - 1).trim();
+      if (cleaned.isNotEmpty) {
+        out.add(_MathSegment(text: cleaned, isMath: true, isDisplay: isDisplay));
+      }
+    }
+
+    int i = 0;
+    var pendingMath = StringBuffer();
+    while (i < math.length) {
+      final start = math.indexOf(r'\text{', i);
+      if (start == -1) {
+        pendingMath.write(math.substring(i));
+        break;
+      }
+      // Find the matching close brace of \text{...}.
+      int depth = 1, j = start + 6;
+      while (j < math.length && depth > 0) {
+        if (math[j] == '{') depth++;
+        if (math[j] == '}') depth--;
+        j++;
+      }
+      final inner = math.substring(start + 6, depth == 0 ? j - 1 : j);
+      if (_khmer.hasMatch(inner)) {
+        pendingMath.write(math.substring(i, start));
+        addMath(pendingMath.toString());
+        pendingMath = StringBuffer();
+        if (inner.trim().isNotEmpty) out.add(_MathSegment(text: inner.trim(), isMath: false));
+      } else {
+        pendingMath.write(math.substring(i, j)); // Latin \text{} is fine in TeX
+      }
+      i = j;
+    }
+    addMath(pendingMath.toString());
+    return out;
   }
 
   @override
@@ -100,6 +160,29 @@ class MathText extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    // Split at line breaks; one Wrap per line.
+    final lines = <List<_MathSegment>>[[]];
+    for (final seg in segments) {
+      if (seg.isLineBreak) {
+        lines.add([]);
+      } else {
+        lines.last.add(seg);
+      }
+    }
+    lines.removeWhere((l) => l.isEmpty);
+    if (lines.length > 1) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: textAlign == TextAlign.center
+            ? CrossAxisAlignment.center
+            : (textAlign == TextAlign.right ? CrossAxisAlignment.end : CrossAxisAlignment.start),
+        children: [for (final l in lines) _line(l, defaultStyle)],
+      );
+    }
+    return _line(lines.isEmpty ? const [] : lines.first, defaultStyle);
+  }
+
+  Widget _line(List<_MathSegment> segments, TextStyle defaultStyle) {
     return Wrap(
       alignment: textAlign == TextAlign.center
           ? WrapAlignment.center
@@ -145,10 +228,17 @@ class _MathSegment {
   final String text;
   final bool isMath;
   final bool isDisplay;
+  final bool isLineBreak;
 
   _MathSegment({
     required this.text,
     required this.isMath,
     this.isDisplay = false,
-  });
+  }) : isLineBreak = false;
+
+  _MathSegment.lineBreak()
+      : text = '',
+        isMath = false,
+        isDisplay = false,
+        isLineBreak = true;
 }

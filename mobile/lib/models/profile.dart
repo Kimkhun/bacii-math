@@ -84,11 +84,11 @@ class Skill {
         ability: (json['ability'] as num?)?.toDouble() ?? 0,
         confidence: (json['confidence'] as num?)?.toDouble() ?? 0,
         level: (json['level'] as num?)?.toDouble() ?? 0,
-        attempts: json['attempts'] as int? ?? 0,
-        correct: json['correct'] as int? ?? 0,
-        streak: json['streak'] as int? ?? 0,
-        bestStreak: json['best_streak'] as int? ?? 0,
-        daysIdle: json['days_idle'] as int? ?? 0,
+        attempts: (json['attempts'] as num?)?.toInt() ?? 0,
+        correct: (json['correct'] as num?)?.toInt() ?? 0,
+        streak: (json['streak'] as num?)?.toInt() ?? 0,
+        bestStreak: (json['best_streak'] as num?)?.toInt() ?? 0,
+        daysIdle: (json['days_idle'] as num?)?.toInt() ?? 0,
         lastSeenAt: json['last_seen_at'] as String?,
         status: json['status'] as String? ?? 'untouched',
         band: json['band'] as String? ?? '',
@@ -133,9 +133,9 @@ class FormulaSkill {
         topic: json['topic'] as String?,
         topicLabel: json['topic_label'] as String?,
         level: (json['level'] as num?)?.toDouble() ?? 0,
-        attempts: json['attempts'] as int? ?? 0,
-        correct: json['correct'] as int? ?? 0,
-        daysIdle: json['days_idle'] as int? ?? 0,
+        attempts: (json['attempts'] as num?)?.toInt() ?? 0,
+        correct: (json['correct'] as num?)?.toInt() ?? 0,
+        daysIdle: (json['days_idle'] as num?)?.toInt() ?? 0,
         status: json['status'] as String? ?? '',
         skillKey: json['skill_key'] as String?,
       );
@@ -189,13 +189,13 @@ class TopicProgress {
         syllabusScore: (json['syllabus_score'] as num?)?.toDouble() ?? 0,
         mastery: (json['mastery'] as num?)?.toDouble() ?? 0,
         coverage: (json['coverage'] as num?)?.toDouble() ?? 0,
-        practised: json['practised'] as int? ?? 0,
-        total: json['total'] as int? ?? 0,
+        practised: (json['practised'] as num?)?.toInt() ?? 0,
+        total: (json['total'] as num?)?.toInt() ?? 0,
         band: json['band'] as String? ?? '',
-        skillsTotal: json['skills_total'] as int? ?? 0,
-        skillsPractised: json['skills_practised'] as int? ?? 0,
-        attempts: json['attempts'] as int? ?? 0,
-        correct: json['correct'] as int? ?? 0,
+        skillsTotal: (json['skills_total'] as num?)?.toInt() ?? 0,
+        skillsPractised: (json['skills_practised'] as num?)?.toInt() ?? 0,
+        attempts: (json['attempts'] as num?)?.toInt() ?? 0,
+        correct: (json['correct'] as num?)?.toInt() ?? 0,
         strongest: json['strongest'] as String?,
         weakest: json['weakest'] as String?,
       );
@@ -203,7 +203,7 @@ class TopicProgress {
 
 class Suggestion {
   final String kind;
-  final int priority;
+  final double priority; // ranking score, fractional
   final String title;
   final String reason;
   final String? contrast;
@@ -230,7 +230,7 @@ class Suggestion {
 
   factory Suggestion.fromJson(Map<String, dynamic> json) => Suggestion(
         kind: json['kind'] as String? ?? '',
-        priority: json['priority'] as int? ?? 0,
+        priority: (json['priority'] as num?)?.toDouble() ?? 0,
         title: json['title'] as String? ?? '',
         reason: json['reason'] as String? ?? '',
         contrast: json['contrast'] as String?,
@@ -277,14 +277,14 @@ class ProfileLevel {
         syllabusScore: (json['syllabus_score'] as num?)?.toDouble() ?? 0,
         mastery: (json['mastery'] as num?)?.toDouble() ?? 0,
         coverage: (json['coverage'] as num?)?.toDouble() ?? 0,
-        practised: json['practised'] as int? ?? 0,
-        total: json['total'] as int? ?? 0,
+        practised: (json['practised'] as num?)?.toInt() ?? 0,
+        total: (json['total'] as num?)?.toInt() ?? 0,
         band: json['band'] as String? ?? '',
-        attempts: json['attempts'] as int? ?? 0,
-        correct: json['correct'] as int? ?? 0,
+        attempts: (json['attempts'] as num?)?.toInt() ?? 0,
+        correct: (json['correct'] as num?)?.toInt() ?? 0,
         accuracy: (json['accuracy'] as num?)?.toDouble() ?? 0,
-        topicsStarted: json['topics_started'] as int? ?? 0,
-        topicsTotal: json['topics_total'] as int? ?? 0,
+        topicsStarted: (json['topics_started'] as num?)?.toInt() ?? 0,
+        topicsTotal: (json['topics_total'] as num?)?.toInt() ?? 0,
       );
 }
 
@@ -297,8 +297,8 @@ class ActivityDay {
 
   factory ActivityDay.fromJson(Map<String, dynamic> json) => ActivityDay(
         date: json['date'] as String? ?? '',
-        attempts: json['attempts'] as int? ?? 0,
-        correct: json['correct'] as int? ?? 0,
+        attempts: (json['attempts'] as num?)?.toInt() ?? 0,
+        correct: (json['correct'] as num?)?.toInt() ?? 0,
       );
 }
 

@@ -55,8 +55,8 @@ class SessionSummary {
         id: json['id'] as String? ?? '',
         questionId: json['question_id'] as String? ?? '',
         status: json['status'] as String? ?? '',
-        partsDone: json['parts_done'] as int? ?? 0,
-        partsTotal: json['parts_total'] as int? ?? 0,
+        partsDone: (json['parts_done'] as num?)?.toInt() ?? 0,
+        partsTotal: (json['parts_total'] as num?)?.toInt() ?? 0,
         updatedAt: json['updated_at'] as String? ?? '',
         question: json['question'] != null
             ? SessionQuestionLite.fromJson(

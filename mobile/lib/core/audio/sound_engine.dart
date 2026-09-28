@@ -115,9 +115,35 @@ Uint8List _renderWav(List<_ToneSpec> tones, {double? masterVolume}) {
 
 class SoundEngine {
   static const String _streakKey = 'bacii_streak';
+  // Same keys as web audioEngine.ts (localStorage there).
+  static const String _enabledKey = 'bacii_canvas_sound_enabled';
+  static const String _volumeKey = 'bacii_canvas_sound_volume';
 
   bool enabled = true;
   double volume = 0.7;
+
+  /// Restores the saved sound preferences (call once at startup).
+  Future<void> loadSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      enabled = prefs.getBool(_enabledKey) ?? enabled;
+      volume = (prefs.getDouble(_volumeKey) ?? volume).clamp(0.0, 1.0);
+    } catch (_) {}
+  }
+
+  Future<void> _saveSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_enabledKey, enabled);
+      await prefs.setDouble(_volumeKey, volume);
+    } catch (_) {}
+  }
+
+  void setVolume(double v) {
+    volume = v.clamp(0.0, 1.0);
+    if (volume > 0 && !enabled) enabled = true;
+    _saveSettings();
+  }
 
   final List<AudioPlayer> _pool = [];
   int _poolIdx = 0;
@@ -192,6 +218,7 @@ class SoundEngine {
 
   bool toggle() {
     enabled = !enabled;
+    _saveSettings();
     return enabled;
   }
 

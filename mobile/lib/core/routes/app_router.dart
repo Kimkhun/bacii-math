@@ -53,6 +53,10 @@ final GoRouter appRouter = GoRouter(
               initialFormula: qp['formula'],
               initialAttempt: qp['attempt'],
               initialSession: qp['session'],
+              // ?template=<structure id> (admin "Practice" buttons); older
+              // links used ?structure=.
+              initialTemplate: qp['template'] ?? qp['structure'],
+              initialDifficulty: qp['difficulty'],
             );
           },
         ),
