@@ -27,8 +27,10 @@ from ...core.slots import _SLOT_NAMES, fill_bound, fill_structured
 from .solver import _solve_definite_integral, _solve_indefinite_integral
 
 # ---------------------------------------------------------------------------
-# The 15 curated Part-I shapes (the first 15 BAC II exercises). These mirror
-# generator._INDEFINITE_TEMPLATES — the source labels are the photo numbers.
+# The 15 Part-I shapes, parameterized from the first 15 BAC II exercises (not
+# a verbatim replay — coefficients are randomized on every generation). These
+# mirror generator._INDEFINITE_TEMPLATES — the source labels are the photo
+# numbers.
 # ---------------------------------------------------------------------------
 _INDEFINITE_TEMPLATES = [
     ("easy", ["{a}*x**2 + {b}*x + {c}", "x"]),
@@ -429,7 +431,8 @@ _INTEGRAL_STRUCTURES = (
 
 _STRUCT_BY_ID = {s["id"]: s for s in _INTEGRAL_STRUCTURES}
 
-# All source exercise labels (the 124 = 15 curated + 109 transcribed). Broken
+# All source exercise labels (the 124 = 15 hand-authored + 109 transcribed
+# template shapes, all parametric — none replayed verbatim). Broken
 # source exercises stay excluded from structures and are listed here for the
 # audit to assert they are *not* covered.
 SOURCE_EXCLUDED_LABELS = ["III-30", "III-34"]
