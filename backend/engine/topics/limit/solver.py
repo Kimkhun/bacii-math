@@ -1099,6 +1099,12 @@ def _curated_limit_steps(params, var, x, point, point_latex, expr, result):
     deriver for `rationalization_conjugate_finite`) so correct intermediate
     work verifies instead of only the final answer."""
     formula = params["formula_name"]
+
+    from .blueprint_interpreter import interpret_blueprint_steps
+    bp_steps, bp_cps = interpret_blueprint_steps(formula, params, var, point, point_latex, expr, result)
+    if bp_steps:
+        return bp_steps, bp_cps
+
     if formula in _ONE_SIDED_RADICAL_KINDS:
         steps, reduced = _one_sided_radical_steps(
             _ONE_SIDED_RADICAL_KINDS[formula], params, var, x, point_latex, expr, result,
