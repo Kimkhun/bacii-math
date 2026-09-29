@@ -43,6 +43,11 @@ backend/engine/
                        template's graded steps once (definitions + checkpoint
                        relations), SymPy validates the plan on random
                        instances and recomputes every value at grading time.
+                       A template may have several methods (alternative
+                       solution paths, --alternatives); rubric.select_method
+                       grades the work against the one it follows, and lines
+                       no method predicts are judged true/false on their own
+                       (grading._ClaimChecker, "verify_claims").
                        Stored in topics/<topic>/data/blueprints.json, written
                        by scripts/generate_blueprints.py --topic <topic> with
                        topics/<topic>/blueprint_spec.py (derivatives so far).

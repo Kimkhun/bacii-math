@@ -123,7 +123,8 @@ MARKING RULES:
 1. Only intermediate results. NEVER include the final answer, and NEVER include anything that
    is mathematically equal to y or to the final answer (for example u'v + uv' before simplifying
    IS the final answer — leave it out). Every checkpoint must have a different value.
-2. 1 to 5 checkpoints; pick the ones a real marker gives points for (u', v', the inner
+2. No checkpoint that is always 0 (e.g. the derivative of a constant numerator): it earns no
+   marks. 1 to 5 checkpoints; pick the ones a real marker gives points for (u', v', the inner
    derivative, the outer derivative, the quotient-rule numerator, each term's derivative).
 3. If y'' is asked, include y' itself as a checkpoint (relation "derivative", of "y").
 4. A plain polynomial differentiated term by term may have [] checkpoints if no intermediate
@@ -174,6 +175,64 @@ Template: y = (a*x + b)*exp(c*x), find y'', slots [a, b, c]
   {"id": "y1", "relation": "derivative", "of": "y", "outer": "", "at": "", "equals": "", "expr": "a*exp(c*x) + c*(a*x + b)*exp(c*x)", "label_en": "y'", "label_km": "ដេរីវេទី១ y'"}]}
 
 Return JSON {"templates": [...]} with exactly one blueprint per template below, same template_id.
+
+TEMPLATES:
+"""
+
+
+def alternative_brief(struct, standard):
+    """A template plus its validated standard method, for --alternatives."""
+    return {
+        **template_brief(struct),
+        "standard_method": {k: standard.get(k) for k in ("definitions", "compose", "checkpoints")},
+    }
+
+
+_METHOD_ITEM = {
+    "type": "OBJECT",
+    "properties": {
+        "method_id": _STRING,
+        "name_en": _STRING,
+        "name_km": _STRING,
+        **RESPONSE_SCHEMA["properties"]["templates"]["items"]["properties"],
+    },
+    "required": ["method_id", "name_en", "name_km", "definitions", "compose", "checkpoints"],
+}
+_METHOD_ITEM["properties"].pop("template_id")
+
+ALTERNATIVES_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "templates": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {"template_id": _STRING, "methods": {"type": "ARRAY", "items": _METHOD_ITEM}},
+                "required": ["template_id", "methods"],
+            },
+        }
+    },
+    "required": ["templates"],
+}
+
+ALTERNATIVES_PROMPT = PROMPT[:PROMPT.index('Return JSON {"templates": [...]}')] + r"""
+TASK FOR THIS REQUEST — ALTERNATIVE METHODS:
+Each template below comes with its STANDARD method's blueprint ("standard_method"). Students
+don't always use it. Write 0 to 2 ALTERNATIVE methods per template: other valid ways a real
+Grade 12 BAC II student solves it, each as a complete blueprint in the same format, plus
+method_id (snake_case, e.g. "expand_first", "chain_rule_on_quotient", "rewrite_as_power"),
+name_en and name_km (a short name of the method).
+
+Good alternatives: expanding/simplifying before differentiating; a different choice of u and v;
+splitting a logarithm vs. the chain rule on the whole argument (or the reverse); rewriting a
+quotient as a product with a negative power; the quotient rule vs. rewriting as a power; the
+product rule vs. expanding. An alternative must ask for DIFFERENT intermediate results than the
+standard method — renaming u and v, or the same steps in another order, is NOT an alternative.
+Every marking rule above still applies to each alternative (no checkpoint equal to y or to the
+final answer; at least one checkpoint). If no genuinely different method exists, return
+"methods": [].
+
+Return JSON {"templates": [{"template_id": ..., "methods": [...]}, ...]}, one entry per template.
 
 TEMPLATES:
 """

@@ -29,12 +29,14 @@ existing judge for that ``answer_kind`` (interval/choice/sign/monotonicity/
 variation_table/continuity) rather than re-implementing it — those judges
 already are the deterministic authority for those shapes.
 """
+import json
 from fractions import Fraction
+from functools import lru_cache
 
 from sympy import Expr, Symbol, oo, simplify, sympify
 
 from .dispatch import solve
-from .grading import _angle_close, _equivalent_const, _numeric_close, _strip_khmer, grade, grade_part, parse_answer
+from .grading import _angle_close, _equivalent_const, _numeric_close, _strip_khmer, grade, grade_part, parse_answer, with_method
 
 # Structured final-answer kinds with a legitimate single-line typed answer
 # a student could actually write ("domain is (2, oo)", "continuous"), so
@@ -162,7 +164,7 @@ def _item_checkpoints(answer_exact, checkpoints):
     return cps
 
 
-def build_rubric(topic, question_type, params, question_points=DEFAULT_QUESTION_POINTS, part_label=None):
+def build_rubric(topic, question_type, params, question_points=DEFAULT_QUESTION_POINTS, part_label=None, method=None):
     """[{"item", "label", "value"|"kind", "points", "answer_kind", ...}] for
     one live/generated question, mechanically weighted per the module
     docstring's two rules. Never hand-typed — every value/kind comes
@@ -173,8 +175,12 @@ def build_rubric(topic, question_type, params, question_points=DEFAULT_QUESTION_
     flow, where the student's `work_text` only ever contains that one
     part's canvas, so scoring the OTHER parts' checkpoints against it would
     always fail them (never actually attempted) instead of just not being
-    part of this grading pass."""
-    solution = solve(topic, question_type, params)
+    part of this grading pass.
+
+    `method`: one of the solution's blueprint methods (see
+    ``engine/core/blueprints.py``) to build the rubric from; default is the
+    solution's own checkpoints (its first method)."""
+    solution = with_method(solve(topic, question_type, params), method)
     parts = solution.get("parts")
     if parts and part_label is not None:
         parts = [p for p in parts if p["label"] == part_label]
@@ -229,6 +235,40 @@ def build_rubric(topic, question_type, params, question_points=DEFAULT_QUESTION_
 # Scoring: match a student's full written work against the rubric.
 # ---------------------------------------------------------------------------
 
+def select_method(topic, question_type, params, lines, question_points=DEFAULT_QUESTION_POINTS,
+                  tolerance=None, part_label=None):
+    """Which blueprint method the student's work follows: the one whose
+    rubric gives this work the highest score, then the most steps actually
+    written (ties -> the earlier, i.e. standard, method). None when the question has fewer than two methods.
+    Shared by `score_work` and ``grading.analyze_work`` so the marks and the
+    points are always judged against the same method."""
+    key = (topic, question_type, json.dumps(params, sort_keys=True, default=str),
+           tuple(lines), question_points, tolerance, part_label)
+    return _select_method_cached(key)
+
+
+@lru_cache(maxsize=256)
+def _select_method_cached(key):
+    topic, question_type, params_json, lines, question_points, tolerance, part_label = key
+    params = json.loads(params_json)
+    methods = solve(topic, question_type, params).get("methods") or []
+    if len(methods) < 2:
+        return None
+    # Rank by points, then by how many of the method's steps the student
+    # literally wrote (not just implied by a correct final answer — with a
+    # right answer every method can score full marks, and the literal steps
+    # are what show which method was actually used); ties -> earlier method.
+    best, best_key = None, None
+    for m in methods:
+        result = _score_work(topic, question_type, params, list(lines), question_points,
+                             tolerance, part_label, m["method"])
+        written = sum(1 for b in result["breakdown"] if b["matched_line"] is not None)
+        key = (result["earned"], written)
+        if best_key is None or key > best_key:
+            best, best_key = m["method"], key
+    return best
+
+
 def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUESTION_POINTS, tolerance=None, part_label=None):
     """Deterministic step-by-step score for one exercise's full written
     work. `lines`: the student's raw work, one asserted fact per line, any
@@ -258,9 +298,20 @@ def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUES
     `part_label`: see `build_rubric` — restricts scoring to one sub-part of
     a multi-part exercise (the progressive check-each-part flow).
 
+    When the question has several blueprint methods, the work is scored
+    against the one it follows (`select_method`), reported as "method".
+
     Returns {"earned", "possible", "breakdown"} — earned/possible are exact
     Fractions; never an LLM judgment call."""
-    rubric = build_rubric(topic, question_type, params, question_points, part_label)
+    method = select_method(topic, question_type, params, lines, question_points, tolerance, part_label)
+    result = _score_work(topic, question_type, params, lines, question_points, tolerance, part_label, method)
+    if method:
+        result["method"] = method
+    return result
+
+
+def _score_work(topic, question_type, params, lines, question_points, tolerance, part_label, method):
+    rubric = build_rubric(topic, question_type, params, question_points, part_label, method)
     work = [ln.strip() for ln in lines if ln.strip()]
     used = [False] * len(work)
     matched_line_idx = [None] * len(rubric)

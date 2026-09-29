@@ -1222,6 +1222,16 @@ class _ClaimChecker:
         return _Claim("define", value=value, label=letter)
 
 
+def with_method(solution, method):
+    """`solution` with its checkpoints swapped for one of its blueprint
+    methods' plans (see ``solution["methods"]``); unchanged when `method`
+    is None or unknown."""
+    plan = next((m for m in solution.get("methods") or [] if m["method"] == method), None)
+    if plan is None:
+        return solution
+    return {**solution, "checkpoints": plan["checkpoints"], "aux_checkpoints": plan["aux_checkpoints"]}
+
+
 def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     """Deterministically check each line of a student's work against the SymPy-computed
     checkpoints for this solution. Returns the first line whose claimed value
@@ -1242,6 +1252,14 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     """
     tol = tolerance if tolerance is not None else _DEFAULT_TOL
     solution = solve(topic, question_type, params)
+    # Several blueprint methods: judge the work against the one it follows
+    # (the same choice score_work makes, so marks and points agree).
+    method = None
+    if len(solution.get("methods") or []) > 1:
+        from .rubric import select_method  # rubric imports this module
+
+        method = select_method(topic, question_type, params, lines, tolerance=tolerance)
+        solution = with_method(solution, method)
     if solution.get("work_mode") == "any_order":
         return _analyze_work_any_order(solution, params, lines, tol)
     given_expr = solution.get("given")
@@ -1639,6 +1657,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
         "first_error_line": first_error_line,
         "reached_final_answer": pointer >= len(checkpoints),
         "formula_breakdown": formula_breakdown,
+        **({"method": method} if method else {}),
     }
 
 def _analyze_work_any_order(solution, params, lines, tol):

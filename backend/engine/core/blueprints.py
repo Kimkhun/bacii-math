@@ -29,6 +29,13 @@ checkpoint could never be told apart from it (a correct final line would be
 claimed by the earlier step). `resolve` drops any that coincide on a given
 instance; `validate` rejects a blueprint where they coincide structurally.
 
+A template may have several *methods* — alternative valid solution paths
+(splitting a log vs. the chain rule on it; expanding first vs. the product
+rule), each a complete blueprint, the standard textbook method first. The
+grader scores a student's whole work against every method and uses the one
+it follows best (``rubric.select_method``); lines no method predicts are
+still judged true/false on their own (``grading._ClaimChecker``).
+
 Relation handlers are registered per topic (``RELATIONS``), so a new topic
 adds its own relation kinds (an antiderivative, a limit, ...) without
 touching this module.
@@ -53,19 +60,32 @@ def blueprints_path(topic: str) -> str:
     return os.path.normpath(os.path.join(_TOPICS_DIR, topic, "data", "blueprints.json"))
 
 
+def _normalize(entry) -> dict:
+    """File entry -> {"methods": [blueprint, ...]}. A template has one or
+    more *methods* (alternative valid solution paths, each a complete
+    blueprint); the first is the standard textbook method. Single-method
+    entries written before methods existed are read as a one-method list."""
+    if "methods" in entry:
+        return entry
+    return {"methods": [{"method_id": "primary", "name_en": "Standard method", **entry}]}
+
+
 def load(topic: str, force: bool = False) -> dict:
-    """{template_id: blueprint} for a topic ({} when it has none yet)."""
+    """{template_id: {"methods": [blueprint, ...]}} for a topic ({} when it
+    has none yet)."""
     if force or topic not in _CACHE:
         try:
             with open(blueprints_path(topic), encoding="utf-8") as f:
-                _CACHE[topic] = json.load(f)
+                _CACHE[topic] = {tid: _normalize(e) for tid, e in json.load(f).items()}
         except (OSError, json.JSONDecodeError):
             _CACHE[topic] = {}
     return _CACHE[topic]
 
 
-def get(topic: str, template_id: str | None) -> dict | None:
-    return load(topic).get(template_id) if template_id else None
+def methods(topic: str, template_id: str | None) -> list[dict]:
+    """The template's blueprints, standard method first ([] if none)."""
+    entry = load(topic).get(template_id) if template_id else None
+    return entry["methods"] if entry else []
 
 
 # ---------------------------------------------------------------------------
@@ -153,24 +173,13 @@ def evaluate(bp: dict, slot_values: dict, given, x) -> dict:
     return {"definitions": definitions, "checkpoints": checkpoints}
 
 
-def resolve(topic, template_id, slot_values, given, final, x, formula=None):
-    """Grading data for one question from its template's blueprint, or None
-    when there is no (usable) blueprint — the caller keeps its own
-    checkpoints then. Returns {"checkpoints": [...], "aux_checkpoints":
-    [...]} in the shape ``analyze_work``/``build_rubric`` consume; the last
-    checkpoint is always `final` (the solver's own answer)."""
-    bp = get(topic, template_id)
-    if not bp or slot_values is None:
-        return None
-    try:
-        values = evaluate(bp, slot_values, given, x)
-    except Exception:  # noqa: BLE001 - a bad blueprint must never break grading
-        return None
+def _plan(bp, slot_values, given, final, x, formula):
+    values = evaluate(bp, slot_values, given, x)
     seen = [given, final]
     checkpoints = []
     for cp, value in values["checkpoints"]:
-        if any(_same(value, s, x) for s in seen):
-            continue  # coincides on this instance: can't be graded by value
+        if value == 0 or any(_same(value, s, x) for s in seen):
+            continue  # 0, or coincides on this instance: can't be graded by value
         seen.append(value)
         checkpoints.append({"label": cp.get("label_en") or cp["id"], "value": value, "formula": formula})
     # Aux: lines that are right wherever they appear without advancing the
@@ -183,6 +192,26 @@ def resolve(topic, template_id, slot_values, given, final, x, formula=None):
     aux += [dict(cp) for cp in checkpoints]
     checkpoints.append({"label": "final answer", "value": final, "formula": formula})
     return {"checkpoints": checkpoints, "aux_checkpoints": aux}
+
+
+def resolve(topic, template_id, slot_values, given, final, x, formula=None):
+    """Grading plans for one question, one per method of its template's
+    blueprint (standard method first), or [] when there is no usable
+    blueprint — the caller keeps its own checkpoints then. Each plan is
+    {"method", "name", "checkpoints", "aux_checkpoints"} in the shape
+    ``analyze_work``/``build_rubric`` consume; every plan's last checkpoint
+    is `final` (the solver's own answer). A method that fails to evaluate
+    on this instance is skipped — a bad blueprint never breaks grading."""
+    if slot_values is None:
+        return []
+    plans = []
+    for bp in methods(topic, template_id):
+        try:
+            plan = _plan(bp, slot_values, given, final, x, formula)
+        except Exception:  # noqa: BLE001
+            continue
+        plans.append({"method": bp.get("method_id", "primary"), "name": bp.get("name_en", ""), **plan})
+    return plans
 
 
 # ---------------------------------------------------------------------------
@@ -223,6 +252,7 @@ def validate(bp: dict, struct: dict, instantiate: Callable, truth: Callable,
 
     x = Symbol(struct.get("var", "x"))
     collisions = [0] * len(bp.get("checkpoints", []))
+    zeros = [0] * len(bp.get("checkpoints", []))
     rng = random.Random(seed)
     for i in range(samples):
         _, slot_values = struct["sampler"](rng)
@@ -249,13 +279,20 @@ def validate(bp: dict, struct: dict, instantiate: Callable, truth: Callable,
             if not _same(claimed, value, x):
                 return [f"{where}: checkpoint {cp['id']} ({cp.get('relation')}): "
                         f"LLM wrote {claimed}, SymPy gives {value}"]
-            if any(_same(value, s, x) for s in seen):
+            if value == 0:
+                zeros[j] += 1
+            elif any(_same(value, s, x) for s in seen):
                 collisions[j] += 1
             seen.append(value)
         if required:
             extra = required(struct, bp, values, x, y, final)
             if extra:
                 return [f"{where}: {p}" for p in extra]
+    for j, n in enumerate(zeros):
+        if n * 2 > samples:
+            problems.append(f"checkpoint {bp['checkpoints'][j]['id']} is 0 on {n}/{samples} samples "
+                            f"(e.g. the derivative of a constant) — it earns no marks and any stray "
+                            f"'= 0' line would match it")
     for j, n in enumerate(collisions):
         if n * 2 > samples:
             cp = bp["checkpoints"][j]
@@ -270,6 +307,17 @@ def _slot_names(struct):
 
 def _slot_env(slot_values):
     return {k: sympify(v) for k, v in slot_values.items()}
+
+
+def same_plan(bp_a: dict, bp_b: dict, struct: dict, instantiate: Callable, seed: int = 7) -> bool:
+    """True when two methods ask for the same intermediate values (on a
+    random instance) — i.e. one isn't really an alternative to the other."""
+    x = Symbol(struct.get("var", "x"))
+    _, slot_values = struct["sampler"](random.Random(seed))
+    y = instantiate(struct, slot_values)
+    a = [v for _, v in evaluate(bp_a, slot_values, y, x)["checkpoints"]]
+    b = [v for _, v in evaluate(bp_b, slot_values, y, x)["checkpoints"]]
+    return all(any(_same(v, w, x) for w in a) for v in b)
 
 
 def save(topic: str, blueprints: dict) -> None:

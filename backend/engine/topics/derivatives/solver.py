@@ -45,11 +45,14 @@ def _solve_derivative(params):
     # supplies the intermediate checkpoints (u', v', the inner derivative, ...)
     # — each value recomputed by SymPy from its relation on this question's
     # numbers; the last checkpoint stays `result`.
-    planned = blueprints.resolve("derivatives", params.get("template_id"), params.get("template_params"),
-                                 given=expr, final=result, x=x, formula="compute_derivative")
-    if planned:
-        checkpoints = planned["checkpoints"]
-        aux_checkpoints = planned["aux_checkpoints"]
+    # A template may have several methods (alternative solution paths);
+    # the first is the default, and the grader picks whichever one the
+    # student's work follows (rubric.select_method).
+    plans = blueprints.resolve("derivatives", params.get("template_id"), params.get("template_params"),
+                               given=expr, final=result, x=x, formula="compute_derivative")
+    if plans:
+        checkpoints = plans[0]["checkpoints"]
+        aux_checkpoints = plans[0]["aux_checkpoints"]
     return {
         "answer_exact": result,
         "answer_decimal": None,
@@ -63,4 +66,5 @@ def _solve_derivative(params):
         "formula_tags": _formula_tags(steps),
         "checkpoints": checkpoints,
         "aux_checkpoints": aux_checkpoints,
+        "methods": plans,
     }
