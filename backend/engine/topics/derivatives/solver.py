@@ -55,6 +55,10 @@ def _solve_derivative(params):
         "answer_decimal": None,
         "answer_latex": latex(result),
         "given": expr,
+        # Judge the student's own labelled lines (u = ..., u' = ...) by
+        # truth, so a different method than the blueprint's isn't marked
+        # wrong — see grading._ClaimChecker.
+        "verify_claims": True,
         "steps": steps,
         "formula_tags": _formula_tags(steps),
         "checkpoints": checkpoints,

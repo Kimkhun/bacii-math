@@ -8,7 +8,7 @@ lives in ``engine.topics.functions.grader``.
 import math
 import re as _re
 
-from sympy import S, Add, E, Expr, expand, sympify, I, N, Symbol, binomial, im, latex, limit, oo, pi, re, simplify, sqrt
+from sympy import S, Add, E, Expr, diff, expand, sympify, I, N, Symbol, binomial, im, latex, limit, oo, pi, re, simplify, sqrt
 from sympy import solve as sym_solve
 from sympy.parsing.sympy_parser import (
     convert_xor,
@@ -1090,6 +1090,138 @@ def _deduce_limit_transition(prev_expr, curr_expr, var_sym, limit_point, target_
         return None
 
 
+# --- Verifying a student's own labelled claims ("u' = ...") --------------
+#
+# A line is judged by whether it is TRUE, not only by whether its value is on
+# the solution's checkpoint list — so work done by a different method than
+# the planned one (another choice of u and v, expanding first, the chain rule
+# instead of splitting a log) isn't marked wrong. The student's own
+# definitions are tracked as the work is read: "u = (7x+7)/(x-1)" names u,
+# then "u' = -14/(x-1)^2" is checked against d/dx of *their* u. Points are
+# unaffected: they still come only from the checkpoints (see rubric.py).
+# Enabled per solution with ``"verify_claims": True`` (derivatives).
+
+_PRIME_CHARS_RE = _re.compile(r"[′’ʹ´`]")
+# Letters a student may use as their own names. Excludes the variable, e,
+# i, the function's own names (y, f) and SymPy's special capitals.
+_CLAIM_RESERVED = set("xeiyfEINSOQ")
+_CLAIM_LHS_NAME_RE = _re.compile(r"^\s*([A-Za-z])\s*('*)\s*(?:\(\s*[A-Za-z]\s*\))?\s*$")
+_CLAIM_LHS_PAREN_RE = _re.compile(r"^\s*\((.+)\)\s*('+)\s*$")
+_CLAIM_LHS_DDX_RE = _re.compile(r"^\s*d\s*([A-Za-z])\s*/\s*d\s*[A-Za-z]\s*$")
+_CLAIM_PRIMED_RE = _re.compile(r"([A-Za-z])('+)(?:\s*\(\s*[A-Za-z]\s*\))?")
+_CLAIM_CALL_RE = _re.compile(r"(?<![A-Za-z])([A-Za-z])\s*\(\s*([A-Za-z])\s*\)")
+
+
+class _Claim:
+    __slots__ = ("kind", "ok", "value", "expected", "label")
+
+    def __init__(self, kind, ok=None, value=None, expected=None, label=None):
+        self.kind, self.ok, self.value, self.expected, self.label = kind, ok, value, expected, label
+
+
+class _ClaimChecker:
+    """Reads one student's work top to bottom, remembering their definitions."""
+
+    def __init__(self, given, var_sym):
+        self.given = given
+        self.x = var_sym
+        self.defs = {}
+
+    def _named(self, letter):
+        if letter in ("y", "f"):
+            return self.given
+        return self.defs.get(letter)
+
+    def _eval(self, text):
+        """An expression in x and the student's names (with primes), or None
+        when it uses anything that can't be resolved."""
+        text = text.strip()
+        if not text:
+            return None
+        subs = {}
+        pool = [c for c in "zwqpmnkjhgdcbatsrvlo" if c not in text and c not in self.defs]
+
+        def primed(m):
+            base = self._named(m.group(1))
+            if base is None or not pool:
+                return m.group(0)
+            ph = pool.pop(0)
+            subs[Symbol(ph)] = diff(base, self.x, len(m.group(2)))
+            return f"({ph})"  # parenthesized: "v'e^x" must not fuse into "ze^x"
+
+        text = _CLAIM_PRIMED_RE.sub(primed, text)
+        text = _CLAIM_CALL_RE.sub(lambda m: m.group(1) if self._named(m.group(1)) is not None and m.group(2) == str(self.x) else m.group(0), text)
+        try:
+            expr = parse_answer(text)
+        except Exception:
+            return None
+        try:
+            free = expr.free_symbols
+        except AttributeError:
+            return None
+        for sym in free:
+            if sym == self.x or sym in subs:
+                continue
+            named = self._named(sym.name) if len(sym.name) == 1 else None
+            if named is None:
+                return None
+            subs[sym] = named
+        return expr.subs(subs) if subs else expr
+
+    def _all_equal(self, values):
+        return all(_equivalent_exact(v, values[0], self.x) for v in values[1:])
+
+    def check(self, text):
+        """A `_Claim` for a labelled line, or None when the line isn't one
+        this checker can judge (the normal checkpoint path handles it)."""
+        text = _PRIME_CHARS_RE.sub("'", text)
+        if "=" not in text:
+            return None
+        lhs, *rhs = text.split("=")
+        rhs = [r for r in rhs if r.strip()]
+        if not rhs:
+            return None
+        order, base, label = None, None, lhs.strip()
+        m = _CLAIM_LHS_NAME_RE.match(lhs)
+        if m:
+            letter, order = m.group(1), len(m.group(2))
+            if order == 0 and letter not in ("y", "f"):
+                if letter in _CLAIM_RESERVED:
+                    return None
+                return self._define(letter, rhs)
+            base = self._named(letter)
+        elif (m := _CLAIM_LHS_PAREN_RE.match(lhs)):
+            base, order = self._eval(m.group(1)), len(m.group(2))
+        elif (m := _CLAIM_LHS_DDX_RE.match(lhs)):
+            base, order = self._named(m.group(1)), 1
+        if base is None:
+            return None
+        expected = diff(base, self.x, order) if order else base
+        values = [self._eval(r) for r in rhs]
+        if any(v is None for v in values):
+            return None
+        ok = all(_equivalent_exact(v, expected, self.x) for v in values)
+        return _Claim("claim", ok=ok, value=values[-1], expected=expected, label=label)
+
+    def _define(self, letter, rhs):
+        values = [self._eval(r) for r in rhs]
+        if any(v is None for v in values):
+            return None
+        value = values[0]
+        old = self.defs.get(letter)
+        if old is not None and not _equivalent_exact(value, old, self.x) \
+                and _equivalent_exact(value, diff(old, self.x), self.x):
+            # "u = 2x" right after "u = x^2": a derivative line whose prime
+            # the handwriting/OCR lost — keep u, credit the derivative.
+            return _Claim("claim", ok=self._all_equal(values), value=value,
+                          expected=diff(old, self.x), label=f"{letter}'")
+        if not self._all_equal(values):
+            # "v = (x+3)(x+4) = x^2 + 7x + 11": the chain itself is wrong.
+            return _Claim("claim", ok=False, value=values[-1], expected=value, label=letter)
+        self.defs[letter] = value
+        return _Claim("define", value=value, label=letter)
+
+
 def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     """Deterministically check each line of a student's work against the SymPy-computed
     checkpoints for this solution. Returns the first line whose claimed value
@@ -1134,6 +1266,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     last_valid_expr = given_expr
 
     var_sym = Symbol(params.get("var", "x"))
+    claims = _ClaimChecker(given_expr, var_sym) if solution.get("verify_claims") and given_expr is not None else None
     for i, raw in enumerate(lines, 1):
         text = _strip_khmer(raw.strip())
         if not text:
@@ -1168,6 +1301,41 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
         if _is_param_restatement(text, params, given_expr):
             line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
             continue
+
+        claim = claims.check(text) if claims is not None else None
+        if claim is not None and claim.kind == "claim":
+            # A labelled claim ("u' = ...", "y' = u'v + uv'", "(ln v)' = ...")
+            # judged true/false on its own terms. A value that is also a
+            # checkpoint still advances the step sequence (even under a
+            # mislabel, e.g. u/v swapped); otherwise the verdict stands.
+            matched_idx = next((idx for idx in range(pointer, len(checkpoints))
+                                if _match_checkpoint(claim.value, checkpoints[idx], tol, var_sym)), None)
+            if matched_idx is not None:
+                matched_checkpoints.add(matched_idx)
+                line_results.append({
+                    "line": i, "text": raw, "checked": True, "correct": True,
+                    "matches": checkpoints[matched_idx]["label"],
+                    "formula": checkpoints[matched_idx].get("formula"),
+                    "expected": str(checkpoints[matched_idx]["value"]),
+                })
+                pointer = matched_idx + 1
+                last_valid_expr = checkpoints[matched_idx]["value"]
+            elif claim.ok or _aux_match([claim.value], aux_checkpoints, tol, var_sym) is not None \
+                    or (pointer > 0 and _match_checkpoint(claim.value, checkpoints[pointer - 1], tol, var_sym)):
+                line_results.append({
+                    "line": i, "text": raw, "checked": True, "correct": True,
+                    "matches": claim.label, "formula": None,
+                    "expected": str(claim.expected if claim.ok else claim.value), "verified": True,
+                })
+            else:
+                line_results.append({
+                    "line": i, "text": raw, "checked": True, "correct": False,
+                    "matches": claim.label, "formula": None, "expected": str(claim.expected),
+                })
+                if first_error_line is None:
+                    first_error_line = i
+            continue
+        is_definition = claim is not None and claim.kind == "define"
 
         had_equals = "=" in text
         if had_equals:
@@ -1416,6 +1584,10 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
             last_valid_expr = value
             if _equivalent_exact(value, solution["answer_exact"], var_sym):
                 pointer = len(checkpoints)
+        elif is_definition:
+            # The student naming their own sub-expression ("u = ..."): not a
+            # claim that can be wrong. Its value is used by later lines.
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "definition"})
         else:
             target = checkpoints[pointer] if pointer < len(checkpoints) else None
             line_results.append({
