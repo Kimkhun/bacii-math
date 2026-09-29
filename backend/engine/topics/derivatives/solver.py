@@ -3,6 +3,7 @@ second derivative for real; the curated JSON only supplies the expression and
 the exam-authored technique narration."""
 from sympy import Symbol, diff, latex, simplify, sympify
 
+from ...core import blueprints
 from ...core.shared import _calc_locals, _formula_tags
 
 
@@ -39,11 +40,23 @@ def _solve_derivative(params):
         ]
     else:
         checkpoints = [{"label": "derivative", "value": result, "formula": "compute_derivative"}]
+    aux_checkpoints = []
+    # The template's blueprint (engine/core/blueprints.py), when it has one,
+    # supplies the intermediate checkpoints (u', v', the inner derivative, ...)
+    # — each value recomputed by SymPy from its relation on this question's
+    # numbers; the last checkpoint stays `result`.
+    planned = blueprints.resolve("derivatives", params.get("template_id"), params.get("template_params"),
+                                 given=expr, final=result, x=x, formula="compute_derivative")
+    if planned:
+        checkpoints = planned["checkpoints"]
+        aux_checkpoints = planned["aux_checkpoints"]
     return {
         "answer_exact": result,
         "answer_decimal": None,
         "answer_latex": latex(result),
+        "given": expr,
         "steps": steps,
         "formula_tags": _formula_tags(steps),
         "checkpoints": checkpoints,
+        "aux_checkpoints": aux_checkpoints,
     }

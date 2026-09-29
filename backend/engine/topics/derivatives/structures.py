@@ -24,6 +24,8 @@ question is sampled from one of these structures. Two origins:
 skill/lesson key); ``rule`` is the main differentiation rule the derivation
 uses, which is what a blueprint's steps actually follow.
 
+Slot names avoid ``e`` (reads as Euler's number to people and LLMs alike).
+
 Slot values are nested under ``params["template_params"]`` rather than
 spread into ``params`` (as limits does): the grader treats a top-level param
 name as a given, so a student line like ``a = 2`` would otherwise be skipped
@@ -168,10 +170,10 @@ def _s_quotient_quadratic_linear(rng):
 def _s_quotient_trinomial_quadratic(rng):
     while True:
         a, b, c, d = _nz(rng, -5, 5), rng.randint(-6, 6), _nz(rng, 1, 4), _nz(rng, -6, 6)
-        e = rng.randint(-5, 5)
-        num, den = a * _X**2 + e * _X + b, c * _X**2 + d
+        m = rng.randint(-5, 5)
+        num, den = a * _X**2 + m * _X + b, c * _X**2 + d
         if _irreducible(num, den):
-            return num / den, {"a": a, "b": b, "c": c, "d": d, "e": e}
+            return num / den, {"a": a, "b": b, "c": c, "d": d, "m": m}
 
 
 def _s_quotient_trinomial_linear(rng):
@@ -582,7 +584,7 @@ DERIVATIVE_STRUCTURES = [
         "({a}*x**2 + {b})/({c}*x + {d})", r"y = \dfrac{a x^{2} + b}{c x + d}",
         "Quadratic over linear", _s_quotient_quadratic_linear, _QUOTIENT),
     _st("trinomial_over_quadratic", "quotient", "quotient", "hard",
-        "({a}*x**2 + {e}*x + {b})/({c}*x**2 + {d})", r"y = \dfrac{a x^{2} + e x + b}{c x^{2} + d}",
+        "({a}*x**2 + {m}*x + {b})/({c}*x**2 + {d})", r"y = \dfrac{a x^{2} + m x + b}{c x^{2} + d}",
         "Trinomial over quadratic", _s_quotient_trinomial_quadratic, _QUOTIENT),
     _st("trinomial_over_linear", "quotient", "quotient", "medium",
         "({a}*x**2 + {b}*x + {c})/({p}*x + {q})", r"y = \dfrac{a x^{2} + b x + c}{p x + q}",

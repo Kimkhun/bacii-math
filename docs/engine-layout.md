@@ -39,6 +39,13 @@ backend/engine/
                        for the historical-exam variant that hand-lists
                        steps instead, since a real paper's numbers don't
                        change).
+    blueprints.py       per-template solution blueprints: an LLM plans each
+                       template's graded steps once (definitions + checkpoint
+                       relations), SymPy validates the plan on random
+                       instances and recomputes every value at grading time.
+                       Stored in topics/<topic>/data/blueprints.json, written
+                       by scripts/generate_blueprints.py --topic <topic> with
+                       topics/<topic>/blueprint_spec.py (derivatives so far).
   llm.py, vision.py, notation.py, explainer.py, formulas.py, cache.py
                         # cross-cutting infra, not topic-specific
 
@@ -57,7 +64,8 @@ backend/engine/
                         graph_grader.py/graph_renderer.py, data/curated/*.json
     derivatives/          solver.py, generator.py, grader.py, structures.py (the
                         template registry — every question is sampled from one
-                        of its structures; audit: scripts/audit_derivative_structures.py)
+                        of its structures; audit: scripts/audit_derivative_structures.py),
+                        blueprint_spec.py + data/blueprints.json (graded steps)
     continuity/, differential_equations/, vectors_space/, conics/
                         solver.py, generator.py, grader.py, data/curated/curated.json
     past_exam/            verbatim replay of a full past exam paper (not a

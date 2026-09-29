@@ -1,0 +1,2808 @@
+{
+  "deriv:chain:cubic_power": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**3 + c*x + b"
+      }
+    ],
+    "compose": "u**n",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "3*a*x**2 + c",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "t**n",
+        "at": "u",
+        "equals": "",
+        "expr": "n*(a*x**3 + c*x + b)**(n - 1)",
+        "label_en": "n·u^(n-1)",
+        "label_km": "n·u^(n-1)"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:chain:full_cubic_high_power": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**3 + b*x**2 + c*x + d"
+      }
+    ],
+    "compose": "u**n",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "3*a*x**2 + 2*b*x + c",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "t**n",
+        "at": "u",
+        "equals": "",
+        "expr": "n*(a*x**3 + b*x**2 + c*x + d)**(n - 1)",
+        "label_en": "n·u^(n-1)",
+        "label_km": "n·u^(n-1)"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:chain:linear_power": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      }
+    ],
+    "compose": "u**n",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "t**n",
+        "at": "u",
+        "equals": "",
+        "expr": "n*(a*x + b)**(n - 1)",
+        "label_en": "n·u^(n-1)",
+        "label_km": "n·u^(n-1)"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:chain:quadratic_power": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + c*x + b"
+      }
+    ],
+    "compose": "u**n",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x + c",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "t**n",
+        "at": "u",
+        "equals": "",
+        "expr": "n*(a*x**2 + c*x + b)**(n - 1)",
+        "label_en": "n·u^(n-1)",
+        "label_km": "n·u^(n-1)"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:chain:reciprocal_power": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      }
+    ],
+    "compose": "k/u**n",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "k/t**n",
+        "at": "u",
+        "equals": "",
+        "expr": "-k*n/(a*x + b)**(n + 1)",
+        "label_en": "outer derivative",
+        "label_km": "ដេរីវេក្រៅ"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:exponential:affine_quotient": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "p*exp(k*x) + q"
+      },
+      {
+        "name": "v",
+        "expr": "exp(k*x) + r"
+      }
+    ],
+    "compose": "u/v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "p*k*exp(k*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*exp(k*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "num",
+        "relation": "combination",
+        "of": "",
+        "outer": "",
+        "at": "",
+        "equals": "u_p*v - u*v_p",
+        "expr": "p*k*exp(k*x)*(exp(k*x) + r) - k*exp(k*x)*(p*exp(k*x) + q)",
+        "label_en": "numerator u'v - uv'",
+        "label_km": "ភាគយក u'v - uv'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:exponential:exp_of_quadratic": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + b*x"
+      }
+    ],
+    "compose": "exp(u)",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x + b",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:exponential:exp_times_sin": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "exp(k*x)"
+      },
+      {
+        "name": "v",
+        "expr": "sin(m*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*exp(k*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "m*cos(m*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:exponential:linear_combo": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "exp(k*x)"
+      }
+    ],
+    "compose": "a*u + b*x",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*exp(k*x)",
+        "label_en": "(e^(kx))'",
+        "label_km": "ដេរីវេ (e^(kx))'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:exponential:linear_times_exp": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      },
+      {
+        "name": "v",
+        "expr": "exp(k*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*exp(k*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:exponential:quadratic_times_exp": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + b"
+      },
+      {
+        "name": "v",
+        "expr": "exp(k*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*exp(k*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:exponential:shifted_quotient": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "exp(k*x) - a"
+      },
+      {
+        "name": "v",
+        "expr": "exp(k*x) + b"
+      }
+    ],
+    "compose": "u/v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*exp(k*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "num",
+        "relation": "combination",
+        "of": "",
+        "outer": "",
+        "at": "",
+        "equals": "u_p*v - u*u_p",
+        "expr": "k*exp(k*x)*(exp(k*x) + b) - (exp(k*x) - a)*k*exp(k*x)",
+        "label_en": "numerator u'v - uv'",
+        "label_km": "ភាគយក u'v - uv'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:exponential:squared_quotient": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "(exp(k*x) + q)/(exp(k*x) + r)"
+      }
+    ],
+    "compose": "u**2",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*(r - q)*exp(k*x)/(exp(k*x) + r)**2",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "t**2",
+        "at": "u",
+        "equals": "",
+        "expr": "2*(exp(k*x) + q)/(exp(k*x) + r)",
+        "label_en": "2u",
+        "label_km": "2u"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:exponential:trinomial_times_exp": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + b*x + c"
+      },
+      {
+        "name": "v",
+        "expr": "exp(k*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x + b",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*exp(k*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:linear_times_log": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + d"
+      },
+      {
+        "name": "v",
+        "expr": "log(x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1/x",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:log_of_linear": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      }
+    ],
+    "compose": "log(u)",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "log(t)",
+        "at": "u",
+        "equals": "",
+        "expr": "1/(a*x + b)",
+        "label_en": "1/u",
+        "label_km": "1/u"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:log_of_quadratic": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + b"
+      }
+    ],
+    "compose": "c*log(u)",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "c*log(t)",
+        "at": "u",
+        "equals": "",
+        "expr": "c/(a*x**2 + b)",
+        "label_en": "c/u",
+        "label_km": "c/u"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:log_of_quotient": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      },
+      {
+        "name": "v",
+        "expr": "c*x + d"
+      }
+    ],
+    "compose": "log(u/v)",
+    "checkpoints": [
+      {
+        "id": "d1",
+        "relation": "derivative",
+        "of": "log(u)",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a/(a*x + b)",
+        "label_en": "(ln u)'",
+        "label_km": "ដេរីវេ ln u"
+      },
+      {
+        "id": "d2",
+        "relation": "derivative",
+        "of": "log(v)",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "c/(c*x + d)",
+        "label_en": "(ln v)'",
+        "label_km": "ដេរីវេ ln v"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:log_of_x_plus_sqrt": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "x + sqrt(x**2 + a)"
+      }
+    ],
+    "compose": "log(u)",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1 + x/sqrt(x**2 + a)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "log(t)",
+        "at": "u",
+        "equals": "",
+        "expr": "1/(x + sqrt(x**2 + a))",
+        "label_en": "1/u",
+        "label_km": "1/u"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:log_over_power": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*log(x) + d"
+      },
+      {
+        "name": "v",
+        "expr": "x**n"
+      }
+    ],
+    "compose": "u/v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a/x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "n*x**(n - 1)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "num",
+        "relation": "combination",
+        "of": "",
+        "outer": "",
+        "at": "",
+        "equals": "u_p*v - u*v_p",
+        "expr": "(a/x)*x**n - n*(a*log(x) + d)*x**(n - 1)",
+        "label_en": "numerator u'v - uv'",
+        "label_km": "ភាគយក u'v - uv'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:log_plus_linear": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "log(x)"
+      }
+    ],
+    "compose": "c*u + b*x",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1/x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:log_plus_quadratic": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      },
+      {
+        "name": "v",
+        "expr": "c*x**2"
+      }
+    ],
+    "compose": "log(u) + v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*c*x",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "term1",
+        "relation": "derivative",
+        "of": "log(u)",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a/(a*x + b)",
+        "label_en": "(ln u)'",
+        "label_km": "ដេរីវេ ln u"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:log_squared_minus_log": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "log(x)"
+      }
+    ],
+    "compose": "u**2 - a*u",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1/x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "term1",
+        "relation": "derivative",
+        "of": "u**2",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*log(x)/x",
+        "label_en": "(u^2)'",
+        "label_km": "ដេរីវេ u^2"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:quadratic_plus_x2_log": {
+    "definitions": [
+      {
+        "name": "w",
+        "expr": "a*x**2"
+      },
+      {
+        "name": "u",
+        "expr": "b*x**2"
+      },
+      {
+        "name": "v",
+        "expr": "log(x)"
+      }
+    ],
+    "compose": "w + u*v",
+    "checkpoints": [
+      {
+        "id": "w_p",
+        "relation": "derivative",
+        "of": "w",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "w'",
+        "label_km": "ដេរីវេ w'"
+      },
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*b*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1/x",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:shifted_self_product": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "x + a"
+      },
+      {
+        "name": "v",
+        "expr": "log(x + a)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1/(x + a)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:trinomial_times_log": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + b*x + c"
+      },
+      {
+        "name": "v",
+        "expr": "log(x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x + b",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1/x",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:logarithm:x_log_plus_linear": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x"
+      },
+      {
+        "name": "v",
+        "expr": "log(x)"
+      }
+    ],
+    "compose": "u*v + b*x",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1/x",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:polynomial:cubic": {
+    "definitions": [],
+    "compose": "",
+    "checkpoints": [],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:polynomial:quadratic": {
+    "definitions": [],
+    "compose": "",
+    "checkpoints": [],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:polynomial:quartic": {
+    "definitions": [],
+    "compose": "",
+    "checkpoints": [],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:polynomial:quartic_plus_reciprocal": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "r/x"
+      }
+    ],
+    "compose": "a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0 + u",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "-r/x**2",
+        "label_en": "(r/x)'",
+        "label_km": "ដេរីវេ (r/x)'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:product:linear_times_quadratic": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      },
+      {
+        "name": "v",
+        "expr": "c*x**2 + d"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*c*x",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:product:monomial_times_linear_power": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "x**m"
+      },
+      {
+        "name": "v",
+        "expr": "(c*x + d)**n"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "m*x**(m - 1)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "n*c*(c*x + d)**(n - 1)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:product:three_factors": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "x**2"
+      },
+      {
+        "name": "v",
+        "expr": "(x + a)*(x + b)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*x + a + b",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:product:two_linear_powers": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "(a*x + b)**2"
+      },
+      {
+        "name": "v",
+        "expr": "(c*x + d)**3"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*(a*x + b)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "3*c*(c*x + d)**2",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:quotient:linear_over_linear": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      },
+      {
+        "name": "v",
+        "expr": "c*x + d"
+      }
+    ],
+    "compose": "u/v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "c",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "num",
+        "relation": "combination",
+        "of": "",
+        "outer": "",
+        "at": "",
+        "equals": "u_p*v - u*v_p",
+        "expr": "a*(c*x + d) - c*(a*x + b)",
+        "label_en": "numerator u'v - uv'",
+        "label_km": "ភាគយក u'v - uv'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:quotient:linear_over_quadratic": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      },
+      {
+        "name": "v",
+        "expr": "c*x**2 + d"
+      }
+    ],
+    "compose": "u/v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*c*x",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "num",
+        "relation": "combination",
+        "of": "",
+        "outer": "",
+        "at": "",
+        "equals": "u_p*v - u*v_p",
+        "expr": "a*(c*x**2 + d) - 2*c*x*(a*x + b)",
+        "label_en": "numerator u'v - uv'",
+        "label_km": "ភាគយក u'v - uv'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:quotient:quadratic_over_linear": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + b"
+      },
+      {
+        "name": "v",
+        "expr": "c*x + d"
+      }
+    ],
+    "compose": "u/v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "c",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "num",
+        "relation": "combination",
+        "of": "",
+        "outer": "",
+        "at": "",
+        "equals": "u_p*v - u*v_p",
+        "expr": "2*a*x*(c*x + d) - c*(a*x**2 + b)",
+        "label_en": "numerator u'v - uv'",
+        "label_km": "ភាគយក u'v - uv'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:quotient:trinomial_over_linear": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + b*x + c"
+      },
+      {
+        "name": "v",
+        "expr": "p*x + q"
+      }
+    ],
+    "compose": "u/v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x + b",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "p",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "num",
+        "relation": "combination",
+        "of": "",
+        "outer": "",
+        "at": "",
+        "equals": "u_p*v - u*v_p",
+        "expr": "(2*a*x + b)*(p*x + q) - p*(a*x**2 + b*x + c)",
+        "label_en": "numerator u'v - uv'",
+        "label_km": "ភាគយក u'v - uv'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:quotient:trinomial_over_quadratic": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + m*x + b"
+      },
+      {
+        "name": "v",
+        "expr": "c*x**2 + d"
+      }
+    ],
+    "compose": "u/v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x + m",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*c*x",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "num",
+        "relation": "combination",
+        "of": "",
+        "outer": "",
+        "at": "",
+        "equals": "u_p*v - u*v_p",
+        "expr": "(2*a*x + m)*(c*x**2 + d) - 2*c*x*(a*x**2 + m*x + b)",
+        "label_en": "numerator u'v - uv'",
+        "label_km": "ភាគយក u'v - uv'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:radical:linear_plus_sqrt": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + b"
+      }
+    ],
+    "compose": "k*x + sqrt(u)",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "sqrt(t)",
+        "at": "u",
+        "equals": "",
+        "expr": "1/(2*sqrt(a*x**2 + b))",
+        "label_en": "1/(2*sqrt(u))",
+        "label_km": "1/(2*sqrt(u))"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:radical:linear_times_sqrt": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "p*x + q"
+      },
+      {
+        "name": "v",
+        "expr": "sqrt(a*x**2 + b)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "p",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a*x/sqrt(a*x**2 + b)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:radical:sqrt_linear": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      }
+    ],
+    "compose": "sqrt(u)",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "sqrt(t)",
+        "at": "u",
+        "equals": "",
+        "expr": "1/(2*sqrt(a*x + b))",
+        "label_en": "1/(2sqrt(u))",
+        "label_km": "1/(2sqrt(u))"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:radical:sqrt_quadratic": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + c*x + b"
+      }
+    ],
+    "compose": "sqrt(u)",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x + c",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "sqrt(t)",
+        "at": "u",
+        "equals": "",
+        "expr": "1/(2*sqrt(a*x**2 + c*x + b))",
+        "label_en": "1/(2sqrt(u))",
+        "label_km": "1/(2sqrt(u))"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:radical:sum_of_sqrts": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      },
+      {
+        "name": "v",
+        "expr": "c*x + d"
+      }
+    ],
+    "compose": "sqrt(u) + sqrt(v)",
+    "checkpoints": [
+      {
+        "id": "d1",
+        "relation": "derivative",
+        "of": "sqrt(u)",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a/(2*sqrt(a*x + b))",
+        "label_en": "(sqrt(u))'",
+        "label_km": "ដេរីវេ (sqrt(u))'"
+      },
+      {
+        "id": "d2",
+        "relation": "derivative",
+        "of": "sqrt(v)",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "c/(2*sqrt(c*x + d))",
+        "label_en": "(sqrt(v))'",
+        "label_km": "ដេរីវេ (sqrt(v))'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:cubic": {
+    "definitions": [],
+    "compose": "",
+    "checkpoints": [
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "3*a*x**2 + 2*b*x + c",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:exp_difference": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "exp(k*x)"
+      },
+      {
+        "name": "v",
+        "expr": "exp(-k*x)"
+      }
+    ],
+    "compose": "u - v",
+    "checkpoints": [
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*exp(k*x) + k*exp(-k*x)",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:exp_minus_cube": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "exp(k*x)"
+      }
+    ],
+    "compose": "a*u - x**3",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*exp(k*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a*k*exp(k*x) - 3*x**2",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:exp_times_sin": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "exp(c*x)"
+      },
+      {
+        "name": "v",
+        "expr": "sin(k*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "c*exp(c*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*cos(k*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "c*exp(c*x)*sin(k*x) + k*exp(c*x)*cos(k*x)",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:linear_plus_exp": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x"
+      },
+      {
+        "name": "v",
+        "expr": "b*exp(k*x)"
+      }
+    ],
+    "compose": "u + v",
+    "checkpoints": [
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a + b*k*exp(k*x)",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:linear_times_exp": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      },
+      {
+        "name": "v",
+        "expr": "exp(c*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "c*exp(c*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a*exp(c*x) + c*(a*x + b)*exp(c*x)",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:log_of_quadratic": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + k"
+      }
+    ],
+    "compose": "log(u)",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x/(a*x**2 + k)",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:log_over_x2": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "log(x)"
+      },
+      {
+        "name": "v",
+        "expr": "x**2"
+      }
+    ],
+    "compose": "u/v + a*x + b",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1/x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*x",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "(1 - 2*log(x))/x**3 + a",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:quartic_plus_sin": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**4"
+      },
+      {
+        "name": "v",
+        "expr": "b*sin(k*x)"
+      }
+    ],
+    "compose": "u + v",
+    "checkpoints": [
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "4*a*x**3 + b*k*cos(k*x)",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:sin_plus_square": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "sin(k*x)"
+      }
+    ],
+    "compose": "a*u + x**2",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*cos(k*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a*k*cos(k*x) + 2*x",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:x2_log": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2"
+      },
+      {
+        "name": "v",
+        "expr": "log(x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1/x",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x*log(x) + a*x",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:x2_log_plus_x2": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2"
+      },
+      {
+        "name": "v",
+        "expr": "log(x)"
+      },
+      {
+        "name": "w",
+        "expr": "b/2*x**2"
+      }
+    ],
+    "compose": "u*v + w",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1/x",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x*log(x) + (a + b)*x",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:second_order:x2_times_exp": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2"
+      },
+      {
+        "name": "v",
+        "expr": "exp(k*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*exp(k*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "y1",
+        "relation": "derivative",
+        "of": "y",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x*exp(k*x) + a*k*x**2*exp(k*x)",
+        "label_en": "y'",
+        "label_km": "ដេរីវេទី១ y'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:binomial_squared": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "sin(k*x) - cos(m*x)"
+      }
+    ],
+    "compose": "u**2",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*cos(k*x) + m*sin(m*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "t**2",
+        "at": "u",
+        "equals": "",
+        "expr": "2*(sin(k*x) - cos(m*x))",
+        "label_en": "2*u",
+        "label_km": "2*u"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:cos_of_quadratic": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2 + b"
+      }
+    ],
+    "compose": "cos(u)",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "cos(t)",
+        "at": "u",
+        "equals": "",
+        "expr": "-sin(a*x**2 + b)",
+        "label_en": "cos'(u)",
+        "label_km": "ដេរីវេ cos(u)"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:cos_power": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "cos(k*x)"
+      }
+    ],
+    "compose": "a*u**n",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "-k*sin(k*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "a*t**n",
+        "at": "u",
+        "equals": "",
+        "expr": "a*n*cos(k*x)**(n - 1)",
+        "label_en": "a·n·u^(n-1)",
+        "label_km": "a·n·u^(n-1)"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:linear_times_cos": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x + b"
+      },
+      {
+        "name": "v",
+        "expr": "cos(k*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "-k*sin(k*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:nested_composition": {
+    "definitions": [
+      {
+        "name": "v",
+        "expr": "k/x"
+      },
+      {
+        "name": "u",
+        "expr": "sin(k/x)"
+      }
+    ],
+    "compose": "cos(u)",
+    "checkpoints": [
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "-k/x**2",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "-k*cos(k/x)/x**2",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "cos(t)",
+        "at": "u",
+        "equals": "",
+        "expr": "-sin(sin(k/x))",
+        "label_en": "-sin(u)",
+        "label_km": "-sin(u)"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:quotient_sin_cos": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a + b*cos(x)"
+      },
+      {
+        "name": "v",
+        "expr": "c + d*sin(x)"
+      }
+    ],
+    "compose": "u/v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "-b*sin(x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "d*cos(x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "num",
+        "relation": "combination",
+        "of": "",
+        "outer": "",
+        "at": "",
+        "equals": "u_p*v - u*v_p",
+        "expr": "-b*sin(x)*(c + d*sin(x)) - d*cos(x)*(a + b*cos(x))",
+        "label_en": "numerator u'v - uv'",
+        "label_km": "ភាគយក u'v - uv'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:sin_cos_sum": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "sin(k*x)"
+      },
+      {
+        "name": "v",
+        "expr": "cos(m*x)"
+      }
+    ],
+    "compose": "a*u + b*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*cos(k*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "-m*sin(m*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:sin_over_shifted_cos": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "sin(k*x)"
+      },
+      {
+        "name": "v",
+        "expr": "a + cos(k*x)"
+      }
+    ],
+    "compose": "u/v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*cos(k*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "-k*sin(k*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "num",
+        "relation": "combination",
+        "of": "",
+        "outer": "",
+        "at": "",
+        "equals": "u_p*v - u*v_p",
+        "expr": "k*cos(k*x)*(a + cos(k*x)) + k*sin(k*x)**2",
+        "label_en": "numerator u'v - uv'",
+        "label_km": "ភាគយក u'v - uv'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:sin_squared": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "sin(k*x)"
+      }
+    ],
+    "compose": "a*u**2",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*cos(k*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "a*t**2",
+        "at": "u",
+        "equals": "",
+        "expr": "2*a*sin(k*x)",
+        "label_en": "2*a*u",
+        "label_km": "2*a*u"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:sin_times_cos": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "sin(k*x)"
+      },
+      {
+        "name": "v",
+        "expr": "cos(m*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*cos(k*x)",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "-m*sin(m*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:squared_quotient": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "(sin(x) + a)/cos(x)"
+      }
+    ],
+    "compose": "u**2",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "(1 + a*sin(x))/cos(x)**2",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "t**2",
+        "at": "u",
+        "equals": "",
+        "expr": "2*(sin(x) + a)/cos(x)",
+        "label_en": "2*u",
+        "label_km": "2*u"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:tan_linear": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "k*x + b"
+      }
+    ],
+    "compose": "tan(u)",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "outer_p",
+        "relation": "outer_derivative",
+        "of": "",
+        "outer": "tan(t)",
+        "at": "u",
+        "equals": "",
+        "expr": "1/cos(k*x + b)**2",
+        "label_en": "tan'(u)",
+        "label_km": "ដេរីវេ tan(u)"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:tan_over_linear": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "tan(k*x)"
+      },
+      {
+        "name": "v",
+        "expr": "x + a"
+      }
+    ],
+    "compose": "u/v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k/cos(k*x)**2",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "1",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      },
+      {
+        "id": "num",
+        "relation": "combination",
+        "of": "",
+        "outer": "",
+        "at": "",
+        "equals": "u_p*v - u*v_p",
+        "expr": "k*(x + a)/cos(k*x)**2 - tan(k*x)",
+        "label_en": "numerator u'v - uv'",
+        "label_km": "ភាគយក u'v - uv'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:x_squared_times_cos": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2"
+      },
+      {
+        "name": "v",
+        "expr": "cos(k*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "-k*sin(k*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:x_squared_times_sin": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x**2"
+      },
+      {
+        "name": "v",
+        "expr": "sin(k*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "2*a*x",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "k*cos(k*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  },
+  "deriv:trigonometric:x_times_cos": {
+    "definitions": [
+      {
+        "name": "u",
+        "expr": "a*x"
+      },
+      {
+        "name": "v",
+        "expr": "cos(k*x)"
+      }
+    ],
+    "compose": "u*v",
+    "checkpoints": [
+      {
+        "id": "u_p",
+        "relation": "derivative",
+        "of": "u",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "a",
+        "label_en": "u'",
+        "label_km": "ដេរីវេ u'"
+      },
+      {
+        "id": "v_p",
+        "relation": "derivative",
+        "of": "v",
+        "outer": "",
+        "at": "",
+        "equals": "",
+        "expr": "-k*sin(k*x)",
+        "label_en": "v'",
+        "label_km": "ដេរីវេ v'"
+      }
+    ],
+    "model": "gemini-3.5-flash",
+    "generated_at": "2026-09-29"
+  }
+}
