@@ -55,7 +55,10 @@ backend/engine/
     functions/            solver.py, display.py (Khmer/English wording),
                         generator.py, grader.py (+ grade_graph_check),
                         graph_grader.py/graph_renderer.py, data/curated/*.json
-    continuity/, derivatives/, differential_equations/, vectors_space/, conics/
+    derivatives/          solver.py, generator.py, grader.py, structures.py (the
+                        template registry — every question is sampled from one
+                        of its structures; audit: scripts/audit_derivative_structures.py)
+    continuity/, differential_equations/, vectors_space/, conics/
                         solver.py, generator.py, grader.py, data/curated/curated.json
     past_exam/            verbatim replay of a full past exam paper (not a
                         randomized template) — solver.py only for the question

@@ -222,12 +222,13 @@ export default function AdminPage() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
+                const idPrefix = st.id.includes(":") ? st.id.split(":")[0] : "limit";
                 const tp =
                   topicFilter !== "all"
                     ? topicFilter
-                    : st.id.includes(":")
-                    ? st.id.split(":")[0]
-                    : "limit";
+                    : idPrefix === "deriv"
+                    ? "derivatives"
+                    : idPrefix;
                 router.push(
                   `/practice?template=${encodeURIComponent(st.id)}&topic=${encodeURIComponent(
                     tp

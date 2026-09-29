@@ -103,6 +103,7 @@ type Variant = {
 
 type Structure = {
   id: string;
+  difficulty?: string | null;
   pattern?: string | null;
   pattern_latex?: string | null;
   technique?: string | null;
@@ -594,6 +595,7 @@ export default function StructureModal({
     if (
       (initialStructure.id.startsWith("limit:") ||
         initialStructure.id.startsWith("integral:") ||
+        initialStructure.id.startsWith("deriv:") ||
         initialStructure.id.startsWith("curated_") ||
         initialStructure.id.startsWith("int_")) &&
       (!initialStructure.variants || initialStructure.variants.length === 0)

@@ -1154,8 +1154,8 @@ function PracticeInner() {
       try {
         const paramTopic = searchParams.get("topic");
         const paramDiff = searchParams.get("difficulty") || "medium";
-        const resolvedTopic =
-          paramTopic || (templateId.includes(":") ? templateId.split(":")[0] : "limit");
+        const idPrefix = templateId.includes(":") ? templateId.split(":")[0] : "limit";
+        const resolvedTopic = paramTopic || (idPrefix === "deriv" ? "derivatives" : idPrefix);
 
         let qType = resolvedTopic;
         if (resolvedTopic === "integral") {
@@ -1166,6 +1166,8 @@ function PracticeInner() {
           }
         } else if (resolvedTopic === "limit") {
           qType = "limit";
+        } else if (resolvedTopic === "derivatives") {
+          qType = "compute_derivative";
         }
 
         const cfg: SessionConfig = {
