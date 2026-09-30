@@ -37,10 +37,11 @@ already are the deterministic authority for those shapes.
 """
 from fractions import Fraction
 
-from sympy import Add, Expr, Symbol, oo, simplify, sympify
+from sympy import Add, Expr, Symbol, diff, fraction, oo, simplify, sympify
 
 from .dispatch import solve
-from .grading import _angle_close, _equivalent_const, _numeric_close, _strip_khmer, grade, grade_part, parse_answer, with_method
+from .grading import (_angle_close, _equivalent_const, _numeric_close, _strip_khmer, fill_prime_slots, grade,
+                      grade_part, parse_answer, prime_slots, with_method)
 
 # Structured final-answer kinds with a legitimate single-line typed answer
 # a student could actually write ("domain is (2, oo)", "continuous"), so
@@ -242,7 +243,8 @@ def build_rubric(topic, question_type, params, question_points=DEFAULT_QUESTION_
 # ---------------------------------------------------------------------------
 
 def score_rubric(topic, question_type, params, rubric, lines, tolerance=None, *,
-                 implied_credit=True, split_chains=False, term_credit=False):
+                 implied_credit=True, split_chains=False, term_credit=False,
+                 prime_credit=False):
     """Match a student's full written work against `rubric` (from
     `build_rubric`). `lines`: the raw work, one asserted fact per line, any
     order. A "simple" step is matched against any not-yet-claimed line; a
@@ -280,6 +282,16 @@ def score_rubric(topic, question_type, params, rubric, lines, tolerance=None, *,
     shows ``(e^{3x})' = 3e^{3x}``. Only such terms count (never a value the
     line merely simplifies to, never a number that happens to appear), so a
     step that disappears into the simplified answer still has to be written.
+
+    `prime_credit`: read ``(E)'`` as "the derivative of E", the way the
+    chain/product rule is written out. A line part holding such slots is
+    judged with each slot set to the true derivative; when that is a correct
+    value (a step or the answer), the factor multiplying a slot is shown
+    (``y' = -(sin(1/x))' * sin(sin(1/x))`` shows the outer derivative
+    ``-sin(sin(1/x))``), and so is the slot's own value when the next "="
+    part substitutes it (``(1/x)' * cos(1/x) = -1/x^2 cos(1/x)`` shows
+    ``(1/x)' = -1/x^2``, but only if -1/x^2 really is (1/x)'; a correctly
+    substituted quotient shows its numerator, u'v - uv').
 
     Returns {"earned", "possible", "breakdown"} — earned/possible are exact
     Fractions; never an LLM judgment call."""
@@ -329,6 +341,17 @@ def score_rubric(topic, question_type, params, rubric, lines, tolerance=None, *,
                     as_term.add(idx)
                     break
 
+    via_prime = set()
+    if prime_credit:
+        for i, raw in enumerate(work):
+            for value in _prime_shown_values(raw, [s["value"] for s in rubric if s["kind"] == "simple"], var_sym):
+                for idx, step in enumerate(rubric):
+                    if matched_line_idx[idx] is None and step["kind"] == "simple" \
+                            and not isinstance(step["value"], (list, tuple)) and _same_term(value, step["value"]):
+                        matched_line_idx[idx] = i
+                        via_prime.add(idx)
+                        break
+
     implied = set()
     if implied_credit:
         item_step_indices = {}
@@ -368,6 +391,8 @@ def score_rubric(topic, question_type, params, rubric, lines, tolerance=None, *,
             entry["implied"] = True
         if idx in as_term:
             entry["as_term"] = True
+        if idx in via_prime:
+            entry["via_prime"] = True
         breakdown.append(entry)
     return {"earned": earned, "possible": possible, "breakdown": breakdown}
 
@@ -479,6 +504,54 @@ def _same_term(a, b):
         return a == b or simplify(a - b) == 0
     except Exception:
         return False
+
+
+def _prime_shown_values(raw, correct_values, var_sym):
+    """Values a line shows through ``(E)'`` slots (see `prime_credit` in
+    `score_rubric`): the factor multiplying each slot, and the value the next
+    "=" part substitutes for it — only from a part that is correct with every
+    slot set to the true derivative."""
+    text = _strip_khmer(raw)
+    chain = [c.strip() for c in text.split("=")]
+    shown = []
+    for p, part in enumerate(chain):
+        slots = prime_slots(part)
+        if not slots:
+            continue
+        try:
+            derivs = [diff(parse_answer(inner), var_sym) for _, _, inner in slots]
+            true_value = parse_answer(fill_prime_slots(part, slots, derivs))
+        except Exception:
+            continue
+        if not any(_same_term(true_value, v) for v in correct_values if not isinstance(v, (list, tuple))):
+            continue
+        nxt = None
+        if p + 1 < len(chain) and chain[p + 1] and not prime_slots(chain[p + 1]):
+            try:
+                nxt = parse_answer(chain[p + 1])
+            except Exception:
+                nxt = None
+        if nxt is not None and _same_term(nxt, true_value):
+            # The rule written out, then substituted correctly: a quotient's
+            # numerator (u'v - uv') is shown by that substituted fraction.
+            num, den = fraction(nxt)
+            if den != 1:
+                shown.append(num)
+        for s in range(len(slots)):
+            try:
+                one = parse_answer(fill_prime_slots(part, slots, [1 if t == s else d for t, d in enumerate(derivs)]))
+                zero = parse_answer(fill_prime_slots(part, slots, [0 if t == s else d for t, d in enumerate(derivs)]))
+                factor = simplify(one - zero)
+            except Exception:
+                continue
+            if factor == 0:
+                continue
+            shown.append(factor)
+            if nxt is not None:
+                used = simplify((nxt - zero) / factor)
+                if _same_term(used, derivs[s]):
+                    shown.append(used)
+    return shown
 
 
 def _judged_step_matches(topic, question_type, params, step, line, tolerance):

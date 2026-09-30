@@ -1119,6 +1119,45 @@ class _Claim:
         self.kind, self.ok, self.value, self.expected, self.label = kind, ok, value, expected, label
 
 
+_PRIMES = "'\u2032\u2019"  # ' ′ ’
+
+
+def prime_slots(text):
+    """[(start, end, E text)] for every ``(E)'`` / ``f(E)'`` in `text`."""
+    slots = []
+    for j, ch in enumerate(text):
+        if ch not in _PRIMES or j == 0 or text[j - 1] != ")":
+            continue
+        depth, k = 0, j - 1
+        while k >= 0:
+            if text[k] == ")":
+                depth += 1
+            elif text[k] == "(":
+                depth -= 1
+                if depth == 0:
+                    break
+            k -= 1
+        if k < 0:
+            continue
+        start = k
+        while start > 0 and text[start - 1].isalpha():
+            start -= 1  # f(E)' — the derivative of the call, not of its argument
+        inner = text[k + 1:j - 1] if start == k else text[start:j]
+        slots.append((start, j + 1, inner))
+    return slots
+
+
+def fill_prime_slots(text, slots, values):
+    """`text` with each slot replaced by its value, parenthesized."""
+    out, pos = [], 0
+    for (start, end, _), value in zip(slots, values):
+        out.append(text[pos:start])
+        out.append(f"({value})")
+        pos = end
+    out.append(text[pos:])
+    return "".join(out)
+
+
 class _ClaimChecker:
     """Reads one student's work top to bottom, remembering their definitions."""
 
@@ -1138,6 +1177,16 @@ class _ClaimChecker:
         text = text.strip()
         if not text:
             return None
+        slots = prime_slots(text)
+        if slots:
+            # "(E)'" is the derivative of E: resolve E, then use its true derivative.
+            derivs = []
+            for _, _, inner in slots:
+                inner_value = self._eval(inner)
+                if inner_value is None:
+                    return None
+                derivs.append(diff(inner_value, self.x))
+            text = fill_prime_slots(text, slots, derivs)
         subs = {}
         pool = [c for c in "zwqpmnkjhgdcbatsrvlo" if c not in text and c not in self.defs]
 

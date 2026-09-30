@@ -179,7 +179,8 @@ hand-listed order matching the printed exam paper). See the module docstrings fo
 Each topic owns its scoring rules in `engine/topics/<topic>/rubric.py` (`build_rubric`/`score_work`,
 called through `engine/rubric.py`); most reuse the default policy in `core/rubric.py` (credit for
 steps implied by a later correct one), while derivatives only gives full marks when every step is
-shown (a step written as a term of the answer, `4 - 2e^{-2x}`, counts), and scores the work against
+shown (a step written as a term of the answer, `4 - 2e^{-2x}`, counts, and so does a rule written with
+`(E)'` notation and then substituted, `(1/x)' cos(1/x) = -1/x^2 cos(1/x)`), and scores the work against
 the blueprint method it follows.
 
 ### Skill progress & practice suggestions

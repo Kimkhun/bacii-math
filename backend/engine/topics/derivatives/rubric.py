@@ -33,7 +33,8 @@ __all__ = ["build_rubric", "score_work", "select_method"]
 def _score(topic, question_type, params, lines, question_points, tolerance, part_label, method):
     rubric = build_rubric(topic, question_type, params, question_points, part_label, method)
     result = score_rubric(topic, question_type, params, rubric, lines, tolerance,
-                          implied_credit=False, split_chains=True, term_credit=True)
+                          implied_credit=False, split_chains=True, term_credit=True,
+                          prime_credit=True)
     # What each step is, with this question's numbers, so a missed step can
     # be shown to the student ("not shown: (e^{-2x})' = -2e^{-2x}").
     for step, entry in zip(rubric, result["breakdown"]):

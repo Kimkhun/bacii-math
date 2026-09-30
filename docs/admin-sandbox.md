@@ -142,7 +142,8 @@ Click **Grade** to run:
   it (see `score_rubric` in `engine/core/rubric.py`). Derivatives never
   implies credit: every step must be shown (`topics/derivatives/rubric.py`),
   on its own line or as a term of a sum (*"(as a term)"*: `y' = 4 - 2e^{-2x}`
-  shows `(e^{-2x})' = -2e^{-2x}`); each derivatives row also shows the step
+  shows `(e^{-2x})' = -2e^{-2x}`), or through `(E)'` notation (`y' = -(sin(1/x))' sin(sin(1/x))`
+  shows the outer derivative); each derivatives row also shows the step
   with this question's numbers and its expected value.
 
 ## Tips
