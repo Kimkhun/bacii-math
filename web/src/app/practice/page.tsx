@@ -2809,8 +2809,19 @@ function PracticeInner() {
                         key={i}
                         className={`text-[11px] ${b.points_earned > 0 ? "text-emerald-700" : "text-[#8a857b]"}`}
                       >
-                        {b.points_earned > 0 ? "✓" : "✗"} {b.label} ({b.points_earned.toFixed(1)}/
-                        {b.points_possible.toFixed(1)})
+                        {b.points_earned > 0 ? "✓" : "✗"}{" "}
+                        {b.label_latex ? <MathText text={`$${b.label_latex}$`} className="inline" /> : b.label} (
+                        {b.points_earned.toFixed(1)}/{b.points_possible.toFixed(1)})
+                        {b.as_term && <span className="text-[#8a857b]"> — {t("label_step_in_answer")}</span>}
+                        {b.points_earned === 0 && b.expected_latex && b.label !== "final answer" && (
+                          <div className="ml-3 text-[#b4442f]">
+                            {t("label_step_not_shown")}{" "}
+                            <MathText
+                              text={`$${b.label_latex ? `${b.label_latex} = ` : ""}${b.expected_latex}$`}
+                              className="inline"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

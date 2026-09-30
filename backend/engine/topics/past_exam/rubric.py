@@ -38,6 +38,10 @@ from sympy import (
 
 from ...core.grading import grade_part
 from ...core.rubric import step_matches  # shared scalar/vector matcher — see engine/core/rubric.py
+# A single past-exam question graded live (not a full paper) uses the
+# default points rubric; `mark_question`/`mark_full_exam` below are the
+# full-paper marking scheme.
+from ...core.rubric import build_rubric, default_score_work as score_work  # noqa: F401
 
 _X = Symbol("x")
 _Y = Symbol("y")
@@ -243,7 +247,7 @@ def _split_final_intermediate(points, n):
     return [each] * (n - 1) + [final]
 
 
-def build_rubric(exam_id, question_no, params):
+def build_exam_question_rubric(exam_id, question_no, params):
     """[{"item", "label", "value", "points"}, ...] for one exam question,
     points computed mechanically from each item's own step count (never
     hand-typed) — see module docstring for the two-rule weighting."""
@@ -270,7 +274,7 @@ def mark_question(exam_id, question_no, params, lines):
     deterministic: every match is either a SymPy equality/tolerance check
     (`step_matches`) or that part's own existing `grade_part` judge
     (monotonicity/position verdicts) — never an LLM judgment call."""
-    rubric = build_rubric(exam_id, question_no, params)
+    rubric = build_exam_question_rubric(exam_id, question_no, params)
     work = [ln for ln in lines if ln.strip()]
     used = [False] * len(work)
     breakdown = []

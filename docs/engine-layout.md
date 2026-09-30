@@ -24,10 +24,13 @@ backend/engine/
                        limit and integral generators
     expr_shared.py      problem-dict builder + small expr formatters, shared
                        by the limit and integral generators
-    rubric.py           build_rubric()/score_work() — deterministic,
+    rubric.py           the points-rubric toolkit — deterministic,
                        step-by-step POINTS scoring for ANY topic's live/
                        generated question (not just past_exam's historical
-                       exams): derives a rubric mechanically from that
+                       exams); each topic's own rules live in
+                       topics/<topic>/rubric.py, routed by engine/rubric.py
+                       (default policy: default_score_work). It
+                       derives a rubric mechanically from that
                        question's own solve() checkpoints/parts (step-count-
                        weighted across parts, 40%-final/60%-intermediate
                        within one part), then matches a student's full
@@ -44,7 +47,7 @@ backend/engine/
                        relations), SymPy validates the plan on random
                        instances and recomputes every value at grading time.
                        A template may have several methods (alternative
-                       solution paths, --alternatives); rubric.select_method
+                       solution paths, --alternatives); derivatives/rubric.py
                        grades the work against the one it follows, and lines
                        no method predicts are judged true/false on their own
                        (grading._ClaimChecker, "verify_claims").
@@ -70,9 +73,14 @@ backend/engine/
     derivatives/          solver.py, generator.py, grader.py, structures.py (the
                         template registry — every question is sampled from one
                         of its structures; audit: scripts/audit_derivative_structures.py),
-                        blueprint_spec.py + data/blueprints.json (graded steps)
+                        blueprint_spec.py + data/blueprints.json (graded steps),
+                        rubric.py (full marks only for complete work — a
+                        step may be shown as a term of a sum; the
+                        blueprint method the work follows)
     continuity/, differential_equations/, vectors_space/, conics/
-                        solver.py, generator.py, grader.py, data/curated/curated.json
+                        solver.py, generator.py, grader.py, rubric.py (default
+                        policy), data/curated/curated.json
+    (every topic folder has a rubric.py — its own points-scoring rules)
     past_exam/            verbatim replay of a full past exam paper (not a
                         randomized template) — solver.py only for the question
                         shapes no other topic covers; data/curated/<year>.json.

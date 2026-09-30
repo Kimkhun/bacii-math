@@ -47,7 +47,7 @@ def _solve_derivative(params):
     # numbers; the last checkpoint stays `result`.
     # A template may have several methods (alternative solution paths);
     # the first is the default, and the grader picks whichever one the
-    # student's work follows (rubric.select_method).
+    # student's work follows (derivatives/rubric.py select_method).
     plans = blueprints.resolve("derivatives", params.get("template_id"), params.get("template_params"),
                                given=expr, final=result, x=x, formula="compute_derivative")
     if plans:

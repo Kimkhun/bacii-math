@@ -1098,7 +1098,7 @@ def _deduce_limit_transition(prev_expr, curr_expr, var_sym, limit_point, target_
 # instead of splitting a log) isn't marked wrong. The student's own
 # definitions are tracked as the work is read: "u = (7x+7)/(x-1)" names u,
 # then "u' = -14/(x-1)^2" is checked against d/dx of *their* u. Points are
-# unaffected: they still come only from the checkpoints (see rubric.py).
+# unaffected: they still come only from the checkpoints (see the topic's rubric.py).
 # Enabled per solution with ``"verify_claims": True`` (derivatives).
 
 _PRIME_CHARS_RE = _re.compile(r"[′’ʹ´`]")
@@ -1256,7 +1256,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
     # (the same choice score_work makes, so marks and points agree).
     method = None
     if len(solution.get("methods") or []) > 1:
-        from .rubric import select_method  # rubric imports this module
+        from ..rubric import select_method  # the topic's own rubric; it imports this module
 
         method = select_method(topic, question_type, params, lines, tolerance=tolerance)
         solution = with_method(solution, method)

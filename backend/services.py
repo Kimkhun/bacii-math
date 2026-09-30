@@ -20,7 +20,7 @@ from core.offload import run_cpu
 from engine import explainer, formulas, generator, grader, llm, solver
 from engine.core import coaching, lessons, mastery, skills, template_shapes
 from engine import hints
-from engine.core.rubric import score_work
+from engine.rubric import score_work
 from engine.topics.past_exam.rubric import mark_full_exam
 from engine.topics.functions import graph_grader
 from engine.topics.functions.generator import _FUNCTION_CURATED_TEMPLATES
@@ -410,6 +410,23 @@ async def explain_question(
         if question.topic == "functions":
             result["graph_check"] = await run_cpu(grader.grade_graph_check, spec, work_text.split("\n"))
 
+    # Steps the rubric wanted but the work never shows (derivatives): the work
+    # comment must not call the work "fully correct" when points were lost.
+    missing_steps = []
+    if work_text and question.topic != "functions":
+        try:
+            rubric_result = await run_cpu(
+                score_work, question.topic, question.question_type, spec, work_text.split("\n"),
+                question_points=10, part_label=part if is_multi and part else None,
+            )
+            missing_steps = [
+                f"{b.get('label_latex') or b['label']} = {b['expected_latex']}"
+                for b in rubric_result["breakdown"]
+                if not b["points_earned"] and b.get("expected_latex") and b["label"] != "final answer"
+            ]
+        except Exception:
+            missing_steps = []
+
     # The work comment and tutor tip always call the LLM, so they need a rate-limit
     # slot up front. Without an answer only the narration runs, which is usually a
     # cache hit; leave `allowed` unset so `_build_explanation` takes a slot only on
@@ -440,6 +457,7 @@ async def explain_question(
         return await llm.check_work(
             question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
             allow_gemini=allowed, step_check=step_check, lang=lang, user_id=user.id,
+            missing_steps=missing_steps,
         )
 
     async def _tutor_tip():

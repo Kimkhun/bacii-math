@@ -15,7 +15,7 @@ and grader directly against hand-entered params, without generating a real
 It's backed by three admin-gated endpoints (`backend/routers/problems.py`,
 `me_router`): `GET /sandbox/sample`, `POST /sandbox/solve`, `POST
 /sandbox/grade` — thin wrappers around `engine.core.dispatch.solve()`,
-`engine.core.grading.analyze_work()`, and `engine.core.rubric.score_work()`,
+`engine.core.grading.analyze_work()`, and `engine.rubric.score_work()` (the topic's own rubric),
 the exact same functions the real grading flow uses. Nothing here is a
 simulation of the grading pipeline; it *is* the grading pipeline, run
 in isolation.
@@ -139,7 +139,11 @@ Click **Grade** to run:
   line"* means the student's own line skipped ahead and a later checkpoint
   in the same item was actually verified — those points are still
   awarded, since the intermediate value must have been computed to reach
-  it (see `engine/core/rubric.py`'s module docstring).
+  it (see `score_rubric` in `engine/core/rubric.py`). Derivatives never
+  implies credit: every step must be shown (`topics/derivatives/rubric.py`),
+  on its own line or as a term of a sum (*"(as a term)"*: `y' = 4 - 2e^{-2x}`
+  shows `(e^{-2x})' = -2e^{-2x}`); each derivatives row also shows the step
+  with this question's numbers and its expected value.
 
 ## Tips
 

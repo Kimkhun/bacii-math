@@ -33,7 +33,7 @@ A template may have several *methods* — alternative valid solution paths
 (splitting a log vs. the chain rule on it; expanding first vs. the product
 rule), each a complete blueprint, the standard textbook method first. The
 grader scores a student's whole work against every method and uses the one
-it follows best (``rubric.select_method``); lines no method predicts are
+it follows best (the topic's ``rubric.select_method``); lines no method predicts are
 still judged true/false on their own (``grading._ClaimChecker``).
 
 Relation handlers are registered per topic (``RELATIONS``), so a new topic
@@ -48,7 +48,7 @@ import random
 import re
 from typing import Callable
 
-from sympy import Symbol, diff, sympify
+from sympy import Symbol, diff, latex, sympify
 
 _TOPICS_DIR = os.path.join(os.path.dirname(__file__), "..", "topics")
 _T = Symbol("t")  # the outer function's variable in an outer_derivative relation
@@ -154,7 +154,11 @@ def _same(a, b, x):
 
 def evaluate(bp: dict, slot_values: dict, given, x) -> dict:
     """SymPy values of every definition and checkpoint for one instance.
-    Returns {"definitions": {name: value}, "checkpoints": [(cp, value)]}."""
+    Returns {"definitions": {name: value}, "checkpoints": [(cp, value)],
+    "labels": {cp id: LaTeX label with this instance's numbers},
+    "subjects": {cp id: the expression it differentiates}} — labels and
+    subjects only for derivative checkpoints (``(e^{-2 x})'``, ``y'``,
+    ``y''``); the others keep the blueprint's generic label."""
     env = {name: sympify(val) for name, val in slot_values.items()}
     env["y"] = given
     definitions = {}
@@ -162,7 +166,7 @@ def evaluate(bp: dict, slot_values: dict, given, x) -> dict:
         value = _parse(d["expr"], env, x)
         definitions[d["name"]] = value
         env[d["name"]] = value
-    checkpoints = []
+    checkpoints, labels, subjects = [], {"y": "y"}, {}
     for cp in bp.get("checkpoints", []):
         handler = RELATIONS.get(cp.get("relation"))
         if handler is None:
@@ -170,7 +174,16 @@ def evaluate(bp: dict, slot_values: dict, given, x) -> dict:
         value = handler(cp, env, x)
         checkpoints.append((cp, value))
         env[cp["id"]] = value
-    return {"definitions": definitions, "checkpoints": checkpoints}
+        if cp.get("relation") == "derivative":
+            of = str(cp.get("of", "")).strip()
+            subjects[cp["id"]] = _parse(of, env, x)
+            if of in labels:
+                labels[cp["id"]] = labels[of] + "'"
+            else:
+                subject = subjects[cp["id"]]
+                labels[cp["id"]] = "y'" if subject == given else rf"\left({latex(subject)}\right)'"
+    labels.pop("y")
+    return {"definitions": definitions, "checkpoints": checkpoints, "labels": labels, "subjects": subjects}
 
 
 def _plan(bp, slot_values, given, final, x, formula):
@@ -181,7 +194,9 @@ def _plan(bp, slot_values, given, final, x, formula):
         if value == 0 or any(_same(value, s, x) for s in seen):
             continue  # 0, or coincides on this instance: can't be graded by value
         seen.append(value)
-        checkpoints.append({"label": cp.get("label_en") or cp["id"], "value": value, "formula": formula})
+        checkpoints.append({"label": cp.get("label_en") or cp["id"], "value": value, "formula": formula,
+                            **({"label_latex": values["labels"][cp["id"]]} if cp["id"] in values["labels"] else {}),
+                            **({"subject": values["subjects"][cp["id"]]} if cp["id"] in values["subjects"] else {})})
     # Aux: lines that are right wherever they appear without advancing the
     # step pointer — the definitions (u = ..., never flagged, never scored)
     # and the intermediate checkpoints again, since independent steps (u'

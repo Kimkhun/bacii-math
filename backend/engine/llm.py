@@ -473,6 +473,20 @@ def subpart_label(part):
     return f" part {part}" if part else ""
 
 
+def _missing_steps_note(missing_steps: list[str] | None) -> str:
+    """Rubric steps the work never shows (verified by SymPy): the comment must
+    say they are missing instead of calling the work fully correct."""
+    if not missing_steps:
+        return ""
+    return (
+        "STEPS NOT SHOWN (CERTAIN, checked by SymPy): the student's work does not write "
+        "these required steps, so it lost points for them even if the final answer is right:\n"
+        + "\n".join(f"  - ${m}$" for m in missing_steps)
+        + "\nDo NOT say the work is fully correct or complete. Say what is right, then tell the "
+        "student to write these steps, quoting them.\n"
+    )
+
+
 def _step_check_summary(step_check: dict | None) -> str:
     if not step_check or not step_check.get("line_results"):
         return ""
@@ -524,7 +538,9 @@ async def check_work(
     step_check: dict | None = None,
     lang: str = "en",
     user_id: any = None,
+    missing_steps: list[str] | None = None,
 ) -> tuple[str | None, str | None]:
+    missing = _missing_steps_note(missing_steps)
     if lang == "km":
         prompt = (
             "You are an expert Cambodian Bac II mathematics teacher checking a student's handwritten work line by line.\n\n"
@@ -533,6 +549,7 @@ async def check_work(
             f"CORRECT SOLUTION (អត្រាកំណែផ្លូវការ):\n{steps_text}\n\n"
             f"CORRECT ANSWER: {answer}\n"
             f"{_step_check_summary(step_check)}\n"
+            f"{missing}"
             "RULES:\n"
             "- Respond 100% in authentic Khmer with NO English words.\n"
             "- Wrap all mathematical expressions in $...$.\n"
@@ -549,6 +566,7 @@ async def check_work(
         f"CORRECT SOLUTION, ONE STEP PER LINE:\n{steps_text}\n\n"
         f"CORRECT ANSWER: {answer}\n"
         f"{_step_check_summary(step_check)}\n"
+        f"{missing}"
         "The question and the student's work may be in Khmer: work lines can mix Khmer "
         "words (e.g. ប្រូបាប៊ីលីតេ, ទាញបាន) with the math, and numbers may be written with "
         "Khmer digits (០-៩). Read the Khmer to understand what the student did, but judge "

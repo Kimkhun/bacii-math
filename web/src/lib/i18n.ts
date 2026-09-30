@@ -71,6 +71,8 @@ export interface Translations {
   label_step: string;
   label_part: string;
   label_step_score: string;
+  label_step_not_shown: string;
+  label_step_in_answer: string;
   label_teacher_tip: string;
   label_practice_formula: string;
   label_expected: string;
@@ -303,6 +305,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     label_step: "Step",
     label_part: "Part",
     label_step_score: "Step-by-step score",
+    label_step_not_shown: "Not shown:",
+    label_step_in_answer: "shown in your answer",
     label_teacher_tip: "Teacher's Exam Rubric Tip",
     label_practice_formula: "Practice formula",
     label_expected: "Expected",
@@ -524,6 +528,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     label_step: "ជំហានទី",
     label_part: "ផ្នែក",
     label_step_score: "ពិន្ទុតាមជំហាន",
+    label_step_not_shown: "មិនបានបង្ហាញ៖",
+    label_step_in_answer: "បានបង្ហាញក្នុងចម្លើយ",
     label_teacher_tip: "ការណែនាំពីលោកគ្រូ (អត្រាកំណែបាក់ឌុប)",
     label_practice_formula: "អនុវត្តរូបមន្តនេះ",
     label_expected: "ចម្លើយរំពឹងទុក",
