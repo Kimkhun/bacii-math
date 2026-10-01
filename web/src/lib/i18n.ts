@@ -109,6 +109,26 @@ export interface Translations {
   lesson_key_formulas: string;
   lesson_answer: string;
   lesson_none: string;
+  lesson_watch: string;
+  lesson_explore: string;
+  lesson_steps: string;
+  lesson_video_hd: string;
+  lesson_video_data_saver: string;
+  lesson_video_error: string;
+  explorer_loading: string;
+  explorer_hint: string;
+  explorer_distance: string;
+  explorer_x_far: string;
+  explorer_zoom: string;
+  explorer_limit: string;
+  explorer_left: string;
+  explorer_right: string;
+  explorer_gap: string;
+  explorer_show_simplified: string;
+  explorer_show_numerator: string;
+  explorer_show_tangent: string;
+  explorer_unit_circle: string;
+  explorer_reset: string;
 
   // Exam Page
   exam_title: string;
@@ -339,6 +359,26 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     lesson_key_formulas: "Key formulas",
     lesson_answer: "Answer",
     lesson_none: "No lesson available for this exercise yet.",
+    lesson_watch: "Watch animation",
+    lesson_explore: "Explore",
+    lesson_steps: "Steps",
+    lesson_video_hd: "HD",
+    lesson_video_data_saver: "Data saver",
+    lesson_video_error: "Couldn't load the video. Check your connection and try again.",
+    explorer_loading: "Loading…",
+    explorer_hint: "Drag across the graph or move the sliders.",
+    explorer_distance: "Distance from the point",
+    explorer_x_far: "How far x goes",
+    explorer_zoom: "Zoom in on the point",
+    explorer_limit: "Limit",
+    explorer_left: "From the left",
+    explorer_right: "From the right",
+    explorer_gap: "gap to the limit",
+    explorer_show_simplified: "Show the simplified form",
+    explorer_show_numerator: "Show the numerator wave",
+    explorer_show_tangent: "Show the tangent at 0",
+    explorer_unit_circle: "Arc $u$ (yellow) against height $\\sin u$ (teal)",
+    explorer_reset: "Reset",
 
     exam_title: "BAC II Mathematics",
     exam_duration: "Duration",
@@ -560,6 +600,26 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     lesson_key_formulas: "រូបមន្តសំខាន់",
     lesson_answer: "ចម្លើយ",
     lesson_none: "មិនទាន់មានមេរៀនសម្រាប់លំហាត់នេះនៅឡើយទេ។",
+    lesson_watch: "មើលចលនា",
+    lesson_explore: "សាកល្បងផ្ទាល់",
+    lesson_steps: "ជំហាន",
+    lesson_video_hd: "HD",
+    lesson_video_data_saver: "សន្សំទិន្នន័យ",
+    lesson_video_error: "មិនអាចផ្ទុកវីដេអូបានទេ។ សូមពិនិត្យអ៊ីនធឺណិត ហើយសាកល្បងម្ដងទៀត។",
+    explorer_loading: "កំពុងផ្ទុក...",
+    explorer_hint: "អូសលើក្រាប ឬរំកិលរបាររំកិល។",
+    explorer_distance: "ចម្ងាយពីចំណុច",
+    explorer_x_far: "x ទៅឆ្ងាយប៉ុណ្ណា",
+    explorer_zoom: "ពង្រីកត្រង់ចំណុច",
+    explorer_limit: "លីមីត",
+    explorer_left: "ពីខាងឆ្វេង",
+    explorer_right: "ពីខាងស្ដាំ",
+    explorer_gap: "គម្លាតពីលីមីត",
+    explorer_show_simplified: "បង្ហាញទម្រង់សម្រួល",
+    explorer_show_numerator: "បង្ហាញរលកភាគយក",
+    explorer_show_tangent: "បង្ហាញបន្ទាត់ប៉ះត្រង់ 0",
+    explorer_unit_circle: "ធ្នូ $u$ (លឿង) ធៀបនឹងកម្ពស់ $\\sin u$ (បៃតង)",
+    explorer_reset: "កំណត់ឡើងវិញ",
 
     exam_title: "វិញ្ញាសាគណិតវិទ្យា — បាក់ឌុប",
     exam_duration: "រយៈពេល",

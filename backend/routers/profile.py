@@ -41,7 +41,9 @@ async def lesson(skill: str, user: User = Depends(get_current_user)):
 
     Static, human-written teaching content — the same for every student and
     never LLM-generated — so it needs no per-user data. 404 when the skill has
-    no lesson yet (only complex numbers are covered for now)."""
+    no lesson yet. Animated lessons also carry an ``animation`` block (the
+    Manim video's captions + interactive explorer id); see
+    ``engine/core/lesson_animations.py``."""
     payload = lessons.get_lesson(skill)
     if payload is None:
         raise HTTPException(status_code=404, detail="No lesson for this skill")

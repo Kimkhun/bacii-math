@@ -1,0 +1,801 @@
+{
+  "direct_substitution": {
+    "video": "limit/direct_substitution",
+    "explorer": "direct_substitution",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "We want the limit of $x^2 + 3x - 1$ as $x$ approaches $2$.",
+        "text_km": "យើងចង់រកលីមីតនៃ $x^2 + 3x - 1$ កាលណា $x$ ខិតជិត $2$។",
+        "start": 0.0,
+        "end": 4.4
+      },
+      {
+        "id": "graph",
+        "text_en": "Here is its graph: one smooth curve with no breaks and no holes.",
+        "text_km": "នេះជាក្រាបរបស់វា៖ ខ្សែកោងរលូនមួយ គ្មានដាច់ និងគ្មានរន្ធ។",
+        "start": 4.4,
+        "end": 10.07
+      },
+      {
+        "id": "approach",
+        "text_en": "Slide $x$ toward $2$ from both sides. The values $f(x)$ close in on one height.",
+        "text_km": "រំកិល $x$ ឱ្យខិតជិត $2$ ពីសងខាង។ តម្លៃ $f(x)$ ខិតជិតកម្ពស់តែមួយ។",
+        "start": 10.07,
+        "end": 15.93
+      },
+      {
+        "id": "match",
+        "text_en": "That height is exactly $f(2)$, the point already on the curve. Nothing is missing at $x = 2$.",
+        "text_km": "កម្ពស់នោះស្មើនឹង $f(2)$ ពិតប្រាកដ ដែលជាចំណុចនៅលើខ្សែកោងស្រាប់។ ត្រង់ $x = 2$ គ្មានអ្វីបាត់ទេ។",
+        "start": 15.93,
+        "end": 24.37
+      },
+      {
+        "id": "substitute",
+        "text_en": "So when the function is continuous at $a$, just substitute $x = a$.",
+        "text_km": "ដូច្នេះ កាលណាអនុគមន៍ជាប់ត្រង់ $a$ គ្រាន់តែជំនួស $x = a$ ដោយផ្ទាល់។",
+        "start": 24.37,
+        "end": 30.5
+      },
+      {
+        "id": "answer",
+        "text_en": "The limit is $9$. Always try direct substitution first.",
+        "text_km": "លីមីតស្មើ $9$។ ត្រូវសាកល្បងជំនួសដោយផ្ទាល់ជាមុនជានិច្ច។",
+        "start": 30.5,
+        "end": 36.87
+      }
+    ],
+    "duration": 36.87,
+    "version": "c3feae1a70"
+  },
+  "factoring_0_0": {
+    "video": "limit/factoring_0_0",
+    "explorer": "factoring_0_0",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $\\frac{x^2 - 9}{x - 3}$ as $x$ approaches $3$.",
+        "text_km": "រកលីមីតនៃ $\\frac{x^2 - 9}{x - 3}$ កាលណា $x$ ខិតជិត $3$។",
+        "start": 0.0,
+        "end": 4.27
+      },
+      {
+        "id": "substitute",
+        "text_en": "Substituting $x = 3$ makes the top and the bottom both $0$. The form $\\frac{0}{0}$ tells us nothing yet.",
+        "text_km": "ជំនួស $x = 3$ ធ្វើឱ្យភាគយក និងភាគបែងស្មើ $0$ ទាំងពីរ។ រាង $\\frac{0}{0}$ មិនទាន់ប្រាប់អ្វីយើងទេ។",
+        "start": 4.27,
+        "end": 12.43
+      },
+      {
+        "id": "graph",
+        "text_en": "The graph is a straight line with one point missing: a hole at $x = 3$.",
+        "text_km": "ក្រាបជាបន្ទាត់ត្រង់ដែលបាត់ចំណុចមួយ៖ មានរន្ធមួយត្រង់ $x = 3$។",
+        "start": 12.43,
+        "end": 18.17
+      },
+      {
+        "id": "approach",
+        "text_en": "Yet from both sides, $f(x)$ heads to the same height. A limit only looks at points near $3$, never at $3$ itself.",
+        "text_km": "ប៉ុន្តែពីសងខាង $f(x)$ ឆ្ពោះទៅកម្ពស់តែមួយ។ លីមីតមើលតែចំណុចជិត $3$ មិនមែនត្រង់ $3$ ផ្ទាល់ទេ។",
+        "start": 18.17,
+        "end": 26.4
+      },
+      {
+        "id": "zoom",
+        "text_en": "Zoom in as close as you like: the hole stays, and the values still close in on $6$.",
+        "text_km": "ពង្រីកឱ្យជិតប៉ុណ្ណាក៏ដោយ៖ រន្ធនៅតែមាន ហើយតម្លៃនៅតែខិតជិត $6$។",
+        "start": 26.4,
+        "end": 33.5
+      },
+      {
+        "id": "factor",
+        "text_en": "Algebra finds that height. $0$ on top and bottom means $(x - 3)$ is a common factor: $x^2 - 9 = (x - 3)(x + 3)$.",
+        "text_km": "ពីជគណិតរកកម្ពស់នោះឃើញ។ $0$ ទាំងលើទាំងក្រោម មានន័យថា $(x - 3)$ ជាកត្តារួម៖ $x^2 - 9 = (x - 3)(x + 3)$។",
+        "start": 33.5,
+        "end": 41.53
+      },
+      {
+        "id": "cancel",
+        "text_en": "Cancel $(x - 3)$. Near $3$ the function is just $x + 3$, the same line without the hole.",
+        "text_km": "សម្រួល $(x - 3)$ ចោល។ នៅជិត $3$ អនុគមន៍គឺ $x + 3$ ដែលជាបន្ទាត់ដដែល ប៉ុន្តែគ្មានរន្ធ។",
+        "start": 41.53,
+        "end": 48.9
+      },
+      {
+        "id": "answer",
+        "text_en": "Now substitute into $x + 3$: the limit is $6$.",
+        "text_km": "ឥឡូវជំនួសចូលក្នុង $x + 3$៖ លីមីតស្មើ $6$។",
+        "start": 48.9,
+        "end": 53.77
+      }
+    ],
+    "duration": 53.77,
+    "version": "fd1a7800d7"
+  },
+  "sinc_standard_limit": {
+    "video": "limit/sinc_standard_limit",
+    "explorer": "sinc_standard_limit",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Evaluate the limit of $\\frac{\\sin(5x)}{2x}$ as $x \\to 0$. Substituting gives $\\frac{0}{0}$, so we need a key fact.",
+        "text_km": "គណនាលីមីតនៃ $\\frac{\\sin(5x)}{2x}$ កាលណា $x \\to 0$។ ការជំនួសផ្ដល់ $\\frac{0}{0}$ ដូច្នេះយើងត្រូវការលីមីតគ្រឹះមួយ។",
+        "start": 0.0,
+        "end": 8.73
+      },
+      {
+        "id": "circle",
+        "text_en": "On the unit circle, an angle $u$ cuts an arc of length exactly $u$. The height of its endpoint is $\\sin u$.",
+        "text_km": "លើរង្វង់ត្រីកោណមាត្រ មុំ $u$ កាត់បានធ្នូដែលមានប្រវែង $u$ ពិតប្រាកដ។ កម្ពស់នៃចុងធ្នូគឺ $\\sin u$។",
+        "start": 8.73,
+        "end": 17.3
+      },
+      {
+        "id": "shrink",
+        "text_en": "Shrink the angle. The arc and the height become almost the same length, so their ratio $\\frac{\\sin u}{u}$ tends to $1$.",
+        "text_km": "បង្រួមមុំ។ ធ្នូ និងកម្ពស់មានប្រវែងស្ទើរតែស្មើគ្នា ដូច្នេះផលធៀប $\\frac{\\sin u}{u}$ ខិតជិត $1$។",
+        "start": 17.3,
+        "end": 27.0
+      },
+      {
+        "id": "graph",
+        "text_en": "The graph of $\\frac{\\sin u}{u}$ agrees: it reaches toward $1$ at $u = 0$, with a hole there.",
+        "text_km": "ក្រាបនៃ $\\frac{\\sin u}{u}$ បញ្ជាក់ដូចគ្នា៖ វាខិតជិត $1$ ត្រង់ $u = 0$ ដោយមានរន្ធនៅទីនោះ។",
+        "start": 27.0,
+        "end": 34.3
+      },
+      {
+        "id": "balance",
+        "text_en": "To use it, the denominator must match the angle $5x$. Multiply and divide by $5$.",
+        "text_km": "ដើម្បីប្រើវា ភាគបែងត្រូវតែដូចមុំ $5x$។ គុណ និងចែកនឹង $5$។",
+        "start": 34.3,
+        "end": 40.03
+      },
+      {
+        "id": "apply",
+        "text_en": "Put $u = 5x$. As $x \\to 0$, $u \\to 0$ too, so $\\frac{\\sin(5x)}{5x} \\to 1$.",
+        "text_km": "តាង $u = 5x$។ កាលណា $x \\to 0$ នោះ $u \\to 0$ ដែរ ដូច្នេះ $\\frac{\\sin(5x)}{5x} \\to 1$។",
+        "start": 40.03,
+        "end": 45.83
+      },
+      {
+        "id": "answer",
+        "text_en": "The limit is $\\frac{5}{2} \\cdot 1 = \\frac{5}{2}$. The graph of $\\frac{\\sin(5x)}{2x}$ heads to $2.5$.",
+        "text_km": "លីមីតស្មើ $\\frac{5}{2} \\cdot 1 = \\frac{5}{2}$។ ក្រាបនៃ $\\frac{\\sin(5x)}{2x}$ ឆ្ពោះទៅ $2.5$។",
+        "start": 45.83,
+        "end": 52.9
+      }
+    ],
+    "duration": 52.9,
+    "version": "1161f7d654"
+  },
+  "rationalization_conjugate_finite": {
+    "video": "limit/rationalization_conjugate_finite",
+    "explorer": "rationalization_conjugate_finite",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $\\frac{\\sqrt{x} - 2}{x - 4}$ as $x$ approaches $4$.",
+        "text_km": "រកលីមីតនៃ $\\frac{\\sqrt{x} - 2}{x - 4}$ កាលណា $x$ ខិតជិត $4$។",
+        "start": 0.0,
+        "end": 4.5
+      },
+      {
+        "id": "substitute",
+        "text_en": "Substituting $x = 4$ gives $\\frac{\\sqrt{4} - 2}{4 - 4} = \\frac{0}{0}$: undetermined.",
+        "text_km": "ជំនួស $x = 4$ បាន $\\frac{\\sqrt{4} - 2}{4 - 4} = \\frac{0}{0}$៖ ជារាងមិនកំណត់។",
+        "start": 4.5,
+        "end": 9.77
+      },
+      {
+        "id": "graph",
+        "text_en": "The graph has a hole at $x = 4$, but it clearly aims at one height.",
+        "text_km": "ក្រាបមានរន្ធត្រង់ $x = 4$ ប៉ុន្តែវាតម្រង់ទៅកម្ពស់តែមួយយ៉ាងច្បាស់។",
+        "start": 9.77,
+        "end": 15.93
+      },
+      {
+        "id": "approach",
+        "text_en": "From both sides the values close in on $0.25$.",
+        "text_km": "ពីសងខាង តម្លៃខិតជិត $0.25$។",
+        "start": 15.93,
+        "end": 20.53
+      },
+      {
+        "id": "conjugate",
+        "text_en": "Multiply top and bottom by the conjugate $\\sqrt{x} + 2$. Since $(\\sqrt{x} - 2)(\\sqrt{x} + 2) = x - 4$, the root leaves the top.",
+        "text_km": "គុណភាគយក និងភាគបែងនឹងកន្សោមឆ្លាស់ $\\sqrt{x} + 2$។ ដោយ $(\\sqrt{x} - 2)(\\sqrt{x} + 2) = x - 4$ ឫសការេចេញពីភាគយក។",
+        "start": 20.53,
+        "end": 28.77
+      },
+      {
+        "id": "cancel",
+        "text_en": "Now $(x - 4)$ is a common factor. Cancel it: what is left is $\\frac{1}{\\sqrt{x} + 2}$.",
+        "text_km": "ឥឡូវ $(x - 4)$ ជាកត្តារួម។ សម្រួលវាចោល៖ នៅសល់ $\\frac{1}{\\sqrt{x} + 2}$។",
+        "start": 28.77,
+        "end": 34.3
+      },
+      {
+        "id": "answer",
+        "text_en": "Substitute $x = 4$: the limit is $\\frac{1}{2 + 2} = \\frac{1}{4}$.",
+        "text_km": "ជំនួស $x = 4$៖ លីមីតស្មើ $\\frac{1}{2 + 2} = \\frac{1}{4}$។",
+        "start": 34.3,
+        "end": 39.33
+      }
+    ],
+    "duration": 39.33,
+    "version": "d487f7e2e9"
+  },
+  "trig_identity_0_0": {
+    "video": "limit/trig_identity_0_0",
+    "explorer": "trig_identity_0_0",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $\\frac{1 - \\sin x}{\\cos^2 x}$ as $x \\to \\frac{\\pi}{2}$.",
+        "text_km": "រកលីមីតនៃ $\\frac{1 - \\sin x}{\\cos^2 x}$ កាលណា $x \\to \\frac{\\pi}{2}$។",
+        "start": 0.0,
+        "end": 4.5
+      },
+      {
+        "id": "substitute",
+        "text_en": "At $x = \\frac{\\pi}{2}$, $\\sin x = 1$ and $\\cos x = 0$, so we get $\\frac{0}{0}$.",
+        "text_km": "ត្រង់ $x = \\frac{\\pi}{2}$ យើងមាន $\\sin x = 1$ និង $\\cos x = 0$ ដូច្នេះបាន $\\frac{0}{0}$។",
+        "start": 4.5,
+        "end": 10.53
+      },
+      {
+        "id": "graph",
+        "text_en": "The graph is smooth except for a hole above $x = \\frac{\\pi}{2}$.",
+        "text_km": "ក្រាបរលូន លើកលែងតែរន្ធមួយនៅលើ $x = \\frac{\\pi}{2}$។",
+        "start": 10.53,
+        "end": 14.8
+      },
+      {
+        "id": "approach",
+        "text_en": "Points sliding in from both sides head to $0.5$.",
+        "text_km": "ចំណុចដែលរំកិលចូលពីសងខាងឆ្ពោះទៅ $0.5$។",
+        "start": 14.8,
+        "end": 19.4
+      },
+      {
+        "id": "identity",
+        "text_en": "Rewrite the bottom with $\\sin^2 x + \\cos^2 x = 1$: $\\cos^2 x = 1 - \\sin^2 x = (1 - \\sin x)(1 + \\sin x)$.",
+        "text_km": "សរសេរភាគបែងឡើងវិញដោយប្រើ $\\sin^2 x + \\cos^2 x = 1$៖ $\\cos^2 x = 1 - \\sin^2 x = (1 - \\sin x)(1 + \\sin x)$។",
+        "start": 19.4,
+        "end": 26.03
+      },
+      {
+        "id": "cancel",
+        "text_en": "The factor $(1 - \\sin x)$ cancels, leaving $\\frac{1}{1 + \\sin x}$, with no hole.",
+        "text_km": "កត្តា $(1 - \\sin x)$ សម្រួលចោល នៅសល់ $\\frac{1}{1 + \\sin x}$ ដែលគ្មានរន្ធ។",
+        "start": 26.03,
+        "end": 31.6
+      },
+      {
+        "id": "answer",
+        "text_en": "Substitute: $\\frac{1}{1 + 1} = \\frac{1}{2}$.",
+        "text_km": "ជំនួស៖ $\\frac{1}{1 + 1} = \\frac{1}{2}$។",
+        "start": 31.6,
+        "end": 35.67
+      }
+    ],
+    "duration": 35.67,
+    "version": "efbe1941ec"
+  },
+  "angle_addition_0_0": {
+    "video": "limit/angle_addition_0_0",
+    "explorer": "angle_addition_0_0",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $\\frac{\\sin x - \\sqrt{3}\\cos x}{x - \\frac{\\pi}{3}}$ as $x \\to \\frac{\\pi}{3}$.",
+        "text_km": "រកលីមីតនៃ $\\frac{\\sin x - \\sqrt{3}\\cos x}{x - \\frac{\\pi}{3}}$ កាលណា $x \\to \\frac{\\pi}{3}$។",
+        "start": 0.0,
+        "end": 5.5
+      },
+      {
+        "id": "substitute",
+        "text_en": "At $x = \\frac{\\pi}{3}$: $\\frac{\\sqrt{3}}{2} - \\sqrt{3} \\cdot \\frac{1}{2} = 0$ on top, and $0$ below. Another $\\frac{0}{0}$.",
+        "text_km": "ត្រង់ $x = \\frac{\\pi}{3}$៖ ភាគយក $\\frac{\\sqrt{3}}{2} - \\sqrt{3} \\cdot \\frac{1}{2} = 0$ ហើយភាគបែងក៏ $0$។ ជារាង $\\frac{0}{0}$ ទៀត។",
+        "start": 5.5,
+        "end": 13.73
+      },
+      {
+        "id": "combine",
+        "text_en": "The top, $\\sin x - \\sqrt{3}\\cos x$, is a single sine wave: amplitude $R = \\sqrt{1 + 3} = 2$, shifted by $\\frac{\\pi}{3}$.",
+        "text_km": "ភាគយក $\\sin x - \\sqrt{3}\\cos x$ ជារលកស៊ីនុសតែមួយ៖ អំព្លីទុត $R = \\sqrt{1 + 3} = 2$ រំកិលដោយ $\\frac{\\pi}{3}$។",
+        "start": 13.73,
+        "end": 23.63
+      },
+      {
+        "id": "rewrite",
+        "text_en": "So the fraction is $2 \\cdot \\frac{\\sin t}{t}$ with $t = x - \\frac{\\pi}{3}$, and $t \\to 0$.",
+        "text_km": "ដូច្នេះប្រភាគស្មើ $2 \\cdot \\frac{\\sin t}{t}$ ដែល $t = x - \\frac{\\pi}{3}$ ហើយ $t \\to 0$។",
+        "start": 23.63,
+        "end": 29.5
+      },
+      {
+        "id": "graph",
+        "text_en": "The graph of the fraction has a hole at $x = \\frac{\\pi}{3}$, at height $2$.",
+        "text_km": "ក្រាបនៃប្រភាគមានរន្ធត្រង់ $x = \\frac{\\pi}{3}$ នៅកម្ពស់ $2$។",
+        "start": 29.5,
+        "end": 35.9
+      },
+      {
+        "id": "answer",
+        "text_en": "Since $\\frac{\\sin t}{t} \\to 1$, the limit is $2 \\cdot 1 = 2$.",
+        "text_km": "ដោយ $\\frac{\\sin t}{t} \\to 1$ លីមីតស្មើ $2 \\cdot 1 = 2$។",
+        "start": 35.9,
+        "end": 40.7
+      }
+    ],
+    "duration": 40.7,
+    "version": "71efafe8dd"
+  },
+  "rationalization_sinc_combo": {
+    "video": "limit/rationalization_sinc_combo",
+    "explorer": "rationalization_sinc_combo",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $\\frac{\\sqrt{1 + x} - \\sqrt{1 - x}}{\\sin(2x)}$ as $x \\to 0$.",
+        "text_km": "រកលីមីតនៃ $\\frac{\\sqrt{1 + x} - \\sqrt{1 - x}}{\\sin(2x)}$ កាលណា $x \\to 0$។",
+        "start": 0.0,
+        "end": 4.73
+      },
+      {
+        "id": "substitute",
+        "text_en": "At $x = 0$ the top is $1 - 1 = 0$ and $\\sin 0 = 0$: the form $\\frac{0}{0}$.",
+        "text_km": "ត្រង់ $x = 0$ ភាគយកស្មើ $1 - 1 = 0$ ហើយ $\\sin 0 = 0$៖ រាង $\\frac{0}{0}$។",
+        "start": 4.73,
+        "end": 9.9
+      },
+      {
+        "id": "graph",
+        "text_en": "The graph has a hole at $x = 0$.",
+        "text_km": "ក្រាបមានរន្ធត្រង់ $x = 0$។",
+        "start": 9.9,
+        "end": 13.0
+      },
+      {
+        "id": "approach",
+        "text_en": "Both sides head for $0.5$.",
+        "text_km": "សងខាងឆ្ពោះទៅ $0.5$។",
+        "start": 13.0,
+        "end": 17.6
+      },
+      {
+        "id": "conjugate",
+        "text_en": "Two tricks combine. First the conjugate: $(\\sqrt{1 + x} - \\sqrt{1 - x})(\\sqrt{1 + x} + \\sqrt{1 - x}) = 2x$.",
+        "text_km": "យើងប្រើគន្លឹះពីររួមគ្នា។ ទីមួយ កន្សោមឆ្លាស់៖ $(\\sqrt{1 + x} - \\sqrt{1 - x})(\\sqrt{1 + x} + \\sqrt{1 - x}) = 2x$។",
+        "start": 17.6,
+        "end": 25.33
+      },
+      {
+        "id": "split",
+        "text_en": "Then pair $2x$ with $\\sin(2x)$: $\\frac{2x}{\\sin(2x)} \\to 1$, while $\\frac{1}{\\sqrt{1 + x} + \\sqrt{1 - x}} \\to \\frac{1}{2}$.",
+        "text_km": "បន្ទាប់មក ផ្គូផ្គង $2x$ ជាមួយ $\\sin(2x)$៖ $\\frac{2x}{\\sin(2x)} \\to 1$ ចំណែក $\\frac{1}{\\sqrt{1 + x} + \\sqrt{1 - x}} \\to \\frac{1}{2}$។",
+        "start": 25.33,
+        "end": 33.57
+      },
+      {
+        "id": "answer",
+        "text_en": "The limit is $1 \\cdot \\frac{1}{2} = \\frac{1}{2}$.",
+        "text_km": "លីមីតស្មើ $1 \\cdot \\frac{1}{2} = \\frac{1}{2}$។",
+        "start": 33.57,
+        "end": 37.73
+      }
+    ],
+    "duration": 37.73,
+    "version": "9a13dc2188"
+  },
+  "exponential_sinc_combo": {
+    "video": "limit/exponential_sinc_combo",
+    "explorer": "exponential_sinc_combo",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $\\frac{(e^x + e^{-x})\\sin^2(3x)}{2x^2}$ as $x \\to 0$.",
+        "text_km": "រកលីមីតនៃ $\\frac{(e^x + e^{-x})\\sin^2(3x)}{2x^2}$ កាលណា $x \\to 0$។",
+        "start": 0.0,
+        "end": 4.4
+      },
+      {
+        "id": "substitute",
+        "text_en": "At $x = 0$: $\\sin 0 = 0$ on top and $0$ below. The form $\\frac{0}{0}$.",
+        "text_km": "ត្រង់ $x = 0$៖ $\\sin 0 = 0$ នៅភាគយក ហើយ $0$ នៅភាគបែង។ រាង $\\frac{0}{0}$។",
+        "start": 4.4,
+        "end": 9.93
+      },
+      {
+        "id": "graph",
+        "text_en": "The graph peaks toward a hole at $x = 0$.",
+        "text_km": "ក្រាបឡើងទៅរករន្ធមួយត្រង់ $x = 0$។",
+        "start": 9.93,
+        "end": 13.2
+      },
+      {
+        "id": "approach",
+        "text_en": "From both sides the values climb toward $9$.",
+        "text_km": "ពីសងខាង តម្លៃឡើងទៅជិត $9$។",
+        "start": 13.2,
+        "end": 17.8
+      },
+      {
+        "id": "split",
+        "text_en": "Split it into two pieces whose limits we know: $\\frac{e^x + e^{-x}}{2} \\cdot \\left(\\frac{\\sin 3x}{x}\\right)^2$.",
+        "text_km": "បំបែកជាពីរផ្នែកដែលយើងស្គាល់លីមីត៖ $\\frac{e^x + e^{-x}}{2} \\cdot \\left(\\frac{\\sin 3x}{x}\\right)^2$។",
+        "start": 17.8,
+        "end": 24.43
+      },
+      {
+        "id": "pieces",
+        "text_en": "The first piece tends to $\\frac{1 + 1}{2} = 1$. The second: $\\frac{\\sin 3x}{x} \\to 3$, so its square tends to $9$.",
+        "text_km": "ផ្នែកទីមួយខិតជិត $\\frac{1 + 1}{2} = 1$។ ផ្នែកទីពីរ៖ $\\frac{\\sin 3x}{x} \\to 3$ ដូច្នេះការេរបស់វាខិតជិត $9$។",
+        "start": 24.43,
+        "end": 32.43
+      },
+      {
+        "id": "answer",
+        "text_en": "The limit is $1 \\cdot 9 = 9$.",
+        "text_km": "លីមីតស្មើ $1 \\cdot 9 = 9$។",
+        "start": 32.43,
+        "end": 36.5
+      }
+    ],
+    "duration": 36.5,
+    "version": "75a2a98b73"
+  },
+  "half_angle_sinc_combo": {
+    "video": "limit/half_angle_sinc_combo",
+    "explorer": "half_angle_sinc_combo",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $\\frac{1 - \\cos(4x)}{x^2}$ as $x \\to 0$.",
+        "text_km": "រកលីមីតនៃ $\\frac{1 - \\cos(4x)}{x^2}$ កាលណា $x \\to 0$។",
+        "start": 0.0,
+        "end": 3.8
+      },
+      {
+        "id": "substitute",
+        "text_en": "At $x = 0$: $1 - \\cos 0 = 0$ over $0$. The form $\\frac{0}{0}$.",
+        "text_km": "ត្រង់ $x = 0$៖ $1 - \\cos 0 = 0$ លើ $0$។ រាង $\\frac{0}{0}$។",
+        "start": 3.8,
+        "end": 7.9
+      },
+      {
+        "id": "graph",
+        "text_en": "The graph rises to a hole at $x = 0$.",
+        "text_km": "ក្រាបឡើងទៅរករន្ធត្រង់ $x = 0$។",
+        "start": 7.9,
+        "end": 11.0
+      },
+      {
+        "id": "approach",
+        "text_en": "The values close in on $8$.",
+        "text_km": "តម្លៃខិតជិត $8$។",
+        "start": 11.0,
+        "end": 15.6
+      },
+      {
+        "id": "identity",
+        "text_en": "Use the half-angle identity $1 - \\cos(2\\theta) = 2\\sin^2\\theta$ with $\\theta = 2x$: $1 - \\cos(4x) = 2\\sin^2(2x)$.",
+        "text_km": "ប្រើរូបមន្តកន្លះមុំ $1 - \\cos(2\\theta) = 2\\sin^2\\theta$ ដែល $\\theta = 2x$៖ $1 - \\cos(4x) = 2\\sin^2(2x)$។",
+        "start": 15.6,
+        "end": 22.17
+      },
+      {
+        "id": "square",
+        "text_en": "So the fraction is $2\\left(\\frac{\\sin 2x}{x}\\right)^2$, and $\\frac{\\sin 2x}{x} \\to 2$.",
+        "text_km": "ដូច្នេះប្រភាគស្មើ $2\\left(\\frac{\\sin 2x}{x}\\right)^2$ ហើយ $\\frac{\\sin 2x}{x} \\to 2$។",
+        "start": 22.17,
+        "end": 27.67
+      },
+      {
+        "id": "answer",
+        "text_en": "The limit is $2 \\cdot 2^2 = 8$.",
+        "text_km": "លីមីតស្មើ $2 \\cdot 2^2 = 8$។",
+        "start": 27.67,
+        "end": 31.77
+      }
+    ],
+    "duration": 31.77,
+    "version": "7662ec2b22"
+  },
+  "exponential_standard_limit": {
+    "video": "limit/exponential_standard_limit",
+    "explorer": "exponential_standard_limit",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $\\frac{e^{3x} - 1}{e^{5x} - 1}$ as $x \\to 0$. Substituting gives $\\frac{0}{0}$.",
+        "text_km": "រកលីមីតនៃ $\\frac{e^{3x} - 1}{e^{5x} - 1}$ កាលណា $x \\to 0$។ ការជំនួសផ្ដល់ $\\frac{0}{0}$។",
+        "start": 0.0,
+        "end": 6.07
+      },
+      {
+        "id": "secant",
+        "text_en": "The key fact: $\\frac{e^u - 1}{u}$ is the slope of the line from $(0, 1)$ to the point $(u, e^u)$ on the curve.",
+        "text_km": "លីមីតគ្រឹះ៖ $\\frac{e^u - 1}{u}$ ជាមេគុណប្រាប់ទិសនៃបន្ទាត់ពី $(0, 1)$ ទៅចំណុច $(u, e^u)$ លើខ្សែកោង។",
+        "start": 6.07,
+        "end": 13.87
+      },
+      {
+        "id": "tangent",
+        "text_en": "As $u \\to 0$, that line turns into the tangent at $(0, 1)$, whose slope is $1$. So $\\frac{e^u - 1}{u} \\to 1$.",
+        "text_km": "កាលណា $u \\to 0$ បន្ទាត់នោះក្លាយជាបន្ទាត់ប៉ះត្រង់ $(0, 1)$ ដែលមានមេគុណប្រាប់ទិស $1$។ ដូច្នេះ $\\frac{e^u - 1}{u} \\to 1$។",
+        "start": 13.87,
+        "end": 23.13
+      },
+      {
+        "id": "balance",
+        "text_en": "Make each exponent appear under its own bracket: divide by $3x$ on top and $5x$ below, then multiply them back.",
+        "text_km": "ធ្វើឱ្យនិទស្សន្តនីមួយៗមាននៅក្រោមតង្កៀបរបស់វា៖ ចែកភាគយកនឹង $3x$ និងភាគបែងនឹង $5x$ រួចគុណវាត្រឡប់មកវិញ។",
+        "start": 23.13,
+        "end": 32.53
+      },
+      {
+        "id": "answer",
+        "text_en": "Both brackets tend to $1$, leaving $\\frac{3x}{5x} = \\frac{3}{5}$.",
+        "text_km": "តង្កៀបទាំងពីរខិតជិត $1$ នៅសល់ $\\frac{3x}{5x} = \\frac{3}{5}$។",
+        "start": 32.53,
+        "end": 38.1
+      }
+    ],
+    "duration": 38.1,
+    "version": "f3855269bb"
+  },
+  "conjugate_infinity": {
+    "video": "limit/conjugate_infinity",
+    "explorer": "conjugate_infinity",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $\\sqrt{x^2 + 4x} - x$ as $x \\to +\\infty$.",
+        "text_km": "រកលីមីតនៃ $\\sqrt{x^2 + 4x} - x$ កាលណា $x \\to +\\infty$។",
+        "start": 0.0,
+        "end": 3.87
+      },
+      {
+        "id": "form",
+        "text_en": "Both $\\sqrt{x^2 + 4x}$ and $x$ grow without bound. The form $\\infty - \\infty$ is undetermined.",
+        "text_km": "ទាំង $\\sqrt{x^2 + 4x}$ និង $x$ កើនឡើងគ្មានព្រំដែន។ រាង $\\infty - \\infty$ ជារាងមិនកំណត់។",
+        "start": 3.87,
+        "end": 10.67
+      },
+      {
+        "id": "graph",
+        "text_en": "Yet the gap between them settles down: run $x$ to the right and the graph levels off.",
+        "text_km": "ប៉ុន្តែគម្លាតរវាងពួកវានឹងនរ៖ រំកិល $x$ ទៅស្ដាំ ក្រាបនឹងរាបស្មើ។",
+        "start": 10.67,
+        "end": 19.57
+      },
+      {
+        "id": "conjugate",
+        "text_en": "Multiply and divide by the conjugate $\\sqrt{x^2 + 4x} + x$. The top becomes $(x^2 + 4x) - x^2 = 4x$.",
+        "text_km": "គុណ និងចែកនឹងកន្សោមឆ្លាស់ $\\sqrt{x^2 + 4x} + x$។ ភាគយកក្លាយជា $(x^2 + 4x) - x^2 = 4x$។",
+        "start": 19.57,
+        "end": 25.97
+      },
+      {
+        "id": "divide",
+        "text_en": "Take $x$ out of the root ($\\sqrt{x^2} = x$ for $x > 0$) and divide top and bottom by $x$.",
+        "text_km": "ទាញ $x$ ចេញពីរ៉ាឌីកាល់ ($\\sqrt{x^2} = x$ ព្រោះ $x > 0$) ហើយចែកភាគយក និងភាគបែងនឹង $x$។",
+        "start": 25.97,
+        "end": 32.97
+      },
+      {
+        "id": "answer",
+        "text_en": "As $x \\to +\\infty$, $\\frac{4}{x} \\to 0$, so the limit is $\\frac{4}{1 + 1} = 2$.",
+        "text_km": "កាលណា $x \\to +\\infty$ នោះ $\\frac{4}{x} \\to 0$ ដូច្នេះលីមីតស្មើ $\\frac{4}{1 + 1} = 2$។",
+        "start": 32.97,
+        "end": 39.77
+      }
+    ],
+    "duration": 39.77,
+    "version": "534b7a1fbb"
+  },
+  "log_limit_infinity": {
+    "video": "limit/log_limit_infinity",
+    "explorer": "log_limit_infinity",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $x\\left[\\ln(x + 2) - \\ln x\\right]$ as $x \\to +\\infty$.",
+        "text_km": "រកលីមីតនៃ $x\\left[\\ln(x + 2) - \\ln x\\right]$ កាលណា $x \\to +\\infty$។",
+        "start": 0.0,
+        "end": 4.43
+      },
+      {
+        "id": "form",
+        "text_en": "The factor $x$ grows without bound, while the bracket shrinks to $0$: the form $\\infty \\cdot 0$.",
+        "text_km": "កត្តា $x$ កើនឡើងគ្មានព្រំដែន ចំណែកតង្កៀបថយទៅ $0$៖ រាង $\\infty \\cdot 0$។",
+        "start": 4.43,
+        "end": 10.67
+      },
+      {
+        "id": "graph",
+        "text_en": "The graph climbs and levels off: the product settles near one height.",
+        "text_km": "ក្រាបឡើង ហើយរាបស្មើ៖ ផលគុណនរនៅជិតកម្ពស់មួយ។",
+        "start": 10.67,
+        "end": 19.57
+      },
+      {
+        "id": "combine",
+        "text_en": "Combine the logs: $\\ln(x + 2) - \\ln x = \\ln\\left(1 + \\frac{2}{x}\\right)$.",
+        "text_km": "បង្រួមលោការីត៖ $\\ln(x + 2) - \\ln x = \\ln\\left(1 + \\frac{2}{x}\\right)$។",
+        "start": 19.57,
+        "end": 24.07
+      },
+      {
+        "id": "substitute_u",
+        "text_en": "Put $u = \\frac{2}{x}$, so $x = \\frac{2}{u}$ and $u \\to 0^+$. The expression becomes $2 \\cdot \\frac{\\ln(1 + u)}{u}$.",
+        "text_km": "តាង $u = \\frac{2}{x}$ នោះ $x = \\frac{2}{u}$ ហើយ $u \\to 0^+$។ កន្សោមក្លាយជា $2 \\cdot \\frac{\\ln(1 + u)}{u}$។",
+        "start": 24.07,
+        "end": 30.87
+      },
+      {
+        "id": "answer",
+        "text_en": "Since $\\frac{\\ln(1 + u)}{u} \\to 1$, the limit is $2$.",
+        "text_km": "ដោយ $\\frac{\\ln(1 + u)}{u} \\to 1$ លីមីតស្មើ $2$។",
+        "start": 30.87,
+        "end": 35.3
+      }
+    ],
+    "duration": 35.3,
+    "version": "54bcebe692"
+  },
+  "rational_function_infinity": {
+    "video": "limit/rational_function_infinity",
+    "explorer": "rational_function_infinity",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $\\frac{3x^2 + 5x}{2x^2 - 7}$ as $x \\to +\\infty$.",
+        "text_km": "រកលីមីតនៃ $\\frac{3x^2 + 5x}{2x^2 - 7}$ កាលណា $x \\to +\\infty$។",
+        "start": 0.0,
+        "end": 4.17
+      },
+      {
+        "id": "form",
+        "text_en": "Top and bottom both grow without bound: the form $\\frac{\\infty}{\\infty}$.",
+        "text_km": "ភាគយក និងភាគបែងកើនឡើងគ្មានព្រំដែនទាំងពីរ៖ រាង $\\frac{\\infty}{\\infty}$។",
+        "start": 4.17,
+        "end": 10.07
+      },
+      {
+        "id": "graph",
+        "text_en": "Run $x$ to the right: the curve levels off at a horizontal asymptote.",
+        "text_km": "រំកិល $x$ ទៅស្ដាំ៖ ខ្សែកោងរាបស្មើទៅរកអាស៊ីមតូតដេក។",
+        "start": 10.07,
+        "end": 18.97
+      },
+      {
+        "id": "dominant",
+        "text_en": "For huge $x$, $3x^2$ swamps $5x$ and $2x^2$ swamps $7$. Only the leading terms matter.",
+        "text_km": "កាលណា $x$ ធំខ្លាំង $3x^2$ លើសលុប $5x$ ហើយ $2x^2$ លើសលុប $7$។ មានតែតួដឺក្រេខ្ពស់បំផុតដែលសំខាន់។",
+        "start": 18.97,
+        "end": 27.1
+      },
+      {
+        "id": "divide",
+        "text_en": "To show it, divide every term by $x^2$: $\\frac{3 + \\frac{5}{x}}{2 - \\frac{7}{x^2}}$. The small fractions vanish.",
+        "text_km": "ដើម្បីបង្ហាញ ចែកគ្រប់តួនឹង $x^2$៖ $\\frac{3 + \\frac{5}{x}}{2 - \\frac{7}{x^2}}$។ ប្រភាគតូចៗខិតជិត $0$។",
+        "start": 27.1,
+        "end": 34.47
+      },
+      {
+        "id": "answer",
+        "text_en": "The limit is $\\frac{3}{2}$: the ratio of the leading coefficients.",
+        "text_km": "លីមីតស្មើ $\\frac{3}{2}$៖ ផលធៀបនៃមេគុណតួដឺក្រេខ្ពស់បំផុត។",
+        "start": 34.47,
+        "end": 40.57
+      }
+    ],
+    "duration": 40.57,
+    "version": "d9233b5314"
+  },
+  "log_limit_zero": {
+    "video": "limit/log_limit_zero",
+    "explorer": "log_limit_zero",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $x \\ln x$ as $x \\to 0^+$.",
+        "text_km": "រកលីមីតនៃ $x \\ln x$ កាលណា $x \\to 0^+$។",
+        "start": 0.0,
+        "end": 3.13
+      },
+      {
+        "id": "form",
+        "text_en": "As $x \\to 0^+$, $x \\to 0$ but $\\ln x \\to -\\infty$: the form $0 \\cdot (-\\infty)$. Who wins?",
+        "text_km": "កាលណា $x \\to 0^+$ នោះ $x \\to 0$ ប៉ុន្តែ $\\ln x \\to -\\infty$៖ រាង $0 \\cdot (-\\infty)$។ តើមួយណាឈ្នះ?",
+        "start": 3.13,
+        "end": 10.0
+      },
+      {
+        "id": "graph",
+        "text_en": "Here is $x \\ln x$ for $x > 0$. It dips below the axis, then turns back up toward the origin.",
+        "text_km": "នេះជាក្រាប $x \\ln x$ ចំពោះ $x > 0$។ វាចុះក្រោមអ័ក្ស រួចត្រឡប់ឡើងទៅរកគល់អ័ក្សវិញ។",
+        "start": 10.0,
+        "end": 17.13
+      },
+      {
+        "id": "race",
+        "text_en": "Shrink $x$: $\\ln x$ grows only slowly, so the factor $x$ drags the product to $0$.",
+        "text_km": "បង្រួម $x$៖ $\\ln x$ កើនយឺតណាស់ ដូច្នេះកត្តា $x$ ទាញផលគុណទៅ $0$។",
+        "start": 17.13,
+        "end": 24.33
+      },
+      {
+        "id": "rule",
+        "text_en": "This is a general rule: $x^p \\ln x \\to 0$ as $x \\to 0^+$ for every $p > 0$. Powers beat logarithms.",
+        "text_km": "នេះជាវិធានទូទៅ៖ $x^p \\ln x \\to 0$ កាលណា $x \\to 0^+$ ចំពោះគ្រប់ $p > 0$។ ស្វ័យគុណឈ្នះលោការីត។",
+        "start": 24.33,
+        "end": 31.7
+      },
+      {
+        "id": "answer",
+        "text_en": "So the limit is $0$.",
+        "text_km": "ដូច្នេះលីមីតស្មើ $0$។",
+        "start": 31.7,
+        "end": 35.77
+      }
+    ],
+    "duration": 35.77,
+    "version": "d60b085029"
+  },
+  "indeterminate_one_infinity": {
+    "video": "limit/indeterminate_one_infinity",
+    "explorer": "indeterminate_one_infinity",
+    "cues": [
+      {
+        "id": "problem",
+        "text_en": "Find the limit of $\\left(1 + \\frac{3}{x}\\right)^x$ as $x \\to +\\infty$.",
+        "text_km": "រកលីមីតនៃ $\\left(1 + \\frac{3}{x}\\right)^x$ កាលណា $x \\to +\\infty$។",
+        "start": 0.0,
+        "end": 4.37
+      },
+      {
+        "id": "form",
+        "text_en": "The base tends to $1$ and the exponent to $\\infty$. The form $1^\\infty$ is undetermined, and the answer is not $1$!",
+        "text_km": "គោលខិតជិត $1$ ហើយនិទស្សន្តខិតទៅ $\\infty$។ រាង $1^\\infty$ ជារាងមិនកំណត់ ហើយចម្លើយមិនមែន $1$ ទេ!",
+        "start": 4.37,
+        "end": 12.4
+      },
+      {
+        "id": "graph",
+        "text_en": "The graph climbs and levels off near $20.09$.",
+        "text_km": "ក្រាបឡើង ហើយរាបស្មើនៅជិត $20.09$។",
+        "start": 12.4,
+        "end": 21.3
+      },
+      {
+        "id": "rewrite",
+        "text_en": "Write the exponent as $\\frac{x}{3} \\cdot 3$: $\\left(1 + \\frac{3}{x}\\right)^x = \\left[\\left(1 + \\frac{3}{x}\\right)^{\\frac{x}{3}}\\right]^3$.",
+        "text_km": "សរសេរនិទស្សន្តជា $\\frac{x}{3} \\cdot 3$៖ $\\left(1 + \\frac{3}{x}\\right)^x = \\left[\\left(1 + \\frac{3}{x}\\right)^{\\frac{x}{3}}\\right]^3$។",
+        "start": 21.3,
+        "end": 28.83
+      },
+      {
+        "id": "e",
+        "text_en": "With $u = \\frac{3}{x} \\to 0$, the inside is $(1 + u)^{\\frac{1}{u}}$, which tends to $e$.",
+        "text_km": "ដោយ $u = \\frac{3}{x} \\to 0$ កន្សោមខាងក្នុងគឺ $(1 + u)^{\\frac{1}{u}}$ ដែលខិតជិត $e$។",
+        "start": 28.83,
+        "end": 34.73
+      },
+      {
+        "id": "answer",
+        "text_en": "So the limit is $e^3 \\approx 20.09$.",
+        "text_km": "ដូច្នេះលីមីតស្មើ $e^3 \\approx 20.09$។",
+        "start": 34.73,
+        "end": 38.8
+      }
+    ],
+    "duration": 38.8,
+    "version": "31d5ff060f"
+  }
+}

@@ -7,6 +7,8 @@ import json
 from functools import lru_cache
 from pathlib import Path
 
+from ...core.lesson_animations import with_animation
+
 _LESSONS_PATH = Path(__file__).with_name("data") / "lessons.json"
 
 
@@ -26,4 +28,5 @@ def get_lesson(technique: str) -> dict | None:
     lesson = _lessons().get(technique)
     if lesson is None:
         return None
-    return {"topic": "limit", "question_type": "limit", "technique": technique, **lesson}
+    payload = {"topic": "limit", "question_type": "limit", "technique": technique, **lesson}
+    return with_animation(payload, _LESSONS_PATH.parent, technique)
