@@ -402,6 +402,8 @@ export interface FormulaEntry {
   weight: number;
   formulas: string[];
   variants: FormulaVariant[];
+  /** Worked-example tutorial video (same shape as a lesson animation). */
+  animation?: LessonAnimation | null;
 }
 
 export interface FormulaCatalog {
@@ -605,6 +607,30 @@ export interface LessonExample {
   answer_latex?: string;
 }
 
+// One caption of a lesson animation. The video itself carries no language;
+// the web renders `text_en`/`text_km` under the player while
+// `start <= currentTime < end` (seconds, written by animations/render.py).
+export interface LessonCue {
+  id: string;
+  start: number;
+  end: number;
+  text_en: string;
+  text_km: string;
+}
+
+// The optional "Watch" (Manim video) + "Explore" (interactive widget) part of
+// a lesson; see backend/engine/core/lesson_animations.py.
+export interface LessonAnimation {
+  /** Media path under NEXT_PUBLIC_ANIMATION_BASE_URL, without extension. */
+  video: string;
+  /** Interactive explorer id (web/src/components/explorers). */
+  explorer?: string;
+  /** Content hash of the rendered video, used to cache-bust. */
+  version?: string;
+  duration?: number;
+  cues: LessonCue[];
+}
+
 export interface Lesson {
   topic: string;
   question_type: string;
@@ -615,6 +641,7 @@ export interface Lesson {
   formulas: LessonFormula[];
   sections: LessonSection[];
   examples: LessonExample[];
+  animation?: LessonAnimation;
 }
 
 export interface FormulaSkill extends SkillEstimate {

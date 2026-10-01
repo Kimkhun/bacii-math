@@ -19,6 +19,7 @@
 | Doc | Covers |
 |---|---|
 | `adding-question-types.md` | The recipe: formula catalog → solver → grader → generator template → web dropdown → verification checklist (with gotchas) |
+| `lesson-animations.md` | Lesson **Watch** (Manim videos, captions kept outside the video, bandwidth budget) and **Explore** (interactive SVG explorers): pipeline, design rules, the add-a-lesson recipe, verification |
 | `admin-sandbox.md` | The admin `/admin` Sandbox tab: run `solve()`/`analyze_work()`/`score_work()` directly against hand-entered params — pick a template, edit params (with a calculator keypad), solve, and test grading against typed, drawn, or photographed work |
 
 ## Planned feature docs (not yet built)

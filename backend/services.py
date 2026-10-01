@@ -19,6 +19,7 @@ import cache
 from core.offload import run_cpu
 from engine import explainer, formulas, generator, grader, llm, solver
 from engine.core import coaching, lessons, mastery, skills, template_shapes
+from engine.core.lesson_animations import formula_animation
 from engine import hints
 from engine.core.rubric import score_work
 from engine.topics.past_exam.rubric import mark_full_exam
@@ -778,7 +779,8 @@ async def get_formulas_catalog() -> dict:
     """Full formula registry grouped by topic, for the admin view and the
     student-facing formula sheet. Each entry carries `variants`: every
     generator (topic, question_type, variant, difficulty) combo known to
-    touch that formula, so a "Practice this" link can force it directly."""
+    touch that formula, so a "Practice this" link can force it directly, and
+    `animation`: its worked-example tutorial video, when one has been made."""
     by_group: dict[str, list] = {}
     for tag, e in formulas.FORMULA_REGISTRY.items():
         g = e.get("group") or "other"
@@ -790,6 +792,7 @@ async def get_formulas_catalog() -> dict:
             "weight": e.get("weight", 1),
             "formulas": e.get("formulas") or [],
             "variants": await generator.variants_for_formula(tag),
+            "animation": formula_animation(tag),
         })
     # Teaching order first, then anything else the registry has — a topic that
     # grows a formula file must not silently vanish from the formula sheet.

@@ -120,7 +120,7 @@ export default function HistoryPage() {
                     <img
                       src={a.strokes_thumb}
                       alt="Your handwriting"
-                      className="mt-2 max-h-36 w-auto max-w-full rounded border border-slate-200 bg-white shadow-sm object-contain"
+                      className="invert-in-dark mt-2 max-h-36 w-auto max-w-full rounded border border-slate-200 bg-white shadow-sm object-contain"
                     />
                   )}
 
