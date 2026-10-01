@@ -102,6 +102,7 @@ export interface Translations {
   formulas_difficulty_medium: string;
   formulas_difficulty_hard: string;
   formulas_practice: string;
+  formulas_watch: string;
   formulas_loading: string;
   lesson: string;
   lesson_loading: string;
@@ -352,6 +353,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     formulas_difficulty_medium: "Medium",
     formulas_difficulty_hard: "Hard",
     formulas_practice: "Practice",
+    formulas_watch: "Watch how",
     formulas_loading: "Loading formulas…",
     lesson: "Lesson",
     lesson_loading: "Loading lesson…",
@@ -593,6 +595,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     formulas_difficulty_medium: "មធ្យម",
     formulas_difficulty_hard: "ពិបាក",
     formulas_practice: "អនុវត្ត",
+    formulas_watch: "មើលរបៀបធ្វើ",
     formulas_loading: "កំពុងផ្ទុកតារាងរូបមន្ត...",
     lesson: "មេរៀន",
     lesson_loading: "កំពុងផ្ទុកមេរៀន...",

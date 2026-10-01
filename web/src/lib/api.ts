@@ -402,6 +402,8 @@ export interface FormulaEntry {
   weight: number;
   formulas: string[];
   variants: FormulaVariant[];
+  /** Worked-example tutorial video (same shape as a lesson animation). */
+  animation?: LessonAnimation | null;
 }
 
 export interface FormulaCatalog {

@@ -19,10 +19,16 @@ render (``start``/``end``/``duration``/``version`` are rewritten by
 
 Kept in its own file rather than inside ``lessons.json`` so the render step can
 rewrite it mechanically without reformatting the hand-laid-out lesson text.
+
+Formula tutorials (a worked example of one formula-sheet entry, shown on the
+formula page) use the same block shape, but are keyed by formula id in a single
+``engine/data/formula_animations.json`` rather than per topic.
 """
 import json
 from functools import lru_cache
 from pathlib import Path
+
+_FORMULA_ANIMATIONS = Path(__file__).resolve().parents[1] / "data" / "formula_animations.json"
 
 
 @lru_cache(maxsize=None)
@@ -39,3 +45,16 @@ def with_animation(lesson: dict, data_dir: Path, lesson_id: str) -> dict:
     """``lesson`` plus its ``animation`` block, when one has been authored."""
     animation = load_animations(data_dir).get(lesson_id)
     return {**lesson, "animation": animation} if animation else lesson
+
+
+@lru_cache(maxsize=1)
+def _formula_animations() -> dict:
+    if not _FORMULA_ANIMATIONS.exists():
+        return {}
+    with open(_FORMULA_ANIMATIONS, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def formula_animation(formula_id: str) -> dict | None:
+    """The tutorial animation for one formula-sheet entry, or None."""
+    return _formula_animations().get(formula_id)

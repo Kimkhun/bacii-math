@@ -81,6 +81,33 @@ Pilot scope: all 15 **limit** lessons. Other topics use the same pattern.
 For a new topic, also call `with_animation(...)` in that topic's `lessons.py`
 `get_lesson` (see `engine/topics/limit/lessons.py`).
 
+## Formula tutorials (experiment)
+
+The same pipeline also makes **worked-example tutorials for formula-sheet
+entries**, shown behind a **Watch how** button on `/formulas`. Each one keeps the
+general rule in a banner at the top, then plays out one concrete example:
+arrows point at the pieces being combined, copies of those numbers fly to where
+their result goes, and the piece that changes (a sign flip, `i^2 -> -1`) is
+flashed. Pilots: `complex_multiplication` (FOIL arrows, then "that was the
+formula"), `complex_division` (flip to the conjugate, the `i` vanishes from the
+bottom), `cross_product` (repeat the x/y columns, slide a window, blue diagonal
+minus red diagonal, then the `u . (u x v) = 0` check).
+
+| Where | What |
+|---|---|
+| `animations/common/formula_kit.py` | `FormulaScene`: `rule` (top banner), `point` (curved arrow), `straight`, `fly` (copies move and morph into a target), `swap` (replace a piece in place), `check` (SymPy) |
+| `animations/formulas/<formula_id>.py` | One `Lesson` scene per formula; `lesson_id` is the formula id from `formulas.json` |
+| `backend/engine/data/formula_animations.json` | Captions and timings, keyed by formula id (one registry, since formulas span topics) |
+| `backend/engine/core/lesson_animations.py` | `formula_animation(id)`; `get_formulas_catalog` adds it to each entry as `animation` |
+| `web/public/animations/formulas/` | Media |
+
+Render with `animations/render.sh formulas [<formula_id> …] [--draft]`.
+`verify.py` checks the registry too, and requires each id to exist in some
+topic's `formulas.json`. Same rules apply: no words in the video, and the
+boxed result is asserted with SymPy at render time. The examples are fixed in
+each scene for now. A later step could take them from a template sample, so
+a tutorial uses the same numbers as the exercise a student is about to practise.
+
 ## Verification
 
 `python3 animations/verify.py` (needs SymPy) checks:

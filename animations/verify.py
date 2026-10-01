@@ -2,8 +2,10 @@
 
     python3 animations/verify.py            # needs sympy (host or render image)
 
-Checks, for every topic with a ``data/animations.json``:
-  * every animated lesson exists in ``lessons.json``;
+Checks, for every topic with a ``data/animations.json`` (and for the formula
+tutorials in ``backend/engine/data/formula_animations.json``):
+  * every animated lesson exists in ``lessons.json`` (every formula tutorial in
+    some topic's ``formulas.json``);
   * every cue has non-empty ``text_en`` and ``text_km``, and rendered timings
     run 0 -> duration without gaps or overlaps;
   * the rendered media (720p, 480p, poster) exist under web/public/animations;
@@ -105,23 +107,39 @@ def check_registry(errors: list[str]) -> int:
                 errors.append(f"{where}: no such lesson in lessons.json")
             if anim.get("explorer") and anim["explorer"] not in registered:
                 errors.append(f"{where}: explorer {anim['explorer']!r} not registered on the web")
-            prev_end = 0.0
-            for cue in anim["cues"]:
-                if not cue.get("text_en", "").strip() or not cue.get("text_km", "").strip():
-                    errors.append(f"{where}/{cue['id']}: missing caption text")
-                if "start" not in cue:
-                    errors.append(f"{where}/{cue['id']}: not rendered yet (no timing)")
-                    continue
-                if abs(cue["start"] - prev_end) > 0.011 or cue["end"] <= cue["start"]:
-                    errors.append(f"{where}/{cue['id']}: bad timing {cue['start']}..{cue['end']}")
-                prev_end = cue["end"]
-            if "duration" in anim and abs(prev_end - anim["duration"]) > 0.011:
-                errors.append(f"{where}: cues end at {prev_end}, video lasts {anim['duration']}")
-            media = REPO / "web/public/animations" / anim["video"]
-            for suffix in (".mp4", ".480.mp4", ".webp"):
-                if not media.with_name(media.name + suffix).exists():
-                    errors.append(f"{where}: missing {media.name + suffix}")
+            check_media_and_cues(where, anim, errors)
+
+    formula_path = REPO / "backend/engine/data/formula_animations.json"
+    if formula_path.exists():
+        known = {tag for f in REPO.glob("backend/engine/topics/*/data/formulas.json")
+                 for tag in json.loads(f.read_text(encoding="utf-8"))}
+        for fid, anim in json.loads(formula_path.read_text(encoding="utf-8")).items():
+            n += 1
+            where = f"formulas/{fid}"
+            if fid not in known:
+                errors.append(f"{where}: no such formula in any topic's formulas.json")
+            check_media_and_cues(where, anim, errors)
     return n
+
+
+def check_media_and_cues(where: str, anim: dict, errors: list[str]) -> None:
+    """Bilingual captions, cue timings that tile the video, and all three media files."""
+    prev_end = 0.0
+    for cue in anim["cues"]:
+        if not cue.get("text_en", "").strip() or not cue.get("text_km", "").strip():
+            errors.append(f"{where}/{cue['id']}: missing caption text")
+        if "start" not in cue:
+            errors.append(f"{where}/{cue['id']}: not rendered yet (no timing)")
+            continue
+        if abs(cue["start"] - prev_end) > 0.011 or cue["end"] <= cue["start"]:
+            errors.append(f"{where}/{cue['id']}: bad timing {cue['start']}..{cue['end']}")
+        prev_end = cue["end"]
+    if "duration" in anim and abs(prev_end - anim["duration"]) > 0.011:
+        errors.append(f"{where}: cues end at {prev_end}, video lasts {anim['duration']}")
+    media = REPO / "web/public/animations" / anim["video"]
+    for suffix in (".mp4", ".480.mp4", ".webp"):
+        if not media.with_name(media.name + suffix).exists():
+            errors.append(f"{where}: missing {media.name + suffix}")
 
 
 def main() -> None:
@@ -130,7 +148,7 @@ def main() -> None:
     limits = check_explorers(errors)
     for e in errors:
         print("FAIL", e)
-    print(f"{lessons} animated lessons, {limits} explorer limits checked against SymPy: "
+    print(f"{lessons} animated lessons/formulas, {limits} explorer limits checked against SymPy: "
           f"{'OK' if not errors else f'{len(errors)} problem(s)'}")
     sys.exit(1 if errors else 0)
 

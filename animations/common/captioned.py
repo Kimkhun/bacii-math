@@ -29,7 +29,14 @@ from .style import BACKGROUND
 REPO = Path(os.environ.get("BACII_REPO", Path(__file__).resolve().parents[2]))
 
 
+#: Formula tutorials are not tied to one topic's lessons: they are keyed by
+#: formula id (the tags of ``engine/formulas.py``) and live in one registry.
+FORMULAS = "formulas"
+
+
 def animations_path(topic: str) -> Path:
+    if topic == FORMULAS:
+        return REPO / "backend" / "engine" / "data" / "formula_animations.json"
     return REPO / "backend" / "engine" / "topics" / topic / "data" / "animations.json"
 
 
@@ -71,7 +78,10 @@ class CaptionedScene(MovingCameraScene):
         self._authored = {c["id"]: c for c in authored}
         self._timeline: list[dict] = []
         self._open: dict | None = None
-        self.lesson = load_lesson(self.topic, self.lesson_id)
+
+    @property
+    def lesson(self) -> dict:
+        return load_lesson(self.topic, self.lesson_id)
 
     @property
     def now(self) -> float:

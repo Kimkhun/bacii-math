@@ -32,6 +32,8 @@ BUDGET_FAIL_MB_PER_MIN = 3.0
 
 
 def animations_path(topic: str) -> Path:
+    if topic == "formulas":  # formula tutorials: one registry keyed by formula id
+        return REPO / "backend" / "engine" / "data" / "formula_animations.json"
     return REPO / "backend" / "engine" / "topics" / topic / "data" / "animations.json"
 
 

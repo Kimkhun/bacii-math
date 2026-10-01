@@ -212,7 +212,10 @@ in the pinned Docker image) and carry no words: bilingual captions + cue timings
 `engine/topics/<topic>/data/animations.json`, merged into `GET /lessons` by
 `engine/core/lesson_animations.py`. Each scene asserts its boxed answer with SymPy at render time, and
 `animations/verify.py` checks the explorers' displayed limits against SymPy. Media is served from
-`web/public/animations` (immutable, `?v=` hash). Full design: `docs/lesson-animations.md`.
+`web/public/animations` (immutable, `?v=` hash). Full design: `docs/lesson-animations.md`. The same pipeline
+makes experimental formula tutorials (worked example with arrows and moving numbers) for `/formulas`:
+scenes in `animations/formulas/`, captions in `backend/engine/data/formula_animations.json`, attached to
+the `/me/formulas` catalog as `animation`.
 
 ### Handwriting detection flow
 Canvas/upload image (base64) → `POST /vision/detect` → backend preprocesses (auto-crop + upscale,
