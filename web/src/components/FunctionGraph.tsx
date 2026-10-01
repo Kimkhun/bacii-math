@@ -32,7 +32,7 @@ export default function FunctionGraph({ graph }: { graph: GraphSpec }) {
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
-      className="w-full h-auto bg-white"
+      className="invert-in-dark w-full h-auto bg-white"
       role="img"
       aria-label="Reference graph of the function"
     >

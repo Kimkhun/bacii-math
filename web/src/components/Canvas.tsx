@@ -2223,11 +2223,11 @@ const Canvas = forwardRef<
       return (
         <div
           ref={wrapperRef}
-          className="fixed inset-0 overflow-auto bg-[#f2f1ed]"
+          className="fixed inset-0 overflow-auto bg-page"
           style={{ overscrollBehavior: "contain" }}
         >
           <div
-            className="relative mx-8 mb-6 rounded-[3px] overflow-hidden shadow-[0px_2px_10px_0px_rgba(0,0,0,0.07)]"
+            className="invert-in-dark relative mx-8 mb-6 rounded-[3px] overflow-hidden shadow-[0px_2px_10px_0px_rgba(0,0,0,0.07)]"
             style={{ width: W * zoom, height: H * zoom, marginTop: topOffset ?? 92 }}
           >
             <canvas
@@ -2261,7 +2261,7 @@ const Canvas = forwardRef<
           </div>
           <div
             ref={cursorElRef}
-            className="fixed z-20 pointer-events-none rounded-full"
+            className="invert-in-dark fixed z-20 pointer-events-none rounded-full"
             style={{ display: "none", transform: "translate(-50%, -50%)", left: 0, top: 0 }}
           />
         </div>
@@ -2275,7 +2275,7 @@ const Canvas = forwardRef<
           width={W * dpr}
           height={H * dpr}
           style={{ aspectRatio: `${W} / ${H}` }}
-          className="stylus-surface w-full h-auto border border-slate-200 rounded cursor-none shadow-sm"
+          className="invert-in-dark stylus-surface w-full h-auto border border-slate-200 rounded cursor-none shadow-sm"
           onPointerDown={start}
           onPointerMove={move}
           onPointerUp={end}
@@ -2288,7 +2288,7 @@ const Canvas = forwardRef<
         />
         <div
           ref={cursorElRef}
-          className="fixed z-20 pointer-events-none rounded-full"
+          className="invert-in-dark fixed z-20 pointer-events-none rounded-full"
           style={{ display: "none", transform: "translate(-50%, -50%)", left: 0, top: 0 }}
         />
       </div>

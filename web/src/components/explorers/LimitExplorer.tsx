@@ -171,7 +171,7 @@ export default function LimitExplorer({ presetId }: { presetId: string }) {
         <svg
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
-          className="w-full touch-none select-none rounded-lg bg-slate-50"
+          className="invert-in-dark w-full touch-none select-none rounded-lg bg-slate-50"
           role="img"
           aria-label={t("explorer_hint")}
           onPointerDown={(e) => {

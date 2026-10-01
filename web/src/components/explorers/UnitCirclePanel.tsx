@@ -33,7 +33,7 @@ export default function UnitCirclePanel({ angle }: { angle: number }) {
 
   return (
     <div className="flex flex-col items-center gap-2 rounded-lg bg-slate-50 p-2">
-      <svg viewBox={`0 0 ${S} ${S}`} className="w-full max-w-[220px]" role="img" aria-label="unit circle">
+      <svg viewBox={`0 0 ${S} ${S}`} className="invert-in-dark w-full max-w-[220px]" role="img" aria-label="unit circle">
         <defs>
           <clipPath id="unit-circle-clip">
             <rect x={0} y={0} width={S} height={S} />

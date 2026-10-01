@@ -4,8 +4,15 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
 html, body {
-  @apply bg-[#f2f1ed] text-[#23272e];
+  @apply bg-page text-ink;
   /* Inter is the UI face; Battambang only fills in for Khmer glyphs Inter lacks. */
   font-family: "Inter", "Battambang", system-ui, -apple-system, "Segoe UI", sans-serif;
   /* Stop iOS/iPadOS Safari's rubber-band page bounce from fighting the
@@ -26,6 +33,16 @@ html, body {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* Handwriting surfaces (canvas, ink thumbnails, graphs) are always drawn in
+   light-mode colors — dark ink on light paper is also exactly what the OCR is
+   sent — and in dark mode simply shown inverted. hue-rotate undoes the hue
+   shift of invert() so red-pen marks stay red and blue curves stay blue.
+   Slightly under 1 so the paper lands on a soft charcoal, not pure black.
+   The theme plugin in tailwind.config.ts restores the light palette inside. */
+.dark .invert-in-dark {
+  filter: invert(0.92) hue-rotate(180deg);
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

@@ -10,6 +10,8 @@ export interface Translations {
   nav_formulas: string;
   nav_admin: string;
   nav_logout: string;
+  theme_to_dark: string;
+  theme_to_light: string;
   nav_login: string;
   nav_signup: string;
   language: string;
@@ -268,6 +270,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     nav_formulas: "Formulas",
     nav_admin: "Admin",
     nav_logout: "Log out",
+    theme_to_dark: "Switch to dark mode",
+    theme_to_light: "Switch to light mode",
     nav_login: "Log in",
     nav_signup: "Sign up",
     language: "Language",
@@ -510,6 +514,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     nav_formulas: "រូបមន្ត",
     nav_admin: "គ្រប់គ្រង",
     nav_logout: "ចាកចេញ",
+    theme_to_dark: "ប្តូរទៅផ្ទៃងងឹត",
+    theme_to_light: "ប្តូរទៅផ្ទៃភ្លឺ",
     nav_login: "ចូល",
     nav_signup: "ចុះឈ្មោះ",
     language: "ភាសា",

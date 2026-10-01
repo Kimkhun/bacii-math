@@ -103,7 +103,7 @@ function ExamPageInner() {
 
   return (
     <div className="max-w-3xl mx-auto p-6 pb-24">
-      <div className="sticky top-0 z-10 bg-[#faf9f6]/95 backdrop-blur border-b border-[#e5e1d8] -mx-6 px-6 py-3 mb-6 flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-paper-50/95 backdrop-blur border-b border-paper-150 -mx-6 px-6 py-3 mb-6 flex items-center justify-between">
         <h1 className="text-lg font-bold text-slate-900">{t("exam_title")} — {exam.exam_date}</h1>
         {secondsLeft !== null && !result && (
           <div
@@ -128,7 +128,7 @@ function ExamPageInner() {
           const sectionGiven = (lang === "km" && section.given_km) ? section.given_km : section.given_en;
 
           return (
-            <div key={section.id} className="bg-white border border-[#e5e1d8] rounded-lg p-5">
+            <div key={section.id} className="bg-white border border-paper-150 rounded-lg p-5">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="font-semibold text-slate-900">
                   {t("exam_question")} {section.id} — {sectionTitle}
@@ -170,7 +170,7 @@ function ExamPageInner() {
                 disabled={!!result}
                 placeholder={lang === "km" ? "សូមសរសេរជំហានដោះស្រាយនៅទីនេះ មួយបន្ទាត់ម្តងៗ..." : "Write your work here, one fact/step per line…"}
                 rows={5}
-                className="w-full border border-[#dddad1] rounded-md p-2.5 text-sm font-mono disabled:bg-slate-50 disabled:text-slate-500"
+                className="w-full border border-paper-300 rounded-md p-2.5 text-sm font-mono disabled:bg-slate-50 disabled:text-slate-500"
               />
 
               {qResult && qResult.breakdown.length > 0 && (

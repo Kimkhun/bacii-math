@@ -2170,7 +2170,7 @@ function PracticeInner() {
       <div className="relative">
         {reviewMode && (
           <div
-            className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto"
+            className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-ink/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto"
             style={{ top: headerHeight + 8 }}
           >
             <span>{t("practice_reviewing_banner")}</span>
@@ -2191,7 +2191,7 @@ function PracticeInner() {
         )}
         {practicingSkill && !practicingFormula && !reviewMode && (
           <div
-            className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto"
+            className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-ink/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto"
             style={{ top: headerHeight + 8 }}
           >
             <span>
@@ -2213,7 +2213,7 @@ function PracticeInner() {
         )}
         {practicingFormula && !reviewMode && (
           <div
-            className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-[#23272e]/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto"
+            className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-ink/90 text-slate-100 text-sm rounded-lg px-3 py-2 shadow-lg pointer-events-auto"
             style={{ top: headerHeight + 8 }}
           >
             <span>
@@ -2288,7 +2288,7 @@ function PracticeInner() {
         {/* Question bar: Preamble + Section Exercise + Sub-steps */}
         <div
           ref={headerRef}
-          className="fixed inset-x-0 top-14 z-10 bg-white border-b border-[#e4e2db] flex flex-col pl-7 pr-6 pb-2.5 pt-[max(0.75rem,env(safe-area-inset-top))] shadow-sm"
+          className="fixed inset-x-0 top-14 z-10 bg-white border-b border-paper-200 flex flex-col pl-7 pr-6 pb-2.5 pt-[max(0.75rem,env(safe-area-inset-top))] shadow-sm"
         >
           <div className="flex items-start justify-between gap-3 w-full">
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -2315,7 +2315,7 @@ function PracticeInner() {
                       return (
                         <div className="space-y-1.5 min-w-0 max-h-[32vh] overflow-y-auto pr-1">
                           {preamble && (
-                            <div className="text-[13px] text-[#475569] font-medium leading-relaxed pb-0.5 border-b border-[#f1f0ea]">
+                            <div className="text-[13px] text-slate-600 font-medium leading-relaxed pb-0.5 border-b border-paper-100">
                               <MathText text={preamble} />
                             </div>
                           )}
@@ -2336,8 +2336,8 @@ function PracticeInner() {
                                   }}
                                   className={`cursor-pointer transition-all rounded px-2.5 py-1 ${
                                     isActive
-                                      ? "bg-amber-50 text-[#0f172a] font-semibold text-[14px] border-l-[3px] border-amber-500 shadow-sm"
-                                      : "text-[#64748b] text-[12.5px] opacity-75 hover:opacity-100 hover:bg-[#faf9f6]"
+                                      ? "bg-amber-50 text-slate-900 font-semibold text-[14px] border-l-[3px] border-amber-500 shadow-sm"
+                                      : "text-slate-500 text-[12.5px] opacity-75 hover:opacity-100 hover:bg-paper-50"
                                   }`}
                                 >
                                   <MathText text={item.text} />
@@ -2348,18 +2348,18 @@ function PracticeInner() {
                         </div>
                       );
                     })() : displayLatex ? (
-                      <div className="text-[#23272e] font-medium text-sm sm:text-base leading-relaxed min-w-0">
-                        <MathText text={`\\(${displayLatex}\\)`} className="text-[#23272e]" />
+                      <div className="text-ink font-medium text-sm sm:text-base leading-relaxed min-w-0">
+                        <MathText text={`\\(${displayLatex}\\)`} className="text-ink" />
                       </div>
                     ) : (
-                      <div className="text-[#23272e] font-medium text-sm sm:text-base leading-relaxed min-w-0">
-                        <MathText text={displayText} className="font-medium text-[#23272e]" />
+                      <div className="text-ink font-medium text-sm sm:text-base leading-relaxed min-w-0">
+                        <MathText text={displayText} className="font-medium text-ink" />
                       </div>
                     )}
                   </div>
                 );
               })() : (
-                <span className="text-[#8a857b] text-sm">
+                <span className="text-paper-600 text-sm">
                   {t("prompt_select_guide")}
                 </span>
               )}
@@ -2386,7 +2386,7 @@ function PracticeInner() {
                 <select
                   value={topic}
                   onChange={(e) => changeTopic(e.target.value)}
-                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                  className="px-2 py-1.5 rounded-md border border-paper-300 text-[12.5px] text-paper-800 bg-white"
                   title={t("label_topic")}
                 >
                   <option value="complex">{t("topic_complex")}</option>
@@ -2412,7 +2412,7 @@ function PracticeInner() {
                           changeQuestionType(`limit:${cat}`);
                         }
                       }}
-                      className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white font-medium"
+                      className="px-2 py-1.5 rounded-md border border-paper-300 text-[12.5px] text-paper-800 bg-white font-medium"
                       title={lang === "km" ? "ជំពូកលីមីត" : "Limit Category"}
                     >
                       {LIMIT_CATEGORIES.map((c) => (
@@ -2425,7 +2425,7 @@ function PracticeInner() {
                     <select
                       value={questionType}
                       onChange={(e) => changeQuestionType(e.target.value)}
-                      className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                      className="px-2 py-1.5 rounded-md border border-paper-300 text-[12.5px] text-paper-800 bg-white"
                       title={lang === "km" ? "វិធីសាស្ត្រគណនា" : "Limit Technique"}
                     >
                       {getLimitCategory(questionType) === "any" ? (
@@ -2445,7 +2445,7 @@ function PracticeInner() {
                   <select
                     value={questionType}
                     onChange={(e) => changeQuestionType(e.target.value)}
-                    className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                    className="px-2 py-1.5 rounded-md border border-paper-300 text-[12.5px] text-paper-800 bg-white"
                     title={t("label_question_type")}
                   >
                     <option value="any">{t("qtype_any")}</option>
@@ -2459,7 +2459,7 @@ function PracticeInner() {
                 <select
                   value={difficulty}
                   onChange={(e) => changeDifficulty(e.target.value)}
-                  className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                  className="px-2 py-1.5 rounded-md border border-paper-300 text-[12.5px] text-paper-800 bg-white"
                   title={t("label_difficulty")}
                 >
                   <option value="easy">{t("diff_easy")}</option>
@@ -2470,7 +2470,7 @@ function PracticeInner() {
                   <select
                     value={mode}
                     onChange={(e) => changeMode(e.target.value)}
-                    className="px-2 py-1.5 rounded-md border border-[#dddad1] text-[12.5px] text-[#3f3c35] bg-white"
+                    className="px-2 py-1.5 rounded-md border border-paper-300 text-[12.5px] text-paper-800 bg-white"
                     title={t("label_mode")}
                   >
                     <option value="templates">{t("mode_templates")}</option>
@@ -2581,7 +2581,7 @@ function PracticeInner() {
             <button
               onClick={newQuestion}
               disabled={isGenerating || busy || hintLoading}
-              className="px-[15px] py-2 stylus:px-5 stylus:py-3 rounded-[7px] bg-[#23272e] text-white text-[12.5px] font-semibold hover:bg-[#31363f] disabled:opacity-50"
+              className="px-[15px] py-2 stylus:px-5 stylus:py-3 rounded-[7px] bg-ink text-white text-[12.5px] font-semibold hover:bg-ink-soft disabled:opacity-50"
               title={t("tip_new_question")}
             >
               {isGenerating ? t("btn_generating") : t("btn_new_question")}
@@ -2591,7 +2591,7 @@ function PracticeInner() {
 
         {/* Section Tabs: Clean English number tabs (1, 2, 3, 4) */}
         {sections.length > 0 && (
-          <div className="flex items-center gap-2 border-t border-[#f0eee8] pt-2 mt-2 w-full">
+          <div className="flex items-center gap-2 border-t border-paper-100 pt-2 mt-2 w-full">
             <div className="flex items-center gap-1.5 flex-wrap">
               {sections.map((sec, sIdx) => {
                 const isSecDone = sec.partIndices.every((idx) => resultByPart[idx]?.correct);
@@ -2606,10 +2606,10 @@ function PracticeInner() {
                     disabled={busy}
                     className={`min-w-[34px] h-[30px] px-3 stylus:min-w-[44px] stylus:h-11 stylus:px-4 stylus:text-sm rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                       isSecActive
-                        ? "bg-[#23272e] text-white shadow-sm ring-2 ring-slate-900/10"
+                        ? "bg-ink text-white shadow-sm ring-2 ring-slate-900/10"
                         : isSecDone
                         ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                        : "bg-[#f2f1ed] text-[#6b6558] hover:bg-[#e7e5df] border border-transparent"
+                        : "bg-page text-paper-700 hover:bg-paper-150 border border-transparent"
                     }`}
                   >
                     {isSecDone && <span className="text-emerald-700">✓</span>}
@@ -2690,7 +2690,7 @@ function PracticeInner() {
                 result.correct ? "bg-emerald-50/95 border-emerald-200" : "bg-red-50/95 border-red-200"
               }`}
             >
-              <div className="font-bold text-[#23272e]">
+              <div className="font-bold text-ink">
                 {exerciseDone
                   ? t("verdict_complete")
                   : result.correct
@@ -2701,7 +2701,7 @@ function PracticeInner() {
                 <button
                   onClick={newQuestion}
                   disabled={isGenerating || busy || hintLoading}
-                  className="mt-2 w-full px-3 py-2 rounded-lg bg-[#23272e] text-white text-xs font-semibold hover:bg-[#31363f] disabled:opacity-50"
+                  className="mt-2 w-full px-3 py-2 rounded-lg bg-ink text-white text-xs font-semibold hover:bg-ink-soft disabled:opacity-50"
                 >
                   {isGenerating ? t("btn_generating") : t("action_next_question")}
                 </button>
@@ -2718,8 +2718,8 @@ function PracticeInner() {
                           secDone
                             ? "bg-emerald-600 text-white"
                             : isSecActive
-                            ? "bg-[#23272e] text-white"
-                            : "bg-[#e4e2db] text-[#8a857b]"
+                            ? "bg-ink text-white"
+                            : "bg-paper-200 text-paper-600"
                         }`}
                       >
                         {sec.label}
@@ -2736,8 +2736,8 @@ function PracticeInner() {
                         i < partIndex || (exerciseDone && i === partIndex)
                           ? "bg-emerald-600 text-white"
                           : i === partIndex
-                          ? "bg-[#23272e] text-white"
-                          : "bg-[#e4e2db] text-[#8a857b]"
+                          ? "bg-ink text-white"
+                          : "bg-paper-200 text-paper-600"
                       }`}
                     >
                       {lab}
@@ -2772,12 +2772,12 @@ function PracticeInner() {
                 </div>
               ) : (
                 !result.correct && (
-                  <div className="mt-1 text-sm text-[#3f3c35]">
+                  <div className="mt-1 text-sm text-paper-800">
                     {t("label_expected")}: <span className="font-medium">{result.expected}</span>
                   </div>
                 )
               )}
-              <div className="mt-1 text-xs text-[#8a857b]">{t("label_reason")}: {result.reason}</div>
+              <div className="mt-1 text-xs text-paper-600">{t("label_reason")}: {result.reason}</div>
               {result.attempt_id &&
                 (!result.correct ||
                   question?.topic === "functions" ||
@@ -2788,14 +2788,14 @@ function PracticeInner() {
                     type="button"
                     onClick={showExplanation}
                     disabled={explaining}
-                    className="mt-2 rounded-md border border-[#c9c5b8] bg-white px-3 py-1.5 text-xs font-medium text-[#3f3c35] shadow-sm hover:bg-[#f4f2ec] disabled:opacity-70"
+                    className="mt-2 rounded-md border border-paper-400 bg-white px-3 py-1.5 text-xs font-medium text-paper-800 shadow-sm hover:bg-paper-100 disabled:opacity-70"
                   >
                     {explaining ? t("label_explaining") : t("btn_explain")}
                   </button>
                 )}
               {result.rubric_score && (
-                <div className="mt-2 rounded-md border border-[#e4e2db] bg-[#faf9f6] p-2.5">
-                  <div className="flex items-center justify-between text-xs font-semibold text-[#3f3c35]">
+                <div className="mt-2 rounded-md border border-paper-200 bg-paper-50 p-2.5">
+                  <div className="flex items-center justify-between text-xs font-semibold text-paper-800">
                     <span>{t("label_step_score")}</span>
                     <span>
                       {result.rubric_score.earned.toFixed(1)} / {result.rubric_score.possible.toFixed(0)}
@@ -2805,7 +2805,7 @@ function PracticeInner() {
                     {result.rubric_score.breakdown.map((b, i) => (
                       <div
                         key={i}
-                        className={`text-[11px] ${b.points_earned > 0 ? "text-emerald-700" : "text-[#8a857b]"}`}
+                        className={`text-[11px] ${b.points_earned > 0 ? "text-emerald-700" : "text-paper-600"}`}
                       >
                         {b.points_earned > 0 ? "✓" : "✗"} {b.label} ({b.points_earned.toFixed(1)}/
                         {b.points_possible.toFixed(1)})
@@ -2853,46 +2853,46 @@ function PracticeInner() {
                   return (
                     <Link
                       href={`/practice?formula=${fumbled}`}
-                      className="mt-2 inline-block px-2.5 py-1 rounded-md bg-[#23272e] text-white text-xs font-medium hover:bg-[#31363f]"
+                      className="mt-2 inline-block px-2.5 py-1 rounded-md bg-ink text-white text-xs font-medium hover:bg-ink-soft"
                     >
                       {t("formulas_practice")}: {fumbled.replaceAll("_", " ")}
                     </Link>
                   );
                 })()}
               {result.variation_table && (
-                <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                <div className="mt-3 border-t border-paper-200 pt-2">
                   <VariationTable vt={result.variation_table} />
                 </div>
               )}
               {result.graph && (
-                <div className="mt-3 border-t border-[#e4e2db] pt-2">
-                  <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
+                <div className="mt-3 border-t border-paper-200 pt-2">
+                  <div className="text-xs font-medium text-paper-600 uppercase mb-1">
                     {t("label_ref_graph_compare")}
                   </div>
                   <FunctionGraph graph={result.graph} />
                   {result.graph_check && (
                     <div className="mt-2 text-xs">
-                      <div className="text-[#8a857b]">{t("label_ref_graph")}:</div>
+                      <div className="text-paper-600">{t("label_ref_graph")}:</div>
                       <div className="mt-0.5 flex flex-wrap gap-x-2">
                         {result.graph_check.items.map((it) => (
                           <span
                             key={it.label}
-                            className={it.found ? "text-emerald-700 font-semibold" : "text-[#8a857b] opacity-60"}
+                            className={it.found ? "text-emerald-700 font-semibold" : "text-paper-600 opacity-60"}
                           >
                             {it.label} {it.found ? "✓" : "·"}
                           </span>
                         ))}
                       </div>
                       {result.graph_check.found < result.graph_check.total && (
-                        <div className="mt-1 text-[#8a857b] text-[11px]">
+                        <div className="mt-1 text-paper-600 text-[11px]">
                           {t("label_missing_labels_note")}
                         </div>
                       )}
                     </div>
                   )}
                   {graphGrade && !graphGrade.error && (
-                    <div className="mt-3 border-t border-[#e4e2db] pt-2">
-                      <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
+                    <div className="mt-3 border-t border-paper-200 pt-2">
+                      <div className="text-xs font-medium text-paper-600 uppercase mb-1">
                         {t("label_graph_assessment")}
                       </div>
                       <div className="flex items-center gap-2 mb-1.5">
@@ -2923,17 +2923,17 @@ function PracticeInner() {
                         </div>
                       </div>
                       {graphGrade.feedback && (
-                        <p className="text-xs text-[#3f3c35] mb-1">{graphGrade.feedback}</p>
+                        <p className="text-xs text-paper-800 mb-1">{graphGrade.feedback}</p>
                       )}
                       {graphGrade.suggestions && graphGrade.suggestions.length > 0 && (
-                        <ul className="text-[11px] text-[#8a857b] list-disc list-inside space-y-0.5">
+                        <ul className="text-[11px] text-paper-600 list-disc list-inside space-y-0.5">
                           {graphGrade.suggestions.map((s, i) => <li key={i}>{s}</li>)}
                         </ul>
                       )}
                     </div>
                   )}
                   {graphGrade?.error === "rate_limited" && (
-                    <div className="mt-2 text-[11px] text-[#8a857b]">
+                    <div className="mt-2 text-[11px] text-paper-600">
                       Graph assessment unavailable (rate limited).
                     </div>
                   )}
@@ -2943,10 +2943,10 @@ function PracticeInner() {
           )}
 
           {(explanation || workText) && (
-            <div className="bg-white/90 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md p-3">
+            <div className="bg-white/90 backdrop-blur border border-paper-200 rounded-lg shadow-md p-3">
               {workText && workText.split("\n").length > 1 && (
-                <div className="mb-2 pb-2 border-b border-[#e4e2db]">
-                  <div className="text-xs text-[#8a857b] uppercase font-medium">{t("label_your_work")}</div>
+                <div className="mb-2 pb-2 border-b border-paper-200">
+                  <div className="text-xs text-paper-600 uppercase font-medium">{t("label_your_work")}</div>
                   <div className="mt-1 text-sm space-y-0.5">
                     {workText.split("\n").map((line, idx) => {
                       const lineNo = idx + 1;
@@ -2956,7 +2956,7 @@ function PracticeInner() {
                       const lineRes = result?.step_check?.line_results.find((r) => r.line === lineNo);
                       const formulaName = lineRes?.formula ? (lineRes.formula_name ?? lineRes.formula.replaceAll("_", " ")) : null;
                       return (
-                        <div key={idx} className={isError ? "text-red-700 font-semibold" : "text-[#6b6558]"}>
+                        <div key={idx} className={isError ? "text-red-700 font-semibold" : "text-paper-700"}>
                           {isError ? "→ " : ""}
                           {latex ? <MathText text={`\\(${latex}\\)`} /> : <MathText text={line} />}
                           {isError && formulaName && (
@@ -2973,16 +2973,16 @@ function PracticeInner() {
                   {/* Show full explanation content if available; otherwise show steps without duplicating */}
                   {explanation.content ? (
                     <div className="space-y-1.5 mb-2">
-                      <div className="text-xs font-medium text-[#8a857b] uppercase">{t("label_solution")}</div>
+                      <div className="text-xs font-medium text-paper-600 uppercase">{t("label_solution")}</div>
                       <MathText text={explanation.content} className="whitespace-pre-wrap" />
                     </div>
                   ) : explanation.steps?.length ? (
                     <div className="space-y-1.5 mb-2">
-                      <div className="text-xs font-medium text-[#8a857b] uppercase">{t("label_solution")}</div>
+                      <div className="text-xs font-medium text-paper-600 uppercase">{t("label_solution")}</div>
                       {explanation.steps.slice(0, hintLevel || explanation.steps.length).map((s) => (
                         <div key={s.step_order} className="flex gap-1.5">
-                          {s.title && <span className="font-medium text-[#23272e] whitespace-nowrap">{t("label_step")} {s.step_order}:</span>}
-                          <MathText text={s.detail} className="text-[#3f3c35]" />
+                          {s.title && <span className="font-medium text-ink whitespace-nowrap">{t("label_step")} {s.step_order}:</span>}
+                          <MathText text={s.detail} className="text-paper-800" />
                         </div>
                       ))}
                     </div>
@@ -2997,30 +2997,30 @@ function PracticeInner() {
                     </div>
                   )}
                   {explanation.work_check?.content && (
-                    <div className="mt-3 border-t border-[#e4e2db] pt-2">
-                      <div className="text-xs font-medium text-[#8a857b] uppercase">{t("label_work_check")}</div>
+                    <div className="mt-3 border-t border-paper-200 pt-2">
+                      <div className="text-xs font-medium text-paper-600 uppercase">{t("label_work_check")}</div>
                       <MathText text={explanation.work_check.content} className="mt-1 whitespace-pre-wrap" />
                     </div>
                   )}
                   {explanation.variation_table && (
-                    <div className="mt-3 border-t border-[#e4e2db] pt-2">
+                    <div className="mt-3 border-t border-paper-200 pt-2">
                       <VariationTable vt={explanation.variation_table} />
                     </div>
                   )}
                   {explanation.graph && (
-                    <div className="mt-3 border-t border-[#e4e2db] pt-2">
-                      <div className="text-xs font-medium text-[#8a857b] uppercase mb-1">
+                    <div className="mt-3 border-t border-paper-200 pt-2">
+                      <div className="text-xs font-medium text-paper-600 uppercase mb-1">
                         {t("label_ref_graph")}
                       </div>
                       <FunctionGraph graph={explanation.graph} />
                       {explanation.graph_check && (
                         <div className="mt-2 text-xs">
-                          <div className="text-[#8a857b]">{t("label_ref_graph")}:</div>
+                          <div className="text-paper-600">{t("label_ref_graph")}:</div>
                           <div className="mt-0.5 flex flex-wrap gap-x-2">
                             {explanation.graph_check.items.map((it) => (
                               <span
                                 key={it.label}
-                                className={it.found ? "text-emerald-700 font-semibold" : "text-[#8a857b] opacity-60"}
+                                className={it.found ? "text-emerald-700 font-semibold" : "text-paper-600 opacity-60"}
                               >
                                 {it.label} {it.found ? "✓" : "·"}
                               </span>
@@ -3059,18 +3059,18 @@ function PracticeInner() {
             className="self-stretch flex flex-col flex-wrap items-center justify-center gap-[3px] px-1.5 cursor-grab active:cursor-grabbing touch-none"
           >
             {Array.from({ length: 6 }).map((_, i) => (
-              <span key={i} className="w-1 h-1 rounded-full bg-[#c7c2b6]" />
+              <span key={i} className="w-1 h-1 rounded-full bg-paper-400" />
             ))}
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2 max-w-[85vw]">
-            <div className="flex items-center gap-0.5 bg-[#f1f0ec] rounded-[9px] p-[3px]">
+            <div className="flex items-center gap-0.5 bg-paper-100 rounded-[9px] p-[3px]">
               <button
                 onClick={() => selectTool("pen")}
                 title={t("tip_pen")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "pen"
-                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
-                    : "text-[#7a756a] font-normal"
+                    ? "bg-white text-ink shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-paper-700 font-normal"
                 }`}
               >
                 {t("tool_pen")}
@@ -3080,8 +3080,8 @@ function PracticeInner() {
                 title={t("tip_eraser")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "eraser"
-                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
-                    : "text-[#7a756a] font-normal"
+                    ? "bg-white text-ink shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-paper-700 font-normal"
                 }`}
               >
                 {t("tool_eraser")}
@@ -3091,8 +3091,8 @@ function PracticeInner() {
                 title={t("tip_line")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "ruler"
-                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
-                    : "text-[#7a756a] font-normal"
+                    ? "bg-white text-ink shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-paper-700 font-normal"
                 }`}
               >
                 {t("tool_line")}
@@ -3102,8 +3102,8 @@ function PracticeInner() {
                 title={t("tip_curve")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "curve"
-                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
-                    : "text-[#7a756a] font-normal"
+                    ? "bg-white text-ink shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-paper-700 font-normal"
                 }`}
               >
                 {t("tool_curve")}
@@ -3113,8 +3113,8 @@ function PracticeInner() {
                 title={t("tip_ellipse")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "ellipse"
-                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
-                    : "text-[#7a756a] font-normal"
+                    ? "bg-white text-ink shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-paper-700 font-normal"
                 }`}
               >
                 {t("tool_ellipse")}
@@ -3124,8 +3124,8 @@ function PracticeInner() {
                 title={t("tip_select")}
                 className={`px-[14px] py-2 stylus:px-4 stylus:py-3 rounded-[6px] text-[12.5px] font-medium ${
                   tool === "select"
-                    ? "bg-white text-[#23272e] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
-                    : "text-[#7a756a] font-normal"
+                    ? "bg-white text-ink shadow-[0px_1px_2px_0px_rgba(0,0,0,0.08)]"
+                    : "text-paper-700 font-normal"
                 }`}
               >
                 {t("tool_select")}
@@ -3136,17 +3136,17 @@ function PracticeInner() {
               title={t("tip_axes")}
               className={`px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border text-[12.5px] font-medium ${
                 tool === "axes" && gridOn
-                  ? "border-[#23272e] bg-[#23272e] text-white"
+                  ? "border-ink bg-ink text-white"
                   : gridOn
-                  ? "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]"
-                  : "border-[#e4e2db] text-[#6b6558] hover:bg-[#faf9f6]"
+                  ? "border-blue-200 bg-blue-50 text-blue-700"
+                  : "border-paper-200 text-paper-700 hover:bg-paper-50"
               }`}
             >
               {tool === "axes" && gridOn ? `${t("tool_axes")} ✓` : t("tool_axes")}
             </button>
             {tool === "axes" && gridOn && (
               <>
-                <div className="flex items-center gap-1.5 rounded-[7px] border border-[#e4e2db] px-2 py-1.5 text-[12px] text-[#6b6558]" title={t("tip_zoom_unit")}>
+                <div className="flex items-center gap-1.5 rounded-[7px] border border-paper-200 px-2 py-1.5 text-[12px] text-paper-700" title={t("tip_zoom_unit")}>
                   <span>scale</span>
                   <input
                     type="number"
@@ -3155,11 +3155,11 @@ function PracticeInner() {
                     step={5}
                     value={gridScale}
                     onChange={(e) => changeGridScale(Number(e.target.value))}
-                    className="w-12 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
+                    className="w-12 border border-paper-200 rounded-[5px] px-1 py-0.5 text-center text-ink"
                     aria-label={t("aria_grid_scale")}
                   />
                 </div>
-                <div className="flex items-center gap-1.5 rounded-[7px] border border-[#e4e2db] px-2 py-1.5 text-[12px] text-[#6b6558]">
+                <div className="flex items-center gap-1.5 rounded-[7px] border border-paper-200 px-2 py-1.5 text-[12px] text-paper-700">
                   <span>Δx</span>
                   <input
                     type="number"
@@ -3168,7 +3168,7 @@ function PracticeInner() {
                     step={0.5}
                     value={gridStep.x}
                     onChange={(e) => changeGridStep("x", Number(e.target.value))}
-                    className="w-11 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
+                    className="w-11 border border-paper-200 rounded-[5px] px-1 py-0.5 text-center text-ink"
                     aria-label={t("aria_grid_x")}
                   />
                   <span>Δy</span>
@@ -3179,7 +3179,7 @@ function PracticeInner() {
                     step={0.5}
                     value={gridStep.y}
                     onChange={(e) => changeGridStep("y", Number(e.target.value))}
-                    className="w-11 border border-[#e4e2db] rounded-[5px] px-1 py-0.5 text-center text-[#23272e]"
+                    className="w-11 border border-paper-200 rounded-[5px] px-1 py-0.5 text-center text-ink"
                     aria-label={t("aria_grid_y")}
                   />
                 </div>
@@ -3196,7 +3196,7 @@ function PracticeInner() {
                         activeCanvas()?.fitGridToWindow(g.x_min!, g.x_max!, g.y_min!, g.y_max!);
                       }
                     }}
-                    className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6]"
+                    className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-paper-200 text-[12.5px] font-medium text-paper-700 hover:bg-paper-50"
                     title={t("tip_refit")}
                   >
                     {t("tool_fit")}
@@ -3207,18 +3207,18 @@ function PracticeInner() {
             <button
               onClick={undo}
               disabled={!canUndo}
-              className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
+              className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-paper-200 text-[12.5px] font-medium text-paper-700 hover:bg-paper-50 disabled:opacity-40"
             >
               {t("btn_undo")}
             </button>
             <button
               onClick={redo}
               disabled={!canRedo}
-              className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40"
+              className="px-[13px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-paper-200 text-[12.5px] font-medium text-paper-700 hover:bg-paper-50 disabled:opacity-40"
             >
               {t("btn_redo")}
             </button>
-            <div className="w-px h-[26px] bg-[#e4e2db]" />
+            <div className="w-px h-[26px] bg-paper-200" />
             <button
               onClick={() => {
                 activeCanvas()?.clear();
@@ -3229,17 +3229,17 @@ function PracticeInner() {
                 setLinePops(null);
                 markDirty();
               }}
-              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#e4e2db] text-[12.5px] font-medium text-[#9a9488] hover:bg-[#faf9f6]"
+              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-paper-200 text-[12.5px] font-medium text-paper-500 hover:bg-paper-50"
             >
               {t("btn_clear")}
             </button>
             <button
               onClick={showHint}
               disabled={busy || hintLoading || isGenerating || !question}
-              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6] disabled:opacity-40 flex items-center gap-1.5"
+              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-paper-300 text-[12.5px] font-medium text-paper-700 hover:bg-paper-50 disabled:opacity-40 flex items-center gap-1.5"
             >
               {hintLoading && (
-                <svg className="w-3.5 h-3.5 animate-spin text-[#6b6558]" viewBox="0 0 24 24" fill="none">
+                <svg className="w-3.5 h-3.5 animate-spin text-paper-700" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
@@ -3254,16 +3254,16 @@ function PracticeInner() {
             </button>
             <button
               onClick={uploadImage}
-              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6]"
+              className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-paper-300 text-[12.5px] font-medium text-paper-700 hover:bg-paper-50"
             >
               {t("tool_upload")}
             </button>
-            <div className="flex items-center rounded-[7px] border border-[#dddad1] overflow-hidden text-xs">
-              <button onClick={zoomOut} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-[#faf9f6] text-[#6b6558]" title={t("tip_zoom_out")}>
+            <div className="flex items-center rounded-[7px] border border-paper-300 overflow-hidden text-xs">
+              <button onClick={zoomOut} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-paper-50 text-paper-700" title={t("tip_zoom_out")}>
                 −
               </button>
-              <span className="px-1.5 min-w-[2.5rem] text-center text-[#8a857b]">{Math.round(zoom * 100)}%</span>
-              <button onClick={zoomIn} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-[#faf9f6] text-[#6b6558]" title={t("tip_zoom_in")}>
+              <span className="px-1.5 min-w-[2.5rem] text-center text-paper-600">{Math.round(zoom * 100)}%</span>
+              <button onClick={zoomIn} className="px-2 py-2.5 stylus:px-3 stylus:py-3 hover:bg-paper-50 text-paper-700" title={t("tip_zoom_in")}>
                 +
               </button>
             </div>
@@ -3271,7 +3271,7 @@ function PracticeInner() {
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
               placeholder={t("placeholder_type_answer")}
-              className="w-28 px-3 py-2.5 stylus:py-3 border border-[#dddad1] rounded-[7px] text-xs placeholder:text-[#a8a296]"
+              className="w-28 px-3 py-2.5 stylus:py-3 border border-paper-300 rounded-[7px] text-xs placeholder:text-paper-500"
             />
             {!busy && !skipAnim && (marks?.length || linePops?.length) ? (
               <button
@@ -3280,7 +3280,7 @@ function PracticeInner() {
                   soundTimeouts.current = [];
                   setSkipAnim(true);
                 }}
-                className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-[#dddad1] text-[12.5px] font-medium text-[#6b6558] hover:bg-[#faf9f6]"
+                className="px-[15px] py-2.5 stylus:px-4 stylus:py-3 rounded-[7px] border border-paper-300 text-[12.5px] font-medium text-paper-700 hover:bg-paper-50"
                 title={t("tip_skip_check")}
               >
                 {t("tool_skip")}
@@ -3289,7 +3289,7 @@ function PracticeInner() {
             <button
               onClick={check}
               disabled={busy}
-              className="px-[15px] py-2.5 stylus:px-6 stylus:py-3.5 rounded-[7px] bg-[#23272e] text-white text-[12.5px] font-medium hover:bg-[#31363f] disabled:opacity-50"
+              className="px-[15px] py-2.5 stylus:px-6 stylus:py-3.5 rounded-[7px] bg-ink text-white text-[12.5px] font-medium hover:bg-ink-soft disabled:opacity-50"
             >
               {busy ? t("btn_checking") : t("tool_check_work")}
             </button>
@@ -3297,8 +3297,8 @@ function PracticeInner() {
         </div>
 
         {/* Pen/eraser size + debug, tucked into an unobtrusive corner strip */}
-        <div className="fixed left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-auto flex flex-col items-center gap-2 bg-white/90 backdrop-blur border border-[#e4e2db] rounded-lg shadow-md p-2">
-          <span className="text-[10px] text-[#a8a296]">{tool === "eraser" ? 100 : 30}</span>
+        <div className="fixed left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-auto flex flex-col items-center gap-2 bg-white/90 backdrop-blur border border-paper-200 rounded-lg shadow-md p-2">
+          <span className="text-[10px] text-paper-500">{tool === "eraser" ? 100 : 30}</span>
           <input
             type="range"
             min={tool === "eraser" ? 10 : 1}
@@ -3310,19 +3310,19 @@ function PracticeInner() {
                 ? selectEraserWidth(Number(e.target.value))
                 : selectPenWidth(Number(e.target.value))
             }
-            className="w-6 h-24 stylus:w-10 stylus:h-32 accent-[#23272e] [writing-mode:vertical-lr] [direction:rtl] cursor-pointer"
+            className="w-6 h-24 stylus:w-10 stylus:h-32 accent-ink [writing-mode:vertical-lr] [direction:rtl] cursor-pointer"
             aria-label={t("aria_size")}
           />
-          <span className="text-[10px] text-[#a8a296]">{tool === "eraser" ? 10 : 1}</span>
-          <span className="text-xs font-semibold text-[#6b6558] tabular-nums">
+          <span className="text-[10px] text-paper-500">{tool === "eraser" ? 10 : 1}</span>
+          <span className="text-xs font-semibold text-paper-700 tabular-nums">
             {tool === "eraser" ? eraserWidth : penWidth}
           </span>
-          <div className="w-full border-t border-[#e4e2db] my-1" />
+          <div className="w-full border-t border-paper-200 my-1" />
           <button
             onClick={() => setShowSettings((s) => !s)}
             title={t("tip_settings")}
             className={`w-7 h-7 stylus:w-9 stylus:h-9 rounded flex items-center justify-center text-xs transition-colors ${
-              showSettings ? "bg-[#23272e] text-white shadow-sm" : "text-[#6b6558] hover:bg-[#faf9f6]"
+              showSettings ? "bg-ink text-white shadow-sm" : "text-paper-700 hover:bg-paper-50"
             }`}
           >
             ⚙️
@@ -3331,7 +3331,7 @@ function PracticeInner() {
             onClick={() => setDebug((d) => !d)}
             title={t("tip_debug")}
             className={`w-7 h-7 stylus:w-9 stylus:h-9 rounded text-[10px] font-bold ${
-              debug ? "bg-[#23272e] text-white" : "text-[#a8a296] hover:bg-[#faf9f6]"
+              debug ? "bg-ink text-white" : "text-paper-500 hover:bg-paper-50"
             }`}
           >
             DBG
@@ -3349,14 +3349,14 @@ function PracticeInner() {
           />
         )}
         {showSettings && (
-          <div className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] max-h-[70vh] overflow-y-auto md:inset-x-auto md:bottom-auto md:max-h-none md:overflow-visible md:left-16 md:top-1/2 md:-translate-y-1/2 z-30 md:w-72 bg-white/95 backdrop-blur-md border border-[#e4e2db] rounded-xl shadow-xl p-4 text-xs space-y-4 pointer-events-auto animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-[#f0eee6] pb-2">
-              <span className="font-semibold text-[#23272e] flex items-center gap-1.5">
+          <div className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] max-h-[70vh] overflow-y-auto md:inset-x-auto md:bottom-auto md:max-h-none md:overflow-visible md:left-16 md:top-1/2 md:-translate-y-1/2 z-30 md:w-72 bg-white/95 backdrop-blur-md border border-paper-200 rounded-xl shadow-xl p-4 text-xs space-y-4 pointer-events-auto animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-paper-150 pb-2">
+              <span className="font-semibold text-ink flex items-center gap-1.5">
                 <span>⚙️</span> Canvas Settings
               </span>
               <button
                 onClick={() => setShowSettings(false)}
-                className="w-5 h-5 stylus:w-10 stylus:h-10 rounded flex items-center justify-center text-[#a8a296] hover:text-[#23272e] hover:bg-[#faf9f6]"
+                className="w-5 h-5 stylus:w-10 stylus:h-10 rounded flex items-center justify-center text-paper-500 hover:text-ink hover:bg-paper-50"
               >
                 ✕
               </button>
@@ -3365,7 +3365,7 @@ function PracticeInner() {
             {/* Audio Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-[#464033]">{t("set_friction_audio")}</span>
+                <span className="font-medium text-paper-800">{t("set_friction_audio")}</span>
                 <button
                   onClick={() => {
                     const next = drawingAudio.toggle();
@@ -3382,8 +3382,8 @@ function PracticeInner() {
               </div>
 
               {/* Volume Slider */}
-              <div className="space-y-1.5 bg-[#fdfcf8] p-2.5 rounded-lg border border-[#eeece2]">
-                <div className="flex items-center justify-between text-[11px] text-[#6b6558]">
+              <div className="space-y-1.5 bg-paper-25 p-2.5 rounded-lg border border-paper-150">
+                <div className="flex items-center justify-between text-[11px] text-paper-700">
                   <span className="flex items-center gap-1">
                     {soundVolume === 0 || !soundEnabled ? "🔇" : soundVolume < 0.5 ? "🔉" : "🔊"}
                     Volume
@@ -3407,7 +3407,7 @@ function PracticeInner() {
                       setSoundEnabled(true);
                     }
                   }}
-                  className="w-full accent-[#23272e] cursor-pointer"
+                  className="w-full accent-ink cursor-pointer"
                 />
               </div>
 
@@ -3426,13 +3426,13 @@ function PracticeInner() {
                       }
                     }, 25);
                   }}
-                  className="flex-1 py-1.5 px-2 bg-[#f4f2ec] hover:bg-[#eae7df] rounded border border-[#dddad1] text-[11px] font-medium text-[#464033] transition-colors"
+                  className="flex-1 py-1.5 px-2 bg-paper-100 hover:bg-paper-150 rounded border border-paper-300 text-[11px] font-medium text-paper-800 transition-colors"
                 >
                   ✏️ Test Pencil
                 </button>
                 <button
                   onClick={() => drawingAudio.playSuccessChime()}
-                  className="flex-1 py-1.5 px-2 bg-[#f4f2ec] hover:bg-[#eae7df] rounded border border-[#dddad1] text-[11px] font-medium text-[#464033] transition-colors"
+                  className="flex-1 py-1.5 px-2 bg-paper-100 hover:bg-paper-150 rounded border border-paper-300 text-[11px] font-medium text-paper-800 transition-colors"
                 >
                   🔔 Test Chime
                 </button>
@@ -3440,15 +3440,15 @@ function PracticeInner() {
             </div>
 
             {/* Extensible Future Settings */}
-            <div className="border-t border-[#f0eee6] pt-3 space-y-2">
-              <span className="text-[11px] font-medium text-[#a8a296] uppercase tracking-wider block">
+            <div className="border-t border-paper-150 pt-3 space-y-2">
+              <span className="text-[11px] font-medium text-paper-500 uppercase tracking-wider block">
                 Input & Stylus
               </span>
-              <div className="flex items-center justify-between text-[11px] text-[#6b6558]">
+              <div className="flex items-center justify-between text-[11px] text-paper-700">
                 <span>{t("set_palm_rejection")}</span>
                 <span className="text-emerald-600 font-medium">✓ Active</span>
               </div>
-              <div className="flex items-center justify-between text-[11px] text-[#6b6558]">
+              <div className="flex items-center justify-between text-[11px] text-paper-700">
                 <span>{t("set_pressure_sensitivity")}</span>
                 <span className="text-emerald-600 font-medium">✓ Enabled</span>
               </div>
