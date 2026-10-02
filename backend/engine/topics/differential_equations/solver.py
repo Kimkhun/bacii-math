@@ -1,12 +1,19 @@
-"""Differential-equation solver (curated BAC II exercises): SymPy's ``dsolve``
-computes the real general or particular solution; the curated JSON only
-supplies the equation's shape (kind + coefficients + optional initial
-conditions) and the exam-authored technique narration."""
+"""Differential-equation solver: SymPy's ``dsolve`` computes the real general
+or particular solution; the question's params only supply the equation's
+shape (kind + coefficients + optional initial conditions, built by a
+``structures.py`` template) and the technique narration.
+
+The graded intermediate steps come from the template's blueprint
+(``engine/core/blueprints.py``, ``blueprint_spec.py``) when it has one — the
+characteristic roots, the particular and general solutions, the constants —
+each value recomputed by SymPy on this question's numbers; otherwise from the
+roots and constants computed here."""
 from sympy import (
     Derivative, Eq, Function, Symbol, cos, exp, im, latex, re, simplify, sin,
     solve as sym_solve, sympify,
 )
 
+from ...core import blueprints
 from ...core.shared import _calc_locals, _formula_tags
 
 try:
@@ -104,6 +111,22 @@ def _relabeled_homogeneous_solution(roots, x):
     return exp(alpha * x) * (C1 * cos(beta * x) + C2 * sin(beta * x))
 
 
+#: The symbols a blueprint's expressions may use besides x and the slots: the
+#: arbitrary constants of a general solution and the undetermined
+#: coefficients of a particular solution (solved away by a "solve" step).
+SYMBOLS = {name: Symbol(name) for name in ("C", "C1", "C2", "A", "B", "D")}
+ARBITRARY_CONSTANTS = ("C", "C1", "C2")
+
+
+def ode_answer(params):
+    """The solution y(x) alone — the final answer every blueprint ends on."""
+    x = Symbol("x")
+    y = Function("y")
+    equation = _build_equation(params["kind"], params, x, y)
+    ics = _build_ics(params.get("ics"), x, y)
+    return dsolve(equation, y(x), ics=ics).rhs if ics else dsolve(equation, y(x)).rhs
+
+
 def _solve_differential_equation(params):
     x = Symbol("x")
     y = Function("y")
@@ -182,6 +205,21 @@ def _solve_differential_equation(params):
             given_equations.append(Eq(general_rhs.diff(x).subs(x, x0), yp0))
 
     checkpoints.append({"label": "y(x)", "value": answer, "formula": "solve_ode"})
+    aux_checkpoints = []
+    # The template's blueprint, when it has one, supplies the graded steps
+    # (one plan per method; the grader picks the one the work follows).
+    plans = blueprints.resolve("differential_equations", params.get("template_id"),
+                               params.get("template_params"), given={}, final=answer, x=x,
+                               formula="solve_ode", symbols=SYMBOLS)
+    if plans:
+        checkpoints = plans[0]["checkpoints"]
+        aux_checkpoints = plans[0]["aux_checkpoints"]
+        # A restated general solution is skipped as "given" before it's
+        # matched against the checkpoints — keep only the ones no step
+        # grades, so the blueprint's own general-solution step can score.
+        graded = [cp for plan in plans for cp in plan["checkpoints"]]
+        given_expressions = [g for g in given_expressions
+                             if not any(_same_up_to_constants(g, cp["value"], x) for cp in graded)]
     return {
         "answer_exact": answer,
         "answer_decimal": None,
@@ -189,6 +227,15 @@ def _solve_differential_equation(params):
         "steps": steps,
         "formula_tags": _formula_tags(steps),
         "checkpoints": checkpoints,
+        "aux_checkpoints": aux_checkpoints,
+        "methods": plans,
         "given_expressions": given_expressions,
         "given_equations": given_equations,
     }
+
+
+def _same_up_to_constants(a, b, x):
+    from ...core.grading import _equivalent_exact, _equivalent_renamed
+
+    names = sorted(str(s) for s in getattr(b, "free_symbols", set()) if str(s) in ARBITRARY_CONSTANTS)
+    return _equivalent_exact(a, b, x) or bool(names) and _equivalent_renamed(a, b, names, x)

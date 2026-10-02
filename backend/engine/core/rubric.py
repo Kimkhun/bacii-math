@@ -40,8 +40,8 @@ from fractions import Fraction
 from sympy import Add, Expr, Symbol, diff, fraction, oo, simplify, sympify
 
 from .dispatch import solve
-from .grading import (_angle_close, _equivalent_const, _numeric_close, _strip_khmer, fill_prime_slots, grade,
-                      grade_part, parse_answer, prime_slots, with_method)
+from .grading import (_angle_close, _equivalent_const, _equivalent_renamed, _numeric_close, _strip_khmer,
+                      fill_prime_slots, grade, grade_part, parse_answer, prime_slots, with_method)
 
 # Structured final-answer kinds with a legitimate single-line typed answer
 # a student could actually write ("domain is (2, oo)", "continuous"), so
@@ -91,13 +91,16 @@ def is_simple_value(value):
     return False
 
 
-def step_matches(text, expected, tol=1e-4, constant_ok=False, var=None, angle=False, alternatives=None):
+def step_matches(text, expected, tol=1e-4, constant_ok=False, var=None, angle=False, alternatives=None,
+                 free_constants=None):
     """True when `text` (one student line) asserts the scalar/vector value
     `expected` (see `is_simple_value` — never called on a structured value).
     `constant_ok`/`var` mirror `analyze_work`'s own checkpoint flag: an
     indefinite-integral antiderivative line may differ from `expected` by
     any constant in `var` (F(x)+C is still correct for any C) — see
-    `_equivalent_const`."""
+    `_equivalent_const`. `free_constants`: the step's arbitrary constants
+    (an ODE general solution) may carry the student's own names — see
+    `grading._equivalent_renamed`."""
     if alternatives:
         return any(step_matches(text, alt, tol, constant_ok, var, angle) for alt in [expected, *alternatives])
     value_str = _value_str(text)
@@ -114,6 +117,8 @@ def step_matches(text, expected, tol=1e-4, constant_ok=False, var=None, angle=Fa
     except Exception:
         return False
     if _scalar_matches(value, expected, tol, constant_ok, var):
+        return True
+    if free_constants and _equivalent_renamed(value, expected, free_constants, var or Symbol("x")):
         return True
     # Angle steps are equal mod 2pi (7pi/4 is the same argument as -pi/4).
     return angle and _angle_close(value, expected, tol)
@@ -232,6 +237,7 @@ def build_rubric(topic, question_type, params, question_points=DEFAULT_QUESTION_
                 "constant_ok": cp.get("constant_ok", False),
                 "angle": cp.get("angle", False),
                 "alternatives": cp.get("alternatives"),
+                "free_constants": cp.get("free_constants"),
                 "label_latex": cp.get("label_latex"),
                 "subject": cp.get("subject"),
             })
@@ -308,7 +314,8 @@ def score_rubric(topic, question_type, params, rubric, lines, tolerance=None, *,
         if step["kind"] == "simple":
             for j, (i, text) in enumerate(parts):
                 if not part_used[j] and step_matches(text, step["value"], tolerance or 1e-4, step.get("constant_ok", False),
-                                                     var_sym, step.get("angle", False), step.get("alternatives")):
+                                                     var_sym, step.get("angle", False), step.get("alternatives"),
+                                                     step.get("free_constants")):
                     matched_line_idx[idx] = i
                     part_used[j] = True
                     break
@@ -404,6 +411,58 @@ def default_score_work(topic, question_type, params, lines, question_points=DEFA
     `part_label`: see `build_rubric`."""
     rubric = build_rubric(topic, question_type, params, question_points, part_label)
     return score_rubric(topic, question_type, params, rubric, lines, tolerance)
+
+
+def method_rubric(**policy):
+    """(score_work, select_method) for a topic whose blueprints may hold
+    several methods (alternative solution paths, ``engine/core/blueprints.py``):
+    the work is scored with `score_rubric(**policy)` against the method it
+    follows, and ``grading.analyze_work`` marks the lines against that same
+    method (via the topic's ``select_method``), so the marks and the points
+    always agree. Each breakdown entry also carries the step's value with
+    this question's numbers (``expected``/``expected_latex``), so a missed
+    step can be shown to the student."""
+    import json
+    from functools import lru_cache
+
+    from sympy import latex
+
+    def _score(topic, question_type, params, lines, question_points, tolerance, part_label, method):
+        rubric = build_rubric(topic, question_type, params, question_points, part_label, method)
+        result = score_rubric(topic, question_type, params, rubric, lines, tolerance, **policy)
+        for step, entry in zip(rubric, result["breakdown"]):
+            if step.get("label_latex"):
+                entry["label_latex"] = step["label_latex"]
+            entry["expected"] = str(step["value"])
+            entry["expected_latex"] = latex(step["value"])
+        return result
+
+    @lru_cache(maxsize=256)
+    def _select_cached(key):
+        topic, question_type, params_json, lines, question_points, tolerance, part_label = key
+        params = json.loads(params_json)
+        methods = solve(topic, question_type, params).get("methods") or []
+        if len(methods) < 2:
+            return None
+        return pick_method(methods, lambda m: _score(topic, question_type, params, list(lines),
+                                                      question_points, tolerance, part_label, m))
+
+    def select_method(topic, question_type, params, lines, question_points=DEFAULT_QUESTION_POINTS,
+                      tolerance=None, part_label=None):
+        """The blueprint method the work follows (None with fewer than two)."""
+        return _select_cached((topic, question_type, json.dumps(params, sort_keys=True, default=str),
+                               tuple(lines), question_points, tolerance, part_label))
+
+    def score_work(topic, question_type, params, lines, question_points=DEFAULT_QUESTION_POINTS,
+                   tolerance=None, part_label=None):
+        """Score the work against the method it follows, reported as "method"."""
+        method = select_method(topic, question_type, params, lines, question_points, tolerance, part_label)
+        result = _score(topic, question_type, params, lines, question_points, tolerance, part_label, method)
+        if method:
+            result["method"] = method
+        return result
+
+    return score_work, select_method
 
 
 def pick_method(methods, score):

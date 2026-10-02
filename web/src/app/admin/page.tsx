@@ -9,6 +9,7 @@ import MathText from "@/components/MathText";
 import StructureModal from "@/components/StructureModal";
 import { useLanguage } from "@/context/LanguageContext";
 import { api, FormulaCatalog, TemplateStructure, TemplateStructures, TemplateSummary } from "@/lib/api";
+import { templateTopic } from "@/lib/templateIds";
 
 type Tab = "overview" | "formulas" | "templates" | "sandbox";
 type TopicStructures = NonNullable<TemplateStructures["topics"]>[number];
@@ -222,13 +223,7 @@ export default function AdminPage() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                const idPrefix = st.id.includes(":") ? st.id.split(":")[0] : "limit";
-                const tp =
-                  topicFilter !== "all"
-                    ? topicFilter
-                    : idPrefix === "deriv"
-                    ? "derivatives"
-                    : idPrefix;
+                const tp = topicFilter !== "all" ? topicFilter : templateTopic(st.id);
                 router.push(
                   `/practice?template=${encodeURIComponent(st.id)}&topic=${encodeURIComponent(
                     tp

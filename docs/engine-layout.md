@@ -47,13 +47,19 @@ backend/engine/
                        relations), SymPy validates the plan on random
                        instances and recomputes every value at grading time.
                        A template may have several methods (alternative
-                       solution paths, --alternatives); derivatives/rubric.py
-                       grades the work against the one it follows, and lines
-                       no method predicts are judged true/false on their own
+                       solution paths, --alternatives); the topic's rubric.py
+                       (core.rubric.method_rubric) grades the work against
+                       the one it follows, and for derivatives lines no
+                       method predicts are judged true/false on their own
                        (grading._ClaimChecker, "verify_claims").
+                       Relations: derivative, outer_derivative, combination,
+                       substitute, solve (a topic adds more with register()).
+                       A topic whose question isn't one y(x) passes named
+                       givens and its extra symbols (an ODE's C1, C2).
                        Stored in topics/<topic>/data/blueprints.json, written
                        by scripts/generate_blueprints.py --topic <topic> with
-                       topics/<topic>/blueprint_spec.py (derivatives so far).
+                       topics/<topic>/blueprint_spec.py (derivatives,
+                       differential_equations).
   llm.py, vision.py, notation.py, explainer.py, formulas.py, cache.py
                         # cross-cutting infra, not topic-specific
 
@@ -77,7 +83,16 @@ backend/engine/
                         rubric.py (full marks only for complete work — a
                         step may be shown as a term of a sum; the
                         blueprint method the work follows)
-    continuity/, differential_equations/, vectors_space/, conics/
+    differential_equations/
+                        solver.py, generator.py, grader.py, structures.py (the
+                        template registry, built from the roots and the
+                        particular solution; the 30 textbook exercises are
+                        instances — audit: scripts/audit_ode_structures.py),
+                        blueprint_spec.py (each step's role is verified:
+                        roots, y_p, general solution, constants) +
+                        data/blueprints.json, rubric.py (default policy, the
+                        blueprint method the work follows)
+    continuity/, vectors_space/, conics/
                         solver.py, generator.py, grader.py, rubric.py (default
                         policy), data/curated/curated.json
     (every topic folder has a rubric.py — its own points-scoring rules)

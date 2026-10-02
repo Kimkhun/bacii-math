@@ -1,6 +1,6 @@
 """Template shapes for the curated-shape topics (continuity, conics,
-vectors_space, differential_equations) — plus derivatives, whose cards come
-straight from its structure registry instead.
+vectors_space) — plus derivatives and differential_equations, whose cards
+come straight from their structure registries instead.
 
 Unlike ``complex``/``integral``/``limit`` — which fill symbolic slot templates —
 these topics mix curated BAC II exercises from ``topics/<topic>/data/curated/*.json``
@@ -27,7 +27,8 @@ from ..topics.conics.generator import _CONICS_CURATED
 from ..topics.continuity.generator import _CONTINUITY_CURATED
 from ..topics.derivatives.generator import build_derivative_variants
 from ..topics.derivatives.structures import all_derivative_structures
-from ..topics.differential_equations.generator import _ODE_CURATED
+from ..topics.differential_equations.generator import build_ode_variants
+from ..topics.differential_equations.structures import all_ode_structures
 from ..topics.vectors_space.generator import _VECTORS_CURATED
 
 CURATED_SHAPE_TOPICS = (
@@ -67,8 +68,9 @@ def _card(topic, qt, shape_id, items, technique, pattern, pattern_latex):
 # structures.py``), the topic's only question source. Unlike the curated
 # shapes below, each card carries real worked samples like limit's cards. ---
 
-def derivative_card(struct, seed=None):
-    variants = build_derivative_variants(struct, count=3, seed=seed)
+def _registry_card(struct, build_variants, seed=None):
+    """One admin card for a registry structure, with 3 worked variants."""
+    variants = build_variants(struct, count=3, seed=seed)
     sample = variants[0] if variants else {}
     return {
         "id": struct["id"],
@@ -89,6 +91,14 @@ def derivative_card(struct, seed=None):
         "formula_tags": sample.get("formula_tags", []),
         "source_labels": struct["source_labels"],
     }
+
+
+def derivative_card(struct, seed=None):
+    return _registry_card(struct, build_derivative_variants, seed)
+
+
+def ode_card(struct, seed=None):
+    return _registry_card(struct, build_ode_variants, seed)
 
 
 def _derivatives_shapes():
@@ -209,32 +219,12 @@ def _vectors_shapes():
     return cards
 
 
-# --- differential_equations: one shape per ODE kind ---
-
-_ODE_SHAPES = [
-    ("first_order_linear_homogeneous", "First-order linear homogeneous",
-     r"y' + a\,y = 0,\quad y(x_0) = y_0"),
-    ("first_order_linear_nonhomogeneous", "First-order linear non-homogeneous",
-     r"y' + a\,y = r,\quad y(x_0) = y_0"),
-    ("second_order_homogeneous_constant_coeff", "Second-order homogeneous, constant coefficients",
-     r"a\,y'' + b\,y' + c\,y = 0"),
-    ("second_order_nonhomogeneous", "Second-order non-homogeneous",
-     r"a\,y'' + b\,y' + c\,y = r(x)"),
-]
-
+# --- differential_equations: one card per registry structure ---
 
 def _ode_shapes():
-    buckets: dict[str, list] = {}
-    for item in _ODE_CURATED:
-        buckets.setdefault(item.get("kind"), []).append(item)
-    cards = []
-    for shape_id, technique, pattern_latex in _ODE_SHAPES:
-        items = buckets.get(shape_id)
-        if not items:
-            continue
-        cards.append(_card("differential_equations", "solve_ode", shape_id, items,
-                           technique, technique, pattern_latex))
-    return cards
+    """One card per registry structure (``topics/differential_equations/
+    structures.py``), like derivatives."""
+    return [ode_card(s) for s in all_ode_structures()]
 
 
 _BUILDERS = {

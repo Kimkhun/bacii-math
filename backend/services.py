@@ -25,6 +25,7 @@ from engine.topics.past_exam.rubric import mark_full_exam
 from engine.topics.functions import graph_grader
 from engine.topics.functions.generator import _FUNCTION_CURATED_TEMPLATES
 from engine.topics.derivatives import structures as derivative_structures
+from engine.topics.differential_equations import structures as ode_structures
 from engine.topics.integral import structures as integral_structures
 from engine.topics.integral.generator import (
     _INDEFINITE_VARIANT_BY_DIFFICULTY,
@@ -1290,13 +1291,37 @@ async def get_template_structures(topic: str | None = None) -> dict:
     return {"topics": topics}
 
 
+def _registry_topics() -> dict:
+    """Topics whose questions all come from a structure registry (one admin
+    card per structure, ``params.template_id``): topic -> (structures
+    module, card builder, one-variant builder, question type)."""
+    from engine.topics.derivatives.generator import build_derivative_variant
+    from engine.topics.differential_equations.generator import build_ode_variant
+
+    return {
+        "derivatives": (derivative_structures, template_shapes.derivative_card, build_derivative_variant,
+                        "compute_derivative"),
+        "differential_equations": (ode_structures, template_shapes.ode_card, build_ode_variant, "solve_ode"),
+    }
+
+
+def _registry_structure(structure_id: str):
+    """(topic, structure) for a registry structure id, or (None, None)."""
+    for topic, (module, *_rest) in _registry_topics().items():
+        struct = module.STRUCTURES_BY_ID.get(structure_id)
+        if struct:
+            return topic, struct
+    return None, None
+
+
 async def regenerate_template_structure(structure_id: str) -> dict:
     """Flush cache for a specific structure and re-generate in real time without wiping other cards."""
-    deriv_def = derivative_structures.STRUCTURES_BY_ID.get(structure_id)
-    if deriv_def:
+    reg_topic, reg_def = _registry_structure(structure_id)
+    if reg_def:
         import time
         seed = int(time.time() * 1000) & 0xFFFFFFFF
-        return {"structure": await asyncio.to_thread(template_shapes.derivative_card, deriv_def, seed)}
+        card = _registry_topics()[reg_topic][1]
+        return {"structure": await asyncio.to_thread(card, reg_def, seed)}
 
     limit_def = next((s for s in limit_structures.all_limit_structures() if s["id"] == structure_id), None)
     if limit_def:
@@ -1393,13 +1418,14 @@ async def solve_custom_template_structure(structure_id: str, params: dict) -> di
     from engine.topics.integral.solver import _solve_definite_integral, _solve_indefinite_integral
     from sympy import sympify
 
-    # 0. Derivative structure: slots are substituted symbolically.
-    deriv_def = derivative_structures.STRUCTURES_BY_ID.get(structure_id)
-    if deriv_def:
-        from engine.topics.derivatives.generator import build_derivative_variant
-        slots = derivative_structures.slot_names(deriv_def)
+    # 0. Registry structure (derivatives, differential equations): slots are
+    # substituted symbolically.
+    reg_topic, reg_def = _registry_structure(structure_id)
+    if reg_def:
+        module, _card, build_variant, _qt = _registry_topics()[reg_topic]
+        slots = module.slot_names(reg_def)
         try:
-            v = build_derivative_variant(deriv_def, template_params={k: params[k] for k in slots})
+            v = build_variant(reg_def, template_params={k: params[k] for k in slots})
         except (KeyError, ValueError, TypeError) as e:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, f"bad parameters for {structure_id}: {e}")
         return {k: v[k] for k in ("prompt", "prompt_latex", "answer_exact", "answer_latex", "steps")}
@@ -1540,11 +1566,12 @@ def _topic_structure_summary(topic: str) -> dict:
             "curated": len(items),
         }
 
-    if topic == "derivatives":
-        structs = derivative_structures.all_derivative_structures()
+    if topic in _registry_topics():
+        module, _card, _variant, qt = _registry_topics()[topic]
+        structs = list(module.STRUCTURES_BY_ID.values())
         return {
             "topic": topic,
-            "question_types": [{"question_type": "compute_derivative", "count": len(structs)}],
+            "question_types": [{"question_type": qt, "count": len(structs)}],
             "structure_count": len(structs),
             "difficulties": sorted({s["difficulty"] for s in structs}),
             "curated": sum(1 for s in structs if s["source_labels"]),

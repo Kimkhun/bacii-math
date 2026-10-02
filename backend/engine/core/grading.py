@@ -7,6 +7,7 @@ lives in ``engine.topics.functions.grader``.
 """
 import math
 import re as _re
+from itertools import permutations
 
 from sympy import S, Add, E, Expr, diff, expand, sympify, I, N, Symbol, binomial, im, latex, limit, oo, pi, re, simplify, sqrt
 from sympy import solve as sym_solve
@@ -310,6 +311,23 @@ def _equivalent_const(value, expected, var, diff=None):
         return len(vals) >= 3 and all(abs(v - vals[0]) <= _SAMPLE_TOL for v in vals[1:])
     except Exception:
         return False
+
+def _equivalent_renamed(value, expected, constants, var):
+    """True when `value` equals `expected` once the student's own names for
+    the arbitrary constants are mapped onto `constants` (any one-to-one
+    mapping): ``A e^{2x} + B e^{3x}`` for ``C1 e^{2x} + C2 e^{3x}``, or with
+    C1 and C2 swapped. Only for a checkpoint flagged ``free_constants`` (an
+    ODE's general solution, see ``engine/core/blueprints.py``)."""
+    targets = [Symbol(c) for c in constants]
+    try:
+        mine = sorted(value.free_symbols - {var}, key=str)
+    except AttributeError:
+        return False
+    if len(mine) != len(targets):
+        return False
+    return any(_equivalent_exact(value.subs(dict(zip(mine, perm)), simultaneous=True), expected, var)
+               for perm in permutations(targets))
+
 
 def _equivalent_exact(value, expected, var, diff=None):
     """True when value == expected exactly, via the same hybrid ladder."""
@@ -1041,6 +1059,8 @@ def _match_checkpoint(value, cp, tol, var_sym):
     # An angle checkpoint (arg(z), a reduced n*theta) is only defined mod 2pi:
     # 7pi/4 and -pi/4 are the same argument.
     if cp.get("angle") and _angle_close(value, cv, tol):
+        return True
+    if cp.get("free_constants") and _equivalent_renamed(value, cv, cp["free_constants"], var_sym):
         return True
     if _numeric_close(value, cv, tol):
         return True

@@ -34,7 +34,8 @@ import re
 from ..topics.conics.generator import _ASK_PHRASE, _CONICS_CURATED
 from ..topics.continuity.generator import _CONTINUITY_CURATED
 from ..topics.derivatives.generator import DERIVATIVE_TECHNIQUES, _derivative_shape
-from ..topics.differential_equations.generator import _KIND_LABEL, _ODE_CURATED
+from ..topics.differential_equations.generator import _KIND_LABEL
+from ..topics.differential_equations.structures import all_ode_structures
 from ..topics.integral.generator import (
     _INDEFINITE_VARIANT_BY_DIFFICULTY,
     _INTEGRAL_VARIANT_BY_DIFFICULTY,
@@ -304,7 +305,8 @@ def _build_catalog():
                 ):
                     out.append(_skill(topic, qt, v, _COUNTING_LABELS.get(v, v), diff))
             elif topic == "differential_equations":
-                for v, diff in _curated_variants(_ODE_CURATED, "kind"):
+                pool = [{"kind": s["category"], "difficulty": s["difficulty"]} for s in all_ode_structures()]
+                for v, diff in _curated_variants(pool, "kind"):
                     out.append(_skill(topic, qt, v, _KIND_LABEL.get(v, v), diff))
             elif topic == "vectors_space":
                 for v, diff in _curated_variants(_VECTORS_CURATED, "op"):

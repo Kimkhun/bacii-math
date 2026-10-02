@@ -183,6 +183,19 @@ shown (a step written as a term of the answer, `4 - 2e^{-2x}`, counts, and so do
 `(E)'` notation and then substituted, `(1/x)' cos(1/x) = -1/x^2 cos(1/x)`), and scores the work against
 the blueprint method it follows.
 
+### Template registries & solution blueprints
+Derivatives and differential equations generate every question from a structure registry
+(`engine/topics/<topic>/structures.py`: named templates with `{slot}` parameters and a sampler; the
+former curated textbook exercises are recorded as instances of them) and tag it with
+`params.template_id`/`params.template_params`. Each template has a *blueprint* in the topic's
+`data/blueprints.json` — its marking scheme, planned once offline by Gemini
+(`scripts/generate_blueprints.py --topic <topic>`, prompt and checks in the topic's `blueprint_spec.py`).
+A blueprint never supplies a trusted value: each checkpoint is a relation (derivative, combination,
+substitute, solve, ...) that SymPy evaluates on the question's own numbers, and a blueprint is saved only
+after SymPy validates it on random instances (`engine/core/blueprints.py`). Verify a topic end to end with
+`scripts/simulate_blueprint_students.py --topic <topic>` and its registry with `scripts/audit_<topic>_structures.py`.
+Migrating another topic to this pattern: `docs/template-blueprint-migration.md`.
+
 ### Skill progress & practice suggestions
 Every graded attempt also updates two hidden trackers (`SkillState` rows): one for the **exercise
 type** the question belongs to (a leaf skill from `engine/core/skills.py` — "sin(x)/x limits", not

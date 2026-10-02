@@ -13,7 +13,7 @@ The topic plugs in through ``engine/topics/<topic>/blueprint_spec.py``
 ``structures``).
 
 Run:  cd backend && PYTHONPATH=. python scripts/generate_blueprints.py --topic derivatives
-      [--only <template_id> ...] [--force] [--batch 5] [--retries 2]
+      [--only <template_id> ...] [--force] [--batch 5] [--retries 2] [--timeout 120]
       [--alternatives]    # add alternative methods (0-2 per template) to the
                           # templates that only have their standard method
       [--validate-only]   # re-check the saved file without calling Gemini
@@ -38,7 +38,7 @@ from engine.llm import _gemini_client
 _BLUEPRINT_KEYS = ("definitions", "compose", "checkpoints")
 
 
-async def _ask(spec, briefs, feedback, model, prompt_head=None, schema=None):
+async def _ask(spec, briefs, feedback, model, prompt_head=None, schema=None, timeout=120, thinking_budget=None):
     prompt = (prompt_head or spec.PROMPT) + "\n".join(json.dumps(b, ensure_ascii=False) for b in briefs)
     if feedback:
         prompt += "\n\nYOUR PREVIOUS BLUEPRINTS FOR THESE TEMPLATES WERE REJECTED BY THE CHECKER:\n"
@@ -49,11 +49,13 @@ async def _ask(spec, briefs, feedback, model, prompt_head=None, schema=None):
         response_schema=schema or spec.RESPONSE_SCHEMA,
         temperature=0.2,
     )
+    if thinking_budget is not None:
+        config.thinking_config = types.ThinkingConfig(thinking_budget=thinking_budget)
     for wait in (10, 30, 60, None):
         try:
             resp = await asyncio.wait_for(
                 _gemini_client().aio.models.generate_content(model=model, contents=prompt, config=config),
-                timeout=max(settings.gemini_timeout_seconds, 120),
+                timeout=max(settings.gemini_timeout_seconds, timeout),
             )
             break
         except Exception as e:  # noqa: BLE001
@@ -88,7 +90,8 @@ async def _generate(spec, targets, args, saved):
             chunk = ids[i:i + args.batch]
             try:
                 answers, tokens = await _ask(spec, [spec.template_brief(pending[t]) for t in chunk],
-                                             {t: feedback[t] for t in chunk if t in feedback}, model)
+                                             {t: feedback[t] for t in chunk if t in feedback}, model,
+                                             timeout=args.timeout, thinking_budget=args.thinking_budget)
             except Exception as e:  # noqa: BLE001
                 print(f"  batch {chunk}: Gemini error {type(e).__name__}: {e}", flush=True)
                 continue
@@ -127,7 +130,9 @@ def _check_alternative(spec, struct, alt, accepted):
         return ["an alternative method needs at least one checkpoint"]
     for other in accepted:
         try:
-            if blueprints.same_plan(other, alt, struct, spec.instantiate):
+            if blueprints.same_plan(other, alt, struct, spec.instantiate,
+                                    symbols=getattr(spec, "SYMBOLS", None),
+                                    given_env=getattr(spec, "given_env", None)):
                 return [f"asks for the same intermediate results as method {other.get('method_id')!r}"]
         except Exception as e:  # noqa: BLE001
             return [f"{type(e).__name__}: {e}"]
@@ -151,7 +156,8 @@ async def _generate_alternatives(spec, targets, args, saved):
             briefs = [spec.alternative_brief(pending[t], saved[t]["methods"][0]) for t in chunk]
             try:
                 answers, tokens = await _ask(spec, briefs, {t: feedback[t] for t in chunk if t in feedback},
-                                             model, spec.ALTERNATIVES_PROMPT, spec.ALTERNATIVES_SCHEMA)
+                                             model, spec.ALTERNATIVES_PROMPT, spec.ALTERNATIVES_SCHEMA,
+                                             timeout=args.timeout, thinking_budget=args.thinking_budget)
             except Exception as e:  # noqa: BLE001
                 print(f"  batch {chunk}: Gemini error {type(e).__name__}: {e}", flush=True)
                 continue
@@ -198,6 +204,9 @@ def main():
     ap.add_argument("--batch", type=int, default=5)
     ap.add_argument("--retries", type=int, default=2)
     ap.add_argument("--model", default=None)
+    ap.add_argument("--timeout", type=int, default=120, help="seconds per Gemini request")
+    ap.add_argument("--thinking-budget", type=int, default=None,
+                    help="cap the model's thinking tokens (a template that keeps timing out)")
     ap.add_argument("--validate-only", action="store_true")
     ap.add_argument("--alternatives", action="store_true",
                     help="add alternative methods to templates that have a standard one")

@@ -11,6 +11,7 @@ import FunctionGraph from "@/components/FunctionGraph";
 import { VariationTable } from "@/components/StructureModal";
 import LessonModal from "@/components/LessonModal";
 import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, HintResponse, Skill, StrokeDoc } from "@/lib/api";
+import { templateQuestionType, templateTopic } from "@/lib/templateIds";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
 import { drawingAudio } from "@/lib/audioEngine";
 import { useLanguage } from "@/context/LanguageContext";
@@ -1154,21 +1155,8 @@ function PracticeInner() {
       try {
         const paramTopic = searchParams.get("topic");
         const paramDiff = searchParams.get("difficulty") || "medium";
-        const idPrefix = templateId.includes(":") ? templateId.split(":")[0] : "limit";
-        const resolvedTopic = paramTopic || (idPrefix === "deriv" ? "derivatives" : idPrefix);
-
-        let qType = resolvedTopic;
-        if (resolvedTopic === "integral") {
-          if (templateId.startsWith("indefinite_") || templateId.startsWith("curated_")) {
-            qType = "indefinite_integral";
-          } else {
-            qType = "definite_integral";
-          }
-        } else if (resolvedTopic === "limit") {
-          qType = "limit";
-        } else if (resolvedTopic === "derivatives") {
-          qType = "compute_derivative";
-        }
+        const resolvedTopic = paramTopic || templateTopic(templateId);
+        const qType = templateQuestionType(resolvedTopic, templateId);
 
         const cfg: SessionConfig = {
           mode: "templates",
