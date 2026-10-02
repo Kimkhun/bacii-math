@@ -1,14 +1,15 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/admin.dart';
 import '../../models/formula.dart';
 import '../../models/template.dart';
-import '../../widgets/function_graph.dart';
 import '../../widgets/math_text.dart';
+import '../../widgets/structure_dialog.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -338,7 +339,7 @@ class _AdminScreenState extends State<AdminScreen> {
                 Card(
                   margin: const EdgeInsets.only(bottom: 8),
                   child: InkWell(
-                    onTap: () => _showStructure(st),
+                    onTap: () => showStructureDialog(context, st, topic: topic),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Column(
@@ -346,7 +347,9 @@ class _AdminScreenState extends State<AdminScreen> {
                         children: [
                           Row(
                             children: [
-                              _code(st.id),
+                              Flexible(child: _code(st.id)),
+                              const SizedBox(width: 6),
+                              _practiceButton(st, topic),
                               const Spacer(),
                               if (st.sourceLabels.isNotEmpty)
                                 Text(st.sourceLabels.join(', '),
@@ -370,90 +373,24 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
-  void _showStructure(TemplateStructure st) {
-    showDialog(
-      context: context,
-      builder: (_) => Dialog(
-        insetPadding: const EdgeInsets.all(16),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640, maxHeight: 700),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    _code(st.id),
-                    const Spacer(),
-                    IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close)),
-                  ],
-                ),
-                if (st.technique != null) ...[
-                  Text(st.technique!,
-                      style: const TextStyle(color: AppTheme.slate600)),
-                  const SizedBox(height: 8),
-                ],
-                st.samplePromptLatex != null
-                    ? MathText(text: '\$${st.samplePromptLatex}\$')
-                    : Text(st.samplePrompt),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Text('Answer: ',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Flexible(
-                      child: MathText(
-                          text:
-                              '\$${st.sampleAnswerLatex ?? st.sampleAnswer}\$'),
-                    ),
-                  ],
-                ),
-                if (st.parts.isNotEmpty) ...[
-                  const Divider(),
-                  const Text('Parts & answers',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  for (final p in st.parts)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [
-                            _code(p.label),
-                            const SizedBox(width: 6),
-                            Flexible(
-                                child: MathText(
-                                    text: (p.questionKm ?? p.want ?? '')
-                                        .replaceAll(RegExp(r'\$(.+?)\$'), r'\($1\)'))),
-                          ]),
-                          Text('→ ${p.answerDisplay ?? p.answer}',
-                              style: const TextStyle(color: AppTheme.slate800)),
-                        ],
-                      ),
-                    ),
-                ],
-                if (st.graph != null) ...[
-                  const Divider(),
-                  FunctionGraph(graph: st.graph!),
-                ],
-                if (st.formulaTags.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: [for (final t in st.formulaTags) _code(t)],
-                  ),
-                ],
-              ],
-            ),
-          ),
+  // Open this template straight on the practice canvas.
+  Widget _practiceButton(TemplateStructure st, String topic) => OutlinedButton.icon(
+        onPressed: () => context.go(Uri(path: '/practice', queryParameters: {
+              'template': st.id,
+              'topic': topic,
+              'difficulty': st.difficulty.isNotEmpty ? st.difficulty : 'medium',
+            }).toString()),
+        icon: const Icon(Icons.edit_outlined, size: 13),
+        label: const Text('Practice', style: TextStyle(fontSize: 11)),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF78350F),
+          backgroundColor: const Color(0xFFFFFBEB),
+          side: const BorderSide(color: Color(0xFFFCD34D)),
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-      ),
-    );
-  }
+      );
 
   Widget _statCard(String label, String value) {
     return Container(

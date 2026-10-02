@@ -42,13 +42,13 @@ export default function DisambiguationCard({
       <div
         {...{ xmlns: "http://www.w3.org/1999/xhtml" }}
         style={{ pointerEvents: "auto" }}
-        className="bg-white border border-[#e8e4da] rounded-xl shadow-[0px_4px_16px_0px_rgba(0,0,0,0.1)] px-5 py-[18px] text-sm"
+        className="bg-white border border-paper-150 rounded-xl shadow-[0px_4px_16px_0px_rgba(0,0,0,0.1)] px-5 py-[18px] text-sm"
       >
-        <div className="text-[#8a857b] text-xs font-medium">I read line {lineNumber} as</div>
-        <div className="mt-2.5 text-[15px] text-[#23272e]">
+        <div className="text-paper-600 text-xs font-medium">I read line {lineNumber} as</div>
+        <div className="mt-2.5 text-[15px] text-ink">
           <MathText text={primary.latex ? `\\(${primary.latex}\\)` : primary.text} />
         </div>
-        <div className="mt-3.5 text-[#8a857b] text-xs font-medium">Did you write one of these instead?</div>
+        <div className="mt-3.5 text-paper-600 text-xs font-medium">Did you write one of these instead?</div>
         <div className="mt-2.5 space-y-2">
           {candidates.map((c, i) => (
             <button
@@ -56,14 +56,14 @@ export default function DisambiguationCard({
               onClick={() => onPick(i)}
               className={`group w-full flex items-center justify-between gap-2 rounded-lg px-3.5 py-3 text-left transition-colors ${
                 i === 0
-                  ? "bg-white border-[1.5px] border-[#b9b2a2] hover:border-[#8a857b]"
-                  : "bg-[#faf9f6] border border-[#e8e4da] hover:border-[#b9b2a2]"
+                  ? "bg-white border-[1.5px] border-paper-400 hover:border-paper-600"
+                  : "bg-paper-50 border border-paper-150 hover:border-paper-400"
               }`}
             >
-              <span className="text-[#23272e] text-sm">
+              <span className="text-ink text-sm">
                 <MathText text={c.latex ? `\\(${c.latex}\\)` : c.text} />
               </span>
-              <span className="text-[11px] font-medium text-[#a8a296] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-[11px] font-medium text-paper-500 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
                 Yes, this one
               </span>
             </button>
@@ -72,13 +72,13 @@ export default function DisambiguationCard({
         <div className="mt-3.5 flex items-center justify-between">
           <button
             onClick={onWriteAgain}
-            className="px-[13px] py-[9px] rounded-[7px] border border-[#dddad1] text-xs font-medium text-[#6b6558] hover:bg-[#faf9f6]"
+            className="px-[13px] py-[9px] rounded-[7px] border border-paper-300 text-xs font-medium text-paper-700 hover:bg-paper-50"
           >
             Write it again
           </button>
           <button
             onClick={onNone}
-            className="px-2 py-1 rounded text-xs font-normal text-[#a8a296] hover:text-[#6b6558]"
+            className="px-2 py-1 rounded text-xs font-normal text-paper-500 hover:text-paper-700"
           >
             None of these
           </button>

@@ -355,7 +355,7 @@ export function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]
                               refY="3.5"
                               orient="auto"
                             >
-                              <polygon points="0 0, 7 3.5, 0 7" fill="#1e293b" />
+                              <polygon points="0 0, 7 3.5, 0 7" className="fill-slate-800" />
                             </marker>
                           </defs>
                           <line
@@ -363,7 +363,7 @@ export function VariationTable({ vt }: { vt: NonNullable<Part["variation_table"]
                             y1={isUp ? "76" : "20"}
                             x2="102"
                             y2={isUp ? "20" : "76"}
-                            stroke="#1e293b"
+                            className="stroke-slate-800"
                             strokeWidth="1.5"
                             markerEnd={`url(#arrowhead-${i})`}
                           />

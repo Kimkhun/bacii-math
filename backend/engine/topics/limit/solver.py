@@ -1,4 +1,5 @@
-"""Limit solver (technique handlers for parameterizable techniques + curated ``formula_name`` branch)."""
+"""Limit solver: per-technique step handlers, plus a generic ``formula_name``-keyed
+branch (``_curated_limit_steps``) shared by every procedurally-generated structure."""
 from sympy import (
     N,
     Pow,
@@ -40,9 +41,9 @@ def _rationalization_conjugate_checkpoints(x, point, expr, formula):
     where exactly one of numerator/denominator carries a square root: rationalize
     that side by its conjugate, cancel the shared (x - point) factor against the
     other (polynomial) side, and report the resulting expression. Generalizes the
-    5 curated `rationalization_conjugate_finite` exercises (whichever side —
-    numerator or denominator — the sqrt is on, and any leading constant
-    multiplier) instead of hardcoding each one. Returns [] when the shape
+    `rationalization_conjugate_finite` family (whichever side — numerator or
+    denominator — the sqrt is on, and any leading constant multiplier)
+    instead of hardcoding each one. Returns [] when the shape
     doesn't match (e.g. both sides have a radical), leaving the caller with
     just the final-value checkpoint."""
     def _conjugate_factor(e):
@@ -86,9 +87,9 @@ def _rationalization_conjugate_checkpoints(x, point, expr, formula):
 
 
 # formula_names whose parameterized handler (below) computes its checkpoints
-# purely from (x, point, expr) — no technique-specific params like a curated
-# exercise's k/a/d — so it can be reused as-is to derive intermediate
-# checkpoints for the curated version of the same technique.
+# purely from (x, point, expr) — no technique-specific params like a sampled
+# instance's k/a/d — so the same handler covers every sampled shape for that
+# technique.
 _CURATED_REUSABLE_HANDLERS = {"direct_substitution", "factoring_0_0", "rational_function_infinity"}
 
 
@@ -97,8 +98,8 @@ def _exponential_standard_limit_checkpoints(x, point, expr, formula):
     standard exponential limit separately" checkpoints for a 0/0 limit shaped
     like (e^{ax}-1)/(e^{bx}-1) at x=0: the numerator and denominator each
     divided by x and limited on their own (giving a and b respectively).
-    Purely generic on `expr` — no a/b params needed — so it covers curated
-    exercises too, whatever the exact coefficients. Returns [] when the
+    Purely generic on `expr` — no a/b params needed — so it covers every
+    sampled instance, whatever the exact coefficients. Returns [] when the
     denominator's own limit is 0 (shape doesn't apply)."""
     try:
         num, den = expr.as_numer_denom()
@@ -222,8 +223,8 @@ def _has_huge_power(expr):
 
 def _derived_technique_text(formula, var, x, point_latex, expr):
     """Narration for a limit that has no authored technique text (exercises built
-    from technique templates rather than the curated exam JSON): the technique's
-    catalogue name plus, when SymPy can simplify the expression, that simplification.
+    from technique templates): the technique's catalogue name plus, when SymPy
+    can simplify the expression, that simplification.
     Never blank, and only says what SymPy actually computed."""
     from engine.formulas import resolve_formula
 
@@ -1090,14 +1091,17 @@ def _logarithmic_limit_steps_checkpoints(params, var, x, point, point_latex, exp
 
 
 def _curated_limit_steps(params, var, x, point, point_latex, expr, result):
-    """Curated real BAC II exercise: SymPy still computes `result` (the graded
-    answer); the exam-authored technique text narrates the steps instead of a
-    generic technique handler — the curated JSON only stores prose, not a
-    reusable parameterized derivation. A handful of formula_names still get a
-    generically-derived intermediate checkpoint (either by reusing the
-    parameter-free handler for the same technique, or a bespoke generic
-    deriver for `rationalization_conjugate_finite`) so correct intermediate
-    work verifies instead of only the final answer."""
+    """Generic ``formula_name``-keyed step deriver, used for every procedurally
+    sampled limit structure (params["formula_name"] is set by the structure's
+    own catalogue entry, not by a per-exercise author). SymPy still computes
+    `result` (the graded answer); the technique's own narration text
+    (``_derived_technique_text`` or an authored ``curated_technique``/title)
+    describes the steps instead of a fully bespoke technique handler. A
+    handful of formula_names still get a generically-derived intermediate
+    checkpoint (either by reusing the parameter-free handler for the same
+    technique, or a bespoke generic deriver for
+    `rationalization_conjugate_finite`) so correct intermediate work verifies
+    instead of only the final answer."""
     formula = params["formula_name"]
 
     from .blueprint_interpreter import interpret_blueprint_steps

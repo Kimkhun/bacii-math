@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import LessonAnimationPanel from "@/components/lesson/LessonAnimationPanel";
 import MathText from "@/components/MathText";
 import { api, Lesson } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
@@ -16,10 +17,12 @@ export default function LessonModal({
   skillKey,
   fallbackLabel,
   onClose,
+  onTrySimilar,
 }: {
   skillKey: string;
   fallbackLabel: string;
   onClose: () => void;
+  onTrySimilar?: (skillKey: string) => void;
 }) {
   const { lang, t } = useLanguage();
   const km = lang === "km";
@@ -61,7 +64,7 @@ export default function LessonModal({
       onClick={onClose}
     >
       <div
-        className="my-6 w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-slate-200"
+        className={`my-6 w-full ${lesson?.animation ? "max-w-3xl" : "max-w-2xl"} rounded-2xl bg-white shadow-2xl border border-slate-200`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Topbar */}
@@ -92,6 +95,20 @@ export default function LessonModal({
               <div className="text-[15px] leading-relaxed text-slate-700">
                 <MathText text={km ? lesson.summary_km : lesson.summary_en} />
               </div>
+
+              {/* Watch (Manim video) / Explore (interactive) — animated lessons only */}
+              {lesson.animation && (
+                <LessonAnimationPanel
+                  animation={lesson.animation}
+                  onTrySimilar={() => {
+                    if (onTrySimilar) {
+                      onTrySimilar(skillKey);
+                    } else {
+                      window.location.href = `/practice?skill=${encodeURIComponent(skillKey)}`;
+                    }
+                  }}
+                />
+              )}
 
               {/* Key formulas */}
               {lesson.formulas.length > 0 && (

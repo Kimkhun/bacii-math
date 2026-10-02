@@ -6,8 +6,10 @@ import '../../core/api/api_client.dart';
 import '../../core/i18n/language_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/profile.dart';
+import '../../models/session.dart';
 import '../../widgets/lesson_modal.dart';
 import '../../widgets/math_text.dart';
+import '../../widgets/saved_exercises_shelf.dart';
 
 Color _levelBar(double level) {
   if (level >= 75) return AppTheme.successGreen;
@@ -26,6 +28,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final ApiClient _api = ApiClient();
   Profile? _profile;
+  List<SessionSummary> _savedSessions = [];
   bool _busy = true;
   String? _error;
   final Set<String> _openTopics = {};
@@ -44,8 +47,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _error = null;
     });
     try {
-      final p = await _api.getProfile();
-      setState(() => _profile = p);
+      final results = await Future.wait<Object>([
+        _api.getProfile(),
+        _api.myProgress().catchError((Object _) => <SessionSummary>[]),
+      ]);
+      setState(() {
+        _profile = results[0] as Profile;
+        _savedSessions = results[1] as List<SessionSummary>;
+      });
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
@@ -62,6 +71,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } finally {
       if (mounted) setState(() => _rebuilding = false);
     }
+  }
+
+  Future<void> _deleteSaved(String id) async {
+    try {
+      await _api.deleteProgress(id);
+      if (mounted) setState(() => _savedSessions.removeWhere((s) => s.id == id));
+    } catch (_) {}
   }
 
   String _pct(double v) => '${(v * 100).round()}%';
@@ -127,6 +143,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 12),
                 _headline(level, p, lang),
+                const SizedBox(height: 16),
+                SavedExercisesShelf(
+                  sessions: _savedSessions,
+                  onDelete: _deleteSaved,
+                ),
                 const SizedBox(height: 16),
                 if (p.suggestions.isNotEmpty) ...[
                   Text(lang.t('profile_suggestions'),

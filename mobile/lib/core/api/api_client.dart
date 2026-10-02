@@ -214,13 +214,22 @@ class ApiClient {
     return GradeResult.fromJson(data as Map<String, dynamic>);
   }
 
+  // All LLM work (narration, work check, tutor tip) lives here, not in
+  // grade(). attemptId/part attach the explanation to the graded attempt so
+  // it shows up in history.
   Future<Explanation> explain(String questionId,
-      {String? userAnswer, String? workText, String? lang}) async {
+      {String? userAnswer,
+      String? workText,
+      String? lang,
+      String? attemptId,
+      String? part}) async {
     final data = await _request('/problems/explain', method: 'POST', body: {
       'question_id': questionId,
       if (userAnswer != null) 'user_answer': userAnswer,
       if (workText != null) 'work_text': workText,
       if (lang != null) 'lang': lang,
+      if (attemptId != null && attemptId.isNotEmpty) 'attempt_id': attemptId,
+      if (part != null) 'part': part,
     });
     return Explanation.fromJson(data as Map<String, dynamic>);
   }
@@ -358,6 +367,14 @@ class ApiClient {
         method: 'POST', body: {'structure_id': structureId});
     return TemplateStructure.fromJson(
         (data as Map<String, dynamic>)['structure'] as Map<String, dynamic>);
+  }
+
+  // Solve a template with admin-picked parameters (StructureModal picker).
+  Future<CustomSolveResult> solveCustomStructure(
+      String structureId, Map<String, dynamic> params) async {
+    final data = await _request('/templates/structures/solve-custom',
+        method: 'POST', body: {'structure_id': structureId, 'params': params});
+    return CustomSolveResult.fromJson(data as Map<String, dynamic>);
   }
 
   // --- Sandbox (admin) ---

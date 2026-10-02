@@ -19,6 +19,7 @@ import cache
 from core.offload import run_cpu
 from engine import explainer, formulas, generator, grader, llm, solver
 from engine.core import coaching, lessons, mastery, skills, template_shapes
+from engine.core.lesson_animations import formula_animation
 from engine import hints
 from engine.rubric import score_work
 from engine.topics.past_exam.rubric import mark_full_exam
@@ -798,7 +799,8 @@ async def get_formulas_catalog() -> dict:
     """Full formula registry grouped by topic, for the admin view and the
     student-facing formula sheet. Each entry carries `variants`: every
     generator (topic, question_type, variant, difficulty) combo known to
-    touch that formula, so a "Practice this" link can force it directly."""
+    touch that formula, so a "Practice this" link can force it directly, and
+    `animation`: its worked-example tutorial video, when one has been made."""
     by_group: dict[str, list] = {}
     for tag, e in formulas.FORMULA_REGISTRY.items():
         g = e.get("group") or "other"
@@ -810,6 +812,7 @@ async def get_formulas_catalog() -> dict:
             "weight": e.get("weight", 1),
             "formulas": e.get("formulas") or [],
             "variants": await generator.variants_for_formula(tag),
+            "animation": formula_animation(tag),
         })
     # Teaching order first, then anything else the registry has — a topic that
     # grows a formula file must not silently vanish from the formula sheet.
@@ -1515,30 +1518,35 @@ def _topic_structure_summary(topic: str) -> dict:
     if topic == "integral":
         qts: dict[str, int] = {}
         diffs: set = set()
-        curated = 0
         for s in integral_structures.all_integral_structures():
             qts[s["question_type"]] = qts.get(s["question_type"], 0) + 1
             diffs.add(s.get("difficulty"))
-            if s.get("source_labels"):
-                curated += 1
+        # Every integral structure is a parametric template (randomized
+        # coefficients each generation) — none are verbatim curated replay.
+        # `source_labels` only tags which real exam exercise a template's
+        # shape was derived from, so it's not counted as "curated" here
+        # (that word means literal exam replay for every other topic).
         return {
             "topic": topic,
             "question_types": [{"question_type": qt, "count": n} for qt, n in qts.items()],
             "structure_count": sum(qts.values()),
             "difficulties": sorted(diffs),
-            "curated": curated,
+            "curated": 0,
         }
 
     if topic == "limit":
         structs = limit_structures.all_limit_structures()
         diffs = {s["difficulty"] for s in structs}
-        curated_count = sum(len(s.get("source_labels", [])) for s in structs)
+        # Every limit exercise is procedurally sampled (no verbatim curated
+        # replay pool) — `source_labels` only tags which real exam problem(s)
+        # a sampler's shape was modeled on, so it's not counted as "curated"
+        # here (that word means literal exam replay for every other topic).
         return {
             "topic": topic,
             "question_types": [{"question_type": "limit", "count": len(structs)}],
             "structure_count": len(structs),
             "difficulties": sorted(diffs),
-            "curated": curated_count,
+            "curated": 0,
         }
 
     if topic == "probability":

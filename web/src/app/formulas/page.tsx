@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import MathText from "@/components/MathText";
+import LessonVideo from "@/components/lesson/LessonVideo";
 import { api, FormulaCatalog } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -27,9 +29,12 @@ const DIFFICULTY_STYLES: Record<"easy" | "medium" | "hard", string> = {
 };
 
 export default function FormulasPage() {
+  const router = useRouter();
   const { lang, t } = useLanguage();
   const [catalog, setCatalog] = useState<FormulaCatalog | null>(null);
   const [topicFilter, setTopicFilter] = useState("all");
+  // One tutorial open at a time; its video loads nothing until played.
+  const [watching, setWatching] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(true);
 
@@ -116,14 +121,32 @@ export default function FormulasPage() {
                               {t(`formulas_difficulty_${difficulty}` as const)}
                             </span>
                           )}
-                          {e.variants.length > 0 && (
-                            <Link
-                              href={`/practice?formula=${e.id}`}
-                              className="ml-auto px-2.5 py-1 rounded-md bg-slate-900 text-white text-xs font-medium hover:bg-slate-700"
-                            >
-                              {t("formulas_practice")}
-                            </Link>
-                          )}
+                          <div className="ml-auto flex items-center gap-2">
+                            {e.animation && (
+                              <button
+                                onClick={() => setWatching(watching === e.id ? null : e.id)}
+                                aria-pressed={watching === e.id}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition ${
+                                  watching === e.id
+                                    ? "border-sky-500 bg-sky-500 text-white"
+                                    : "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100"
+                                }`}
+                              >
+                                <svg viewBox="0 0 16 16" className="h-3 w-3" fill="currentColor" aria-hidden>
+                                  <path d="M4 2.5v11l9-5.5z" />
+                                </svg>
+                                {t("formulas_watch")}
+                              </button>
+                            )}
+                            {e.variants.length > 0 && (
+                              <Link
+                                href={`/practice?formula=${e.id}`}
+                                className="px-2.5 py-1 rounded-md bg-slate-900 text-white text-xs font-medium hover:bg-slate-700"
+                              >
+                                {t("formulas_practice")}
+                              </Link>
+                            )}
+                          </div>
                         </div>
                         {e.latex && (
                           <div className="mt-2 text-slate-700">
@@ -138,6 +161,18 @@ export default function FormulasPage() {
                               </li>
                             ))}
                           </ul>
+                        )}
+                        {e.animation && watching === e.id && (
+                          <div className="mt-4">
+                            <LessonVideo
+                              animation={e.animation}
+                              onTrySimilar={
+                                e.variants.length > 0
+                                  ? () => router.push(`/practice?formula=${encodeURIComponent(e.id)}`)
+                                  : undefined
+                              }
+                            />
+                          </div>
                         )}
                       </div>
                     );

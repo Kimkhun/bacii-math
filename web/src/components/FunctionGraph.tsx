@@ -1,6 +1,7 @@
 "use client";
 
 import { GraphSpec } from "@/lib/api";
+import { integerTickStep, makeScale, ticks } from "@/lib/plot";
 
 // Renders the SymPy-sampled reference graph as pure SVG: axes + ticks, the
 // curve (one path per segment so asymptote gaps stay clean), dashed vertical
@@ -11,8 +12,7 @@ export default function FunctionGraph({ graph }: { graph: GraphSpec }) {
   const W = 340;
   const H = 240;
   const { x_min, x_max, y_min, y_max } = graph;
-  const xTo = (x: number) => pad + ((x - x_min) / (x_max - x_min)) * (W - 2 * pad);
-  const yTo = (y: number) => H - pad - ((y - y_min) / (y_max - y_min)) * (H - 2 * pad);
+  const { xTo, yTo } = makeScale(graph, W, H, pad);
 
   const axisX = yTo(0);
   const axisY = xTo(0);
@@ -25,17 +25,14 @@ export default function FunctionGraph({ graph }: { graph: GraphSpec }) {
       .join(" ");
 
   // Integer tick grid: choose a step that keeps ~6-12 ticks across the window.
-  const range = Math.max(x_max - x_min, y_max - y_min);
-  const step = range <= 12 ? 1 : range <= 24 ? 2 : 5;
-  const xTicks: number[] = [];
-  const yTicks: number[] = [];
-  for (let v = Math.ceil(x_min / step) * step; v <= x_max; v += step) xTicks.push(v);
-  for (let v = Math.ceil(y_min / step) * step; v <= y_max; v += step) yTicks.push(v);
+  const step = integerTickStep(graph);
+  const xTicks = ticks(x_min, x_max, step);
+  const yTicks = ticks(y_min, y_max, step);
 
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
-      className="w-full h-auto bg-white"
+      className="invert-in-dark w-full h-auto bg-white"
       role="img"
       aria-label="Reference graph of the function"
     >

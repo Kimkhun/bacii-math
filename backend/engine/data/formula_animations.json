@@ -1,0 +1,177 @@
+{
+  "complex_multiplication": {
+    "video": "formulas/complex_multiplication",
+    "cues": [
+      {
+        "id": "rule",
+        "text_en": "This is the formula for multiplying two complex numbers. You don't have to memorise it: watch where it comes from.",
+        "text_km": "នេះជារូបមន្តសម្រាប់គុណចំនួនកុំផ្លិចពីរ។ មិនបាច់ទន្ទេញទេ៖ មើលពីរបៀបដែលវាកើតឡើង។",
+        "start": 0.0,
+        "end": 8.17
+      },
+      {
+        "id": "example",
+        "text_en": "Take $(2+3i)(4-i)$.",
+        "text_km": "ពិនិត្យផលគុណ $(2+3i)(4-i)$។",
+        "start": 8.17,
+        "end": 11.27
+      },
+      {
+        "id": "distribute",
+        "text_en": "Expand like ordinary brackets: each term of the first bracket multiplies each term of the second. That gives four products.",
+        "text_km": "គុណពន្លាតតាមវង់ក្រចកធម្មតា៖ យកតួនីមួយៗក្នុងកន្សោមទីមួយ គុណនឹងតួនីមួយៗក្នុងកន្សោមទីពីរ នោះយើងបាន ៤ តួ។",
+        "start": 11.27,
+        "end": 20.07
+      },
+      {
+        "id": "i_squared",
+        "text_en": "The last product contains $i^2$. Since $i^2 = -1$, $-3i^2$ becomes $+3$: a real number.",
+        "text_km": "ផលគុណចុងក្រោយមាន $i^2$។ ដោយសារ $i^2 = -1$ នោះ $-3i^2$ ក្លាយជា $+3$ (ផ្នែកពិត)។",
+        "start": 20.07,
+        "end": 26.37
+      },
+      {
+        "id": "group",
+        "text_en": "Collect the terms: real numbers together (blue), terms with $i$ together (orange).",
+        "text_km": "ផ្ដុំតួចូលគ្នា៖ ផ្ដុំផ្នែកពិតចូលគ្នា (ពណ៌ខៀវ) និងផ្ដុំផ្នែកនិមិត្តដែលមាន $i$ ចូលគ្នា (ពណ៌ទឹកក្រូច)។",
+        "start": 26.37,
+        "end": 33.9
+      },
+      {
+        "id": "answer",
+        "text_en": "So $(2+3i)(4-i) = 11 + 10i$.",
+        "text_km": "ដូចនេះ $(2+3i)(4-i) = 11 + 10i$។",
+        "start": 33.9,
+        "end": 37.3
+      },
+      {
+        "id": "shortcut",
+        "text_en": "That is exactly the formula: $ac - bd$ is the real part and $ad + bc$ is the imaginary part. Same numbers, same answer.",
+        "text_km": "នោះហើយជារូបមន្ត៖ $ac - bd$ ជាផ្នែកពិត ហើយ $ad + bc$ ជាផ្នែកនិមិត្ត។ តួលេខដដែល ចម្លើយដូចគ្នា។",
+        "start": 37.3,
+        "end": 47.7
+      }
+    ],
+    "duration": 47.7,
+    "version": "69fbad9be1"
+  },
+  "cross_product": {
+    "video": "formulas/cross_product",
+    "cues": [
+      {
+        "id": "rule",
+        "text_en": "The cross-product formula looks long. With a small grid and a sliding window, it computes itself.",
+        "text_km": "រូបមន្តផលគុណនៃពីរវិចទ័រ (ផលគុណខ្វែង) មើលទៅវែង។ ប៉ុន្តែតាមវិធីគូសតារាង និងរំកិលប្រអប់ វាងាយស្រួលគណនាណាស់។",
+        "start": 0.0,
+        "end": 7.93
+      },
+      {
+        "id": "setup",
+        "text_en": "Take $\\vec u = (2, -1, 3)$ and $\\vec v = (1, 4, -2)$. Write them as two rows, one column per coordinate.",
+        "text_km": "ពិនិត្យ $\\vec u = (2, -1, 3)$ និង $\\vec v = (1, 4, -2)$។ សរសេរជាពីរបន្ទាត់ មួយជួរឈរសម្រាប់កូអរដោនេនីមួយៗ។",
+        "start": 7.93,
+        "end": 15.5
+      },
+      {
+        "id": "repeat",
+        "text_en": "Copy the $x$ and $y$ columns once more on the right.",
+        "text_km": "ចម្លងជួរឈរ $x$ និង $y$ ម្ដងទៀតនៅខាងស្ដាំ។",
+        "start": 15.5,
+        "end": 19.53
+      },
+      {
+        "id": "x_comp",
+        "text_en": "First coordinate: skip the $x$ column and frame the next two. Blue diagonal minus red diagonal: $(-1)(-2) - 3 \\cdot 4 = -10$.",
+        "text_km": "កូអរដោនេទីមួយ ($x$)៖ រំលងជួរឈរ $x$ ហើយគូសប្រអប់លើពីរបន្ទាប់។ ផលគុណអង្កត់ទ្រូងខៀវ ដកផលគុណអង្កត់ទ្រូងក្រហម៖ $(-1)(-2) - 3 \\cdot 4 = -10$។",
+        "start": 19.53,
+        "end": 29.43
+      },
+      {
+        "id": "y_comp",
+        "text_en": "Slide the window one column right. Same pattern: $3 \\cdot 1 - 2 \\cdot (-2) = 7$.",
+        "text_km": "រំកិលប្រអប់មួយជួរឈរទៅស្ដាំតាមលំនាំដដែល៖ $3 \\cdot 1 - 2 \\cdot (-2) = 7$។",
+        "start": 29.43,
+        "end": 35.93
+      },
+      {
+        "id": "z_comp",
+        "text_en": "Slide once more: $2 \\cdot 4 - (-1) \\cdot 1 = 9$.",
+        "text_km": "រំកិលប្រអប់ម្ដងទៀត៖ $2 \\cdot 4 - (-1) \\cdot 1 = 9$។",
+        "start": 35.93,
+        "end": 42.43
+      },
+      {
+        "id": "answer",
+        "text_en": "So $\\vec u \\times \\vec v = (-10, 7, 9)$.",
+        "text_km": "ដូចនេះផលគុណវិចទ័រ $\\vec u \\times \\vec v = (-10, 7, 9)$។",
+        "start": 42.43,
+        "end": 45.5
+      },
+      {
+        "id": "check",
+        "text_en": "Quick check: $\\vec u \\times \\vec v$ is perpendicular to $\\vec u$, so their dot product must be $0$. It is.",
+        "text_km": "ផ្ទៀងផ្ទាត់រហ័ស៖ $\\vec u \\times \\vec v$ ត្រូវតែកែងនឹង $\\vec u$ នាំឱ្យផលគុណស្កាលែស្មើ $0$។ ត្រឹមត្រូវ។",
+        "start": 45.5,
+        "end": 55.03
+      }
+    ],
+    "duration": 55.03,
+    "version": "5b6da32855"
+  },
+  "complex_division": {
+    "video": "formulas/complex_division",
+    "cues": [
+      {
+        "id": "rule",
+        "text_en": "To divide complex numbers, multiply the top and the bottom by the conjugate of the bottom. Here is why it works.",
+        "text_km": "ដើម្បីចែកចំនួនកុំផ្លិចពីរ យើងគុណភាគយក និងភាគបែងនឹងកុំផ្លិចឆ្លាស់នៃភាគបែង។",
+        "start": 0.0,
+        "end": 8.87
+      },
+      {
+        "id": "problem",
+        "text_en": "Take $\\frac{3+i}{1-i}$. We can't divide by $1-i$ directly: first the bottom has to become a real number.",
+        "text_km": "ពិនិត្យ $\\frac{3+i}{1-i}$។ យើងមិនអាចចែកនឹង $1-i$ ផ្ទាល់ទេ៖ ដំបូងត្រូវបំប្លែងភាគបែងឱ្យទៅជាចំនួនពិតសិន។",
+        "start": 8.87,
+        "end": 17.27
+      },
+      {
+        "id": "conjugate",
+        "text_en": "The conjugate of $1-i$ is $1+i$: only the sign of the imaginary part flips.",
+        "text_km": "កុំផ្លិចឆ្លាស់នៃ $1-i$ គឺ $1+i$៖ គ្រាន់តែប្ដូរសញ្ញានៃផ្នែកនិមិត្តពីដកទៅបូក។",
+        "start": 17.27,
+        "end": 23.3
+      },
+      {
+        "id": "multiply",
+        "text_en": "Multiply the top and the bottom by $1+i$. The value doesn't change: we are multiplying by $\\frac{1+i}{1+i} = 1$.",
+        "text_km": "គុណភាគយក និងភាគបែងនឹង $1+i$។ តម្លៃប្រភាគមិនប្រែប្រួលទេ ព្រោះ $\\frac{1+i}{1+i} = 1$។",
+        "start": 23.3,
+        "end": 30.47
+      },
+      {
+        "id": "denominator",
+        "text_en": "Bottom: $(1-i)(1+i) = 1^2 - i^2 = 1 + 1 = 2$. The $i$ is gone: the bottom is now real.",
+        "text_km": "គណនាភាគបែង៖ $(1-i)(1+i) = 1^2 - i^2 = 1 + 1 = 2$។ បាត់ $i$ ហើយ ភាគបែងក្លាយជាចំនួនពិត។",
+        "start": 30.47,
+        "end": 36.63
+      },
+      {
+        "id": "numerator",
+        "text_en": "Top: expand $(3+i)(1+i) = 3 + 3i + i + i^2$. With $i^2 = -1$, that is $2 + 4i$.",
+        "text_km": "គណនាភាគយក៖ ពន្លាត $(3+i)(1+i) = 3 + 3i + i + i^2 = 2 + 4i$ (ដោយសារ $i^2 = -1$)។",
+        "start": 36.63,
+        "end": 42.7
+      },
+      {
+        "id": "answer",
+        "text_en": "Divide each part by $2$: $\\frac{3+i}{1-i} = 1 + 2i$.",
+        "text_km": "ចែកផ្នែកនីមួយៗនឹង $2$៖ ទទួលបាន $\\frac{3+i}{1-i} = 1 + 2i$។",
+        "start": 42.7,
+        "end": 49.6
+      }
+    ],
+    "duration": 49.6,
+    "version": "50cb836189"
+  }
+}

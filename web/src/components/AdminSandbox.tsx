@@ -327,7 +327,7 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
     }`;
 
   return (
-    <div className="fixed inset-0 z-40 bg-[#faf9f6] flex flex-col">
+    <div className="fixed inset-0 z-40 bg-paper-50 flex flex-col">
       <div
         className="shrink-0 flex items-center justify-between px-4 border-b border-slate-200 bg-white"
         style={{ height: TOPBAR_H }}

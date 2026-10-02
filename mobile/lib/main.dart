@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/api/api_client.dart';
+import 'core/audio/sound_engine.dart';
 import 'core/auth/auth_provider.dart';
 import 'core/i18n/language_provider.dart';
 import 'core/theme/app_theme.dart';
@@ -11,6 +12,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final apiClient = ApiClient();
+  drawingAudio.loadSettings();
 
   runApp(
     MultiProvider(

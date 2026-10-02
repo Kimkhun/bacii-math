@@ -1,4 +1,5 @@
 import 'graph.dart';
+import 'variation_table.dart';
 
 class StepCheckLine {
   final int line;
@@ -7,6 +8,8 @@ class StepCheckLine {
   final bool? correct;
   final String? matches;
   final String? formula;
+  // Human-readable name of `formula` (the id), when the backend knows one.
+  final String? formulaName;
   final String? expected;
   final String? reason;
 
@@ -17,6 +20,7 @@ class StepCheckLine {
     this.correct,
     this.matches,
     this.formula,
+    this.formulaName,
     this.expected,
     this.reason,
   });
@@ -28,6 +32,7 @@ class StepCheckLine {
         correct: json['correct'] as bool?,
         matches: json['matches'] as String?,
         formula: json['formula'] as String?,
+        formulaName: json['formula_name'] as String?,
         expected: json['expected'] as String?,
         reason: json['reason'] as String?,
       );
@@ -196,10 +201,12 @@ class Explanation {
   final String trigger;
   final TextProvider? workCheck;
   final TextProvider? teacherFeedback;
+  final String? officialPartSolution;
   final StepCheck? stepCheck;
   final List<SolutionStep> steps;
   final GraphSpec? graph;
   final GraphCheck? graphCheck;
+  final VariationTable? variationTable;
 
   Explanation({
     required this.content,
@@ -208,11 +215,29 @@ class Explanation {
     this.trigger = '',
     this.workCheck,
     this.teacherFeedback,
+    this.officialPartSolution,
     this.stepCheck,
     this.steps = const [],
     this.graph,
     this.graphCheck,
+    this.variationTable,
   });
+
+  /// Same explanation without the tutor tip (it is shown on the result card
+  /// instead, so it isn't displayed twice — see web showExplanation).
+  Explanation withoutTeacherFeedback() => Explanation(
+        content: content,
+        provider: provider,
+        intervened: intervened,
+        trigger: trigger,
+        workCheck: workCheck,
+        officialPartSolution: officialPartSolution,
+        stepCheck: stepCheck,
+        steps: steps,
+        graph: graph,
+        graphCheck: graphCheck,
+        variationTable: variationTable,
+      );
 
   factory Explanation.fromJson(Map<String, dynamic> json) => Explanation(
         content: json['content'] as String? ?? '',
@@ -223,6 +248,7 @@ class Explanation {
             json['work_check'] as Map<String, dynamic>?),
         teacherFeedback: TextProvider.fromJson(
             json['teacher_feedback'] as Map<String, dynamic>?),
+        officialPartSolution: json['official_part_solution'] as String?,
         stepCheck: json['step_check'] != null
             ? StepCheck.fromJson(json['step_check'] as Map<String, dynamic>)
             : null,
@@ -235,6 +261,7 @@ class Explanation {
         graphCheck: json['graph_check'] != null
             ? GraphCheck.fromJson(json['graph_check'] as Map<String, dynamic>)
             : null,
+        variationTable: VariationTable.fromJson(json['variation_table']),
       );
 }
 
@@ -277,7 +304,9 @@ class GradeResult {
   final StepCheck? stepCheck;
   final GraphSpec? graph;
   final GraphCheck? graphCheck;
+  final VariationTable? variationTable;
   final RubricScore? rubricScore;
+  final String? officialPartSolution;
 
   GradeResult({
     this.attemptId = '',
@@ -294,8 +323,36 @@ class GradeResult {
     this.stepCheck,
     this.graph,
     this.graphCheck,
+    this.variationTable,
     this.rubricScore,
+    this.officialPartSolution,
   });
+
+  /// Copy with the tutor tip / official part solution fetched later by
+  /// /problems/explain (grading itself no longer calls any LLM).
+  GradeResult withTutorFeedback({
+    TextProvider? teacherFeedback,
+    String? officialPartSolution,
+  }) =>
+      GradeResult(
+        attemptId: attemptId,
+        correct: correct,
+        reason: reason,
+        given: given,
+        expected: expected,
+        parts: parts,
+        part: part,
+        allComplete: allComplete,
+        explanation: explanation,
+        workCheck: workCheck,
+        teacherFeedback: teacherFeedback ?? this.teacherFeedback,
+        stepCheck: stepCheck,
+        graph: graph,
+        graphCheck: graphCheck,
+        variationTable: variationTable,
+        rubricScore: rubricScore,
+        officialPartSolution: officialPartSolution ?? this.officialPartSolution,
+      );
 
   factory GradeResult.fromJson(Map<String, dynamic> json) => GradeResult(
         attemptId: json['attempt_id'] as String? ?? '',
@@ -324,8 +381,10 @@ class GradeResult {
         graphCheck: json['graph_check'] != null
             ? GraphCheck.fromJson(json['graph_check'] as Map<String, dynamic>)
             : null,
+        variationTable: VariationTable.fromJson(json['variation_table']),
         rubricScore: json['rubric_score'] != null
             ? RubricScore.fromJson(json['rubric_score'] as Map<String, dynamic>)
             : null,
+        officialPartSolution: json['official_part_solution'] as String?,
       );
 }

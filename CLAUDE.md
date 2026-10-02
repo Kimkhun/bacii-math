@@ -217,12 +217,26 @@ Full design: `docs/skill-progress.md`.
   dashboard, backed by `routers/admin.py`).
 - `components/` — `Canvas` (handwriting capture), `QuestionCard`, `Navbar`, `AuthGuard`, `AdminGuard`,
   `AdminSandbox` (admin debug/sandbox mode, see `docs/admin-sandbox.md`), `DisambiguationCard`,
-  `FunctionGraph`, `LessonModal` (bilingual lesson content), `MathKeypad`, `MathText`, `StructureModal`.
+  `FunctionGraph`, `LessonModal` (bilingual lesson content), `MathKeypad`, `MathText`, `StructureModal`;
+  `lesson/` + `explorers/` — an animated lesson's **Watch** (Manim video + synced bilingual captions) and
+  **Explore** (lazy-loaded interactive SVG explorer) modes; see "Lesson animations" below.
 - `context/` — `AuthContext.tsx` (JWT stored in `localStorage`, exposes auth state to the app);
   `LanguageContext.tsx` (Khmer/English UI mode, see `docs/khmer-language-mode.md`).
 - `lib/` — `api.ts` (typed API client; auto-refreshes the access token on a 401 using the refresh
   token); `i18n.ts` (Khmer/English string tables); `audioEngine.ts`/`sounds.ts` (canvas drawing sound
   effects, see `docs/sounds-and-streaks.md`).
+
+### Lesson animations
+Animated lessons (pilot: all 15 limit lessons) add a **Watch** video and an **Explore** widget to
+`LessonModal`. Videos are rendered offline with Manim (`animations/`, run `animations/render.sh <topic>`
+in the pinned Docker image) and carry no words: bilingual captions + cue timings live in
+`engine/topics/<topic>/data/animations.json`, merged into `GET /lessons` by
+`engine/core/lesson_animations.py`. Each scene asserts its boxed answer with SymPy at render time, and
+`animations/verify.py` checks the explorers' displayed limits against SymPy. Media is served from
+`web/public/animations` (immutable, `?v=` hash). Full design: `docs/lesson-animations.md`. The same pipeline
+makes experimental formula tutorials (worked example with arrows and moving numbers) for `/formulas`:
+scenes in `animations/formulas/`, captions in `backend/engine/data/formula_animations.json`, attached to
+the `/me/formulas` catalog as `animation`.
 
 ### Handwriting detection flow
 Canvas/upload image (base64) → `POST /vision/detect` → backend preprocesses (auto-crop + upscale,

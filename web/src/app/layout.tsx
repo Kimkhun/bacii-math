@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { ThemeProvider, THEME_COLORS, THEME_INIT_SCRIPT } from "@/context/ThemeContext";
 import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import NavigationProgressBar from "@/components/NavigationProgressBar";
@@ -37,7 +38,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#f2f1ed",
+  // Overwritten before first paint by THEME_INIT_SCRIPT when dark mode is on.
+  themeColor: THEME_COLORS.light,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -57,17 +59,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `try{var l=localStorage.getItem("bacii_lang");if(l==="km"||l==="en"){document.documentElement.lang=l}}catch(e){}`,
           }}
         />
+        {/* Same idea for light/dark mode: no flash of the wrong theme. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body>
         <Suspense fallback={null}>
           <NavigationProgressBar />
         </Suspense>
-        <LanguageProvider>
-          <AuthProvider>
-            <Navbar />
-            <main className="min-h-screen">{children}</main>
-          </AuthProvider>
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <Navbar />
+              <main className="min-h-screen">{children}</main>
+            </AuthProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

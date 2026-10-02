@@ -1,4 +1,5 @@
 import 'graph.dart';
+import 'variation_table.dart';
 
 /// Admin template-introspection + sandbox models. Mirrors TemplateSummary /
 /// TemplateStructures / TemplateStructure / Sandbox* in web/src/lib/api.ts.
@@ -58,6 +59,131 @@ class TemplateSummary {
       );
 }
 
+/// Sign table of a domain part (web StructureModal SignTable).
+class SignTable {
+  final List<String> cols;
+  final String label; // expression of the last (main) row
+  final List<String> values; // that row's cells: sign, root marker, sign, ...
+
+  SignTable({required this.cols, required this.label, required this.values});
+
+  static SignTable? fromJson(dynamic json) {
+    if (json is! Map<String, dynamic>) return null;
+    final cols = ((json['cols'] as List?) ?? []).map((e) => e.toString()).toList();
+    final rows = (json['rows'] as List?) ?? [];
+    if (cols.length < 2 || rows.isEmpty || rows.last is! Map) return null;
+    final main = rows.last as Map;
+    return SignTable(
+      cols: cols,
+      label: main['label']?.toString() ?? '',
+      values: ((main['cols'] as List?) ?? [])
+          .map((c) => c is Map ? (c['val']?.toString() ?? '') : c.toString())
+          .toList(),
+    );
+  }
+}
+
+/// One worked step of a template variant / custom solve.
+class VariantStep {
+  final String title;
+  final String detail;
+  final String? formula;
+
+  VariantStep({this.title = '', this.detail = '', this.formula});
+
+  factory VariantStep.fromJson(Map<String, dynamic> json) => VariantStep(
+        title: json['title']?.toString() ?? '',
+        detail: json['detail']?.toString() ?? '',
+        formula: json['formula']?.toString(),
+      );
+
+  static List<VariantStep> listFrom(dynamic v) => ((v as List?) ?? [])
+      .whereType<Map<String, dynamic>>()
+      .map(VariantStep.fromJson)
+      .toList();
+}
+
+/// A pre-generated, SymPy-verified instance of a template.
+class TemplateVariant {
+  final int variantIndex;
+  final Map<String, dynamic> params;
+  final String? prompt;
+  final String? promptLatex;
+  final String? answerLatex;
+  final String? answerExact;
+  final List<VariantStep> steps;
+
+  TemplateVariant({
+    required this.variantIndex,
+    this.params = const {},
+    this.prompt,
+    this.promptLatex,
+    this.answerLatex,
+    this.answerExact,
+    this.steps = const [],
+  });
+
+  factory TemplateVariant.fromJson(Map<String, dynamic> json) => TemplateVariant(
+        variantIndex: (json['variant_index'] as num?)?.toInt() ?? 0,
+        params: (json['params'] as Map<String, dynamic>?) ?? const {},
+        prompt: json['prompt']?.toString(),
+        promptLatex: json['prompt_latex']?.toString(),
+        answerLatex: json['answer_latex']?.toString(),
+        answerExact: json['answer_exact']?.toString(),
+        steps: VariantStep.listFrom(json['steps']),
+      );
+}
+
+/// Result of /templates/structures/solve-custom (admin parameter picker).
+class CustomSolveResult {
+  final String prompt;
+  final String promptLatex;
+  final String answerExact;
+  final String answerLatex;
+  final List<VariantStep> steps;
+
+  CustomSolveResult({
+    required this.prompt,
+    required this.promptLatex,
+    required this.answerExact,
+    required this.answerLatex,
+    this.steps = const [],
+  });
+
+  factory CustomSolveResult.fromJson(Map<String, dynamic> json) => CustomSolveResult(
+        prompt: json['prompt']?.toString() ?? '',
+        promptLatex: json['prompt_latex']?.toString() ?? '',
+        answerExact: json['answer_exact']?.toString() ?? '',
+        answerLatex: json['answer_latex']?.toString() ?? '',
+        steps: VariantStep.listFrom(json['steps']),
+      );
+}
+
+/// Khmer step-by-step solution of one part (solution_km_json.parts[]).
+class KmPartSolution {
+  final String label;
+  final List<(String khmer, String latex)> steps;
+  final String answerKhmer;
+  final String answerLatex;
+
+  KmPartSolution({
+    required this.label,
+    this.steps = const [],
+    this.answerKhmer = '',
+    this.answerLatex = '',
+  });
+
+  factory KmPartSolution.fromJson(Map<String, dynamic> json) => KmPartSolution(
+        label: json['label']?.toString() ?? '',
+        steps: ((json['steps'] as List?) ?? [])
+            .whereType<Map>()
+            .map((s) => (s['khmer']?.toString() ?? '', s['latex']?.toString() ?? ''))
+            .toList(),
+        answerKhmer: json['answer_khmer']?.toString() ?? '',
+        answerLatex: json['answer_latex']?.toString() ?? '',
+      );
+}
+
 class TemplateStructurePart {
   final String label;
   final String? want;
@@ -67,6 +193,8 @@ class TemplateStructurePart {
   final String answer;
   final String? answerLatex;
   final String? answerDisplay;
+  final SignTable? signTable;
+  final VariationTable? variationTable;
 
   TemplateStructurePart({
     required this.label,
@@ -77,6 +205,8 @@ class TemplateStructurePart {
     required this.answer,
     this.answerLatex,
     this.answerDisplay,
+    this.signTable,
+    this.variationTable,
   });
 
   factory TemplateStructurePart.fromJson(Map<String, dynamic> json) =>
@@ -89,6 +219,8 @@ class TemplateStructurePart {
         answer: json['answer'] as String? ?? '',
         answerLatex: json['answer_latex'] as String?,
         answerDisplay: json['answer_display'] as String?,
+        signTable: SignTable.fromJson(json['sign_table']),
+        variationTable: VariationTable.fromJson(json['variation_table']),
       );
 }
 
@@ -108,6 +240,9 @@ class TemplateStructure {
   final GraphSpec? graph;
   final String? solutionKm;
   final List<TemplateStructurePart> parts;
+  final Map<String, dynamic>? sampleParams;
+  final List<TemplateVariant> variants;
+  final List<KmPartSolution> solutionKmParts;
 
   TemplateStructure({
     required this.id,
@@ -125,6 +260,9 @@ class TemplateStructure {
     this.graph,
     this.solutionKm,
     this.parts = const [],
+    this.sampleParams,
+    this.variants = const [],
+    this.solutionKmParts = const [],
   });
 
   factory TemplateStructure.fromJson(Map<String, dynamic> json) =>
@@ -152,6 +290,15 @@ class TemplateStructure {
         parts: ((json['parts'] as List?) ?? [])
             .map((p) =>
                 TemplateStructurePart.fromJson(p as Map<String, dynamic>))
+            .toList(),
+        sampleParams: json['sample_params'] as Map<String, dynamic>?,
+        variants: ((json['variants'] as List?) ?? [])
+            .whereType<Map<String, dynamic>>()
+            .map(TemplateVariant.fromJson)
+            .toList(),
+        solutionKmParts: (((json['solution_km_json'] as Map?)?['parts'] as List?) ?? [])
+            .whereType<Map<String, dynamic>>()
+            .map(KmPartSolution.fromJson)
             .toList(),
       );
 }

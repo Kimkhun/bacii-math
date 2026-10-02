@@ -10,6 +10,8 @@ export interface Translations {
   nav_formulas: string;
   nav_admin: string;
   nav_logout: string;
+  theme_to_dark: string;
+  theme_to_light: string;
   nav_login: string;
   nav_signup: string;
   language: string;
@@ -104,6 +106,7 @@ export interface Translations {
   formulas_difficulty_medium: string;
   formulas_difficulty_hard: string;
   formulas_practice: string;
+  formulas_watch: string;
   formulas_loading: string;
   lesson: string;
   lesson_loading: string;
@@ -111,6 +114,39 @@ export interface Translations {
   lesson_key_formulas: string;
   lesson_answer: string;
   lesson_none: string;
+  lesson_watch: string;
+  lesson_explore: string;
+  lesson_steps: string;
+  lesson_video_hd: string;
+  lesson_video_data_saver: string;
+  lesson_video_error: string;
+  lesson_auto_pause: string;
+  lesson_continuous: string;
+  lesson_next_step: string;
+  lesson_prev_step: string;
+  lesson_replay_step: string;
+  lesson_replay_all: string;
+  lesson_try_similar: string;
+  lesson_completed_title: string;
+  lesson_completed_desc: string;
+  lesson_speed: string;
+  lesson_download: string;
+  lesson_pip: string;
+  lesson_more_options: string;
+  explorer_loading: string;
+  explorer_hint: string;
+  explorer_distance: string;
+  explorer_x_far: string;
+  explorer_zoom: string;
+  explorer_limit: string;
+  explorer_left: string;
+  explorer_right: string;
+  explorer_gap: string;
+  explorer_show_simplified: string;
+  explorer_show_numerator: string;
+  explorer_show_tangent: string;
+  explorer_unit_circle: string;
+  explorer_reset: string;
 
   // Exam Page
   exam_title: string;
@@ -249,6 +285,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     nav_formulas: "Formulas",
     nav_admin: "Admin",
     nav_logout: "Log out",
+    theme_to_dark: "Switch to dark mode",
+    theme_to_light: "Switch to light mode",
     nav_login: "Log in",
     nav_signup: "Sign up",
     language: "Language",
@@ -336,6 +374,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     formulas_difficulty_medium: "Medium",
     formulas_difficulty_hard: "Hard",
     formulas_practice: "Practice",
+    formulas_watch: "Watch how",
     formulas_loading: "Loading formulas…",
     lesson: "Lesson",
     lesson_loading: "Loading lesson…",
@@ -343,6 +382,39 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     lesson_key_formulas: "Key formulas",
     lesson_answer: "Answer",
     lesson_none: "No lesson available for this exercise yet.",
+    lesson_watch: "Watch animation",
+    lesson_explore: "Explore",
+    lesson_steps: "Steps",
+    lesson_video_hd: "HD",
+    lesson_video_data_saver: "Data saver",
+    lesson_video_error: "Couldn't load the video. Check your connection and try again.",
+    lesson_auto_pause: "Auto-pause steps",
+    lesson_continuous: "Continuous",
+    lesson_next_step: "Next step",
+    lesson_prev_step: "Previous step",
+    lesson_replay_step: "Replay step",
+    lesson_replay_all: "Replay video",
+    lesson_try_similar: "Try a similar problem on Canvas",
+    lesson_completed_title: "Mastered the concept?",
+    lesson_completed_desc: "Reinforce what you just learned by solving a similar problem with your stylus.",
+    lesson_speed: "Speed",
+    lesson_download: "Download video",
+    lesson_pip: "Picture in picture",
+    lesson_more_options: "More options",
+    explorer_loading: "Loading…",
+    explorer_hint: "Drag across the graph or move the sliders.",
+    explorer_distance: "Distance from the point",
+    explorer_x_far: "How far x goes",
+    explorer_zoom: "Zoom in on the point",
+    explorer_limit: "Limit",
+    explorer_left: "From the left",
+    explorer_right: "From the right",
+    explorer_gap: "gap to the limit",
+    explorer_show_simplified: "Show the simplified form",
+    explorer_show_numerator: "Show the numerator wave",
+    explorer_show_tangent: "Show the tangent at 0",
+    explorer_unit_circle: "Arc $u$ (yellow) against height $\\sin u$ (teal)",
+    explorer_reset: "Reset",
 
     exam_title: "BAC II Mathematics",
     exam_duration: "Duration",
@@ -472,6 +544,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     nav_formulas: "រូបមន្ត",
     nav_admin: "គ្រប់គ្រង",
     nav_logout: "ចាកចេញ",
+    theme_to_dark: "ប្តូរទៅផ្ទៃងងឹត",
+    theme_to_light: "ប្តូរទៅផ្ទៃភ្លឺ",
     nav_login: "ចូល",
     nav_signup: "ចុះឈ្មោះ",
     language: "ភាសា",
@@ -559,6 +633,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     formulas_difficulty_medium: "មធ្យម",
     formulas_difficulty_hard: "ពិបាក",
     formulas_practice: "អនុវត្ត",
+    formulas_watch: "មើលរបៀបធ្វើ",
     formulas_loading: "កំពុងផ្ទុកតារាងរូបមន្ត...",
     lesson: "មេរៀន",
     lesson_loading: "កំពុងផ្ទុកមេរៀន...",
@@ -566,6 +641,39 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     lesson_key_formulas: "រូបមន្តសំខាន់",
     lesson_answer: "ចម្លើយ",
     lesson_none: "មិនទាន់មានមេរៀនសម្រាប់លំហាត់នេះនៅឡើយទេ។",
+    lesson_watch: "មើលចលនា",
+    lesson_explore: "សាកល្បងផ្ទាល់",
+    lesson_steps: "ជំហាន",
+    lesson_video_hd: "HD",
+    lesson_video_data_saver: "សន្សំទិន្នន័យ",
+    lesson_video_error: "មិនអាចផ្ទុកវីដេអូបានទេ។ សូមពិនិត្យអ៊ីនធឺណិត ហើយសាកល្បងម្ដងទៀត។",
+    lesson_auto_pause: "ឈប់តាមជំហាន",
+    lesson_continuous: "ចាក់បន្ត",
+    lesson_next_step: "ជំហានបន្ទាប់",
+    lesson_prev_step: "ជំហានមុន",
+    lesson_replay_step: "មើលជំហាននេះឡើងវិញ",
+    lesson_replay_all: "មើលវីដេអូឡើងវិញ",
+    lesson_try_similar: "អនុវត្តលំហាត់ស្រដៀងនេះនៅលើក្តារខៀន",
+    lesson_completed_title: "យល់ពីគន្លឹះដោះស្រាយហើយមែនទេ?",
+    lesson_completed_desc: "ពង្រឹងចំណេះដឹងដែលទើបតែបានរៀន ដោយអនុវត្តលំហាត់ស្រដៀងនេះដោយដៃផ្ទាល់។",
+    lesson_speed: "ល្បឿន",
+    lesson_download: "ទាញយកវីដេអូ",
+    lesson_pip: "រូបភាពក្នុងរូបភាព",
+    lesson_more_options: "ជម្រើសបន្ថែម",
+    explorer_loading: "កំពុងផ្ទុក...",
+    explorer_hint: "អូសលើក្រាប ឬរំកិលរបាររំកិល។",
+    explorer_distance: "ចម្ងាយពីចំណុច",
+    explorer_x_far: "x ទៅឆ្ងាយប៉ុណ្ណា",
+    explorer_zoom: "ពង្រីកត្រង់ចំណុច",
+    explorer_limit: "លីមីត",
+    explorer_left: "ពីខាងឆ្វេង",
+    explorer_right: "ពីខាងស្ដាំ",
+    explorer_gap: "គម្លាតពីលីមីត",
+    explorer_show_simplified: "បង្ហាញទម្រង់សម្រួល",
+    explorer_show_numerator: "បង្ហាញរលកភាគយក",
+    explorer_show_tangent: "បង្ហាញបន្ទាត់ប៉ះត្រង់ 0",
+    explorer_unit_circle: "ធ្នូ $u$ (លឿង) ធៀបនឹងកម្ពស់ $\\sin u$ (បៃតង)",
+    explorer_reset: "កំណត់ឡើងវិញ",
 
     exam_title: "វិញ្ញាសាគណិតវិទ្យា — បាក់ឌុប",
     exam_duration: "រយៈពេល",
