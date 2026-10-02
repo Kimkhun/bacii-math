@@ -3547,6 +3547,10 @@ function PracticeInner() {
             skillKey={lessonSkillKey}
             fallbackLabel={lessonLabel}
             onClose={() => setShowLesson(false)}
+            onTrySimilar={async () => {
+              setShowLesson(false);
+              await newQuestion();
+            }}
           />
         )}
       </div>

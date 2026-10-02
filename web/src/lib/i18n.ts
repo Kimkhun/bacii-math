@@ -118,6 +118,19 @@ export interface Translations {
   lesson_video_hd: string;
   lesson_video_data_saver: string;
   lesson_video_error: string;
+  lesson_auto_pause: string;
+  lesson_continuous: string;
+  lesson_next_step: string;
+  lesson_prev_step: string;
+  lesson_replay_step: string;
+  lesson_replay_all: string;
+  lesson_try_similar: string;
+  lesson_completed_title: string;
+  lesson_completed_desc: string;
+  lesson_speed: string;
+  lesson_download: string;
+  lesson_pip: string;
+  lesson_more_options: string;
   explorer_loading: string;
   explorer_hint: string;
   explorer_distance: string;
@@ -371,6 +384,19 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     lesson_video_hd: "HD",
     lesson_video_data_saver: "Data saver",
     lesson_video_error: "Couldn't load the video. Check your connection and try again.",
+    lesson_auto_pause: "Auto-pause steps",
+    lesson_continuous: "Continuous",
+    lesson_next_step: "Next step",
+    lesson_prev_step: "Previous step",
+    lesson_replay_step: "Replay step",
+    lesson_replay_all: "Replay video",
+    lesson_try_similar: "Try a similar problem on Canvas",
+    lesson_completed_title: "Mastered the concept?",
+    lesson_completed_desc: "Reinforce what you just learned by solving a similar problem with your stylus.",
+    lesson_speed: "Speed",
+    lesson_download: "Download video",
+    lesson_pip: "Picture in picture",
+    lesson_more_options: "More options",
     explorer_loading: "Loading…",
     explorer_hint: "Drag across the graph or move the sliders.",
     explorer_distance: "Distance from the point",
@@ -615,6 +641,19 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     lesson_video_hd: "HD",
     lesson_video_data_saver: "សន្សំទិន្នន័យ",
     lesson_video_error: "មិនអាចផ្ទុកវីដេអូបានទេ។ សូមពិនិត្យអ៊ីនធឺណិត ហើយសាកល្បងម្ដងទៀត។",
+    lesson_auto_pause: "ឈប់តាមជំហាន",
+    lesson_continuous: "ចាក់បន្ត",
+    lesson_next_step: "ជំហានបន្ទាប់",
+    lesson_prev_step: "ជំហានមុន",
+    lesson_replay_step: "មើលជំហាននេះឡើងវិញ",
+    lesson_replay_all: "មើលវីដេអូឡើងវិញ",
+    lesson_try_similar: "អនុវត្តលំហាត់ស្រដៀងនេះនៅលើក្តារខៀន",
+    lesson_completed_title: "យល់ពីគន្លឹះដោះស្រាយហើយមែនទេ?",
+    lesson_completed_desc: "ពង្រឹងចំណេះដឹងដែលទើបតែបានរៀន ដោយអនុវត្តលំហាត់ស្រដៀងនេះដោយដៃផ្ទាល់។",
+    lesson_speed: "ល្បឿន",
+    lesson_download: "ទាញយកវីដេអូ",
+    lesson_pip: "រូបភាពក្នុងរូបភាព",
+    lesson_more_options: "ជម្រើសបន្ថែម",
     explorer_loading: "កំពុងផ្ទុក...",
     explorer_hint: "អូសលើក្រាប ឬរំកិលរបាររំកិល។",
     explorer_distance: "ចម្ងាយពីចំណុច",

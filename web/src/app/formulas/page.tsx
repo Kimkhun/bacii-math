@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import MathText from "@/components/MathText";
 import LessonVideo from "@/components/lesson/LessonVideo";
@@ -28,6 +29,7 @@ const DIFFICULTY_STYLES: Record<"easy" | "medium" | "hard", string> = {
 };
 
 export default function FormulasPage() {
+  const router = useRouter();
   const { lang, t } = useLanguage();
   const [catalog, setCatalog] = useState<FormulaCatalog | null>(null);
   const [topicFilter, setTopicFilter] = useState("all");
@@ -162,7 +164,14 @@ export default function FormulasPage() {
                         )}
                         {e.animation && watching === e.id && (
                           <div className="mt-4">
-                            <LessonVideo animation={e.animation} />
+                            <LessonVideo
+                              animation={e.animation}
+                              onTrySimilar={
+                                e.variants.length > 0
+                                  ? () => router.push(`/practice?formula=${encodeURIComponent(e.id)}`)
+                                  : undefined
+                              }
+                            />
                           </div>
                         )}
                       </div>

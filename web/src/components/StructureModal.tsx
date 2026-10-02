@@ -103,6 +103,7 @@ type Variant = {
 
 type Structure = {
   id: string;
+  difficulty?: string | null;
   pattern?: string | null;
   pattern_latex?: string | null;
   technique?: string | null;

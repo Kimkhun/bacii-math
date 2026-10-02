@@ -20,7 +20,13 @@ function clock(seconds?: number) {
  * until one is pressed: the video uses preload="none" and the explorer's code
  * is a separate lazily-loaded chunk.
  */
-export default function LessonAnimationPanel({ animation }: { animation: LessonAnimation }) {
+export default function LessonAnimationPanel({
+  animation,
+  onTrySimilar,
+}: {
+  animation: LessonAnimation;
+  onTrySimilar?: () => void;
+}) {
   const { t } = useLanguage();
   const [mode, setMode] = useState<Mode>(null);
   const Explorer = animation.explorer ? getExplorer(animation.explorer) : null;
@@ -31,13 +37,13 @@ export default function LessonAnimationPanel({ animation }: { animation: LessonA
       aria-pressed={mode === m}
       className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition stylus:py-3.5 ${
         mode === m
-          ? "border-sky-500 bg-sky-500 text-white shadow-sm"
+          ? "border-sky-500 bg-sky-500 text-[#ffffff] shadow-sm"
           : "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100"
       }`}
     >
       {icon}
       {label}
-      {extra && <span className={`text-xs font-normal ${mode === m ? "text-sky-100" : "text-sky-500"}`}>{extra}</span>}
+      {extra && <span className={`text-xs font-normal ${mode === m ? "text-[#ffffff]/80" : "text-sky-500"}`}>{extra}</span>}
     </button>
   );
 
@@ -64,7 +70,7 @@ export default function LessonAnimationPanel({ animation }: { animation: LessonA
             </svg>,
           )}
       </div>
-      {mode === "watch" && <LessonVideo animation={animation} />}
+      {mode === "watch" && <LessonVideo animation={animation} onTrySimilar={onTrySimilar} />}
       {mode === "explore" && Explorer && <Explorer />}
     </div>
   );

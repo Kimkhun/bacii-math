@@ -17,10 +17,12 @@ export default function LessonModal({
   skillKey,
   fallbackLabel,
   onClose,
+  onTrySimilar,
 }: {
   skillKey: string;
   fallbackLabel: string;
   onClose: () => void;
+  onTrySimilar?: (skillKey: string) => void;
 }) {
   const { lang, t } = useLanguage();
   const km = lang === "km";
@@ -95,7 +97,18 @@ export default function LessonModal({
               </div>
 
               {/* Watch (Manim video) / Explore (interactive) — animated lessons only */}
-              {lesson.animation && <LessonAnimationPanel animation={lesson.animation} />}
+              {lesson.animation && (
+                <LessonAnimationPanel
+                  animation={lesson.animation}
+                  onTrySimilar={() => {
+                    if (onTrySimilar) {
+                      onTrySimilar(skillKey);
+                    } else {
+                      window.location.href = `/practice?skill=${encodeURIComponent(skillKey)}`;
+                    }
+                  }}
+                />
+              )}
 
               {/* Key formulas */}
               {lesson.formulas.length > 0 && (
