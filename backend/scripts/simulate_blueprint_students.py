@@ -86,7 +86,7 @@ def main():
                                 if b["points_earned"] != b["points_possible"]]
                         failures.append(f"{where}: {score['earned']}/{score['possible']}, lost {lost}")
                     checked = analyze_work(args.topic, qt, params, lines)
-                    flagged = [r["text"] for r in checked.get("lines", []) if r.get("checked") and not r.get("correct")]
+                    flagged = [r["text"] for r in checked["line_results"] if r.get("checked") and not r.get("correct")]
                     if flagged:
                         failures.append(f"{where}: flagged {flagged}")
                     if len(plans) > 1 and score.get("method") not in (None, plan["method"]):

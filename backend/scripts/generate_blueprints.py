@@ -14,6 +14,7 @@ The topic plugs in through ``engine/topics/<topic>/blueprint_spec.py``
 
 Run:  cd backend && PYTHONPATH=. python scripts/generate_blueprints.py --topic derivatives
       [--only <template_id> ...] [--force] [--batch 5] [--retries 2] [--timeout 120]
+      [--concurrency 1] [--thinking-budget N] [--model M]
       [--alternatives]    # add alternative methods (0-2 per template) to the
                           # templates that only have their standard method
       [--validate-only]   # re-check the saved file without calling Gemini
@@ -68,6 +69,18 @@ async def _ask(spec, briefs, feedback, model, prompt_head=None, schema=None, tim
     return json.loads(resp.text).get("templates", []), tokens
 
 
+async def _bounded(coros, limit):
+    """Run `coros` with at most `limit` in flight (Gemini calls overlap;
+    the SymPy validation of each answer still runs one at a time)."""
+    gate = asyncio.Semaphore(max(1, limit))
+
+    async def one(coro):
+        async with gate:
+            await coro
+
+    await asyncio.gather(*(one(c) for c in coros))
+
+
 def _check(spec, struct, bp):
     try:
         return spec.validate(bp, struct)
@@ -86,15 +99,15 @@ async def _generate(spec, targets, args, saved):
             break
         ids = list(pending)
         print(f"\n== attempt {attempt + 1}: {len(ids)} template(s) ==", flush=True)
-        for i in range(0, len(ids), args.batch):
-            chunk = ids[i:i + args.batch]
+
+        async def run(chunk):
             try:
                 answers, tokens = await _ask(spec, [spec.template_brief(pending[t]) for t in chunk],
                                              {t: feedback[t] for t in chunk if t in feedback}, model,
                                              timeout=args.timeout, thinking_budget=args.thinking_budget)
             except Exception as e:  # noqa: BLE001
                 print(f"  batch {chunk}: Gemini error {type(e).__name__}: {e}", flush=True)
-                continue
+                return
             totals[0] += tokens[0]
             totals[1] += tokens[1]
             by_id = {a.get("template_id"): a for a in answers}
@@ -116,6 +129,8 @@ async def _generate(spec, targets, args, saved):
                 feedback.pop(tid, None)
                 print(f"  [ok] {tid}: {len(bp['checkpoints'])} checkpoint(s)", flush=True)
             blueprints.save(args.topic, saved)
+
+        await _bounded([run(ids[i:i + args.batch]) for i in range(0, len(ids), args.batch)], args.concurrency)
     for tid in pending:
         rejected[tid] = feedback.get(tid, "no answer")
     print(f"\ntokens: {totals[0]} prompt + {totals[1]} output ({model})")
@@ -145,14 +160,14 @@ async def _generate_alternatives(spec, targets, args, saved):
     pending = {s["id"]: s for s in targets}
     feedback: dict[str, str] = {}
     totals = [0, 0]
-    added = 0
+    added = [0]
     for attempt in range(1 + args.retries):
         if not pending:
             break
         ids = list(pending)
         print(f"\n== attempt {attempt + 1}: {len(ids)} template(s) ==", flush=True)
-        for i in range(0, len(ids), args.batch):
-            chunk = ids[i:i + args.batch]
+
+        async def run(chunk):
             briefs = [spec.alternative_brief(pending[t], saved[t]["methods"][0]) for t in chunk]
             try:
                 answers, tokens = await _ask(spec, briefs, {t: feedback[t] for t in chunk if t in feedback},
@@ -160,7 +175,7 @@ async def _generate_alternatives(spec, targets, args, saved):
                                              timeout=args.timeout, thinking_budget=args.thinking_budget)
             except Exception as e:  # noqa: BLE001
                 print(f"  batch {chunk}: Gemini error {type(e).__name__}: {e}", flush=True)
-                continue
+                return
             totals[0] += tokens[0]
             totals[1] += tokens[1]
             by_id = {a.get("template_id"): a for a in answers}
@@ -183,7 +198,7 @@ async def _generate_alternatives(spec, targets, args, saved):
                 new = accepted[1:]
                 if new or not reasons:
                     saved[tid] = {"methods": accepted, "alternatives_checked": time.strftime("%Y-%m-%d")}
-                    added += len(new)
+                    added[0] += len(new)
                     del pending[tid]
                     feedback.pop(tid, None)
                     names = ", ".join(m["method_id"] for m in new) or "none (no genuinely different method)"
@@ -192,8 +207,10 @@ async def _generate_alternatives(spec, targets, args, saved):
                     feedback[tid] = " | ".join(reasons)
                     print(f"  [rejected] {tid}: {feedback[tid][:160]}", flush=True)
             blueprints.save(args.topic, saved)
+
+        await _bounded([run(ids[i:i + args.batch]) for i in range(0, len(ids), args.batch)], args.concurrency)
     print(f"\ntokens: {totals[0]} prompt + {totals[1]} output ({model})")
-    return added, {t: feedback.get(t, "no answer") for t in pending}
+    return added[0], {t: feedback.get(t, "no answer") for t in pending}
 
 
 def main():
@@ -205,6 +222,7 @@ def main():
     ap.add_argument("--retries", type=int, default=2)
     ap.add_argument("--model", default=None)
     ap.add_argument("--timeout", type=int, default=120, help="seconds per Gemini request")
+    ap.add_argument("--concurrency", type=int, default=1, help="Gemini requests in flight at once")
     ap.add_argument("--thinking-budget", type=int, default=None,
                     help="cap the model's thinking tokens (a template that keeps timing out)")
     ap.add_argument("--validate-only", action="store_true")

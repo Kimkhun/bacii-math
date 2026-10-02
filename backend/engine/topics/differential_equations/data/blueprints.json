@@ -32,8 +32,53 @@
         ],
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
+      },
+      {
+        "method_id": "characteristic_equation",
+        "name_en": "Characteristic Equation Method",
+        "name_km": "វិធីសាស្ត្រសមីការលក្ខណៈ",
+        "definitions": [],
+        "compose": "",
+        "checkpoints": [
+          {
+            "id": "r",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "-a",
+            "expr": "-a",
+            "label_en": "r",
+            "label_km": "ឫស r"
+          },
+          {
+            "id": "yg",
+            "role": "general_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "C*exp(r*x)",
+            "expr": "C*exp(-a*x)",
+            "label_en": "general solution",
+            "label_km": "ចម្លើយទូទៅ"
+          },
+          {
+            "id": "C_v",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0",
+            "expr": "y0",
+            "label_en": "C",
+            "label_km": "ថេរ C"
+          }
+        ],
+        "model": "gemini-3.5-flash",
+        "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:first_nonhom:constant_rhs": {
     "methods": [
@@ -96,7 +141,8 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:first_nonhom:linear_rhs": {
     "methods": [
@@ -181,7 +227,8 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:first_nonhom:trig_rhs": {
     "methods": [
@@ -266,7 +313,8 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_hom:complex_roots": {
     "methods": [
@@ -345,8 +393,86 @@
         ],
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
+      },
+      {
+        "method_id": "complex_roots_directly",
+        "name_en": "Direct Complex Roots",
+        "name_km": "រកឫសកុំផ្លិចផ្ទាល់",
+        "definitions": [],
+        "compose": "",
+        "checkpoints": [
+          {
+            "id": "delta",
+            "role": "discriminant",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "(-2*al)**2 - 4*(al**2 + be**2)",
+            "expr": "-4*be**2",
+            "label_en": "Δ",
+            "label_km": "ឌីសគ្រីមីណង់ Δ"
+          },
+          {
+            "id": "r1",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "al + be*I",
+            "expr": "al + be*I",
+            "label_en": "r_1",
+            "label_km": "ឫស r_1"
+          },
+          {
+            "id": "r2",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "al - be*I",
+            "expr": "al - be*I",
+            "label_en": "r_2",
+            "label_km": "ឫស r_2"
+          },
+          {
+            "id": "yg",
+            "role": "general_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x))",
+            "expr": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x))",
+            "label_en": "general solution",
+            "label_km": "ចម្លើយទូទៅ"
+          },
+          {
+            "id": "c1",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C1",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "y0",
+            "label_en": "C_1",
+            "label_km": "ថេរ C_1"
+          },
+          {
+            "id": "c2",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C2",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "(yp0 - al*y0)/be",
+            "label_en": "C_2",
+            "label_km": "ថេរ C_2"
+          }
+        ],
+        "model": "gemini-3.5-flash",
+        "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_hom:distinct_roots": {
     "methods": [
@@ -426,7 +552,8 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_hom:double_root": {
     "methods": [
@@ -484,7 +611,8 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_hom:harmonic_shifted_ic": {
     "methods": [
@@ -552,8 +680,75 @@
         ],
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
+      },
+      {
+        "method_id": "direct_roots",
+        "name_en": "Direct characteristic roots",
+        "name_km": "រកឫសសមីការសម្គាល់ផ្ទាល់",
+        "definitions": [],
+        "compose": "",
+        "checkpoints": [
+          {
+            "id": "r1",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "w*I",
+            "expr": "w*I",
+            "label_en": "r_1",
+            "label_km": "ឫស r_1"
+          },
+          {
+            "id": "r2",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "-w*I",
+            "expr": "-w*I",
+            "label_en": "r_2",
+            "label_km": "ឫស r_2"
+          },
+          {
+            "id": "yg",
+            "role": "general_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "C1*cos(w*x) + C2*sin(w*x)",
+            "expr": "C1*cos(w*x) + C2*sin(w*x)",
+            "label_en": "general solution",
+            "label_km": "ចម្លើយទូទៅ"
+          },
+          {
+            "id": "c1",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C1",
+            "at": "",
+            "equals": "yg.subs(x, pi*k/(2*w)) = y0; diff(yg, x).subs(x, pi*k/(2*w)) = yp0",
+            "expr": "y0*cos(pi*k/2) - yp0*sin(pi*k/2)/w",
+            "label_en": "C_1",
+            "label_km": "ថេរ C_1"
+          },
+          {
+            "id": "c2",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C2",
+            "at": "",
+            "equals": "yg.subs(x, pi*k/(2*w)) = y0; diff(yg, x).subs(x, pi*k/(2*w)) = yp0",
+            "expr": "y0*sin(pi*k/2) + yp0*cos(pi*k/2)/w",
+            "label_en": "C_2",
+            "label_km": "ថេរ C_2"
+          }
+        ],
+        "model": "gemini-3.5-flash",
+        "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_hom:opposite_roots_log_ic": {
     "methods": [
@@ -633,7 +828,8 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:complex_roots_constant_rhs": {
     "methods": [
@@ -734,8 +930,108 @@
         ],
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
+      },
+      {
+        "method_id": "complex_roots_directly",
+        "name_en": "Complex roots directly",
+        "name_km": "រកឫសកុំផ្លិចផ្ទាល់",
+        "definitions": [],
+        "compose": "",
+        "checkpoints": [
+          {
+            "id": "delta",
+            "role": "discriminant",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "4*al**2 - 4*(al**2 + be**2)",
+            "expr": "-4*be**2",
+            "label_en": "Δ",
+            "label_km": "ឌីសគ្រីមីណង់ Δ"
+          },
+          {
+            "id": "r1",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "al + be*I",
+            "expr": "al + be*I",
+            "label_en": "r_1",
+            "label_km": "ឫស r_1"
+          },
+          {
+            "id": "r2",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "al - be*I",
+            "expr": "al - be*I",
+            "label_en": "r_2",
+            "label_km": "ឫស r_2"
+          },
+          {
+            "id": "yh",
+            "role": "homogeneous_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x))",
+            "expr": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x))",
+            "label_en": "y_h",
+            "label_km": "ចម្លើយទូទៅនៃសមីការអូម៉ូសែន y_h"
+          },
+          {
+            "id": "yp",
+            "role": "particular_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "q",
+            "expr": "q",
+            "label_en": "y_p",
+            "label_km": "ចម្លើយពិសេស y_p"
+          },
+          {
+            "id": "yg",
+            "role": "general_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "yh + yp",
+            "expr": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x)) + q",
+            "label_en": "general solution",
+            "label_km": "ចម្លើយទូទៅ"
+          },
+          {
+            "id": "c1",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C1",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "y0 - q",
+            "label_en": "C_1",
+            "label_km": "ថេរ C_1"
+          },
+          {
+            "id": "c2",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C2",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "(yp0 - al*(y0 - q))/be",
+            "label_en": "C_2",
+            "label_km": "ថេរ C_2"
+          }
+        ],
+        "model": "gemini-3.5-flash",
+        "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:complex_roots_linear_rhs": {
     "methods": [
@@ -863,8 +1159,135 @@
         ],
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
+      },
+      {
+        "method_id": "complex_roots_method",
+        "name_en": "Complex roots of characteristic equation",
+        "name_km": "ឫសកុំផ្លិចនៃសមីការសរាល់",
+        "definitions": [
+          {
+            "name": "Y",
+            "expr": "A*x + B"
+          }
+        ],
+        "compose": "",
+        "checkpoints": [
+          {
+            "id": "delta",
+            "role": "discriminant",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "4*al**2 - 4*(al**2 + be**2)",
+            "expr": "-4*be**2",
+            "label_en": "Δ",
+            "label_km": "ឌីសគ្រីមីណង់ Δ"
+          },
+          {
+            "id": "r1",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "al + be*I",
+            "expr": "al + be*I",
+            "label_en": "r_1",
+            "label_km": "ឫស r_1"
+          },
+          {
+            "id": "r2",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "al - be*I",
+            "expr": "al - be*I",
+            "label_en": "r_2",
+            "label_km": "ឫស r_2"
+          },
+          {
+            "id": "yh",
+            "role": "homogeneous_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x))",
+            "expr": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x))",
+            "label_en": "y_h",
+            "label_km": "ចម្លើយទូទៅនៃសមីការអូម៉ូសែន y_h"
+          },
+          {
+            "id": "A_v",
+            "role": "coefficient",
+            "relation": "solve",
+            "of": "A",
+            "at": "",
+            "equals": "diff(Y, x, 2) + (-2*al)*diff(Y, x) + (al**2 + be**2)*Y = al**2*p*x+al**2*q-2*al*p+be**2*p*x+be**2*q",
+            "expr": "p",
+            "label_en": "A",
+            "label_km": "A"
+          },
+          {
+            "id": "B_v",
+            "role": "coefficient",
+            "relation": "solve",
+            "of": "B",
+            "at": "",
+            "equals": "diff(Y, x, 2) + (-2*al)*diff(Y, x) + (al**2 + be**2)*Y = al**2*p*x+al**2*q-2*al*p+be**2*p*x+be**2*q",
+            "expr": "q",
+            "label_en": "B",
+            "label_km": "B"
+          },
+          {
+            "id": "yp",
+            "role": "particular_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "A_v*x + B_v",
+            "expr": "p*x + q",
+            "label_en": "y_p",
+            "label_km": "ចម្លើយពិសេស y_p"
+          },
+          {
+            "id": "yg",
+            "role": "general_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "yh + yp",
+            "expr": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x)) + p*x + q",
+            "label_en": "general solution",
+            "label_km": "ចម្លើយទូទៅ"
+          },
+          {
+            "id": "c1",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C1",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "y0 - q",
+            "label_en": "C_1",
+            "label_km": "ថេរ C_1"
+          },
+          {
+            "id": "c2",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C2",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "(yp0 - al*(y0 - q) - p)/be",
+            "label_en": "C_2",
+            "label_km": "ថេរ C_2"
+          }
+        ],
+        "model": "gemini-3.5-flash",
+        "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:complex_roots_quadratic_rhs": {
     "methods": [
@@ -1003,8 +1426,108 @@
         ],
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
+      },
+      {
+        "method_id": "complex_roots_direct_yp",
+        "name_en": "Complex roots with direct particular solution",
+        "name_km": "វិធីសាស្ត្រឫសកុំផ្លិចនិងទាញរកចម្លើយពិសេសផ្ទាល់",
+        "definitions": [],
+        "compose": "",
+        "checkpoints": [
+          {
+            "id": "delta",
+            "role": "discriminant",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "4*al**2 - 4*(al**2 + be**2)",
+            "expr": "-4*be**2",
+            "label_en": "Δ",
+            "label_km": "ឌីសគ្រីមីណង់ Δ"
+          },
+          {
+            "id": "r1",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "al + be*I",
+            "expr": "al + be*I",
+            "label_en": "r_1",
+            "label_km": "ឫស r_1"
+          },
+          {
+            "id": "r2",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "al - be*I",
+            "expr": "al - be*I",
+            "label_en": "r_2",
+            "label_km": "ឫស r_2"
+          },
+          {
+            "id": "yh",
+            "role": "homogeneous_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x))",
+            "expr": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x))",
+            "label_en": "y_h",
+            "label_km": "ចម្លើយទូទៅនៃសមីការអូម៉ូសែន y_h"
+          },
+          {
+            "id": "yp",
+            "role": "particular_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "s*x**2 + p*x + q",
+            "expr": "s*x**2 + p*x + q",
+            "label_en": "y_p",
+            "label_km": "ចម្លើយពិសេស y_p"
+          },
+          {
+            "id": "yg",
+            "role": "general_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "yh + yp",
+            "expr": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x)) + s*x**2 + p*x + q",
+            "label_en": "general solution",
+            "label_km": "ចម្លើយទូទៅ"
+          },
+          {
+            "id": "c1",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C1",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "y0 - q",
+            "label_en": "C_1",
+            "label_km": "ថេរ C_1"
+          },
+          {
+            "id": "c2",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C2",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "(yp0 - al*(y0 - q) - p)/be",
+            "label_en": "C_2",
+            "label_km": "ថេរ C_2"
+          }
+        ],
+        "model": "gemini-3.5-flash",
+        "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:complex_roots_trig_rhs": {
     "methods": [
@@ -1132,8 +1655,124 @@
         ],
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
+      },
+      {
+        "method_id": "direct_complex_roots",
+        "name_en": "Direct Complex Roots Method",
+        "name_km": "វិធីសាស្ត្ររកឫសកុំផ្លិចផ្ទាល់",
+        "definitions": [
+          {
+            "name": "Y",
+            "expr": "A*cos(k*x) + B*sin(k*x)"
+          }
+        ],
+        "compose": "",
+        "checkpoints": [
+          {
+            "id": "r1",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "al + be*I",
+            "expr": "al + be*I",
+            "label_en": "r_1",
+            "label_km": "ឫស r_1"
+          },
+          {
+            "id": "r2",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "al - be*I",
+            "expr": "al - be*I",
+            "label_en": "r_2",
+            "label_km": "ឫស r_2"
+          },
+          {
+            "id": "yh",
+            "role": "homogeneous_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x))",
+            "expr": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x))",
+            "label_en": "y_h",
+            "label_km": "ចម្លើយទូទៅនៃសមីការអូម៉ូសែន y_h"
+          },
+          {
+            "id": "A_v",
+            "role": "coefficient",
+            "relation": "solve",
+            "of": "A",
+            "at": "",
+            "equals": "diff(Y, x, 2) - 2*al*diff(Y, x) + (al**2 + be**2)*Y = al**2*m*cos(k*x)+al**2*n*sin(k*x)+2*al*k*m*sin(k*x)-2*al*k*n*cos(k*x)+be**2*m*cos(k*x)+be**2*n*sin(k*x)-k**2*m*cos(k*x)-k**2*n*sin(k*x)",
+            "expr": "m",
+            "label_en": "A",
+            "label_km": "A"
+          },
+          {
+            "id": "B_v",
+            "role": "coefficient",
+            "relation": "solve",
+            "of": "B",
+            "at": "",
+            "equals": "diff(Y, x, 2) - 2*al*diff(Y, x) + (al**2 + be**2)*Y = al**2*m*cos(k*x)+al**2*n*sin(k*x)+2*al*k*m*sin(k*x)-2*al*k*n*cos(k*x)+be**2*m*cos(k*x)+be**2*n*sin(k*x)-k**2*m*cos(k*x)-k**2*n*sin(k*x)",
+            "expr": "n",
+            "label_en": "B",
+            "label_km": "B"
+          },
+          {
+            "id": "yp",
+            "role": "particular_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "A_v*cos(k*x) + B_v*sin(k*x)",
+            "expr": "m*cos(k*x) + n*sin(k*x)",
+            "label_en": "y_p",
+            "label_km": "ចម្លើយពិសេស y_p"
+          },
+          {
+            "id": "yg",
+            "role": "general_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "yh + yp",
+            "expr": "exp(al*x)*(C1*cos(be*x) + C2*sin(be*x)) + m*cos(k*x) + n*sin(k*x)",
+            "label_en": "general solution",
+            "label_km": "ចម្លើយទូទៅ"
+          },
+          {
+            "id": "c1",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C1",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "y0 - m",
+            "label_en": "C_1",
+            "label_km": "ថេរ C_1"
+          },
+          {
+            "id": "c2",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C2",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "(yp0 - al*(y0 - m) - k*n)/be",
+            "label_en": "C_2",
+            "label_km": "ថេរ C_2"
+          }
+        ],
+        "model": "gemini-3.5-flash",
+        "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:distinct_roots_constant_rhs": {
     "methods": [
@@ -1235,7 +1874,8 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:distinct_roots_linear_rhs": {
     "methods": [
@@ -1337,7 +1977,8 @@
         "model": "gemini-2.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:distinct_roots_quadratic_rhs": {
     "methods": [
@@ -1476,8 +2117,119 @@
         ],
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
+      },
+      {
+        "method_id": "direct_particular_solution",
+        "name_en": "Direct Particular Solution",
+        "name_km": "រកចម្លើយពិសេសផ្ទាល់",
+        "definitions": [],
+        "compose": "",
+        "checkpoints": [
+          {
+            "id": "delta",
+            "role": "discriminant",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "(r1 + r2)**2 - 4*r1*r2",
+            "expr": "(r1 - r2)**2",
+            "label_en": "Δ",
+            "label_km": "ឌីសគ្រីមីណង់ Δ"
+          },
+          {
+            "id": "ra",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "r1",
+            "expr": "r1",
+            "label_en": "r_1",
+            "label_km": "ឫស r_1"
+          },
+          {
+            "id": "rb",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "r2",
+            "expr": "r2",
+            "label_en": "r_2",
+            "label_km": "ឫស r_2"
+          },
+          {
+            "id": "yh",
+            "role": "homogeneous_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "C1*exp(ra*x) + C2*exp(rb*x)",
+            "expr": "C1*exp(r1*x) + C2*exp(r2*x)",
+            "label_en": "y_h",
+            "label_km": "ចម្លើយទូទៅនៃសមីការអូម៉ូសែន y_h"
+          },
+          {
+            "id": "yp",
+            "role": "particular_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "s*x**2 + p*x + q",
+            "expr": "s*x**2 + p*x + q",
+            "label_en": "y_p",
+            "label_km": "ចម្លើយពិសេស y_p"
+          },
+          {
+            "id": "yg",
+            "role": "general_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "yh + yp",
+            "expr": "C1*exp(r1*x) + C2*exp(r2*x) + s*x**2 + p*x + q",
+            "label_en": "general solution",
+            "label_km": "ចម្លើយទូទៅ"
+          },
+          {
+            "id": "ygp",
+            "role": "derived",
+            "relation": "derivative",
+            "of": "yg",
+            "at": "",
+            "equals": "",
+            "expr": "C1*r1*exp(r1*x) + C2*r2*exp(r2*x) + 2*s*x + p",
+            "label_en": "y_g'",
+            "label_km": "ដេរីវេ y_g'"
+          },
+          {
+            "id": "c1",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C1",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "(yp0 - p - r2*(y0 - q))/(r1 - r2)",
+            "label_en": "C_1",
+            "label_km": "ថេរ C_1"
+          },
+          {
+            "id": "c2",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C2",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "(r1*(y0 - q) - yp0 + p)/(r1 - r2)",
+            "label_en": "C_2",
+            "label_km": "ថេរ C_2"
+          }
+        ],
+        "model": "gemini-3.5-flash",
+        "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:distinct_roots_trig_rhs": {
     "methods": [
@@ -1606,7 +2358,8 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:double_roots_constant_rhs": {
     "methods": [
@@ -1685,8 +2438,86 @@
         ],
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
+      },
+      {
+        "method_id": "factor_x_first",
+        "name_en": "Homogeneous solution with x-term first",
+        "name_km": "ចម្លើយសមីការអូម៉ូសែនមានតួ x មុន",
+        "definitions": [],
+        "compose": "",
+        "checkpoints": [
+          {
+            "id": "ra",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "r",
+            "expr": "r",
+            "label_en": "r",
+            "label_km": "ឫស r"
+          },
+          {
+            "id": "yh",
+            "role": "homogeneous_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "(C1*x + C2)*exp(r*x)",
+            "expr": "(C1*x + C2)*exp(r*x)",
+            "label_en": "y_h",
+            "label_km": "ចម្លើយទូទៅនៃសមីការអូម៉ូសែន y_h"
+          },
+          {
+            "id": "yp",
+            "role": "particular_solution",
+            "relation": "solve",
+            "of": "A",
+            "at": "",
+            "equals": "r**2*A = q*r**2",
+            "expr": "q",
+            "label_en": "y_p",
+            "label_km": "ចម្លើយពិសេស y_p"
+          },
+          {
+            "id": "yg",
+            "role": "general_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "yh + yp",
+            "expr": "(C1*x + C2)*exp(r*x) + q",
+            "label_en": "general solution",
+            "label_km": "ចម្លើយទូទៅ"
+          },
+          {
+            "id": "c1",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C1",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "yp0 - r*(y0 - q)",
+            "label_en": "C_1",
+            "label_km": "ថេរ C_1"
+          },
+          {
+            "id": "c2",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C2",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "y0 - q",
+            "label_en": "C_2",
+            "label_km": "ថេរ C_2"
+          }
+        ],
+        "model": "gemini-3.5-flash",
+        "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:double_roots_linear_rhs": {
     "methods": [
@@ -1793,7 +2624,8 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:double_roots_quadratic_rhs": {
     "methods": [
@@ -1911,7 +2743,8 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:double_roots_trig_rhs": {
     "methods": [
@@ -1991,7 +2824,8 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:resonant_sin_rhs": {
     "methods": [
@@ -2092,8 +2926,108 @@
         ],
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
+      },
+      {
+        "method_id": "complex_roots_direct",
+        "name_en": "Complex Roots Method",
+        "name_km": "វិធីសាស្ត្រឫសកុំផ្លិច",
+        "definitions": [],
+        "compose": "",
+        "checkpoints": [
+          {
+            "id": "r1",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "w*I",
+            "expr": "w*I",
+            "label_en": "r_1",
+            "label_km": "ឫស r_1"
+          },
+          {
+            "id": "r2",
+            "role": "root",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "-w*I",
+            "expr": "-w*I",
+            "label_en": "r_2",
+            "label_km": "ឫស r_2"
+          },
+          {
+            "id": "yh",
+            "role": "homogeneous_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "C1*cos(w*x) + C2*sin(w*x)",
+            "expr": "C1*cos(w*x) + C2*sin(w*x)",
+            "label_en": "y_h",
+            "label_km": "ចម្លើយទូទៅនៃសមីការអូម៉ូសែន y_h"
+          },
+          {
+            "id": "A_v",
+            "role": "coefficient",
+            "relation": "solve",
+            "of": "A",
+            "at": "",
+            "equals": "diff(A*x*cos(w*x), x, 2) + w**2*A*x*cos(w*x) = m*sin(w*x)",
+            "expr": "-m/(2*w)",
+            "label_en": "A",
+            "label_km": "A"
+          },
+          {
+            "id": "yp",
+            "role": "particular_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "A_v*x*cos(w*x)",
+            "expr": "-m*x*cos(w*x)/(2*w)",
+            "label_en": "y_p",
+            "label_km": "ចម្លើយពិសេស y_p"
+          },
+          {
+            "id": "yg",
+            "role": "general_solution",
+            "relation": "combination",
+            "of": "",
+            "at": "",
+            "equals": "yh + yp",
+            "expr": "C1*cos(w*x) + C2*sin(w*x) - m*x*cos(w*x)/(2*w)",
+            "label_en": "general solution",
+            "label_km": "ចម្លើយទូទៅ"
+          },
+          {
+            "id": "c1",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C1",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "y0",
+            "label_en": "C_1",
+            "label_km": "ថេរ C_1"
+          },
+          {
+            "id": "c2",
+            "role": "constant",
+            "relation": "solve",
+            "of": "C2",
+            "at": "",
+            "equals": "yg.subs(x, 0) = y0; diff(yg, x).subs(x, 0) = yp0",
+            "expr": "(2*yp0*w + m)/(2*w**2)",
+            "label_en": "C_2",
+            "label_km": "ថេរ C_2"
+          }
+        ],
+        "model": "gemini-3.5-flash",
+        "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   },
   "ode:second_nonhom:zero_c_constant_rhs": {
     "methods": [
@@ -2195,6 +3129,7 @@
         "model": "gemini-3.5-flash",
         "generated_at": "2026-10-02"
       }
-    ]
+    ],
+    "alternatives_checked": "2026-10-02"
   }
 }
