@@ -24,10 +24,13 @@ backend/engine/
                        limit and integral generators
     expr_shared.py      problem-dict builder + small expr formatters, shared
                        by the limit and integral generators
-    rubric.py           build_rubric()/score_work() — deterministic,
+    rubric.py           the points-rubric toolkit — deterministic,
                        step-by-step POINTS scoring for ANY topic's live/
                        generated question (not just past_exam's historical
-                       exams): derives a rubric mechanically from that
+                       exams); each topic's own rules live in
+                       topics/<topic>/rubric.py, routed by engine/rubric.py
+                       (default policy: default_score_work). It
+                       derives a rubric mechanically from that
                        question's own solve() checkpoints/parts (step-count-
                        weighted across parts, 40%-final/60%-intermediate
                        within one part), then matches a student's full
@@ -39,6 +42,24 @@ backend/engine/
                        for the historical-exam variant that hand-lists
                        steps instead, since a real paper's numbers don't
                        change).
+    blueprints.py       per-template solution blueprints: an LLM plans each
+                       template's graded steps once (definitions + checkpoint
+                       relations), SymPy validates the plan on random
+                       instances and recomputes every value at grading time.
+                       A template may have several methods (alternative
+                       solution paths, --alternatives); the topic's rubric.py
+                       (core.rubric.method_rubric) grades the work against
+                       the one it follows, and for derivatives lines no
+                       method predicts are judged true/false on their own
+                       (grading._ClaimChecker, "verify_claims").
+                       Relations: derivative, outer_derivative, combination,
+                       substitute, solve (a topic adds more with register()).
+                       A topic whose question isn't one y(x) passes named
+                       givens and its extra symbols (an ODE's C1, C2).
+                       Stored in topics/<topic>/data/blueprints.json, written
+                       by scripts/generate_blueprints.py --topic <topic> with
+                       topics/<topic>/blueprint_spec.py (derivatives,
+                       differential_equations, integral).
   llm.py, vision.py, notation.py, explainer.py, formulas.py, cache.py
                         # cross-cutting infra, not topic-specific
 
@@ -47,16 +68,40 @@ backend/engine/
                         arithmetic, power, De Moivre, nth roots — see below
     limit/               solver.py, generator.py, structures.py (curated pool +
                         technique registry), grader.py, data/curated/*.json
-    integral/            solver.py, generator.py, structures.py (the 168-shape
-                        registry backing the admin /templates page), grader.py
+    integral/            solver.py, generator.py, grader.py, structures.py (the
+                        168-shape registry, ids integral:<name>; every question
+                        is sampled from it — audit: scripts/audit_integral_structures.py),
+                        blueprint_spec.py (integrand y, bounds lo/hi; a
+                        substitution/by-parts compose must rebuild y; roles:
+                        F, term antiderivatives, F(lo)/F(hi), new bounds) +
+                        data/blueprints.json, rubric.py (default policy, the
+                        blueprint method the work follows)
     probability/          solver.py, generator.py (scenario-based), counting.py
                         (combinatorics question_type), scenarios.py, grader.py
                         (multi-part grading), data/scenarios/, data/counting/
     functions/            solver.py, display.py (Khmer/English wording),
                         generator.py, grader.py (+ grade_graph_check),
                         graph_grader.py/graph_renderer.py, data/curated/*.json
-    continuity/, derivatives/, differential_equations/, vectors_space/, conics/
-                        solver.py, generator.py, grader.py, data/curated/curated.json
+    derivatives/          solver.py, generator.py, grader.py, structures.py (the
+                        template registry — every question is sampled from one
+                        of its structures; audit: scripts/audit_derivative_structures.py),
+                        blueprint_spec.py + data/blueprints.json (graded steps),
+                        rubric.py (full marks only for complete work — a
+                        step may be shown as a term of a sum; the
+                        blueprint method the work follows)
+    differential_equations/
+                        solver.py, generator.py, grader.py, structures.py (the
+                        template registry, built from the roots and the
+                        particular solution; the 30 textbook exercises are
+                        instances — audit: scripts/audit_ode_structures.py),
+                        blueprint_spec.py (each step's role is verified:
+                        roots, y_p, general solution, constants) +
+                        data/blueprints.json, rubric.py (default policy, the
+                        blueprint method the work follows)
+    continuity/, vectors_space/, conics/
+                        solver.py, generator.py, grader.py, rubric.py (default
+                        policy), data/curated/curated.json
+    (every topic folder has a rubric.py — its own points-scoring rules)
     past_exam/            verbatim replay of a full past exam paper (not a
                         randomized template) — solver.py only for the question
                         shapes no other topic covers; data/curated/<year>.json.

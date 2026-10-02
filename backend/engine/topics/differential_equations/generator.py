@@ -1,12 +1,14 @@
-"""Differential-equation generation: curated real BAC II / textbook exercises
-from data/curated/*.json mixed with equations built from chosen characteristic
-roots and particular solutions. SymPy's dsolve recomputes the solution at solve time."""
-import json
-import os
+"""Differential-equation generation: every question is sampled from the
+structure registry (``structures.py``) — no verbatim curated exercises (each
+of those is an instance of a structure). SymPy's dsolve recomputes the
+solution at solve time. Every question records its structure
+(``params["template_id"]``) and slot values (``params["template_params"]``)."""
+import random
+import zlib
 
-from sympy import Symbol, cos, diff, expand, latex, sin, sympify
+from sympy import Symbol, latex, sympify
 
-_CATALOG_DIR = os.path.join(os.path.dirname(__file__), "data", "curated")
+from .structures import ODE_KINDS, ODE_STRUCTURES, STRUCTURES_BY_ID, instantiate
 
 _KIND_LABEL = {
     "first_order_linear_homogeneous": "y' + a y = 0",
@@ -14,26 +16,6 @@ _KIND_LABEL = {
     "second_order_homogeneous_constant_coeff": "y'' + b y' + c y = 0",
     "second_order_nonhomogeneous": "y'' + b y' + c y = g(x)",
 }
-
-
-def _load():
-    pool = []
-    try:
-        files = sorted(f for f in os.listdir(_CATALOG_DIR) if f.endswith(".json"))
-    except OSError:
-        files = []
-    for fname in files:
-        try:
-            with open(os.path.join(_CATALOG_DIR, fname), encoding="utf-8") as f:
-                items = json.load(f)
-        except (OSError, json.JSONDecodeError):
-            continue
-        if isinstance(items, list):
-            pool.extend(items)
-    return pool
-
-
-_ODE_CURATED = _load()
 
 
 def _term(coeff_str, symbol, first):
@@ -77,9 +59,9 @@ def _ics_latex(ics):
     return r",\ ".join(parts)
 
 
-def _build_curated_ode(item):
+def _build_problem(item):
     params = dict(item)
-    display = f"{_KIND_LABEL.get(item['kind'], item['kind'])} ({item.get('id')})"
+    display = _KIND_LABEL.get(item["kind"], item["kind"])
     eq_l = _equation_latex(item)
     ics_l = _ics_latex(item.get("ics"))
     prompt_latex = rf"\text{{Solve: }} {eq_l}" + (rf"\\[4pt] \text{{with }} {ics_l}." if ics_l else r"\text{ (general solution).}")
@@ -93,124 +75,86 @@ def _build_curated_ode(item):
         "prompt": f"Solve the differential equation: {display}"
         + (" with the given initial conditions." if item.get("ics") else " (find the general solution)."),
         "prompt_latex": prompt_latex,
-        "source": "curated",
+        "source": "generated",
     }
 
 
-_KINDS = tuple(_KIND_LABEL)
-_x = Symbol("x")
-
-_ODE_TECHNIQUE = {
-    "first_order_linear_homogeneous":
-        "y' + ay = 0 has general solution y = Ce^{-ax}; use the initial condition to find C.",
-    "first_order_linear_nonhomogeneous":
-        "Solve y' + ay = 0, add a particular solution of the same form as the right-hand side, "
-        "then use the initial condition to find C.",
-    "second_order_homogeneous_constant_coeff":
-        "Solve the characteristic equation r^2 + br + c = 0; distinct, repeated or complex roots give the "
-        "form of the general solution, then use the initial conditions to find C1 and C2.",
-    "second_order_nonhomogeneous":
-        "General solution = homogeneous solution (from r^2 + br + c = 0) + a particular solution shaped like "
-        "the right-hand side; then use the initial conditions to find C1 and C2.",
-}
+_KINDS = ODE_KINDS
 
 
-def _nz(rng, lo, hi):
-    return rng.choice([v for v in range(lo, hi + 1) if v != 0])
+def _structure_problem(struct, values, difficulty=None):
+    params = {
+        **instantiate(struct, values),
+        "difficulty": difficulty or struct["difficulty"],
+        "var": struct["var"],
+        "curated_technique": struct["narration"],
+        "template_id": struct["id"],
+        # Nested, so the grader never mistakes a slot name for a given.
+        "template_params": dict(values),
+    }
+    return _build_problem(params)
 
 
-def _roots(rng, difficulty):
-    """(b, c) of r^2 + br + c from roots chosen first, so every solution is clean."""
-    form = {"easy": "distinct", "medium": rng.choice(("distinct", "repeated")),
-            "hard": rng.choice(("distinct", "repeated", "complex", "complex"))}[difficulty]
-    if form == "distinct":
-        r1, r2 = rng.sample([v for v in range(-4, 5)], 2)
-        return -(r1 + r2), r1 * r2, form
-    if form == "repeated":
-        r = _nz(rng, -4, 4)
-        return -2 * r, r * r, form
-    alpha, beta = rng.randint(-2, 2), rng.randint(1, 4)
-    return -2 * alpha, alpha * alpha + beta * beta, form
-
-
-def _ode_lhs(kind, params, y_p):
-    if kind.startswith("first"):
-        return expand(diff(y_p, _x) + sympify(params["a"]) * y_p)
-    return expand(diff(y_p, _x, 2) + sympify(params["b"]) * diff(y_p, _x) + sympify(params["c"]) * y_p)
-
-
-def _avoid_trivial_ics(rng, ics, y_p, first_order):
-    """Re-roll y(x0) when the initial conditions match the particular solution,
-    which would zero every constant and make the answer just y_p."""
-    x0 = sympify(ics["x0"])
-    while True:
-        same_value = sympify(ics["y0"]) == y_p.subs(_x, x0)
-        same_slope = first_order or sympify(ics["yp0"]) == diff(y_p, _x).subs(_x, x0)
-        if not (same_value and same_slope):
-            return
-        ics["y0"] = str(rng.randint(-3, 5))
-
-
-def _sample_ode_item(rng, kind, difficulty):
-    params = {"kind": kind, "difficulty": difficulty, "curated_technique": _ODE_TECHNIQUE[kind]}
-    ics = {"x0": "0", "y0": str(rng.randint(-3, 5))}
-    if kind == "first_order_linear_homogeneous":
-        params["a"] = str(_nz(rng, -4, 4) if difficulty == "easy" else _nz(rng, -6, 6))
-        if ics["y0"] == "0":
-            ics["y0"] = str(_nz(rng, -3, 5))
-    elif kind == "first_order_linear_nonhomogeneous":
-        a = _nz(rng, -4, 4)
-        params["a"] = str(a)
-        if difficulty == "easy":
-            y_p = _nz(rng, -5, 5)
-        elif difficulty == "medium":
-            y_p = rng.choice((_nz(rng, -5, 5), _nz(rng, -3, 3) * _x + rng.randint(-4, 4)))
-        else:
-            y_p = rng.choice((_nz(rng, -3, 3) * _x + rng.randint(-4, 4),
-                              _nz(rng, -3, 3) * cos(_x) + rng.randint(-3, 3) * sin(_x)))
-        params["rhs"] = str(_ode_lhs(kind, params, sympify(y_p)))
-        _avoid_trivial_ics(rng, ics, sympify(y_p), first_order=True)
-    else:
-        b, c, form = _roots(rng, difficulty)
-        params["b"], params["c"] = str(b), str(c)
-        ics["yp0"] = str(rng.randint(-5, 5))
-        if form == "complex" and b == 0 and rng.random() < 0.4:
-            ics["x0"] = "pi/2"
-        if kind == "second_order_nonhomogeneous":
-            if c == 0:
-                c = 1
-                params["c"] = "1"
-            y_p = rng.choice([
-                _nz(rng, -5, 5),
-                _nz(rng, -3, 3) * _x + rng.randint(-4, 4),
-                _nz(rng, -2, 2) * _x**2 + rng.randint(-3, 3) * _x + rng.randint(-3, 3),
-            ] + ([_nz(rng, -3, 3) * cos(2 * _x) + rng.randint(-2, 2) * sin(2 * _x)]
-                 if not (b == 0 and c == 4) else []))
-            params["rhs"] = str(_ode_lhs(kind, params, sympify(y_p)))
-            _avoid_trivial_ics(rng, ics, sympify(y_p), first_order=False)
-        else:
-            _avoid_trivial_ics(rng, ics, sympify(0), first_order=False)
-    params["ics"] = ics
-    return params
+def generate_ode_for_structure(rng, struct, difficulty=None):
+    """One exercise sampled from a registry structure."""
+    _, values = struct["sampler"](rng)
+    return _structure_problem(struct, values, difficulty)
 
 
 def generate_ode_for_kind(rng, kind, difficulty="medium"):
-    problem = _build_curated_ode(_sample_ode_item(rng, kind, difficulty))
-    label = _KIND_LABEL[kind]
-    problem["z_display"] = problem["z_latex"] = label
-    problem["prompt"] = f"Solve the differential equation: {label} with the given initial conditions."
-    problem["source"] = "generated"
-    return problem
+    """One exercise of an ODE kind: a structure of that kind at `difficulty`
+    (any difficulty if the kind has none there)."""
+    pool = [s for s in ODE_STRUCTURES if s["category"] == kind]
+    at_diff = [s for s in pool if s["difficulty"] == difficulty]
+    return generate_ode_for_structure(rng, rng.choice(at_diff or pool), difficulty)
 
 
 def _generate_differential_equations(rng, difficulty, question_type=None, variant=None):
-    """Half real curated exercises, half procedurally sampled ones. `variant` is
-    a `kind` (first/second order, homogeneous or not); unknown variants are ignored."""
+    """`variant` is an ODE `kind` (first/second order, homogeneous or not) or a
+    structure id from the registry (e.g. "ode:second_hom:double_root");
+    unknown variants are ignored rather than fatal, so a stale practice link
+    still yields a question."""
     if question_type not in (None, "solve_ode"):
         raise ValueError(f"question_type {question_type} does not match topic differential_equations")
-    kind = variant if variant in _KINDS else None
-    curated = [t for t in _ODE_CURATED
-               if t.get("difficulty") == difficulty and (kind is None or t.get("kind") == kind)]
-    if curated and rng.random() < 0.5:
-        return _build_curated_ode(rng.choice(curated))
-    return generate_ode_for_kind(rng, kind or rng.choice(_KINDS), difficulty)
+    if variant in STRUCTURES_BY_ID:
+        return generate_ode_for_structure(rng, STRUCTURES_BY_ID[variant])
+    kind = variant if variant in _KINDS else rng.choice(_KINDS)
+    return generate_ode_for_kind(rng, kind, difficulty)
+
+
+def build_ode_variant(struct, seed=0, template_params=None):
+    """One worked example of a structure for the admin template card: the
+    sampled (or, with `template_params`, the given) exercise plus SymPy's
+    answer and steps."""
+    from ...core.dispatch import solve
+
+    if template_params is None:
+        problem = generate_ode_for_structure(random.Random(seed), struct)
+    else:
+        problem = _structure_problem(struct, template_params)
+    sol = solve("differential_equations", "solve_ode", problem["params"])
+    return {
+        "params": problem["params"]["template_params"],
+        "prompt": problem["prompt"],
+        "prompt_latex": problem["prompt_latex"],
+        "answer_exact": str(sol["answer_exact"]),
+        "answer_latex": sol["answer_latex"],
+        "steps": sol.get("steps", []),
+        "formula_tags": sol.get("formula_tags", []),
+    }
+
+
+def build_ode_variants(struct, count=3, seed=None):
+    """Up to `count` distinct worked variants (distinct slot values)."""
+    base = (zlib.crc32(struct["id"].encode()) & 0xFFFFFFFF) if seed is None else seed
+    variants, seen = [], set()
+    for i in range(20):
+        if len(variants) >= count:
+            break
+        v = build_ode_variant(struct, base + i * 31337)
+        sig = tuple(sorted(v["params"].items()))
+        if sig in seen:
+            continue
+        seen.add(sig)
+        variants.append({"variant_index": len(variants) + 1, **v})
+    return variants

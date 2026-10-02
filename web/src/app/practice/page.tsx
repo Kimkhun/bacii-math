@@ -11,6 +11,7 @@ import FunctionGraph from "@/components/FunctionGraph";
 import { VariationTable } from "@/components/StructureModal";
 import LessonModal from "@/components/LessonModal";
 import { api, Question, GradeResult, Explanation, DetectResult, SessionSummary, FormulaEntry, GraphGradeResult, HintResponse, Skill, StrokeDoc } from "@/lib/api";
+import { templateQuestionType, templateTopic } from "@/lib/templateIds";
 import { getStreak, playGradeSound, playMarkSound, updateStreak } from "@/lib/sounds";
 import { drawingAudio } from "@/lib/audioEngine";
 import { useLanguage } from "@/context/LanguageContext";
@@ -1154,19 +1155,8 @@ function PracticeInner() {
       try {
         const paramTopic = searchParams.get("topic");
         const paramDiff = searchParams.get("difficulty") || "medium";
-        const resolvedTopic =
-          paramTopic || (templateId.includes(":") ? templateId.split(":")[0] : "limit");
-
-        let qType = resolvedTopic;
-        if (resolvedTopic === "integral") {
-          if (templateId.startsWith("indefinite_") || templateId.startsWith("curated_")) {
-            qType = "indefinite_integral";
-          } else {
-            qType = "definite_integral";
-          }
-        } else if (resolvedTopic === "limit") {
-          qType = "limit";
-        }
+        const resolvedTopic = paramTopic || templateTopic(templateId);
+        const qType = templateQuestionType(resolvedTopic, templateId);
 
         const cfg: SessionConfig = {
           mode: "templates",
@@ -2807,8 +2797,19 @@ function PracticeInner() {
                         key={i}
                         className={`text-[11px] ${b.points_earned > 0 ? "text-emerald-700" : "text-paper-600"}`}
                       >
-                        {b.points_earned > 0 ? "✓" : "✗"} {b.label} ({b.points_earned.toFixed(1)}/
-                        {b.points_possible.toFixed(1)})
+                        {b.points_earned > 0 ? "✓" : "✗"}{" "}
+                        {b.label_latex ? <MathText text={`$${b.label_latex}$`} className="inline" /> : b.label} (
+                        {b.points_earned.toFixed(1)}/{b.points_possible.toFixed(1)})
+                        {b.as_term && <span className="text-[#8a857b]"> — {t("label_step_in_answer")}</span>}
+                        {b.points_earned === 0 && b.expected_latex && b.label !== "final answer" && (
+                          <div className="ml-3 text-[#b4442f]">
+                            {t("label_step_not_shown")}{" "}
+                            <MathText
+                              text={`$${b.label_latex ? `${b.label_latex} = ` : ""}${b.expected_latex}$`}
+                              className="inline"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

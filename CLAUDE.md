@@ -106,14 +106,16 @@ Next.js web (3016) --REST/JSON, Bearer JWT--> FastAPI backend (8016)
   endpoint's use case (create question, grade, explain, stats, exam replay, template introspection,
   skill tracking + profile). This is the place to look first to understand a request's full flow.
 - `engine/` — the math/AI core, framework-agnostic, organized **by topic**:
-  - `solver.py` / `generator.py` / `grader.py` — thin public facade modules (do not rename); each
-    re-exports the real implementation from `engine/core/` and `engine/topics/<topic>/`.
+  - `solver.py` / `generator.py` / `grader.py` / `rubric.py` — thin public facade modules (do not
+    rename); each re-exports the real implementation from `engine/core/` and `engine/topics/<topic>/`
+    (`rubric.py` routes `score_work`/`build_rubric` to the question's topic's own `rubric.py`).
   - `core/` — the topic-neutral kernel: `dispatch.py` (routes `solve()`/`generate()` to the right
     topic), `grading.py` (`parse_answer`/`analyze_work`/`grade`/`grade_part` + every generic
     answer-kind judge — compares a user answer against the SymPy-exact answer, exact or
-    tolerance-based), `rubric.py` (deterministic step-by-step points rubric for generated/live
-    questions of any topic — derives per-checkpoint point weights mechanically from the same
-    `checkpoints` list `solve()` already returns, so no topic hand-lists point values), `shared.py`
+    tolerance-based), `rubric.py` (the step-by-step points-rubric toolkit — derives per-checkpoint
+    point weights mechanically from the same `checkpoints` list `solve()` already returns, so no
+    topic hand-lists point values; each topic's own scoring rules live in
+    `engine/topics/<topic>/rubric.py`, routed by `engine/rubric.py`), `shared.py`
     (question-type registry + small SymPy formatting helpers), `slots.py`/`expr_shared.py`
     (template-filling helpers shared by the limit/integral generators), `skills.py` (the skill
     taxonomy — one leaf per practisable exercise type, derived from the generators' own registries),
@@ -174,6 +176,25 @@ point weights mechanically from an ordered list of graded steps — the last ste
 of that part's points, the rest split the remaining 60% evenly — rather than hand-typing point values;
 they differ only in where that step list comes from (the generic solver's `checkpoints` vs. a
 hand-listed order matching the printed exam paper). See the module docstrings for the full rationale.
+Each topic owns its scoring rules in `engine/topics/<topic>/rubric.py` (`build_rubric`/`score_work`,
+called through `engine/rubric.py`); most reuse the default policy in `core/rubric.py` (credit for
+steps implied by a later correct one), while derivatives only gives full marks when every step is
+shown (a step written as a term of the answer, `4 - 2e^{-2x}`, counts, and so does a rule written with
+`(E)'` notation and then substituted, `(1/x)' cos(1/x) = -1/x^2 cos(1/x)`), and scores the work against
+the blueprint method it follows.
+
+### Template registries & solution blueprints
+Derivatives, differential equations and integrals generate every question from a structure registry
+(`engine/topics/<topic>/structures.py`: named templates with `{slot}` parameters and a sampler; the
+former curated textbook exercises are recorded as instances of them) and tag it with
+`params.template_id`/`params.template_params`. Each template has a *blueprint* in the topic's
+`data/blueprints.json` — its marking scheme, planned once offline by Gemini
+(`scripts/generate_blueprints.py --topic <topic>`, prompt and checks in the topic's `blueprint_spec.py`).
+A blueprint never supplies a trusted value: each checkpoint is a relation (derivative, combination,
+substitute, solve, ...) that SymPy evaluates on the question's own numbers, and a blueprint is saved only
+after SymPy validates it on random instances (`engine/core/blueprints.py`). Verify a topic end to end with
+`scripts/simulate_blueprint_students.py --topic <topic>` and its registry with `scripts/audit_<topic>_structures.py`.
+Migrating another topic to this pattern: `docs/template-blueprint-migration.md`.
 
 ### Skill progress & practice suggestions
 Every graded attempt also updates two hidden trackers (`SkillState` rows): one for the **exercise

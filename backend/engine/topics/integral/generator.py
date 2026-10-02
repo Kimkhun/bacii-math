@@ -1,25 +1,16 @@
-"""Integral generation: definite (polynomial, trig, linear_argument, u_substitution,
-mixed_sum, by_parts) and indefinite (power, expand, split, linear_argument, usub,
-trig_sec) variants, plus the difficulty variant tables."""
-from engine.core.expr_shared import _build_expr_problem, _expr_latex, _fmt_poly
-from engine.core.slots import _fill
+"""Integral generation: every question is sampled from the structure registry
+(``structures.py``) — definite (polynomial, trig, linear_argument,
+u_substitution, mixed_sum, by_parts) and indefinite (power, indefinite_sum,
+expand, split, linear_argument, usub, trig_sec) — and records its structure
+(``params["template_id"]``) and slot values + bounds
+(``params["template_params"]``), so the structure's blueprint supplies the
+graded steps. SymPy computes the answer at solve time."""
+import re
+
+from engine.core.expr_shared import _build_expr_problem, _expr_latex
 from engine.notation import pretty_expr, pretty_point
 
-from .structures import (
-    _bound_latex,
-    _def_structures,
-    _indef_structures,
-    _new_def_structures,
-    _new_indef_structures,
-    build_sample,
-    _INDEF_EXPAND_TEMPLATES,
-    _INDEFINITE_TEMPLATES,
-    _INDEF_LINEAR_TEMPLATES,
-    _INDEF_SPLIT_TEMPLATES,
-    _INDEF_TRIG_SQ_TEMPLATES,
-    _INDEF_USUB_TEMPLATES,
-)
-
+from .structures import _bound_latex, all_integral_structures, structure_by_id
 
 _INTEGRAL_VARIANT_BY_DIFFICULTY = {
     "easy": ["polynomial"],
@@ -33,282 +24,35 @@ _INDEFINITE_VARIANT_BY_DIFFICULTY = {
     "hard": ["usub", "split", "trig_sec", "linear_argument", "expand"],
 }
 
-#: Templates transcribed from the textbook's exercises. The hand-written
-#: shapes below already cover every other admin template, so these are the
-#: ones that must be drawn from structures.py directly.
-_TEXTBOOK_STRUCTURES = {}
-for _s in _new_indef_structures() + _new_def_structures():
-    _TEXTBOOK_STRUCTURES.setdefault((_s["question_type"], _s["variant"]), []).append(_s)
-_ORIGINAL_COUNT = {}
-for _s in _indef_structures() + _def_structures():
-    _key = (_s["question_type"], _s["variant"])
-    _ORIGINAL_COUNT[_key] = _ORIGINAL_COUNT.get(_key, 0) + 1
+_DEF = "definite_integral"
+_IND = "indefinite_integral"
 
-#: Largest definite-integral answer a textbook template may produce in practice.
-_MAX_DEFINITE_ANSWER = 100
+#: A sec^2 / csc^2 term (1/cos^2, 1/sin^2): what the "trig_sec" skill practises.
+_SEC_CSC = re.compile(r"/(cos|sin)\(\{v\}\)\*\*2")
 
 
-def _textbook_problem(rng, question_type, variant, difficulty):
-    """With probability equal to the textbook templates' share of this
-    technique (capped at half, so hand-written shapes keep appearing), build
-    the exercise from a textbook template. Returns None to fall through."""
-    pool = _TEXTBOOK_STRUCTURES.get((question_type, variant))
+def _serves(struct, question_type, variant):
+    """Whether `struct` answers a request for `variant` of `question_type`:
+    its own variant, plus — as the old samplers did — the textbook sums for
+    "power", and every sec^2/csc^2 shape for "trig_sec"."""
+    if struct["question_type"] != question_type:
+        return False
+    if struct["variant"] == variant:
+        return True
+    if variant == "power":
+        return struct["variant"] == "indefinite_sum"
+    if variant == "trig_sec":
+        return bool(_SEC_CSC.search(struct["pattern"]))
+    return False
+
+
+def _pick(rng, question_type, variant, difficulty):
+    pool = [s for s in all_integral_structures() if _serves(s, question_type, variant)]
     if not pool:
-        return None
-    share = len(pool) / (len(pool) + max(_ORIGINAL_COUNT.get((question_type, variant), 0), len(pool)))
-    if rng.random() >= share:
-        return None
-    struct = rng.choice([t for t in pool if t["difficulty"] == difficulty] or pool)
-    try:
-        sample = build_sample(struct, rng.randrange(2**31), max_abs=_MAX_DEFINITE_ANSWER)
-    except ValueError:
-        return None
-    params = sample["params"]
-    var = params["var"]
-    if question_type == "indefinite_integral":
-        problem = _build_indefinite(params["expr"], var, difficulty, variant)
-    else:
-        lower, upper, func = params["lower"], params["upper"], params["expr"]
-        problem = _build_expr_problem(
-            "integral", "definite_integral", params, difficulty,
-            f"Compute ∫ from {var} = {pretty_point(lower)} to {var} = {pretty_point(upper)} "
-            f"of {pretty_expr(func)} d{var}.",
-            rf"\text{{Compute }} \int_{{{_bound_latex(lower, var)}}}^{{{_bound_latex(upper, var)}}} "
-            rf"{_expr_latex(func, var)}\,d{var}",
-            f"\\int_{{{lower}}}^{{{upper}}} ({func})\\,d{var}",
-        )
-    problem["params"]["structure"] = struct["id"]
-    return problem
+        raise ValueError(f"no integral structure for {question_type} / {variant}")
+    at_diff = [s for s in pool if s["difficulty"] == difficulty]
+    return rng.choice(at_diff or pool)
 
-
-def _generate_integral(rng, difficulty, variant=None):
-    variant = variant or rng.choice(_INTEGRAL_VARIANT_BY_DIFFICULTY[difficulty])
-    textbook = _textbook_problem(rng, "definite_integral", variant, difficulty)
-    if textbook is not None:
-        return textbook
-
-    if variant == "trig":
-        # c·sin(x) or c·cos(x) over bounds whose answers stay clean:
-        # sin: 0→π/2 gives c, 0→π/3 gives c/2; cos: 0→π/2 gives c, 0→π/6 gives c/2.
-        coef = rng.choice([1, 2, 3, 5])
-        kind = rng.choice(["sin", "cos"])
-        upper = rng.choice(["pi/2", "pi/3"] if kind == "sin" else ["pi/2", "pi/6"])
-        func = f"{coef}*{kind}(x)" if coef != 1 else f"{kind}(x)"
-        lower = "0"
-        bounds_latex = ("0", upper.replace("pi", r"\pi"))
-    elif variant == "linear_argument":
-        # ∫f(kx+b) forms over [0,1] (or clean trig bounds). Trig keeps b=0;
-        # reciprocal/sqrt force b ≥ 1 so the integral is proper at x = 0.
-        k = rng.randint(2, 5)
-        kind = rng.choice(["sin", "cos", "e", "power", "reciprocal", "sqrt"])
-        b = rng.choice([0, 0, 1, 2, -1])
-        if kind in ("reciprocal", "sqrt") and b <= 0:
-            b = 1
-        if kind in ("sin", "cos"):
-            func = f"{kind}({k}*x)"
-            lower, upper = "0", f"pi/(2*{k})"
-            bounds_latex = ("0", rf"\pi/(2\cdot{k})")
-        elif kind == "e":
-            func = f"e**({k}*x+{b})" if b else f"e**({k}*x)"
-            lower, upper = "0", "1"
-            bounds_latex = ("0", "1")
-        elif kind == "power":
-            n = rng.randint(2, 3)
-            arg = f"{k}*x+{b}" if b else f"{k}*x"
-            func = f"({arg})**{n}"
-            lower, upper = "0", "1"
-            bounds_latex = ("0", "1")
-        elif kind == "sqrt":
-            arg = f"{k}*x+{b}" if b else f"{k}*x"
-            func = f"1/sqrt({arg})"
-            lower, upper = "0", "1"
-            bounds_latex = ("0", "1")
-        else:  # reciprocal
-            arg = f"{k}*x+{b}" if b else f"{k}*x"
-            func = f"1/({arg})"
-            lower, upper = "0", "1"
-            bounds_latex = ("0", "1")
-    elif variant == "u_substitution":
-        # ∫u'·f(u) definite forms. Bounds are chosen so the substituted
-        # endpoints stay clean numbers (or special trig values).
-        ukind = rng.choice([
-            "power", "reciprocal", "exp", "sin", "cos", "quad_pow", "quad_recip",
-            "trig_power", "ln_pow", "e_recip", "kx2_exp", "sqrt", "sinx_over",
-        ])
-        if ukind in ("power", "reciprocal", "exp", "sin", "cos"):
-            c = rng.randint(1, 3)
-            degree = rng.choice([2, 2, 3])
-            if degree == 2:
-                u, ud = f"x**2+{c}", "2*x"
-            else:
-                u, ud = f"x**3+{c}", "3*x**2"
-            lower, upper = "0", "1"
-            bounds_latex = ("0", "1")
-            if ukind == "power":
-                n = rng.randint(2, 3)
-                func = f"{ud}*({u})**{n}"
-            elif ukind == "reciprocal":
-                func = f"{ud}/({u})"
-            elif ukind == "exp":
-                func = f"{ud}*e**({u})"
-            else:
-                func = f"{ud}*{ukind}({u})"
-        elif ukind in ("quad_pow", "quad_recip"):
-            a = rng.randint(1, 3)
-            c = rng.randint(1, 4)
-            u = f"x**2 + {a}*x + {c}"
-            ud = f"{a} + 2*x"
-            if ukind == "quad_pow":
-                n = rng.randint(2, 3)
-                func = f"({ud})*({u})**{n}"
-            else:
-                func = f"({ud})/({u})"
-            lower, upper = "0", "1"
-            bounds_latex = ("0", "1")
-        elif ukind == "trig_power":
-            n = rng.randint(2, 4)
-            func = rng.choice([f"sin(x)*cos(x)**{n}", f"cos(x)*sin(x)**{n}"])
-            lower, upper = "0", "pi/2"
-            bounds_latex = ("0", r"\pi/2")
-        elif ukind == "ln_pow":
-            n = rng.randint(2, 4)
-            func = f"ln(x)**{n}/x"
-            lower, upper = "1", "e"
-            bounds_latex = ("1", "e")
-        elif ukind == "e_recip":
-            c = rng.randint(2, 4)
-            func = f"e**x/(e**x + {c})"
-            lower, upper = "0", "1"
-            bounds_latex = ("0", "1")
-        elif ukind == "kx2_exp":
-            k = rng.randint(2, 3)
-            c = rng.randint(1, 3)
-            func = f"{k}*x*e**({k}*x**2 + {c})"
-            lower, upper = "0", "1"
-            bounds_latex = ("0", "1")
-        elif ukind == "sqrt":
-            b = rng.randint(1, 3)
-            c = rng.randint(1, 4)
-            func = f"{b}*x/sqrt({b}*x**2 + {c})"
-            lower, upper = "0", "1"
-            bounds_latex = ("0", "1")
-        else:  # sinx_over — u = a + cos x, u' = -sin x, clean on (π/3, π/2)
-            a = rng.randint(1, 3)
-            func = f"sin(x)/({a} + cos(x))"
-            lower, upper = "pi/3", "pi/2"
-            bounds_latex = (r"\pi/3", r"\pi/2")
-    elif variant == "mixed_sum":
-        # Sums of basic terms (Part III S1): algebraic+exponential over integer
-        # bounds, or a trig set over special-angle bounds. Bounds avoid the
-        # singularities of the source material (never 1/x through 0).
-        if rng.random() < 0.6:
-            # algebraic + exponential over integer bounds (products, negative
-            # bounds and 1/xⁿ forms are safe — no 1/x through 0).
-            tpl, safe_bounds = rng.choice([
-                ("{a}*x**2 + {b}*x + {c}", [("1", "2"), ("1", "3"), ("2", "3")]),
-                ("{a}*x**2 + {b}/x + {f}*e**x", [("1", "2"), ("1", "3"), ("2", "3")]),
-                ("{a}/x + {b}/x**2 + {f}*e**x", [("1", "2"), ("1", "3"), ("2", "3")]),
-                ("{a}*x**2 - {b}*x + {c} + {d}/x", [("1", "2"), ("1", "3"), ("2", "3")]),
-                ("{a}*sqrt(x) + {b}/sqrt(x) + {c}", [("1", "2"), ("1", "3"), ("2", "3")]),
-                ("{a}*x**2 + {b}*x + {c} + {f}*e**x", [("1", "2"), ("1", "3"), ("2", "3")]),
-                ("({a}*x - {b})*({c}*x + {d})", [("1", "2"), ("0", "1"), ("-1", "0"), ("-2", "-1")]),
-                ("{a} + {b}/x**2 + {c}/x**3", [("-2", "-1"), ("-3", "-1"), ("1", "2")]),
-                ("{a}*x + {b} + e**x/(e**x + {c})", [("0", "1"), ("1", "2")]),
-                ("{a}*x/(x**2 + {b}) - {c}/(x - {s})", [("0", "1")]),
-            ])
-            func = _fill(rng, tpl, "x")
-            lo, hi = rng.choice(safe_bounds)
-            lower, upper = lo, hi
-            bounds_latex = (lo, hi)
-        else:
-            # Each trig template carries only bounds where its terms are finite
-            # (csc² diverges at 0, sec² at π/2).
-            tpl, safe = rng.choice([
-                ("{a}*sin(x) + {b}*cos(x)", [("0", "pi/4"), ("0", "pi/6"), ("pi/4", "pi/3")]),
-                ("{a}/cos(x)**2 + {b}/sin(x)**2", [("pi/4", "pi/3"), ("pi/6", "pi/4")]),
-                ("{a}*sin({k}*x) + {b}*cos({k}*x)", [("0", "pi/4"), ("0", "pi/6"), ("pi/4", "pi/3")]),
-                ("{a}*sin(x) + {b}/cos(x)**2", [("0", "pi/4"), ("0", "pi/6")]),
-                ("{a}*tan(x) + {b}*sin(x)", [("0", "pi/4"), ("0", "pi/6")]),
-                ("sin(x) + {a}*cos(x)/({s} - sin(x))", [("0", "pi/2")]),
-            ])
-            func = _fill(rng, tpl, "x")
-            lo, hi = rng.choice(safe)
-            lower, upper = lo, hi
-            bounds_latex = (lo.replace("pi", r"\pi"), hi.replace("pi", r"\pi"))
-    elif variant == "by_parts":
-        # Integration by parts (Part III S4): x·sin/cos(kx), x·eˣ, xⁿln x,
-        # ln²x/x — all over bounds with clean exact answers.
-        kind = rng.choice(["x_sin", "x_cos", "x_e", "x_ln", "x2_ln", "x3_ln", "ln2_x"])
-        if kind == "x_sin":
-            k = rng.randint(2, 4)
-            a = rng.choice([1, 2, 3])
-            func = f"{a}*x*sin({k}*x)"
-            lower, upper = "0", f"pi/(2*{k})"
-            bounds_latex = ("0", rf"\pi/(2\cdot{k})")
-        elif kind == "x_cos":
-            k = rng.randint(2, 4)
-            a = rng.choice([1, 2, 3])
-            func = f"{a}*x*cos({k}*x)"
-            lower, upper = "0", f"pi/(2*{k})"
-            bounds_latex = ("0", rf"\pi/(2\cdot{k})")
-        elif kind == "x_e":
-            a = rng.choice([1, 2, 3])
-            func = f"{a}*x*e**x"
-            lower, upper = "0", "1"
-            bounds_latex = ("0", "1")
-        elif kind == "x_ln":
-            func = "x*ln(x)"
-            lower, upper = "1", "2"
-            bounds_latex = ("1", "2")
-        elif kind == "x2_ln":
-            func = "x**2*ln(x)"
-            lower, upper = "1", "2"
-            bounds_latex = ("1", "2")
-        elif kind == "x3_ln":
-            func = "x**3*ln(x)"
-            lower, upper = "1", "2"
-            bounds_latex = ("1", "2")
-        else:  # ln2_x
-            func = "ln(x)**2/x"
-            lower, upper = "1", "2"
-            bounds_latex = ("1", "2")
-    else:
-        hi = 3 if difficulty == "easy" else 6
-        p = rng.randint(-hi, hi)
-        q = rng.randint(-hi, hi)
-        r = rng.randint(-hi, hi)
-        lower_n = rng.randint(-2, 1) if difficulty != "easy" else 0
-        upper_n = rng.randint(lower_n + 1, lower_n + 3)
-        func = _fmt_poly(p, q, r)
-        lower, upper = str(lower_n), str(upper_n)
-        bounds_latex = (lower, upper)
-
-    params = {"expr": func, "var": "x", "lower": lower, "upper": upper, "variant": variant}
-    prompt = f"Compute ∫ from x = {pretty_point(lower)} to x = {pretty_point(upper)} of {pretty_expr(func)} dx."
-    expr_latex = _expr_latex(func)
-    prompt_latex = rf"\text{{Compute }} \int_{{{bounds_latex[0]}}}^{{{bounds_latex[1]}}} {expr_latex}\,dx"
-    display = f"\\int_{{{lower}}}^{{{upper}}} ({func})\\,dx"
-
-    return _build_expr_problem("integral", "definite_integral", params, difficulty, prompt, prompt_latex, display)
-
-_INDEFINITE_VARIABLES = ("x", "t", "y")
-
-# Term pools for indefinite sums (terms are written with x; the variable is
-# substituted in). Constants like ln2, e, pi, sqrt5 mirror the BAC II exercises.
-_INDEFINITE_TERM_POOLS = {
-    "power": [
-        "3*x**2", "2*x", "-4", "5", "1", "-3*x**3", "4*x**2", "-7*x", "x**3",
-        "(1/2)*x**2", "-6*x", "9", "x**(2/3)", "x*sqrt(x)",
-    ],
-    "reciprocal": [
-        "2/x", "5/x", "1/x", "-3/x", "6/x", "4/x**2", "-5/sqrt(x)", "3/(2*x)",
-        "-3/(2*x**2)", "7/x",
-    ],
-    "exponential": ["e**x", "2*e**x", "-2*e**x", "(3/4)*e**x", "4*e**x", "-e**x"],
-    "trig": ["sin(x)", "cos(x)", "2*sin(x)", "3*cos(x)", "-3*sin(x)", "5*cos(x)", "-cos(x)"],
-    "trig_sec": ["1/cos(x)**2", "2/sin(x)**2", "1/sin(x)**2", "3/cos(x)**2", "2/cos(x)**2", "-1/sin(x)**2"],
-    "special": ["ln(2)", "ln(3)", "e", "e**2", "pi", "sqrt(5)", "sqrt(3)", "-e", "-pi", "x*ln(2)"],
-}
 
 def _build_indefinite(func, var, difficulty, variant, curated=False):
     params = {"expr": func, "var": var, "variant": variant, "curated": curated}
@@ -316,46 +60,56 @@ def _build_indefinite(func, var, difficulty, variant, curated=False):
     expr_latex = _expr_latex(func, var)
     prompt_latex = rf"\text{{Compute }} \int ({expr_latex})\,d{var} \text{{ (indefinite, +C)}}"
     display = f"\\int ({func})\\,d{var}"
-    return _build_expr_problem("integral", "indefinite_integral", params, difficulty, prompt, prompt_latex, display)
+    return _build_expr_problem("integral", _IND, params, difficulty, prompt, prompt_latex, display)
+
+
+def _build_definite(params, difficulty):
+    lower, upper, func, var = params["lower"], params["upper"], params["expr"], params["var"]
+    return _build_expr_problem(
+        "integral", _DEF, params, difficulty,
+        f"Compute ∫ from {var} = {pretty_point(lower)} to {var} = {pretty_point(upper)} "
+        f"of {pretty_expr(func)} d{var}.",
+        rf"\text{{Compute }} \int_{{{_bound_latex(lower, var)}}}^{{{_bound_latex(upper, var)}}} "
+        rf"{_expr_latex(func, var)}\,d{var}",
+        f"\\int_{{{lower}}}^{{{upper}}} ({func})\\,d{var}",
+    )
+
+
+def generate_integral_for_structure(rng, struct, difficulty=None, variant=None):
+    """One exercise sampled from a registry structure. `variant` is the skill
+    it is recorded under (default: the structure's own)."""
+    params, template_params = struct["sampler"](rng)
+    difficulty = difficulty or struct["difficulty"]
+    variant = "indefinite_sum" if struct["variant"] == "indefinite_sum" else (variant or struct["variant"])
+    if struct["question_type"] == _IND:
+        problem = _build_indefinite(params["expr"], params["var"], difficulty, variant,
+                                    curated=struct["variant"] == "indefinite_sum")
+    else:
+        problem = _build_definite({**params, "variant": variant}, difficulty)
+    problem["params"]["template_id"] = struct["id"]
+    # Nested, so the grader never mistakes a slot name for a given.
+    problem["params"]["template_params"] = template_params
+    return problem
+
+
+def _generate(rng, question_type, difficulty, variant, table):
+    struct = structure_by_id(variant) if variant else None
+    if struct is not None:
+        return generate_integral_for_structure(rng, struct)
+    if variant not in {v for vs in table.values() for v in vs} | {"indefinite_sum"}:
+        variant = rng.choice(table[difficulty])
+    return generate_integral_for_structure(rng, _pick(rng, question_type, variant, difficulty), difficulty, variant)
+
+
+def _generate_integral(rng, difficulty, variant=None):
+    """A definite integral: `variant` is a technique (see
+    `_INTEGRAL_VARIANT_BY_DIFFICULTY`) or a structure id; unknown variants
+    are ignored, so a stale practice link still yields a question."""
+    return _generate(rng, _DEF, difficulty, variant, _INTEGRAL_VARIANT_BY_DIFFICULTY)
+
 
 def _generate_indefinite(rng, difficulty, variant=None):
-    variant = variant or rng.choice(_INDEFINITE_VARIANT_BY_DIFFICULTY[difficulty])
-    textbook = _textbook_problem(rng, "indefinite_integral", variant, difficulty)
-    if textbook is not None:
-        return textbook
-    var = rng.choice(_INDEFINITE_VARIABLES)
-
-    if variant == "expand":
-        return _build_indefinite(_fill(rng, rng.choice(_INDEF_EXPAND_TEMPLATES), var), var, difficulty, variant)
-    if variant == "split":
-        return _build_indefinite(_fill(rng, rng.choice(_INDEF_SPLIT_TEMPLATES), var), var, difficulty, variant)
-    if variant == "usub":
-        _, tpl = rng.choice(_INDEF_USUB_TEMPLATES)
-        return _build_indefinite(_fill(rng, tpl, var), var, difficulty, variant)
-    if variant == "linear_argument":
-        return _build_indefinite(_fill(rng, rng.choice(_INDEF_LINEAR_TEMPLATES), var), var, difficulty, variant)
-    if variant == "trig_sec" and rng.random() < 0.5:
-        return _build_indefinite(
-            _fill(rng, rng.choice(_INDEF_TRIG_SQ_TEMPLATES), var), var, difficulty, variant
-        )
-
-    # "power" (easy) and "trig_sec" (hard): curated shapes + random term sums.
-    # "indefinite_sum" names the curated shapes themselves, so it always draws one.
-    if variant == "indefinite_sum" or rng.random() < 0.4:
-        pool = [t for d, t in _INDEFINITE_TEMPLATES if d == difficulty]
-        if not pool:
-            pool = [t for d, t in _INDEFINITE_TEMPLATES]
-        tpl, tvar = rng.choice(pool)
-        return _build_indefinite(_fill(rng, tpl, tvar), tvar, difficulty, "indefinite_sum", curated=True)
-
-    groups = ["power"]
-    if difficulty == "medium":
-        groups = rng.sample(["power", "reciprocal", "exponential"], k=2)
-    elif difficulty == "hard":
-        groups = rng.sample(
-            ["power", "reciprocal", "exponential", "trig", "trig_sec", "special"],
-            k=rng.randint(3, 4),
-        )
-    terms = [rng.choice(_INDEFINITE_TERM_POOLS[g]) for g in groups]
-    func = " + ".join(terms).replace("x", var)
-    return _build_indefinite(func, var, difficulty, variant)
+    """An indefinite integral: `variant` is a technique (see
+    `_INDEFINITE_VARIANT_BY_DIFFICULTY`, plus "indefinite_sum" — the
+    textbook's sums of basic terms) or a structure id."""
+    return _generate(rng, _IND, difficulty, variant, _INDEFINITE_VARIANT_BY_DIFFICULTY)

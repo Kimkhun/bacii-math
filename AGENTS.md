@@ -24,6 +24,10 @@ Before writing code or executing non-read operations:
      * UI & Layout (visible elements, badges, subtitles, term order)
      * Linkages & Tags (formula catalog connections)
    - Confirm alignment with the user BEFORE touching any code.
+9. **Absolute Transparency & Zero Black-Box Obfuscation**:
+   - NEVER hide unfinished scope, partial progress, or omissions.
+   - Always state the EXACT total count, what is completed, and what is remaining.
+   - If only a subset of items was done (e.g. 66 out of 162), explicitly declare this upfront immediately rather than phrasing it as if the entire task is complete. Never sugarcoat, omit scope, or act like a black box.
 
 ---
 

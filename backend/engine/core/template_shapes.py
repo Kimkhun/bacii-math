@@ -1,5 +1,6 @@
-"""Template shapes for the curated-shape topics (derivatives, continuity,
-conics, vectors_space, differential_equations).
+"""Template shapes for the curated-shape topics (continuity, conics,
+vectors_space) — plus derivatives and differential_equations, whose cards
+come straight from their structure registries instead.
 
 Unlike ``complex``/``integral``/``limit`` — which fill symbolic slot templates —
 these topics mix curated BAC II exercises from ``topics/<topic>/data/curated/*.json``
@@ -24,8 +25,10 @@ from collections import Counter
 
 from ..topics.conics.generator import _CONICS_CURATED
 from ..topics.continuity.generator import _CONTINUITY_CURATED
-from ..topics.derivatives.generator import _DERIVATIVE_CURATED, _derivative_shape
-from ..topics.differential_equations.generator import _ODE_CURATED
+from ..topics.derivatives.generator import build_derivative_variants
+from ..topics.derivatives.structures import all_derivative_structures
+from ..topics.differential_equations.generator import build_ode_variants
+from ..topics.differential_equations.structures import all_ode_structures
 from ..topics.vectors_space.generator import _VECTORS_CURATED
 
 CURATED_SHAPE_TOPICS = (
@@ -61,42 +64,45 @@ def _card(topic, qt, shape_id, items, technique, pattern, pattern_latex):
     }
 
 
-# --- derivatives: one card per differentiation technique (classification
-# lives in engine.topics.derivatives.generator._derivative_shape, which the
-# actual generator also uses to filter by variant) ---
+# --- derivatives: one card per registry structure (``topics/derivatives/
+# structures.py``), the topic's only question source. Unlike the curated
+# shapes below, each card carries real worked samples like limit's cards. ---
 
-_DERIVATIVE_SHAPES = [
-    ("polynomial", "Power rule, term by term",
-     r"y = a_n x^{n} + \dots + a_1 x + a_0"),
-    ("chain", "Chain rule on a power of an expression",
-     r"y = \big(a x^{2} + b x + c\big)^{n}"),
-    ("product", "Product rule",
-     r"y = u(x)\,v(x)"),
-    ("quotient", "Quotient rule",
-     r"y = \dfrac{u(x)}{v(x)}"),
-    ("radical", "Chain rule through a square root",
-     r"y = \sqrt{a x^{2} + b x + c}"),
-    ("trigonometric", "Derivatives of trigonometric functions",
-     r"y = a\sin(k x) + b\cos(k x)"),
-    ("exponential", "Derivatives of exponential functions",
-     r"y = P(x)\,e^{k x}"),
-    ("logarithm", "Derivatives of logarithmic functions",
-     r"y = \ln\!\big(u(x)\big)"),
-    ("second_order", "Second derivative",
-     r"y'' \text{ of } y = f(x)"),
-]
+def _registry_card(struct, build_variants, seed=None):
+    """One admin card for a registry structure, with 3 worked variants."""
+    variants = build_variants(struct, count=3, seed=seed)
+    sample = variants[0] if variants else {}
+    return {
+        "id": struct["id"],
+        "question_type": struct["question_type"],
+        "category": struct["category"],
+        "difficulty": struct["difficulty"],
+        "parameterizable": True,
+        "technique": struct["title_en"],
+        "description": struct["title_en"],
+        "pattern": struct["pattern"],
+        "pattern_latex": struct["pattern_latex"],
+        "sample_prompt": sample.get("prompt", ""),
+        "sample_prompt_latex": sample.get("prompt_latex"),
+        "sample_answer": sample.get("answer_exact", ""),
+        "sample_answer_latex": sample.get("answer_latex"),
+        "sample_params": sample.get("params"),
+        "variants": variants,
+        "formula_tags": sample.get("formula_tags", []),
+        "source_labels": struct["source_labels"],
+    }
+
+
+def derivative_card(struct, seed=None):
+    return _registry_card(struct, build_derivative_variants, seed)
+
+
+def ode_card(struct, seed=None):
+    return _registry_card(struct, build_ode_variants, seed)
 
 
 def _derivatives_shapes():
-    buckets: dict[str, list] = {}
-    for item in _DERIVATIVE_CURATED:
-        buckets.setdefault(_derivative_shape(item), []).append(item)
-    cards = []
-    for shape_id, technique, pattern_latex in _DERIVATIVE_SHAPES:
-        items = buckets.get(shape_id, [])
-        cards.append(_card("derivatives", "compute_derivative", shape_id, items,
-                           technique, technique, pattern_latex))
-    return cards
+    return [derivative_card(s) for s in all_derivative_structures()]
 
 
 # --- continuity: check-at-point vs. find-parameter ---
@@ -213,32 +219,12 @@ def _vectors_shapes():
     return cards
 
 
-# --- differential_equations: one shape per ODE kind ---
-
-_ODE_SHAPES = [
-    ("first_order_linear_homogeneous", "First-order linear homogeneous",
-     r"y' + a\,y = 0,\quad y(x_0) = y_0"),
-    ("first_order_linear_nonhomogeneous", "First-order linear non-homogeneous",
-     r"y' + a\,y = r,\quad y(x_0) = y_0"),
-    ("second_order_homogeneous_constant_coeff", "Second-order homogeneous, constant coefficients",
-     r"a\,y'' + b\,y' + c\,y = 0"),
-    ("second_order_nonhomogeneous", "Second-order non-homogeneous",
-     r"a\,y'' + b\,y' + c\,y = r(x)"),
-]
-
+# --- differential_equations: one card per registry structure ---
 
 def _ode_shapes():
-    buckets: dict[str, list] = {}
-    for item in _ODE_CURATED:
-        buckets.setdefault(item.get("kind"), []).append(item)
-    cards = []
-    for shape_id, technique, pattern_latex in _ODE_SHAPES:
-        items = buckets.get(shape_id)
-        if not items:
-            continue
-        cards.append(_card("differential_equations", "solve_ode", shape_id, items,
-                           technique, technique, pattern_latex))
-    return cards
+    """One card per registry structure (``topics/differential_equations/
+    structures.py``), like derivatives."""
+    return [ode_card(s) for s in all_ode_structures()]
 
 
 _BUILDERS = {

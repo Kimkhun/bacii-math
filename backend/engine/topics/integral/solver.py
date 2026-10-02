@@ -1,4 +1,10 @@
-"""Definite and indefinite integral solvers."""
+"""Definite and indefinite integral solvers.
+
+The graded intermediate steps come from the question's template blueprint
+(``engine/core/blueprints.py``, ``blueprint_spec.py``) when it has one — the
+antiderivative of each term, the substitution's du and new bounds, the parts
+u, v, du, F and its values at the bounds — each value recomputed by SymPy on
+this question's numbers; otherwise from the antiderivative alone."""
 from sympy import (
     Integral,
     N,
@@ -17,7 +23,46 @@ from sympy import (
     sympify,
 )
 
+from ...core import blueprints
 from ...core.shared import _calc_locals, _formula_tags, inline_latex
+
+
+def checkpoint_flags(cp):
+    """An antiderivative step is right up to any constant (F + C)."""
+    if cp.get("role") in ("antiderivative", "term_antiderivative") or cp.get("relation") == "antiderivative":
+        return {"constant_ok": True}
+    return {}
+
+
+def _bounds_env(params, var):
+    loc = _calc_locals(var)
+    return {"lo": sympify(params["lower"], locals=loc), "hi": sympify(params["upper"], locals=loc)}
+
+
+def _blueprint_plans(params, x, expr, final, formula, definite, antiderivative):
+    """The template blueprint's grading plans (one per method), [] if none.
+    A blueprint writes F in the form a student does ((x**2+3)**4/4); SymPy's
+    own antiderivative may differ from it by a constant (x**8/4 + ...), so
+    every F(hi)/F(lo) step also accepts the value shifted by that constant."""
+    given = {"y": expr, **(_bounds_env(params, params["var"]) if definite else {})}
+    plans = blueprints.resolve("integral", params.get("template_id"), params.get("template_params"),
+                               given=given, final=final, x=x, formula=formula,
+                               checkpoint_flags=checkpoint_flags,
+                               final_flags=None if definite else {"constant_ok": True})
+    for plan in plans:
+        forms = [cp["value"] for cp in plan["checkpoints"] if cp.get("role") == "antiderivative"]
+        shifts = []
+        for F in forms:
+            try:
+                c = simplify(antiderivative - F)
+            except Exception:  # noqa: BLE001
+                continue
+            if c != 0 and not c.has(x):
+                shifts.append(c)
+        for cp in plan["checkpoints"]:
+            if cp.get("role") == "bound_value" and shifts:
+                cp["alternatives"] = [simplify(cp["value"] + c) for c in shifts]
+    return plans
 
 
 def _indefinite_term_tag(term, x):
@@ -95,16 +140,26 @@ def _solve_indefinite_integral(params):
         "answer_latex": latex(antiderivative),
         "steps": steps,
         "formula_tags": _formula_tags(steps),
-        "checkpoints": [
+        **_with_blueprint(params, x, expr, antiderivative, "setup_integral", False, antiderivative, [
             {
                 "label": "antiderivative",
                 "value": antiderivative,
                 "formula": "setup_integral",
                 "constant_ok": True,
             },
-        ],
+        ]),
         "given": expr,
     }
+
+
+def _with_blueprint(params, x, expr, final, formula, definite, antiderivative, checkpoints):
+    """The solution's checkpoints: the blueprint's plans when the template
+    has one, else `checkpoints`."""
+    plans = _blueprint_plans(params, x, expr, final, formula, definite, antiderivative)
+    if not plans:
+        return {"checkpoints": checkpoints}
+    return {"checkpoints": plans[0]["checkpoints"], "aux_checkpoints": plans[0]["aux_checkpoints"],
+            "methods": plans}
 
 def _solve_definite_integral(params):
     var = params["var"]
@@ -224,7 +279,7 @@ def _solve_definite_integral(params):
         "answer_latex": latex(result),
         "steps": steps,
         "formula_tags": _formula_tags(steps),
-        "checkpoints": [
+        **_with_blueprint(params, x, expr, result, "fundamental_theorem", True, antiderivative, [
             {
                 "label": "antiderivative",
                 "value": antiderivative,
@@ -233,6 +288,6 @@ def _solve_definite_integral(params):
             },
             {"label": "F(upper)", "value": f_upper, "formula": "fundamental_theorem"},
             {"label": "F(lower)", "value": f_lower, "formula": "fundamental_theorem"},
-        ],
+        ]),
         "given": expr,
     }

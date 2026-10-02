@@ -21,10 +21,12 @@ from engine import explainer, formulas, generator, grader, llm, solver
 from engine.core import coaching, lessons, mastery, skills, template_shapes
 from engine.core.lesson_animations import formula_animation
 from engine import hints
-from engine.core.rubric import score_work
+from engine.rubric import score_work
 from engine.topics.past_exam.rubric import mark_full_exam
 from engine.topics.functions import graph_grader
 from engine.topics.functions.generator import _FUNCTION_CURATED_TEMPLATES
+from engine.topics.derivatives import structures as derivative_structures
+from engine.topics.differential_equations import structures as ode_structures
 from engine.topics.integral import structures as integral_structures
 from engine.topics.integral.generator import (
     _INDEFINITE_VARIANT_BY_DIFFICULTY,
@@ -410,6 +412,23 @@ async def explain_question(
         if question.topic == "functions":
             result["graph_check"] = await run_cpu(grader.grade_graph_check, spec, work_text.split("\n"))
 
+    # Steps the rubric wanted but the work never shows (derivatives): the work
+    # comment must not call the work "fully correct" when points were lost.
+    missing_steps = []
+    if work_text and question.topic != "functions":
+        try:
+            rubric_result = await run_cpu(
+                score_work, question.topic, question.question_type, spec, work_text.split("\n"),
+                question_points=10, part_label=part if is_multi and part else None,
+            )
+            missing_steps = [
+                f"{b.get('label_latex') or b['label']} = {b['expected_latex']}"
+                for b in rubric_result["breakdown"]
+                if not b["points_earned"] and b.get("expected_latex") and b["label"] != "final answer"
+            ]
+        except Exception:
+            missing_steps = []
+
     # The work comment and tutor tip always call the LLM, so they need a rate-limit
     # slot up front. Without an answer only the narration runs, which is usually a
     # cache hit; leave `allowed` unset so `_build_explanation` takes a slot only on
@@ -440,6 +459,7 @@ async def explain_question(
         return await llm.check_work(
             question.prompt, work_text or user_answer, steps_text, str(question.expected_answer),
             allow_gemini=allowed, step_check=step_check, lang=lang, user_id=user.id,
+            missing_steps=missing_steps,
         )
 
     async def _tutor_tip():
@@ -1043,7 +1063,7 @@ async def _build_topic_structure_payload(topic: str) -> dict:
     elif topic == "limit":
         payload = await asyncio.to_thread(_build_limit_structure_payload)
     elif topic in template_shapes.CURATED_SHAPE_TOPICS:
-        payload = _build_curated_shape_payload(topic)
+        payload = await asyncio.to_thread(_build_curated_shape_payload, topic)
     else:
         payload = await _build_generic_topic_payload(topic)
     total_structures = sum(len(qt.get("structures", [])) for qt in payload.get("question_types", []))
@@ -1274,8 +1294,38 @@ async def get_template_structures(topic: str | None = None) -> dict:
     return {"topics": topics}
 
 
+def _registry_topics() -> dict:
+    """Topics whose questions all come from a structure registry (one admin
+    card per structure, ``params.template_id``): topic -> (structures
+    module, card builder, one-variant builder, question type)."""
+    from engine.topics.derivatives.generator import build_derivative_variant
+    from engine.topics.differential_equations.generator import build_ode_variant
+
+    return {
+        "derivatives": (derivative_structures, template_shapes.derivative_card, build_derivative_variant,
+                        "compute_derivative"),
+        "differential_equations": (ode_structures, template_shapes.ode_card, build_ode_variant, "solve_ode"),
+    }
+
+
+def _registry_structure(structure_id: str):
+    """(topic, structure) for a registry structure id, or (None, None)."""
+    for topic, (module, *_rest) in _registry_topics().items():
+        struct = module.STRUCTURES_BY_ID.get(structure_id)
+        if struct:
+            return topic, struct
+    return None, None
+
+
 async def regenerate_template_structure(structure_id: str) -> dict:
     """Flush cache for a specific structure and re-generate in real time without wiping other cards."""
+    reg_topic, reg_def = _registry_structure(structure_id)
+    if reg_def:
+        import time
+        seed = int(time.time() * 1000) & 0xFFFFFFFF
+        card = _registry_topics()[reg_topic][1]
+        return {"structure": await asyncio.to_thread(card, reg_def, seed)}
+
     limit_def = next((s for s in limit_structures.all_limit_structures() if s["id"] == structure_id), None)
     if limit_def:
         import time
@@ -1313,7 +1363,7 @@ async def regenerate_template_structure(structure_id: str) -> dict:
             _save_structure_cache("limit", _limit_structure_payload)
         return {"structure": new_entry}
 
-    integral_def = next((s for s in integral_structures.all_integral_structures() if s["id"] == structure_id), None)
+    integral_def = integral_structures.structure_by_id(structure_id)
     if integral_def:
         import time
         seed = int(time.time() * 1000) & 0xFFFFFFFF
@@ -1371,6 +1421,18 @@ async def solve_custom_template_structure(structure_id: str, params: dict) -> di
     from engine.topics.integral.solver import _solve_definite_integral, _solve_indefinite_integral
     from sympy import sympify
 
+    # 0. Registry structure (derivatives, differential equations): slots are
+    # substituted symbolically.
+    reg_topic, reg_def = _registry_structure(structure_id)
+    if reg_def:
+        module, _card, build_variant, _qt = _registry_topics()[reg_topic]
+        slots = module.slot_names(reg_def)
+        try:
+            v = build_variant(reg_def, template_params={k: params[k] for k in slots})
+        except (KeyError, ValueError, TypeError) as e:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"bad parameters for {structure_id}: {e}")
+        return {k: v[k] for k in ("prompt", "prompt_latex", "answer_exact", "answer_latex", "steps")}
+
     # 1. Limit structure
     limit_def = next((s for s in limit_structures.all_limit_structures() if s["id"] == structure_id), None)
     if limit_def:
@@ -1413,12 +1475,15 @@ async def solve_custom_template_structure(structure_id: str, params: dict) -> di
         }
 
     # 2. Integral structure
-    integral_def = next((s for s in integral_structures.all_integral_structures() if s["id"] == structure_id), None)
+    integral_def = integral_structures.structure_by_id(structure_id)
     if integral_def:
-        pattern = integral_def["pattern"]
-        expr = pattern
-        for k, v in params.items():
-            expr = expr.replace("{" + str(k) + "}", str(v))
+        template_params = {k: str(params[k]) for k in integral_def["slots"] if k in params}
+        if integral_def["question_type"] == "definite_integral":
+            template_params.update(lower=str(params.get("lower", "0")), upper=str(params.get("upper", "1")))
+        try:
+            expr = integral_structures.instantiate(integral_def, template_params)["expr"]
+        except KeyError as e:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"bad parameters for {structure_id}: {e}")
         var = integral_def.get("var", "x")
         qt = integral_def["question_type"]
         if qt == "definite_integral":
@@ -1510,6 +1575,17 @@ def _topic_structure_summary(topic: str) -> dict:
             "structure_count": len(items),
             "difficulties": sorted(diffs),
             "curated": len(items),
+        }
+
+    if topic in _registry_topics():
+        module, _card, _variant, qt = _registry_topics()[topic]
+        structs = list(module.STRUCTURES_BY_ID.values())
+        return {
+            "topic": topic,
+            "question_types": [{"question_type": qt, "count": len(structs)}],
+            "structure_count": len(structs),
+            "difficulties": sorted({s["difficulty"] for s in structs}),
+            "curated": sum(1 for s in structs if s["source_labels"]),
         }
 
     if topic in template_shapes.CURATED_SHAPE_TOPICS:
@@ -1632,7 +1708,7 @@ def _fractions_to_float(obj):
 _SANDBOX_STRING_KEYS = {
     "var", "operation", "op", "formula_name", "kind", "unknown", "fn_name",
     "ask", "variant", "structure", "technique", "curated_technique", "wanted",
-    "want", "id", "source_id",
+    "want", "id", "source_id", "template_id",
 }
 
 

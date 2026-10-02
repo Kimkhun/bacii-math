@@ -3,6 +3,7 @@ second derivative for real; the curated JSON only supplies the expression and
 the exam-authored technique narration."""
 from sympy import Symbol, diff, latex, simplify, sympify
 
+from ...core import blueprints
 from ...core.shared import _calc_locals, _formula_tags
 
 
@@ -39,11 +40,31 @@ def _solve_derivative(params):
         ]
     else:
         checkpoints = [{"label": "derivative", "value": result, "formula": "compute_derivative"}]
+    aux_checkpoints = []
+    # The template's blueprint (engine/core/blueprints.py), when it has one,
+    # supplies the intermediate checkpoints (u', v', the inner derivative, ...)
+    # — each value recomputed by SymPy from its relation on this question's
+    # numbers; the last checkpoint stays `result`.
+    # A template may have several methods (alternative solution paths);
+    # the first is the default, and the grader picks whichever one the
+    # student's work follows (derivatives/rubric.py select_method).
+    plans = blueprints.resolve("derivatives", params.get("template_id"), params.get("template_params"),
+                               given=expr, final=result, x=x, formula="compute_derivative")
+    if plans:
+        checkpoints = plans[0]["checkpoints"]
+        aux_checkpoints = plans[0]["aux_checkpoints"]
     return {
         "answer_exact": result,
         "answer_decimal": None,
         "answer_latex": latex(result),
+        "given": expr,
+        # Judge the student's own labelled lines (u = ..., u' = ...) by
+        # truth, so a different method than the blueprint's isn't marked
+        # wrong — see grading._ClaimChecker.
+        "verify_claims": True,
         "steps": steps,
         "formula_tags": _formula_tags(steps),
         "checkpoints": checkpoints,
+        "aux_checkpoints": aux_checkpoints,
+        "methods": plans,
     }

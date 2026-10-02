@@ -761,12 +761,17 @@ export default function AdminSandbox({ summary, onExit }: { summary: TemplateSum
                               <tbody>
                                 {gradeResult.rubric_score.breakdown.map((b, i) => (
                                   <tr key={i} className="border-t border-slate-100">
-                                    <td className="py-1 pr-2 text-slate-500">{b.label}</td>
+                                    <td className="py-1 pr-2 text-slate-500">
+                                      {b.label_latex ? <MathText text={`$${b.label_latex}$`} /> : b.label}
+                                      {b.expected_latex && <MathText text={`$= ${b.expected_latex}$`} />}
+                                    </td>
                                     <td className="py-1 pr-2 font-mono text-slate-800">
                                       {b.points_earned}/{b.points_possible}
                                     </td>
                                     <td className="py-1 text-slate-400">
-                                      {b.matched_line ?? (b.implied ? "implied by a later line" : "")}
+                                      {b.matched_line
+                                        ? `${b.matched_line}${b.as_term ? " (as a term)" : ""}`
+                                        : b.implied ? "implied by a later line" : ""}
                                     </td>
                                   </tr>
                                 ))}

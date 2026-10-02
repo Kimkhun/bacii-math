@@ -5,6 +5,7 @@ import React, { Fragment, useEffect, useMemo, useState } from "react";
 import FunctionGraph from "@/components/FunctionGraph";
 import MathText from "@/components/MathText";
 import { api } from "@/lib/api";
+import { hasStructureVariants } from "@/lib/templateIds";
 
 // Backend question_km strings use $...$ math markers; KaTeX only recognises
 // \(...\) / $$...$$ — normalise to \( \).
@@ -593,10 +594,7 @@ export default function StructureModal({
     setCustomResult(null);
     // If structure has no variants loaded yet, automatically fetch them
     if (
-      (initialStructure.id.startsWith("limit:") ||
-        initialStructure.id.startsWith("integral:") ||
-        initialStructure.id.startsWith("curated_") ||
-        initialStructure.id.startsWith("int_")) &&
+      hasStructureVariants(initialStructure.id) &&
       (!initialStructure.variants || initialStructure.variants.length === 0)
     ) {
       setRegenerating(true);

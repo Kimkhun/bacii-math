@@ -158,6 +158,10 @@ historical paper — unlike every other topic's generated exercises.
 
 ### Step-by-step marking scheme, generic variant (`engine/core/rubric.py`)
 
+Each topic's scoring rules live in its own `engine/topics/<topic>/rubric.py`
+(called through `engine/rubric.py`); what follows is the shared default
+most of them reuse.
+
 The same points-per-step rubric, generalized to every topic's LIVE/
 GENERATED question (limits through function studies), not just the 2018
 exam. A generated exercise's numbers differ every time, so its rubric can't

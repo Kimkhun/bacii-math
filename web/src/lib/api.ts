@@ -266,6 +266,10 @@ export interface RubricScore {
     points_earned: number;
     points_possible: number;
     matched_line: string | null;
+    // Derivatives: what the step is, with this question's numbers.
+    label_latex?: string;
+    expected_latex?: string;
+    as_term?: boolean;
   }[];
 }
 
@@ -512,6 +516,9 @@ export interface SandboxRubricStep {
   points_possible: number;
   matched_line: string | null;
   implied?: boolean;
+  label_latex?: string;
+  expected_latex?: string;
+  as_term?: boolean;
 }
 
 export interface SandboxGradeResult {
