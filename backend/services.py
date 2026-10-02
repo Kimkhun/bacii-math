@@ -1360,7 +1360,7 @@ async def regenerate_template_structure(structure_id: str) -> dict:
             _save_structure_cache("limit", _limit_structure_payload)
         return {"structure": new_entry}
 
-    integral_def = next((s for s in integral_structures.all_integral_structures() if s["id"] == structure_id), None)
+    integral_def = integral_structures.structure_by_id(structure_id)
     if integral_def:
         import time
         seed = int(time.time() * 1000) & 0xFFFFFFFF
@@ -1472,12 +1472,15 @@ async def solve_custom_template_structure(structure_id: str, params: dict) -> di
         }
 
     # 2. Integral structure
-    integral_def = next((s for s in integral_structures.all_integral_structures() if s["id"] == structure_id), None)
+    integral_def = integral_structures.structure_by_id(structure_id)
     if integral_def:
-        pattern = integral_def["pattern"]
-        expr = pattern
-        for k, v in params.items():
-            expr = expr.replace("{" + str(k) + "}", str(v))
+        template_params = {k: str(params[k]) for k in integral_def["slots"] if k in params}
+        if integral_def["question_type"] == "definite_integral":
+            template_params.update(lower=str(params.get("lower", "0")), upper=str(params.get("upper", "1")))
+        try:
+            expr = integral_structures.instantiate(integral_def, template_params)["expr"]
+        except KeyError as e:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"bad parameters for {structure_id}: {e}")
         var = integral_def.get("var", "x")
         qt = integral_def["question_type"]
         if qt == "definite_integral":
@@ -1697,7 +1700,7 @@ def _fractions_to_float(obj):
 _SANDBOX_STRING_KEYS = {
     "var", "operation", "op", "formula_name", "kind", "unknown", "fn_name",
     "ask", "variant", "structure", "technique", "curated_technique", "wanted",
-    "want", "id", "source_id",
+    "want", "id", "source_id", "template_id",
 }
 
 

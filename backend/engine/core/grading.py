@@ -163,6 +163,22 @@ def _rewrite_trig_powers(text):
 # matches "int" inside another word ("point", "print", ...).
 _INTEGRAL_SIGN_RE = _re.compile(r"∫|\\int\b|\bint\b")
 
+def _evaluated_side(text, var):
+    """The right-hand side of a line "∫ ... = value", when it is a value in
+    the question's own variable (no integral left, no u); else None."""
+    if "=" not in text:
+        return None
+    rhs = text.rpartition("=")[2].strip()
+    if not rhs or _INTEGRAL_SIGN_RE.search(rhs):
+        return None
+    try:
+        value = parse_answer(rhs)
+        free = value.free_symbols - {var, Symbol("C"), Symbol("C1"), Symbol("C2")}
+    except Exception:  # noqa: BLE001
+        return None
+    return None if free else rhs
+
+
 def _normalize_ocr_text(text):
     """OCR-specific normalization applied before any other parsing: ODE
     arbitrary constants written with a LaTeX-style subscript ("C_1", "C_2")
@@ -1365,8 +1381,14 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
         text = _normalize_ocr_text(text)
 
         if _INTEGRAL_SIGN_RE.search(text):
-            line_results.append({"line": i, "text": raw, "checked": False, "reason": "unevaluated_integral"})
-            continue
+            # "∫ 3x² dx = x³" — the evaluated side is a checkable value; an
+            # integral still on the right, or a result in u (∫u² du = u³/3),
+            # isn't comparable with the steps (all in x), so it's skipped.
+            evaluated = _evaluated_side(text, var_sym)
+            if evaluated is None:
+                line_results.append({"line": i, "text": raw, "checked": False, "reason": "unevaluated_integral"})
+                continue
+            text = evaluated
 
         # A bare step number ('1.', '2)') left over once a Khmer heading
         # ('3. ដោះស្រាយ...') is stripped — a heading, not the value 3, so it

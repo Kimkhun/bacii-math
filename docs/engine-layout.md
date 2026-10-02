@@ -59,7 +59,7 @@ backend/engine/
                        Stored in topics/<topic>/data/blueprints.json, written
                        by scripts/generate_blueprints.py --topic <topic> with
                        topics/<topic>/blueprint_spec.py (derivatives,
-                       differential_equations).
+                       differential_equations, integral).
   llm.py, vision.py, notation.py, explainer.py, formulas.py, cache.py
                         # cross-cutting infra, not topic-specific
 
@@ -68,8 +68,14 @@ backend/engine/
                         arithmetic, power, De Moivre, nth roots — see below
     limit/               solver.py, generator.py, structures.py (curated pool +
                         technique registry), grader.py, data/curated/*.json
-    integral/            solver.py, generator.py, structures.py (the 168-shape
-                        registry backing the admin /templates page), grader.py
+    integral/            solver.py, generator.py, grader.py, structures.py (the
+                        168-shape registry, ids integral:<name>; every question
+                        is sampled from it — audit: scripts/audit_integral_structures.py),
+                        blueprint_spec.py (integrand y, bounds lo/hi; a
+                        substitution/by-parts compose must rebuild y; roles:
+                        F, term antiderivatives, F(lo)/F(hi), new bounds) +
+                        data/blueprints.json, rubric.py (default policy, the
+                        blueprint method the work follows)
     probability/          solver.py, generator.py (scenario-based), counting.py
                         (combinatorics question_type), scenarios.py, grader.py
                         (multi-part grading), data/scenarios/, data/counting/

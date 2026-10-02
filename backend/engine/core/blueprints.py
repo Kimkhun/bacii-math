@@ -58,7 +58,7 @@ import random
 import re
 from typing import Callable
 
-from sympy import Symbol, diff, latex, simplify, solve, sympify
+from sympy import Integral, Symbol, diff, integrate, latex, simplify, solve, sympify
 
 _TOPICS_DIR = os.path.join(os.path.dirname(__file__), "..", "topics")
 _T = Symbol("t")  # the outer function's variable in an outer_derivative relation
@@ -113,6 +113,18 @@ def _rel_outer_derivative(cp, env, x, symbols):
 
 def _rel_combination(cp, env, x, symbols):
     return _parse(cp["equals"], env, x, symbols)
+
+
+def _rel_antiderivative(cp, env, x, symbols):
+    """An antiderivative of `of` (no constant): SymPy's, or its rules-based
+    integrator's when the default leaves an unevaluated integral."""
+    integrand = _parse(cp["of"], env, x, symbols)
+    value = integrate(integrand, x)
+    if value.has(Integral):
+        value = integrate(integrand, x, manual=True)
+    if value.has(Integral):
+        raise BlueprintError(f"no closed-form antiderivative of {integrand}")
+    return value
 
 
 def _rel_substitute(cp, env, x, symbols):
@@ -174,6 +186,7 @@ def _identity_equations(expr, x):
 RELATIONS: dict[str, Callable] = {
     "derivative": _rel_derivative,
     "outer_derivative": _rel_outer_derivative,
+    "antiderivative": _rel_antiderivative,
     "combination": _rel_combination,
     "substitute": _rel_substitute,
     "solve": _rel_solve,
@@ -211,6 +224,12 @@ def _parse(text, env, x, extra=None):
     if unknown:
         raise BlueprintError(f"unknown names {sorted(map(str, unknown))} in {text!r}")
     return expr
+
+
+def _same_up_to_constant(a, b, x):
+    from .grading import _equivalent_const
+
+    return _equivalent_const(a, b, x)
 
 
 def _same(a, b, x):
@@ -267,7 +286,7 @@ def evaluate(bp: dict, slot_values: dict, given, x, symbols=None) -> dict:
     return {"definitions": definitions, "checkpoints": checkpoints, "labels": labels, "subjects": subjects}
 
 
-def _plan(bp, slot_values, given, final, x, formula, symbols):
+def _plan(bp, slot_values, given, final, x, formula, symbols, checkpoint_flags=None, final_flags=None):
     values = evaluate(bp, slot_values, given, x, symbols)
     seen = [*_given_env(given).values(), final]
     constants = set((symbols or {}).values())
@@ -280,7 +299,9 @@ def _plan(bp, slot_values, given, final, x, formula, symbols):
         checkpoints.append({"label": cp.get("label_en") or cp["id"], "value": value, "formula": formula,
                             **({"label_latex": values["labels"][cp["id"]]} if cp["id"] in values["labels"] else {}),
                             **({"subject": values["subjects"][cp["id"]]} if cp["id"] in values["subjects"] else {}),
-                            **({"free_constants": free} if free else {})})
+                            **({"free_constants": free} if free else {}),
+                            **({"role": cp["role"]} if cp.get("role") else {}),
+                            **(checkpoint_flags(cp) if checkpoint_flags else {})})
     # Aux: lines that are right wherever they appear without advancing the
     # step pointer — the definitions (u = ..., never flagged, never scored)
     # and the intermediate checkpoints again, since independent steps (u'
@@ -289,11 +310,12 @@ def _plan(bp, slot_values, given, final, x, formula, symbols):
            for name, value in values["definitions"].items()
            if not any(_same(value, s, x) for s in seen)]
     aux += [dict(cp) for cp in checkpoints]
-    checkpoints.append({"label": "final answer", "value": final, "formula": formula})
+    checkpoints.append({"label": "final answer", "value": final, "formula": formula, **(final_flags or {})})
     return {"checkpoints": checkpoints, "aux_checkpoints": aux}
 
 
-def resolve(topic, template_id, slot_values, given, final, x, formula=None, symbols=None):
+def resolve(topic, template_id, slot_values, given, final, x, formula=None, symbols=None,
+            checkpoint_flags=None, final_flags=None):
     """Grading plans for one question, one per method of its template's
     blueprint (standard method first), or [] when there is no usable
     blueprint — the caller keeps its own checkpoints then. Each plan is
@@ -302,13 +324,16 @@ def resolve(topic, template_id, slot_values, given, final, x, formula=None, symb
     is `final` (the solver's own answer). A method that fails to evaluate
     on this instance is skipped — a bad blueprint never breaks grading.
     `given`: one expression (``y``) or a dict of named givens; `symbols`:
-    the topic's extra symbols ({name: Symbol}), see the module docstring."""
+    the topic's extra symbols ({name: Symbol}), see the module docstring.
+    `checkpoint_flags(cp) -> dict` adds a topic's matching flags to a step
+    (an antiderivative step is ``constant_ok``: any +C is right);
+    `final_flags` likewise for the final answer."""
     if slot_values is None:
         return []
     plans = []
     for bp in methods(topic, template_id):
         try:
-            plan = _plan(bp, slot_values, given, final, x, formula, symbols)
+            plan = _plan(bp, slot_values, given, final, x, formula, symbols, checkpoint_flags, final_flags)
         except Exception:  # noqa: BLE001
             continue
         plans.append({"method": bp.get("method_id", "primary"), "name": bp.get("name_en", ""), **plan})
@@ -322,7 +347,7 @@ def resolve(topic, template_id, slot_values, given, final, x, formula=None, symb
 def validate(bp: dict, struct: dict, instantiate: Callable, truth: Callable,
              samples: int = 6, seed: int = 0, required: Callable | None = None,
              symbols: dict | None = None, given_env: Callable | None = None,
-             expr_optional: bool = False) -> list[str]:
+             expr_optional: bool = False, max_zero_share: float = 0.5) -> list[str]:
     """Problems with `bp` for `struct` (empty list = accepted), checked on
     `samples` random instances drawn from the structure's own sampler:
 
@@ -344,7 +369,11 @@ def validate(bp: dict, struct: dict, instantiate: Callable, truth: Callable,
     checked for a topic whose given is y. `expr_optional`: a checkpoint may
     leave its worked value ``expr`` empty (for a topic whose `required`
     checks what each step means, e.g. an ODE constant's value — a long
-    formula an LLM easily gets wrong without the plan being wrong)."""
+    formula an LLM easily gets wrong without the plan being wrong).
+    `max_zero_share`: the share of samples a step may be 0 on (a 0 step is
+    dropped on that instance; one that is 0 on most is useless) — a topic
+    whose zeros depend on the instance (F(lower) with lower = 0 on some
+    questions only) raises it."""
     problems: list[str] = []
     symbols = symbols or {}
     slots = set(_slot_names(struct))
@@ -380,18 +409,24 @@ def validate(bp: dict, struct: dict, instantiate: Callable, truth: Callable,
                                   symbols)
             except BlueprintError as e:
                 return [f"{where}: compose: {e}"]
-            if not _same(composed, y, x):
-                return [f"{where}: compose {bp.get('compose')!r} = {composed}, but y = {y}"]
+            target = _given_env(given)["y"]
+            if not _same(composed, target, x):
+                return [f"{where}: compose {bp.get('compose')!r} = {composed}, but y = {target}"]
         seen = [*_given_env(given).values(), final]
         for j, (cp, value) in enumerate(values["checkpoints"]):
             if expr_optional and not str(cp.get("expr") or "").strip():
                 claimed = value
             else:
                 try:
-                    claimed = _parse(cp.get("expr", ""), _slot_env(slot_values), x, symbols)
+                    # The givens other than y (an integral's bounds lo/hi) may appear;
+                    # y may not, or "expr": "y" would check nothing.
+                    named = {k: v for k, v in _given_env(given).items() if k != "y"}
+                    claimed = _parse(cp.get("expr", ""), {**_slot_env(slot_values), **named}, x, symbols)
                 except BlueprintError as e:
                     return [f"{where}: checkpoint {cp['id']}: expr: {e}"]
-            if not _same(claimed, value, x):
+            # An antiderivative is only defined up to a constant.
+            if not (_same(claimed, value, x) or cp.get("relation") == "antiderivative"
+                    and _same_up_to_constant(claimed, value, x)):
                 return [f"{where}: checkpoint {cp['id']} ({cp.get('relation')}): "
                         f"LLM wrote {claimed}, SymPy gives {value}"]
             if value == 0:
@@ -404,7 +439,7 @@ def validate(bp: dict, struct: dict, instantiate: Callable, truth: Callable,
             if extra:
                 return [f"{where}: {p}" for p in extra]
     for j, n in enumerate(zeros):
-        if n * 2 > samples:
+        if n > samples * max_zero_share:
             problems.append(f"checkpoint {bp['checkpoints'][j]['id']} is 0 on {n}/{samples} samples "
                             f"(e.g. the derivative of a constant) — it earns no marks and any stray "
                             f"'= 0' line would match it")
@@ -417,6 +452,11 @@ def validate(bp: dict, struct: dict, instantiate: Callable, truth: Callable,
 
 
 def _slot_names(struct):
+    """A structure's slots: its own ``slots`` list when it has one (a pattern
+    may hold placeholders that aren't slots, like integral's ``{v}``), else
+    every ``{name}`` in its pattern."""
+    if struct.get("slots") is not None:
+        return list(struct["slots"])
     return list(dict.fromkeys(re.findall(r"\{(\w+)\}", struct["pattern"])))
 
 

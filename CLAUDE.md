@@ -184,7 +184,7 @@ shown (a step written as a term of the answer, `4 - 2e^{-2x}`, counts, and so do
 the blueprint method it follows.
 
 ### Template registries & solution blueprints
-Derivatives and differential equations generate every question from a structure registry
+Derivatives, differential equations and integrals generate every question from a structure registry
 (`engine/topics/<topic>/structures.py`: named templates with `{slot}` parameters and a sampler; the
 former curated textbook exercises are recorded as instances of them) and tag it with
 `params.template_id`/`params.template_params`. Each template has a *blueprint* in the topic's

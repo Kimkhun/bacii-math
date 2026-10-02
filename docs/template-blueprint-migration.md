@@ -5,9 +5,10 @@ time from named templates**, each template carrying a **blueprint**: a marking s
 planned once, offline, which SymPy re-evaluates on every question's own numbers to drive the
 step-by-step checker and the points rubric.
 
-Done so far: **derivatives** (74 templates, the reference implementation) and **differential
-equations** (23 templates, the pilot that generalized the core). This guide is the recipe for the
-rest (integral, limit, vectors_space, conics, continuity, probability, complex). `functions` and
+Done so far: **derivatives** (74 templates, the reference implementation), **differential
+equations** (23 templates, the pilot that generalized the core) and **integral** (168 templates).
+This guide is the recipe for the rest (limit, vectors_space, conics, continuity, probability,
+complex). `functions` and
 `past_exam` stay out: `functions` is a multi-part study with its own grader, and `past_exam` replays
 a real paper whose marking scheme is already hand-listed in the printed order
 (`engine/topics/past_exam/rubric.py`).
@@ -244,7 +245,13 @@ return {..., "checkpoints": checkpoints, "aux_checkpoints": aux_checkpoints, "me
 then), and silently skips a method that fails on an instance: **a bad blueprint never breaks
 grading.** The last checkpoint of every plan is always the solver's own answer.
 
-Watch for solver fields that pre-empt a checkpoint. ODE's `given_expressions` (a restated general
+Watch for values only defined up to a constant. Integral lessons: SymPy's antiderivative is not the student's (x⁸/4 + … vs (x²+3)⁴/4: they differ
+by a constant, and so do F(hi) and F(lo)), so a blueprint writes F in the student's form and each
+F(hi)/F(lo) step also accepts the value shifted by SymPy's constant (`alternatives`); and the
+step checker used to skip every line with ∫ in it — it now checks the evaluated right-hand side
+(`∫ 3x² dx = x³`) unless that is still an integral or in u.
+
+Watch for solver fields that pre-empt a checkpoint, too. ODE's `given_expressions` (a restated general
 solution is skipped as "given") had to drop any expression a blueprint step now grades, or that step
 could never score.
 
@@ -288,6 +295,14 @@ Practical notes from the pilot:
   the old code; restart it after a fix.
 - **Long answers time out.** Big templates (10+ steps) can exceed 120 s. Use `--batch 1
   --timeout 300`, and `--thinking-budget <tokens>` for a template that keeps timing out.
+- **Big topics: run requests in parallel** (`--concurrency 4 --batch 2`); validation still runs one
+  at a time. If gemini-3.5-flash keeps timing out on some templates, `--model gemini-2.5-flash`
+  for the leftovers has worked (the model used is recorded per method).
+- **Leftovers can be written by hand (or by another model).** Write them in the same JSON shape the
+  LLM returns and run `scripts/import_blueprints.py --topic <topic> --file plans.json --model <author>`
+  (`--alternatives` for extra methods, or `"methods": []` to record "checked, none"). They go
+  through exactly the same gate, and the author is recorded per method. Integral's last 15 and
+  ODE's last 9 alternative checks were done this way after Gemini kept timing out.
 - **Cost** is printed at the end of each run (prompt and output tokens). A 23-template topic with
   retries is well under a dollar on gemini-3.5-flash.
 
@@ -366,9 +381,9 @@ status table below.
 | topic | registry | curated folded in | blueprints | notes |
 |---|---|---|---|---|
 | derivatives | 74 structures | 54 → removed | 74/74, 128 methods | reference implementation; strict "every step shown" policy |
-| differential_equations | 23 structures | 30 → removed | 23/23 (standard methods; one by gemini-2.5-flash after 3.5-flash kept timing out) | pilot; role-verified spec; default policy |
+| differential_equations | 23 structures | 30 → removed | 23/23, 33 methods (10 alternatives; one standard by gemini-2.5-flash after 3.5-flash kept timing out) | pilot; role-verified spec; default policy |
 | limit | 162 structures | removed (PR #26) | 162 *unvalidated* LaTeX-string blueprints (`backend/data/limit_blueprints.json`, the "AI experinet" commit) | **re-do in this format**: relations + SymPy gate (`limit` relation) |
-| integral | 168 structures | mapped | none | questions not yet tagged with `template_id`; needs `antiderivative` / bounds relations |
+| integral | 168 structures (ids `integral:<name>`, bare names still resolve) | 122 mapped | 168/168 (153 gemini-3.5-flash, 15 claude-opus-5-5); 504 simulated works full marks, no flagged line | registry already existed; the work was making the generator sample *only* from it (the inline samplers were near-duplicates) and tagging questions |
 | vectors_space | none (7 samplers) | 27 curated | none | needs named givens (A, B, C) and vector relations |
 | conics | none (11 asks) | 29 curated | none | |
 | continuity | none (2 samplers) | 24 curated | none | needs `limit` (one-sided) relations |

@@ -5,9 +5,17 @@ knows about — both the shapes the live generator emits and the parameterized
 templates derived from the 124 BAC II integral exercises (so every exercise has
 a structure it maps to). Used by:
 
+- the live generator (``generator.py``): every question is sampled from one
+  of these structures and records it as ``params["template_id"]`` (with its
+  slot values and bounds in ``params["template_params"]``), so the
+  structure's blueprint (``blueprint_spec.py``, ``engine/core/blueprints.py``)
+  supplies the graded steps,
 - the admin `/templates/structures` endpoint (pattern + one filled sample per
   structure), and
-- `scripts/verify_integral_structures.py` (solve + grade every structure).
+- `scripts/audit_integral_structures.py` (sample, solve, verify and grade every structure).
+
+Ids are ``integral:<name>`` (``integral:def_poly``, ``integral:usub_power``);
+the bare names used before the prefix still resolve (``structure_by_id``).
 
 This module deliberately imports only SymPy (and this topic's own
 ``solver.py``, which also only imports SymPy) so the host verify script can
@@ -23,7 +31,7 @@ import zlib
 
 from sympy import E, Integral, N, Symbol, latex, oo, pi, sqrt, sympify, zoo
 
-from ...core.slots import _SLOT_NAMES, fill_bound, fill_structured
+from ...core.slots import _COEFF_POOLS, _SLOT_NAMES, fill_bound
 from .solver import _solve_definite_integral, _solve_indefinite_integral
 
 # ---------------------------------------------------------------------------
@@ -427,7 +435,38 @@ _INTEGRAL_STRUCTURES = (
     _indef_structures() + _new_indef_structures() + _def_structures() + _new_def_structures()
 )
 
+ID_PREFIX = "integral:"
+
+#: Slot draws that differ from the shared coefficient pools: the definite
+#: polynomial keeps the signed coefficients and the wider bounds the old
+#: hand-written sampler used.
+_SIGNED = [str(v) for v in range(-6, 7)]
+_CUSTOM_POOLS = {
+    "def_poly": {"a": [v for v in _SIGNED if v != "0"], "b": _SIGNED, "c": _SIGNED},
+}
+_EXTRA_BOUNDS = {
+    "def_poly": [("0", "2"), ("0", "3"), ("-1", "1"), ("-2", "1"), ("1", "3")],
+}
+
+
+def _bound_slots(bounds):
+    return [slot for lo, hi in bounds or () for slot in _SLOT_NAMES
+            if "{" + slot + "}" in lo + hi]
+
+
+for _s in _INTEGRAL_STRUCTURES:
+    _s["legacy_id"] = _s["id"]
+    _s["id"] = ID_PREFIX + _s["id"]
+    _s["pools"] = _CUSTOM_POOLS.get(_s["legacy_id"])
+    if _s["bounds"]:
+        _s["bounds"] = list(_s["bounds"]) + _EXTRA_BOUNDS.get(_s["legacy_id"], [])
+    # The pattern's {v} is the variable, not a slot.
+    _s["slots"] = list(dict.fromkeys(
+        [slot for slot in _SLOT_NAMES if "{" + slot + "}" in _s["pattern"]] + _bound_slots(_s["bounds"])))
+
 _STRUCT_BY_ID = {s["id"]: s for s in _INTEGRAL_STRUCTURES}
+_STRUCT_BY_ID.update({s["legacy_id"]: s for s in _INTEGRAL_STRUCTURES})
+STRUCTURES_BY_ID = {s["id"]: s for s in _INTEGRAL_STRUCTURES}
 
 # All source exercise labels (the 124 = 15 curated + 109 transcribed). Broken
 # source exercises stay excluded from structures and are listed here for the
@@ -440,7 +479,12 @@ def all_integral_structures():
 
 
 def structure_by_id(struct_id):
+    """The structure for an id, with or without the ``integral:`` prefix."""
     return _STRUCT_BY_ID.get(struct_id)
+
+
+def slot_names(struct):
+    return list(struct["slots"])
 
 
 def source_label_map():
@@ -527,6 +571,73 @@ def _solve_struct(qt, params):
     return _solve_definite_integral(params)
 
 
+def _wrap(value):
+    """A slot value pasted into a pattern: negatives in brackets, so
+    "{a}*x" with a = -3 reads (-3)*x and "x - {b}" with b = -2 reads x - (-2)."""
+    text = str(value)
+    return f"({text})" if text.startswith("-") else text
+
+
+def instantiate(struct, template_params):
+    """The question params for these slot values (and, for a definite
+    integral, the "lower"/"upper" bounds recorded with them)."""
+    var = struct["var"]
+    expr = struct["pattern"].replace("{v}", var)
+    missing = [n for n in struct["slots"] if n not in template_params]
+    if missing:
+        raise KeyError(f"{struct['id']}: missing slot values {missing}")
+    for slot in struct["slots"]:
+        expr = expr.replace("{" + slot + "}", _wrap(template_params[slot]))
+    if any(str(template_params[slot]).startswith("-") for slot in struct["slots"]):
+        # "(-4)*x**2 + 3*x" -> "-4*x**2 + 3*x" (only signed pools reach here).
+        expr = str(sympify(expr, locals={var: Symbol(var), **_LOCALS}))
+    params = {"expr": expr, "var": var, "variant": struct["variant"]}
+    if struct["question_type"] == _DEF:
+        params["lower"] = str(template_params["lower"])
+        params["upper"] = str(template_params["upper"])
+    return params
+
+
+def _draw(struct, rng):
+    """One random fill: (params, template_params)."""
+    var = struct["var"]
+    pools = struct.get("pools") or {}
+    vals = {slot: rng.choice(pools.get(slot) or _COEFF_POOLS[slot]) for slot in struct["slots"]}
+    template_params = dict(vals)
+    if struct["question_type"] == _DEF:
+        lo_t, hi_t = rng.choice(struct["bounds"])
+        template_params["lower"] = fill_bound(rng, lo_t, var, vals)
+        template_params["upper"] = fill_bound(rng, hi_t, var, vals)
+    return instantiate(struct, template_params), template_params
+
+
+#: Largest definite-integral answer a sampled question may have: the
+#: grader's decimal tolerance is absolute, so a rounded answer to a huge
+#: result would be marked wrong.
+MAX_DEFINITE_ANSWER = 100
+
+
+def sample(struct, rng, max_abs=MAX_DEFINITE_ANSWER):
+    """(params, template_params) for a solvable instance with a clean finite
+    answer (see `build_sample`) — the structure's sampler."""
+    for _ in range(40):
+        params, template_params = _draw(struct, rng)
+        try:
+            solution = _solve_struct(struct["question_type"], params)
+        except Exception:
+            continue
+        if not _sample_ok(solution, struct["question_type"], params["var"]):
+            continue
+        if max_abs is not None and struct["question_type"] == _DEF and abs(N(solution["answer_exact"])) > max_abs:
+            continue
+        return params, template_params
+    raise ValueError(f"could not build a valid sample for {struct['id']}")
+
+
+for _s in _INTEGRAL_STRUCTURES:
+    _s["sampler"] = (lambda rng, struct=_s: sample(struct, rng))
+
+
 def build_sample(struct, seed, max_abs=None):
     """Deterministic filled instance of a structure: params + solved solution,
     reseeding until the answer is a clean finite real result (and, for a
@@ -534,12 +645,8 @@ def build_sample(struct, seed, max_abs=None):
     var = struct["var"]
     for attempt in range(40):
         rng = random.Random(seed + attempt * 7919)
-        expr, vals = fill_structured(rng, struct["pattern"], var)
-        params = {"expr": expr, "var": var, "variant": struct["variant"]}
-        if struct["question_type"] == _DEF:
-            lo_t, hi_t = rng.choice(struct["bounds"])
-            params["lower"] = fill_bound(rng, lo_t, var, vals)
-            params["upper"] = fill_bound(rng, hi_t, var, vals)
+        params, vals = _draw(struct, rng)
+        expr = params["expr"]
         try:
             solution = _solve_struct(struct["question_type"], params)
         except Exception:
