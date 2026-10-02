@@ -1,8 +1,14 @@
-import asyncio
+"""Blueprint specification for Limit derivations.
+
+Defines the master prompt, schemas, and generator for creating AI-powered
+step-by-step mathematical limit derivations and SymPy checkpoints.
+"""
+
 import json
-import os
-import re
+from typing import Any
+
 from google.genai import types
+
 from engine.llm import _gemini_generate
 
 # Define the schema for batched template steps
@@ -17,32 +23,44 @@ BATCH_LIMIT_SCHEMA = {
                     "template_id": {"type": "STRING"},
                     "indeterminate_form": {
                         "type": "STRING",
-                        "description": "The exact indeterminate form: 0/0, 1^\\infty, \\infty/\\infty, or \\infty - \\infty"
+                        "description": "The exact indeterminate form: 0/0, 1^\\infty, \\infty/\\infty, or \\infty - \\infty",
+                    },
+                    "formula_tags": {
+                        "type": "ARRAY",
+                        "items": {"type": "STRING"},
+                        "description": "Official Bac II formula IDs exercised in this derivation (e.g. trig_half_angle, sinc_standard_limit, factoring_0_0, rationalization_conjugate_finite, indeterminate_one_infinity).",
                     },
                     "steps": {
                         "type": "ARRAY",
                         "items": {
                             "type": "STRING",
-                            "description": "A pure LaTeX equation line containing parameter placeholders like {a}, {b}, {k}. Line 1 MUST include the indeterminate form tag \\left(\\text{រាងមិនកំណត់ } ...\\right). Subsequent lines start with = \\lim_{...} or evaluate to the final algebraic form. ABSOLUTELY ZERO English or Khmer words permitted anywhere in the steps."
-                        }
+                            "description": "A pure LaTeX equation line containing parameter placeholders like {a}, {b}, {k}. Line 1 MUST include the indeterminate form tag \\left(\\text{រាងមិនកំណត់ } ...\\right). Subsequent lines start with = \\lim_{...} or evaluate to the final algebraic form. ABSOLUTELY ZERO English or Khmer words permitted anywhere in the steps.",
+                        },
                     },
                     "checkpoints": {
                         "type": "ARRAY",
                         "items": {
                             "type": "STRING",
-                            "description": "The key intermediate mathematical expressions (right-hand side of intermediate steps) for the canvas grader, parameterized with {a}, {b}, {k}."
-                        }
+                            "description": "The key intermediate mathematical expressions (right-hand side of intermediate steps) for the canvas grader, parameterized with {a}, {b}, {k}.",
+                        },
                     },
                     "final_answer_formula": {
                         "type": "STRING",
-                        "description": "Algebraic expression for the final answer in terms of parameters, e.g. {k}, {a} - {b}, 2*{a}, etc."
-                    }
+                        "description": "Algebraic expression for the final answer in terms of parameters, e.g. {k}, {a} - {b}, 2*{a}, etc.",
+                    },
                 },
-                "required": ["template_id", "indeterminate_form", "steps", "checkpoints", "final_answer_formula"]
-            }
+                "required": [
+                    "template_id",
+                    "indeterminate_form",
+                    "formula_tags",
+                    "steps",
+                    "checkpoints",
+                    "final_answer_formula",
+                ],
+            },
         }
     },
-    "required": ["templates"]
+    "required": ["templates"],
 }
 
 MASTER_LIMIT_SYSTEM_PROMPT = """You are the Chief Official Examiner for the Grade 12 Cambodian National Bac II Mathematics Examination (អត្រាកំណែផ្លូវការក្រសួងអប់រំ).
@@ -113,24 +131,24 @@ STRICT EDITORIAL AND MATHEMATICAL RULES:
 
    D. RADICAL LIMITS:
       - Square root conjugate (sqrt(x + c) - d)/(x - a):
-        Line 1: State limit with 0/0 tag: \lim_{x \to {a}} \dfrac{\sqrt{x + {c}} - {d}}{x - {a}} \quad \left(\text{រាងមិនកំណត់ } \dfrac{0}{0}\right)
-        Line 2: Multiply by conjugate: = \lim_{x \to {a}} \dfrac{(\sqrt{x + {c}} - {d})(\sqrt{x + {c}} + {d})}{(x - {a})(\sqrt{x + {c}} + {d})}
-        Line 3: Expand numerator: = \lim_{x \to {a}} \dfrac{x + {c} - {d}^2}{(x - {a})(\sqrt{x + {c}} + {d})}
-        Line 4: Cancel common factor: = \lim_{x \to {a}} \dfrac{1}{\sqrt{x + {c}} + {d}}
-        Line 5: Substitute x = {a}: = \dfrac{1}{\sqrt{{a} + {c}} + {d}}
+        Line 1: State limit with 0/0 tag: \\lim_{x \\to {a}} \\dfrac{\\sqrt{x + {c}} - {d}}{x - {a}} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)
+        Line 2: Multiply by conjugate: = \\lim_{x \\to {a}} \\dfrac{(\\sqrt{x + {c}} - {d})(\\sqrt{x + {c}} + {d})}{(x - {a})(\\sqrt{x + {c}} + {d})}
+        Line 3: Expand numerator: = \\lim_{x \\to {a}} \\dfrac{x + {c} - {d}^2}{(x - {a})(\\sqrt{x + {c}} + {d})}
+        Line 4: Cancel common factor: = \\lim_{x \\to {a}} \\dfrac{1}{\\sqrt{x + {c}} + {d}}
+        Line 5: Substitute x = {a}: = \\dfrac{1}{\\sqrt{{a} + {c}} + {d}}
 
    E. TRIGONOMETRIC LIMITS:
       - Standard sinc ratio sin(ax)/(bx):
-        Line 1: State limit with 0/0 tag: \lim_{x \to 0} \dfrac{\sin({a}x)}{{b}x} \quad \left(\text{រាងមិនកំណត់ } \dfrac{0}{0}\right)
-        Line 2: Balance coefficients: = \lim_{x \to 0} \dfrac{{a}}{{b}} \cdot \dfrac{\sin({a}x)}{{a}x}
-        Line 3: Pull constant outside: = \dfrac{{a}}{{b}} \cdot \lim_{x \to 0} \dfrac{\sin({a}x)}{{a}x}
-        Line 4: Evaluate standard limit: = \dfrac{{a}}{{b}} \cdot 1 = \dfrac{{a}}{{b}}
+        Line 1: State limit with 0/0 tag: \\lim_{x \\to 0} \\dfrac{\\sin({a}x)}{{b}x} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)
+        Line 2: Balance coefficients: = \\lim_{x \\to 0} \\dfrac{{a}}{{b}} \\cdot \\dfrac{\\sin({a}x)}{{a}x}
+        Line 3: Pull constant outside: = \\dfrac{{a}}{{b}} \\cdot \\lim_{x \\to 0} \\dfrac{\\sin({a}x)}{{a}x}
+        Line 4: Evaluate standard limit: = \\dfrac{{a}}{{b}} \\cdot 1 = \\dfrac{{a}}{{b}}
       - Cosine half-angle (1 - cos(ax))/x^2:
-        Line 1: State limit with 0/0 tag: \lim_{x \to 0} \dfrac{1 - \cos({a}x)}{x^2} \quad \left(\text{រាងមិនកំណត់ } \dfrac{0}{0}\right)
-        Line 2: Apply half-angle formula 1 - \cos(u) = 2\sin^2(u/2): = \lim_{x \to 0} \dfrac{2\sin^2\left(\frac{{a}x}{2}\right)}{x^2}
-        Line 3: Group square ratio: = \lim_{x \to 0} 2 \cdot \left(\dfrac{\sin\left(\frac{{a}x}{2}\right)}{x}\right)^2
-        Line 4: Balance coefficients: = 2 \cdot \left(\dfrac{{a}}{2}\right)^2 \cdot \lim_{x \to 0} \left(\dfrac{\sin\left(\frac{{a}x}{2}\right)}{\frac{{a}x}{2}}\right)^2
-        Line 5: Evaluate: = 2 \cdot \dfrac{{a}^2}{4} \cdot (1)^2 = \dfrac{{a}^2}{2}
+        Line 1: State limit with 0/0 tag: \\lim_{x \\to 0} \\dfrac{1 - \\cos({a}x)}{x^2} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)
+        Line 2: Apply half-angle formula 1 - \\cos(u) = 2\\sin^2(u/2): = \\lim_{x \\to 0} \\dfrac{2\\sin^2\\left(\\frac{{a}x}{2}\\right)}{x^2}
+        Line 3: Group square ratio: = \\lim_{x \\to 0} 2 \\cdot \\left(\\dfrac{\\sin\\left(\\frac{{a}x}{2}\\right)}{x}\\right)^2
+        Line 4: Balance coefficients: = 2 \\cdot \\left(\\dfrac{{a}}{2}\\right)^2 \\cdot \\lim_{x \\to 0} \\left(\\dfrac{\\sin\\left(\\frac{{a}x}{2}\\right)}{\\frac{{a}x}{2}}\\right)^2
+        Line 5: Evaluate: = 2 \\cdot \\dfrac{{a}^2}{4} \\cdot (1)^2 = \\dfrac{{a}^2}{2}
       - Difference of sines or cosines (sum-to-product):
         Line 1: State limit with 0/0 tag
         Line 2: Apply sum-to-product trigonometric identity
@@ -138,31 +156,48 @@ STRICT EDITORIAL AND MATHEMATICAL RULES:
         Line 4: Evaluate each limit factor to obtain the final value
 
    F. INFINITY LIMITS:
-      - Rational functions P(x)/Q(x) as x -> \infty:
-        Line 1: State limit with \infty/\infty tag: \lim_{x \to +\infty} \dfrac{P(x)}{Q(x)} \quad \left(\text{រាងមិនកំណត់ } \dfrac{\infty}{\infty}\right)
+      - Rational functions P(x)/Q(x) as x -> \\infty:
+        Line 1: State limit with \\infty/\\infty tag: \\lim_{x \\to +\\infty} \\dfrac{P(x)}{Q(x)} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{\\infty}{\\infty}\\right)
         Line 2: Factor out dominant power of x from numerator and denominator
         Line 3: Cancel common power of x
         Line 4: Evaluate remaining fractional terms (tending to 0) to yield the leading coefficient ratio
       - Conjugates at infinity sqrt(Ax^2 + Bx + C) - (kx + D):
-        Line 1: State limit with \infty - \infty tag: \lim_{x \to +\infty} \left(\sqrt{A x^2 + B x + C} - (kx + D)\right) \quad \left(\text{រាងមិនកំណត់ } \infty - \infty\right)
-        Line 2: Multiply and divide by conjugate: \dfrac{(\dots)(\dots)}{\sqrt{\dots} + (\dots)}
+        Line 1: State limit with \\infty - \\infty tag: \\lim_{x \\to +\\infty} \\left(\\sqrt{A x^2 + B x + C} - (kx + D)\\right) \\quad \\left(\\text{រាងមិនកំណត់ } \\infty - \\infty\\right)
+        Line 2: Multiply and divide by conjugate: \\dfrac{(\\dots)(\\dots)}{\\sqrt{\\dots} + (\\dots)}
         Line 3: Expand numerator difference of squares
         Line 4: Factor out x from numerator and denominator
-        Line 5: Evaluate limit as x -> +\infty
+        Line 5: Evaluate limit as x -> +\\infty
 
 4. PARAMETER PRESERVATION:
    - Retain exact parameter tokens ({a}, {b}, {k}, {c}, {d}, {m}, {n}, {p}, {q}) so the blueprint is 100% universal for any numeric variant.
+
+5. APPROVED OFFICIAL BAC II FORMULA CATALOG (ONLY PICK FROM THESE TAGS):
+   - factoring_0_0 (ដាក់ជាផលគុណកត្តារាងមិនកំណត់ 0/0)
+   - rational_function_infinity (លីមីតអនុគមន៍សនិទាននៅអនន្ត)
+   - rationalization_conjugate_finite (គុណកន្សោមឆ្លាស់បំបាត់រ៉ាឌីកាល់)
+   - conjugate_infinity (គុណកន្សោមឆ្លាស់នៅអនន្ត)
+   - indeterminate_one_infinity (លីមីតរាងមិនកំណត់ 1^∞ ចំនួន e)
+   - sinc_standard_limit (រូបមន្តលីមីតនៃអនុគមន៍ត្រីកោណមាត្រ sin(x)/x=1)
+   - exponential_standard_limit (រូបមន្តលីមីតនៃអនុគមន៍អិចប៉ូណង់ស្យែល (e^x-1)/x=1)
+   - log_limit_zero (រូបមន្តលីមីតនៃអនុគមន៍ឡូការីត ln(1+x)/x=1)
+   - trig_double_angle (រូបមន្តទ្វេមុំ)
+   - trig_half_angle (រូបមន្តកន្លះមុំ)
+   - trig_fundamental_relations (ទំនាក់ទំនងសំខាន់ៗ)
+   - trig_triple_quad_angle (រូបមន្តត្រីមុំ)
+   - trig_sum_to_product (រូបមន្តបម្លែងផលបូក)
+   - limit_power_identity (រូបមន្តលីមីតស្វ័យគុណ x^n - a^n)
 """
 
-async def generate_blueprints_for_templates(template_list: list[dict]) -> dict:
+
+async def generate_blueprints_for_templates(template_list: list[dict[str, Any]]) -> dict[str, Any]:
     prompt = MASTER_LIMIT_SYSTEM_PROMPT + "\n\nTEMPLATES TO SOLVE:\n"
     for idx, t in enumerate(template_list, 1):
-        prompt += f"{idx}. ID: \"{t['id']}\"\n   Pattern: \"{t['pattern']}\" as {t.get('var', 'x')} -> {t.get('point', '0')}\n\n"
+        prompt += f'{idx}. ID: "{t["id"]}"\n   Pattern: "{t["pattern"]}" as {t.get("var", "x")} -> {t.get("point", "0")}\n\n'
 
     resp = await _gemini_generate(
         prompt,
         response_schema=BATCH_LIMIT_SCHEMA,
-        endpoint="batch_limit_blueprints"
+        endpoint="batch_limit_blueprints",
     )
     if isinstance(resp, str):
         return json.loads(resp)

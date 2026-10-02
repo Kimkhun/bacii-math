@@ -1118,12 +1118,7 @@ def _with_formula_names(line_results):
     return line_results
 
 
-def _deduce_limit_transition(prev_expr, curr_expr, var_sym, limit_point, target_val=None):
-    try:
-        from ..topics.limit.rules import deduce_limit_step
-        return deduce_limit_step(prev_expr, curr_expr, var_sym, limit_point, target_val)
-    except Exception:
-        return None
+
 
 
 # --- Verifying a student's own labelled claims ("u' = ...") --------------
@@ -1629,22 +1624,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
                 "expected": str(aux_hit["value"]), "restated": True,
             })
         elif symbolic_value and given_expr is not None and _equivalent_exact(value, given_expr, var_sym):
-            # An algebraic rewrite of the given expression:
-            # If for limits, this rewrite exercises a specific Bac II formula (e.g. half-angle,
-            # trig identity, factoring, conjugate), credit it rather than discarding as a restatement.
-            if topic == "limit" and (rule_deduced := _deduce_limit_transition(last_valid_expr, value, var_sym, limit_point, solution.get("answer_exact"))):
-                line_results.append({
-                    "line": i,
-                    "text": raw,
-                    "checked": True,
-                    "correct": True,
-                    "matches": rule_deduced.get("label"),
-                    "formula": rule_deduced.get("formula"),
-                    "expected": str(value),
-                })
-                last_valid_expr = value
-            else:
-                line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
+            line_results.append({"line": i, "text": raw, "checked": False, "reason": "given"})
         elif had_equals and _is_var_point_declaration(lhs, value_str, params.get("var", "x")):
             # 'x = 0' (Step 1: substitute x = 0 directly) names the
             # substitution point rather than asserting a computed value.
@@ -1679,20 +1659,7 @@ def analyze_work(topic, question_type, params, lines, tolerance=None) -> dict:
             # letters, on a problem whose every checkpoint is a concrete
             # number — nothing here to verify, so it can't be wrong.
             line_results.append({"line": i, "text": raw, "checked": False, "reason": "definition"})
-        elif topic == "limit" and (rule_deduced := _deduce_limit_transition(last_valid_expr, value, var_sym, limit_point, solution.get("answer_exact"))):
-            line_results.append({
-                "line": i,
-                "text": raw,
-                "checked": True,
-                "correct": True,
-                "matches": rule_deduced.get("label"),
-                "formula": rule_deduced.get("formula"),
-                "compound_formulas": rule_deduced.get("compound_formulas"),
-                "expected": str(value),
-            })
-            last_valid_expr = value
-            if _equivalent_exact(value, solution["answer_exact"], var_sym):
-                pointer = len(checkpoints)
+
         elif is_definition:
             # The student naming their own sub-expression ("u = ..."): not a
             # claim that can be wrong. Its value is used by later lines.
