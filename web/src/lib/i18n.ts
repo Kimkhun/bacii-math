@@ -861,6 +861,8 @@ export const QUESTION_TYPE_LABELS: Record<string, { en: string; km: string }> = 
 
   "limit:trig:sinc_standard": { en: "Fundamental sinc limit sin(kx)/x", km: "លីមីតគ្រឹះ sin(kx)/x" },
   "limit:trig:half_angle": { en: "Half-angle trig (1 - cos(mx))/x²", km: "លីមីតកន្លះមុំ (1 - cos(mx))/x²" },
+  "limit:trig:sinc_kx": { en: "Fundamental sinc limit sin(kx)/x", km: "លីមីតគ្រឹះ sin(kx)/x" },
+  "limit:trig:one_minus_cos": { en: "Half-angle trig (1 - cos(mx))/x²", km: "លីមីតកន្លះមុំ (1 - cos(mx))/x²" },
 
   "limit:exponential:diff_ratio": { en: "Difference of exponentials", km: "ផលដកអិចស្ប៉ូណង់ស្យែលត្រង់ 0" },
   "limit:exponential:trig_combo": { en: "Exponential mixed with trig", km: "អិចស្ប៉ូណង់ស្យែលចម្រុះត្រីកោណមាត្រ" },

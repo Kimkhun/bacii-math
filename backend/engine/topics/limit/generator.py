@@ -46,13 +46,23 @@ def _build_sampled_limit(technique, expr, point, difficulty, side=None):
 def generate_limit_for_technique(rng, technique, difficulty=None):
     """Sample one procedurally-generated instance of a specific parameterizable
     limit technique using authentic textbook structures."""
-    candidates = [
+    # Match exact ID first (accepting with or without 'limit:' prefix)
+    exact = [
         s for s in LIMIT_STRUCTURES
-        if s.get("id") == technique or s.get("subfamily") == technique
-        or s.get("category") == technique or s.get("shape") == technique
+        if s.get("id") == technique
+        or s.get("id") == f"limit:{technique}"
+        or (technique.startswith("limit:") and s.get("id") == technique[6:])
     ]
-    pool = candidates or [s for s in LIMIT_STRUCTURES if s.get("difficulty") == difficulty] or LIMIT_STRUCTURES
-    chosen = rng.choice(pool)
+    if exact:
+        chosen = rng.choice(exact)
+    else:
+        candidates = [
+            s for s in LIMIT_STRUCTURES
+            if s.get("subfamily") == technique
+            or s.get("category") == technique or s.get("shape") == technique
+        ]
+        pool = candidates or [s for s in LIMIT_STRUCTURES if s.get("difficulty") == difficulty] or LIMIT_STRUCTURES
+        chosen = rng.choice(pool)
     expr, point, slots = chosen["sampler"](rng)
     diff = chosen.get("difficulty", difficulty or "medium")
     prob = _build_sampled_limit(chosen["id"], expr, point, diff, slots.get("side"))
@@ -73,6 +83,26 @@ _SUBFAMILY_GROUPS = {
 
 def _generate_limit(rng, difficulty, variant=None):
     if variant:
+        # Specific structure id match first (e.g. "limit:trig:one_minus_cos", "trig:one_minus_cos", "diff_cubes").
+        # No structure id may equal a /practice group value (e.g. "limit:trig:half_angle"), or the group
+        # would only ever serve that one structure.
+        exact = [
+            s for s in LIMIT_STRUCTURES
+            if s.get("id") == variant
+            or s.get("id") == f"limit:{variant}"
+            or (variant.startswith("limit:") and s.get("id") == variant[6:])
+            or s.get("id").endswith(f":{variant}")
+        ]
+        if exact:
+            chosen = exact[0]
+            expr, point, slots = chosen["sampler"](rng)
+            prob = _build_sampled_limit(chosen["id"], expr, point, chosen.get("difficulty", difficulty), slots.get("side"))
+            prob["params"]["technique"] = chosen["id"]
+            prob["params"]["title_km"] = chosen.get("title_km")
+            prob["params"]["formula_name"] = chosen.get("shape", chosen["id"])
+            prob["params"].update(slots)
+            return prob
+
         norm_variant = variant[6:] if variant.startswith("limit:") else variant
         # Category/family match (e.g. "rational", "radical", "trig", "exponential", "logarithmic", "infinity")
         cat_pool = [

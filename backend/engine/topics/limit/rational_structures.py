@@ -10,9 +10,7 @@ import random
 
 def _sample_rat_diff_squares_linear(rng):
     a = rng.choice([2, 3, 4, 5, 6])
-    sign = rng.choice([1, -1])
-    pt = a * sign
-    return f"(x**2 - {a**2})/(x - {pt})", str(pt), {"a": a}
+    return f"(x**2 - {a**2})/(x - {a})", str(a), {"a": a, "pt": a}
 
 def _sample_rat_diff_squares_quad(rng):
     a = rng.choice([2, 3, 4, 5])
@@ -34,19 +32,23 @@ def _sample_rat_quadratic_linear(rng):
         r2 = rng.choice([-4, 4, 5])
     p = r1 + r2
     q = r1 * r2
-    return f"(x**2 - {p}*x + {q})/(x - {r1})", str(r1), {"r1": r1, "p": p, "q": q}
+    return f"(x**2 - {p}*x + {q})/(x - {r1})", str(r1), {"r1": r1, "r2": r2, "p": p, "q": q}
 
 def _sample_rat_quadratic_quadratic(rng):
     r_shared = rng.choice([1, 2, -1, -2])
     r1 = rng.choice([3, -3, 4])
     r2 = rng.choice([v for v in (5, -4, 2) if v != r_shared])
-    b1 = -(r_shared + r1)
-    c1 = r_shared * r1
-    b2 = -(r_shared + r2)
-    c2 = r_shared * r2
+    p1 = r_shared + r1
+    q1 = r_shared * r1
+    p2 = r_shared + r2
+    q2 = r_shared * r2
+    b1 = -p1
+    c1 = q1
+    b2 = -p2
+    c2 = q2
     num = f"x**2 {'+' if b1 >= 0 else '-'} {abs(b1)}*x {'+' if c1 >= 0 else '-'} {abs(c1)}"
     den = f"x**2 {'+' if b2 >= 0 else '-'} {abs(b2)}*x {'+' if c2 >= 0 else '-'} {abs(c2)}"
-    return f"({num})/({den})", str(r_shared), {"shared": r_shared, "r1": r1, "r2": r2}
+    return f"({num})/({den})", str(r_shared), {"shared": r_shared, "r1": r1, "r2": r2, "p1": p1, "q1": q1, "p2": p2, "q2": q2}
 
 def _sample_rat_quartic_linear(rng):
     a = rng.choice([1, 2, 3])
@@ -67,7 +69,9 @@ def _sample_rat_diff_cubes_quad(rng):
 def _sample_rat_diff_cubes_trinomial(rng):
     a = rng.choice([1, 2])
     b = rng.choice([2, 3])
-    return f"(x**3 - {a**3})/({b}*x**2 - {b*a + 1}*x + {a})", str(a), {"a": a, "b": b}
+    c = b * a + 1
+    d = a
+    return f"(x**3 - {a**3})/({b}*x**2 - {c}*x + {d})", str(a), {"a": a, "b": b, "c": c, "d": d}
 
 def _sample_rat_shifted_binomial_cube(rng):
     a = rng.choice([2, 3, 4])
@@ -84,11 +88,12 @@ def _sample_rat_shifted_difference_squares(rng):
 
 def _sample_rat_grouping_cubic(rng):
     a = rng.choice([2, 3])
-    return f"(x**3 - {a}*x**2 + x - {a})/(2*x**2 - {2*a + 1}*x + {a})", str(a), {"a": a}
+    b = 2 * a + 1
+    return f"(x**3 - {a}*x**2 + x - {a})/(2*x**2 - {b}*x + {a})", str(a), {"a": a, "b": b}
 
 def _sample_rat_poly_derivative_1(rng):
     n = rng.choice([4, 5, 6])
-    return f"(x**{n} - {n}*x + {n-1})/(x - 1)**2", "1", {"n": n}
+    return f"(x**{n} - {n}*x + {n-1})/(x - 1)**2", "1", {"n": n, "n_minus_1": n - 1, "n_minus_2": n - 2}
 
 def _sample_rat_poly_monomial_n(rng):
     n = rng.choice([2015, 2018, 2021, 2025])
@@ -97,7 +102,7 @@ def _sample_rat_poly_monomial_n(rng):
 def _sample_rat_poly_derivative_ratio(rng):
     n = rng.choice([10, 20, 50, 100])
     m = rng.choice([5, 10, 25, 50])
-    return f"(x**{n} - {n}*x + {n-1})/(x**{m} - {m}*x + {m-1})", "1", {"n": n, "m": m}
+    return f"(x**{n} - {n}*x + {n-1})/(x**{m} - {m}*x + {m-1})", "1", {"n": n, "m": m, "n_minus_1": n - 1, "m_minus_1": m - 1}
 
 def _sample_rat_poly_odd_ratio(rng):
     p = rng.choice([2017, 2019, 2023])
@@ -409,9 +414,7 @@ RATIONAL_STRUCTURES = [
         "point": "3",
         "var": "x",
         "sampler": lambda rng: (
-            f"sqrt(3*x**2 - 11)",
-            "3",
-            {"a": 3, "b": 11, "p": 3},
+            (lambda c: (f"sqrt(3*x**2 - 11) + {c}*x", "3", {"a": 3, "b": 11, "c": c, "p": 3}))(rng.choice([1, 2, 3]))
         ),
         "source_labels": ["2021a", "2025a", "dir_01"],
     },
@@ -447,9 +450,9 @@ RATIONAL_STRUCTURES = [
         "point": "oo",
         "var": "x",
         "sampler": lambda rng: (
-            f"({rng.choice([6, 8, 10])}*x**2 - x + 1)/({rng.choice([2, 4, 8])}*x**2 + 8)",
-            "oo",
-            {"a": 8, "p": 8, "q": 8},
+            (lambda a, p, q: (f"({a}*x**2 - x + 1)/({p}*x**2 + {q})", "oo", {"a": a, "p": p, "q": q}))(
+                rng.choice([6, 8, 10]), rng.choice([2, 4, 8]), 8
+            )
         ),
         "source_labels": ["2024b", "rat_31"],
     },

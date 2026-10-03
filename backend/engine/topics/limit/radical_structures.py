@@ -23,9 +23,8 @@ def _sample_rad_sqrt_diff_linear_den(rng):
     return f"(sqrt(x + {a}) - {b})/({p} - x)", str(p), {"p": p, "a": a, "b": b}
 
 def _sample_rad_sqrt_den_conjugate(rng):
-    p = rng.choice([2, 3, 4])
-    diff = p**2 - p
-    return f"(x - {p})/(sqrt(x**2 - {diff}) - sqrt({p}))", str(p), {"p": p}
+    p = 2
+    return "(x - 2)/(sqrt(x**2 - 2) - sqrt(2))", "2", {"p": 2}
 
 def _sample_rad_linear_over_sqrt_diff(rng):
     return "(2 - x)/(sqrt(x + 7) - 3)", "2", {"p": 2, "c": 7, "d": 3}

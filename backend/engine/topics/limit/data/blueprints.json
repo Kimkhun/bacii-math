@@ -204,7 +204,7 @@
       "\\lim_{x \\to 0} \\dfrac{e^x + e^{2x} + e^{3x} - 3}{x} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
       "= \\lim_{x \\to 0} \\dfrac{(e^x - 1) + (e^{2x} - 1) + (e^{3x} - 1)}{x}",
       "= \\lim_{x \\to 0} \\left(\\dfrac{e^x - 1}{x} + \\dfrac{e^{2x} - 1}{x} + \\dfrac{e^{3x} - 1}{x}\\right)",
-      "= \\lim_{x \\to 0} \\left(\\dfrac{e^x - 1}{x} + 2 \\cdot \\dfrac{e^{2x} - 1}{2x} + 3 \\cdot \\dfrac{e^{3x} - 1}{3x}\right)",
+      "= \\lim_{x \\to 0} \\left(\\dfrac{e^x - 1}{x} + 2 \\cdot \\dfrac{e^{2x} - 1}{2x} + 3 \\cdot \\dfrac{e^{3x} - 1}{3x}\\right)",
       "= 1 + 2 \\cdot 1 + 3 \\cdot 1",
       "= 6"
     ],
@@ -222,13 +222,13 @@
       "\\lim_{x \\to \\infty} \\dfrac{e^x}{x^{n}} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{\\infty}{\\infty}\\right)",
       "= \\lim_{t \\to \\infty} \\dfrac{e^{{n}t}}{({n}t)^{n}}",
       "= \\lim_{t \\to \\infty} \\dfrac{(e^t)^{n}}{{n}^{n} t^{n}}",
-      "= \\dfrac{1}{{n}^{n}} \\lim_{t \\to \\infty} \\left(\\dfrac{e^t}{t}\right)^{n}",
+      "= \\dfrac{1}{{n}^{n}} \\lim_{t \\to \\infty} \\left(\\dfrac{e^t}{t}\\right)^{n}",
       "= \\dfrac{1}{{n}^{n}} \\cdot (+\\infty)^{n}",
       "= +\\infty"
     ],
     "checkpoints": [
       "\\dfrac{e^{{n}t}}{({n}t)^{n}}",
-      "\\dfrac{1}{{n}^{n}} \\left(\\dfrac{e^t}{t}\right)^{n}",
+      "\\dfrac{1}{{n}^{n}} \\left(\\dfrac{e^t}{t}\\right)^{n}",
       "+\\infty"
     ],
     "final_answer_formula": "+\\infty"
@@ -289,9 +289,9 @@
     "template_id": "limit:euler:fraction_base",
     "indeterminate_form": "1^\\infty",
     "steps": [
-      "\\lim_{x \\to \\infty} \\left(\\dfrac{x - {a}}{x + {b}}\right)^x \\quad \\left(\\text{រាងមិនកំណត់ } 1^\\infty\\right)",
-      "= \\lim_{x \\to \\infty} \\left(\\dfrac{1 - \\dfrac{{a}}{x}}{1 + \\dfrac{{b}}{x}}\right)^x",
-      "= \\lim_{x \\to \\infty} \\dfrac{\\left(1 - \\dfrac{{a}}{x}\\right)^x}{\\left(1 + \\dfrac{{b}}{x}\right)^x}",
+      "\\lim_{x \\to \\infty} \\left(\\dfrac{x - {a}}{x + {b}}\\right)^x \\quad \\left(\\text{រាងមិនកំណត់ } 1^\\infty\\right)",
+      "= \\lim_{x \\to \\infty} \\left(\\dfrac{1 - \\dfrac{{a}}{x}}{1 + \\dfrac{{b}}{x}}\\right)^x",
+      "= \\lim_{x \\to \\infty} \\dfrac{\\left(1 - \\dfrac{{a}}{x}\\right)^x}{\\left(1 + \\dfrac{{b}}{x}\\right)^x}",
       "= \\lim_{x \\to \\infty} \\dfrac{\\left[\\left(1 - \\dfrac{{a}}{x}\\right)^{-\\dfrac{x}{{a}}}\\right]^{-{a}}}{\\left[\\left(1 + \\dfrac{{b}}{x}\\right)^{\\dfrac{x}{{b}}}\\right]^{{b}}}",
       "= \\dfrac{e^{-{a}}}{e^{{b}}}",
       "= e^{-{a} - {b}}"
@@ -307,9 +307,9 @@
     "template_id": "limit:euler:zero_linear",
     "indeterminate_form": "1^\\infty",
     "steps": [
-      "\\lim_{x \\to 0} \\left(1 + {a}x\right)^{\\dfrac{1}{x}} \\quad \\left(\text{រាងមិនកំណត់ } 1^\\infty\\right)",
-      "= \\lim_{x \\to 0} \\left[\\left(1 + {a}x\right)^{\\dfrac{1}{{a}x}}\\right]^{{a}}",
-      "= \\left[\\lim_{x \\to 0} \\left(1 + {a}x\right)^{\\dfrac{1}{{a}x}}\\right]^{{a}}",
+      "\\lim_{x \\to 0} \\left(1 + {a}x\\right)^{\\dfrac{1}{x}} \\quad \\left(\\text{រាងមិនកំណត់ } 1^\\infty\\right)",
+      "= \\lim_{x \\to 0} \\left[\\left(1 + {a}x\\right)^{\\dfrac{1}{{a}x}}\\right]^{{a}}",
+      "= \\left[\\lim_{x \\to 0} \\left(1 + {a}x\\right)^{\\dfrac{1}{{a}x}}\\right]^{{a}}",
       "= e^{{a}}"
     ],
     "checkpoints": [
@@ -322,9 +322,9 @@
     "template_id": "limit:euler:zero_rational_power",
     "indeterminate_form": "1^\\infty",
     "steps": [
-      "\\lim_{x \\to 0} \\left(1 - {a}x\right)^{\\dfrac{{b}}{x}} \\quad \\left(\\text{រាងមិនកំណត់ } 1^\\infty\\right)",
-      "= \\lim_{x \\to 0} \\left[\\left(1 - {a}x\right)^{-\\dfrac{1}{{a}x}}\\right]^{-{a}{b}}",
-      "= \\left[\\lim_{x \\to 0} \\left(1 - {a}x\right)^{-\\dfrac{1}{{a}x}}\\right]^{-{a}{b}}",
+      "\\lim_{x \\to 0} \\left(1 - {a}x\\right)^{\\dfrac{{b}}{x}} \\quad \\left(\\text{រាងមិនកំណត់ } 1^\\infty\\right)",
+      "= \\lim_{x \\to 0} \\left[\\left(1 - {a}x\\right)^{-\\dfrac{1}{{a}x}}\\right]^{-{a}{b}}",
+      "= \\left[\\lim_{x \\to 0} \\left(1 - {a}x\\right)^{-\\dfrac{1}{{a}x}}\\right]^{-{a}{b}}",
       "= e^{-{a}{b}}"
     ],
     "checkpoints": [
@@ -591,7 +591,7 @@
       "\\lim_{x \\to 0} \\dfrac{(e^{-x} + e^x)\\sin^2({a}x)}{2x^2} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
       "= \\lim_{x \\to 0} \\left(\\dfrac{e^{-x} + e^x}{2} \\cdot \\dfrac{\\sin^2({a}x)}{x^2}\\right)",
       "= \\lim_{x \\to 0} \\left(\\dfrac{e^{-x} + e^x}{2} \\cdot {a}^2 \\cdot \\left(\\dfrac{\\sin({a}x)}{{a}x}\\right)^2\\right)",
-      "= \\lim_{x \\to 0} \\left(\\dfrac{e^{-x} + e^x}{2}\right) \\cdot {a}^2 \\cdot \\left(\\lim_{x \\to 0} \\dfrac{\\sin({a}x)}{{a}x}\\right)^2",
+      "= \\lim_{x \\to 0} \\left(\\dfrac{e^{-x} + e^x}{2}\\right) \\cdot {a}^2 \\cdot \\left(\\lim_{x \\to 0} \\dfrac{\\sin({a}x)}{{a}x}\\right)^2",
       "= \\dfrac{e^0 + e^0}{2} \\cdot {a}^2 \\cdot (1)^2",
       "= {a}^2"
     ],
@@ -1148,7 +1148,7 @@
       "= \\lim_{x \\to 0} \\dfrac{\\ln\\left(1 + \\left(1 - e^{-x^2}\\cos({a}x)\\right)\\right)}{1 - e^{-x^2}\\cos({a}x)} \\cdot \\lim_{x \\to 0} \\left(\\dfrac{1 - e^{-x^2}}{x^2} + e^{-x^2} \\cdot \\dfrac{1 - \\cos({a}x)}{x^2}\\right)",
       "= 1 \\cdot \\lim_{x \\to 0} \\left(\\dfrac{e^{-x^2} - 1}{-x^2} + e^{-x^2} \\cdot \\dfrac{2\\sin^2\\left(\\dfrac{{a}x}{2}\\right)}{x^2}\\right)",
       "= 1 \\cdot \\left(1 + e^0 \\cdot 2 \\cdot \\lim_{x \\to 0} \\left(\\dfrac{\\sin\\left(\\dfrac{{a}x}{2}\\right)}{\\dfrac{{a}x}{2}}\\right)^2 \\cdot \\dfrac{{a}^2}{4}\\right)",
-      "= 1 \\cdot \\left(1 + 1 \\cdot 2 \\cdot 1^2 \\cdot \\dfrac{{a}^2}{4}\right) = 1 + \\dfrac{{a}^2}{2}"
+      "= 1 \\cdot \\left(1 + 1 \\cdot 2 \\cdot 1^2 \\cdot \\dfrac{{a}^2}{4}\\right) = 1 + \\dfrac{{a}^2}{2}"
     ],
     "checkpoints": [
       "\\dfrac{\\ln\\left(1 + \\left(1 - e^{-x^2}\\cos({a}x)\\right)\\right)}{1 - e^{-x^2}\\cos({a}x)} \\cdot \\dfrac{1 - e^{-x^2}\\cos({a}x)}{x^2}",
@@ -1351,18 +1351,18 @@
     "template_id": "limit:rational:poly_derivative_identity",
     "indeterminate_form": "0/0",
     "steps": [
-      "\\lim_{x \\to 1} \\dfrac{x^{n} - {n}x + {n}-1}{(x - 1)^2} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
-      "= \\lim_{x \\to 1} \\dfrac{(x^{n} - 1) - {n}(x - 1)}{(x - 1)^2}",
-      "= \\lim_{x \\to 1} \\dfrac{(x - 1)(x^{n-1} + x^{n-2} + \\dots + 1) - {n}(x - 1)}{(x - 1)^2}",
-      "= \\lim_{x \\to 1} \\dfrac{x^{n-1} + x^{n-2} + \\dots + 1 - {n}}{x - 1}",
-      "= \\lim_{x \\to 1} \\left( \\dfrac{x^{n-1} - 1}{x - 1} + \\dfrac{x^{n-2} - 1}{x - 1} + \\dots + \\dfrac{x - 1}{x - 1} \\right)",
-      "= ({n}-1) + ({n}-2) + \\dots + 1 = \\dfrac{{n}({n}-1)}{2}"
+      "\\lim_{x \\to 1} \\dfrac{x^{{n}} - {n}x + {n_minus_1}}{(x - 1)^2} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
+      "= \\lim_{x \\to 1} \\dfrac{(x^{{n}} - 1) - {n}(x - 1)}{(x - 1)^2}",
+      "= \\lim_{x \\to 1} \\dfrac{(x - 1)(x^{{n_minus_1}} + x^{{n_minus_2}} + \\dots + 1) - {n}(x - 1)}{(x - 1)^2}",
+      "= \\lim_{x \\to 1} \\dfrac{x^{{n_minus_1}} + x^{{n_minus_2}} + \\dots + 1 - {n}}{x - 1}",
+      "= \\lim_{x \\to 1} \\left( \\dfrac{x^{{n_minus_1}} - 1}{x - 1} + \\dfrac{x^{{n_minus_2}} - 1}{x - 1} + \\dots + \\dfrac{x - 1}{x - 1} \\right)",
+      "= ({n_minus_1}) + ({n_minus_2}) + \\dots + 1 = \\dfrac{{n}({n_minus_1})}{2}"
     ],
     "checkpoints": [
-      "\\dfrac{(x^{n} - 1) - {n}(x - 1)}{(x - 1)^2}",
-      "\\dfrac{x^{n-1} + x^{n-2} + \\dots + 1 - {n}}{x - 1}",
-      "\\dfrac{x^{n-1} - 1}{x - 1} + \\dfrac{x^{n-2} - 1}{x - 1} + \\dots + \\dfrac{x - 1}{x - 1}",
-      "\\dfrac{{n}({n}-1)}{2}"
+      "\\dfrac{(x^{{n}} - 1) - {n}(x - 1)}{(x - 1)^2}",
+      "\\dfrac{x^{{n_minus_1}} + x^{{n_minus_2}} + \\dots + 1 - {n}}{x - 1}",
+      "\\dfrac{x^{{n_minus_1}} - 1}{x - 1} + \\dfrac{x^{{n_minus_2}} - 1}{x - 1} + \\dots + \\dfrac{x - 1}{x - 1}",
+      "\\dfrac{{n}({n_minus_1})}{2}"
     ],
     "final_answer_formula": "{n}*({n}-1)/2"
   },
@@ -1370,7 +1370,7 @@
     "template_id": "limit:rational:poly_monomial_n",
     "indeterminate_form": "0/0",
     "steps": [
-      "\\lim_{x \\to 1} \\dfrac{x^{n} - 1}{x - 1} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
+      "\\lim_{x \\to 1} \\dfrac{x^{{n}} - 1}{x - 1} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
       "= \\lim_{x \\to 1} \\dfrac{(x - 1)(x^{{n}-1} + x^{{n}-2} + \\dots + x + 1)}{x - 1}",
       "= \\lim_{x \\to 1} (x^{{n}-1} + x^{{n}-2} + \\dots + x + 1)",
       "= 1^{{n}-1} + 1^{{n}-2} + \\dots + 1 + 1",
@@ -1387,7 +1387,7 @@
     "template_id": "limit:rational:poly_derivative_ratio",
     "indeterminate_form": "0/0",
     "steps": [
-      "\\lim_{x \\to 1} \\dfrac{x^{n} - {n}x + {n} - 1}{x^{m} - {m}x + {m} - 1} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
+      "\\lim_{x \\to 1} \\dfrac{x^{{n}} - {n}x + {n_minus_1}}{x^{{m}} - {m}x + {m_minus_1}} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
       "= \\lim_{x \\to 1} \\dfrac{(x - 1) \\left[ (x^{{n}-1} - 1) + (x^{{n}-2} - 1) + \\dots + (x - 1) \\right]}{(x - 1) \\left[ (x^{{m}-1} - 1) + (x^{{m}-2} - 1) + \\dots + (x - 1) \\right]}",
       "= \\lim_{x \\to 1} \\dfrac{(x^{{n}-1} - 1) + (x^{{n}-2} - 1) + \\dots + (x - 1)}{(x^{{m}-1} - 1) + (x^{{m}-2} - 1) + \\dots + (x - 1)}",
       "= \\lim_{x \\to 1} \\dfrac{\\dfrac{x^{{n}-1} - 1}{x - 1} + \\dfrac{x^{{n}-2} - 1}{x - 1} + \\dots + 1}{\\dfrac{x^{{m}-1} - 1}{x - 1} + \\dfrac{x^{{m}-2} - 1}{x - 1} + \\dots + 1}",
@@ -1439,9 +1439,9 @@
   },
   "limit:direct:poly_radical": {
     "template_id": "limit:direct:poly_radical",
-    "indeterminate_form": "0/0",
+    "indeterminate_form": "",
     "steps": [
-      "\\lim_{x \\to 3} \\left(\\sqrt{{a}x^2 - {b}} + {c}x\\right) \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
+      "\\lim_{x \\to 3} \\left(\\sqrt{{a}x^2 - {b}} + {c}x\\right)",
       "= \\sqrt{\\lim_{x \\to 3} ({a}x^2 - {b})} + \\lim_{x \\to 3} ({c}x)",
       "= \\sqrt{{a}\\left(\\lim_{x \\to 3} x\\right)^2 - {b}} + {c}\\left(\\lim_{x \\to 3} x\\right)",
       "= \\sqrt{{a}(3)^2 - {b}} + {c}(3)",
@@ -1670,19 +1670,20 @@
     "template_id": "limit:radical:double_conjugate_quad",
     "indeterminate_form": "0/0",
     "steps": [
-      "\\lim_{x \\to 2} \\dfrac{\\sqrt{x^2 - {a}} - {b}}{\\sqrt{x + {c}} - {d}} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
-      "= \\lim_{x \\to 2} \\dfrac{\\left(\\sqrt{x^2 - {a}} - {b}\\right)\\left(\\sqrt{x^2 - {a}} + {b}\\right)\\left(\\sqrt{x + {c}} + {d}\\right)}{\\left(\\sqrt{x + {c}} - {d}\\right)\\left(\\sqrt{x + {c}} + {d}\\right)\\left(\\sqrt{x^2 - {a}} + {b}\\right)}",
-      "= \\lim_{x \\to 2} \\dfrac{\\left(x^2 - {a} - {b}^2\\right)\\left(\\sqrt{x + {c}} + {d}\\right)}{\\left(x + {c} - {d}^2\\right)\\left(\\sqrt{x^2 - {a}} + {b}\\right)}",
-      "= \\lim_{x \\to 2} \\dfrac{(x - 2)(x + 2)\\left(\\sqrt{x + {c}} + {d}\\right)}{(x - 2)\\left(\\sqrt{x^2 - {a}} + {b}\\right)}",
-      "= \\lim_{x \\to 2} \\dfrac{(x + 2)\\left(\\sqrt{x + {c}} + {d}\\right)}{\\sqrt{x^2 - {a}} + {b}}",
-      "= \\dfrac{(2 + 2)\\left(\\sqrt{2 + {c}} + {d}\\right)}{\\sqrt{2^2 - {a}} + {b}} = \\dfrac{4{d}}{{b}}"
+      "\\lim_{x \\to {p}} \\dfrac{\\sqrt{x^2 - {a}} - {b}}{\\sqrt{x + {c}} - {d}} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
+      "= \\lim_{x \\to {p}} \\dfrac{\\left(\\sqrt{x^2 - {a}} - {b}\\right)\\left(\\sqrt{x^2 - {a}} + {b}\\right)\\left(\\sqrt{x + {c}} + {d}\\right)}{\\left(\\sqrt{x + {c}} - {d}\\right)\\left(\\sqrt{x + {c}} + {d}\\right)\\left(\\sqrt{x^2 - {a}} + {b}\\right)}",
+      "= \\lim_{x \\to {p}} \\dfrac{\\left(x^2 - {a} - {b}^2\\right)\\left(\\sqrt{x + {c}} + {d}\\right)}{\\left(x + {c} - {d}^2\\right)\\left(\\sqrt{x^2 - {a}} + {b}\\right)}",
+      "= \\lim_{x \\to {p}} \\dfrac{(x - {p})(x + {p})\\left(\\sqrt{x + {c}} + {d}\\right)}{(x - {p})\\left(\\sqrt{x^2 - {a}} + {b}\\right)}",
+      "= \\lim_{x \\to {p}} \\dfrac{(x + {p})\\left(\\sqrt{x + {c}} + {d}\\right)}{\\sqrt{x^2 - {a}} + {b}}",
+      "= \\dfrac{({p} + {p})\\left(\\sqrt{{p} + {c}} + {d}\\right)}{\\sqrt{{p}^2 - {a}} + {b}} = \\dfrac{2{p} \\cdot 2{d}}{2{b}} = \\dfrac{2{p}{d}}{{b}}"
     ],
     "checkpoints": [
       "\\dfrac{\\left(\\sqrt{x^2 - {a}} - {b}\\right)\\left(\\sqrt{x^2 - {a}} + {b}\\right)\\left(\\sqrt{x + {c}} + {d}\\right)}{\\left(\\sqrt{x + {c}} - {d}\\right)\\left(\\sqrt{x + {c}} + {d}\\right)\\left(\\sqrt{x^2 - {a}} + {b}\\right)}",
       "\\dfrac{\\left(x^2 - {a} - {b}^2\\right)\\left(\\sqrt{x + {c}} + {d}\\right)}{\\left(x + {c} - {d}^2\\right)\\left(\\sqrt{x^2 - {a}} + {b}\\right)}",
-      "\\dfrac{(x + 2)\\left(\\sqrt{x + {c}} + {d}\\right)}{\\sqrt{x^2 - {a}} + {b}}"
+      "\\dfrac{(x + {p})\\left(\\sqrt{x + {c}} + {d}\\right)}{\\sqrt{x^2 - {a}} + {b}}",
+      "\\dfrac{2{p}{d}}{{b}}"
     ],
-    "final_answer_formula": "4*{d}/{b}"
+    "final_answer_formula": "2*{p}*{d}/{b}"
   },
   "limit:radical:double_conjugate_two_sqrts": {
     "template_id": "limit:radical:double_conjugate_two_sqrts",
@@ -1880,8 +1881,8 @@
     ],
     "final_answer_formula": "{a}/{c}"
   },
-  "limit:trig:sinc_standard": {
-    "template_id": "limit:trig:sinc_standard",
+  "limit:trig:sinc_kx": {
+    "template_id": "limit:trig:sinc_kx",
     "indeterminate_form": "0/0",
     "steps": [
       "\\lim_{x \\to 0} \\dfrac{{c}\\sin({k}x)}{x} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
@@ -1897,8 +1898,8 @@
     ],
     "final_answer_formula": "{c}*{k}"
   },
-  "limit:trig:half_angle": {
-    "template_id": "limit:trig:half_angle",
+  "limit:trig:one_minus_cos": {
+    "template_id": "limit:trig:one_minus_cos",
     "indeterminate_form": "0/0",
     "steps": [
       "\\lim_{x \\to 0} \\dfrac{1 - \\cos({m}x)}{{b}x^2} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
@@ -2083,20 +2084,19 @@
   },
   "limit:trig:cos2x_tan2x_pi4": {
     "template_id": "limit:trig:cos2x_tan2x_pi4",
-    "indeterminate_form": "0/0",
+    "indeterminate_form": "",
     "steps": [
-      "\\lim_{x \\to \\dfrac{\\pi}{4}} \\dfrac{{k}\\cos(2x)}{\\cot(2x)} \\quad \\left(\\text{រាងមិនកំណត់ } \\dfrac{0}{0}\\right)",
-      "= \\lim_{x \\to \\dfrac{\\pi}{4}} \\dfrac{{k}\\cos(2x)}{\\dfrac{\\cos(2x)}{\\sin(2x)}}",
-      "= \\lim_{x \\to \\dfrac{\\pi}{4}} \\dfrac{{k}\\cos(2x)\\sin(2x)}{\\cos(2x)}",
-      "= \\lim_{x \\to \\dfrac{\\pi}{4}} {k}\\sin(2x)",
-      "= {k}\\sin\\left(2 \\cdot \\dfrac{\\pi}{4}\\right)",
-      "= {k}"
+      "\\lim_{x \\to \\dfrac{\\pi}{4}} \\dfrac{{k}\\cos(2x)}{\\tan(2x)}",
+      "= \\lim_{x \\to \\dfrac{\\pi}{4}} \\dfrac{{k}\\cos(2x)}{\\dfrac{\\sin(2x)}{\\cos(2x)}}",
+      "= \\lim_{x \\to \\dfrac{\\pi}{4}} \\dfrac{{k}\\cos^2(2x)}{\\sin(2x)}",
+      "= \\dfrac{{k}\\cos^2\\left(2 \\cdot \\dfrac{\\pi}{4}\\right)}{\\sin\\left(2 \\cdot \\dfrac{\\pi}{4}\\right)}",
+      "= \\dfrac{{k} \\cdot 0}{1} = 0"
     ],
     "checkpoints": [
-      "\\dfrac{{k}\\cos(2x)}{\\dfrac{\\cos(2x)}{\\sin(2x)}}",
-      "{k}\\sin(2x)"
+      "\\dfrac{{k}\\cos^2(2x)}{\\sin(2x)}",
+      "0"
     ],
-    "final_answer_formula": "{k}"
+    "final_answer_formula": "0"
   },
   "limit:trig:shifted_cos_quad_root": {
     "template_id": "limit:trig:shifted_cos_quad_root",

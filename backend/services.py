@@ -983,18 +983,19 @@ def _build_integral_structure_payload() -> dict:
 _limit_structure_payload = None
 
 
-def _build_limit_structure_payload() -> dict:
+def _build_limit_structure_payload(force: bool = False) -> dict:
     """One card per parameterized limit structure (mirroring integral's payload),
     each with a deterministic sample, authentic Khmer technique label, symbolic
     pattern, and source BAC II / textbook labels. Persisted to disk."""
     global _limit_structure_payload
-    if _limit_structure_payload is not None:
+    if not force and _limit_structure_payload is not None:
         return _limit_structure_payload
 
-    cached = _load_structure_cache("limit")
-    if cached is not None:
-        _limit_structure_payload = cached
-        return _limit_structure_payload
+    if not force:
+        cached = _load_structure_cache("limit")
+        if cached is not None:
+            _limit_structure_payload = cached
+            return _limit_structure_payload
 
     entries = []
     for struct in limit_structures.all_limit_structures():

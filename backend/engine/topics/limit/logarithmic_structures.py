@@ -60,7 +60,7 @@ def _sample_log_rational_inside_val(rng):
 
 def _sample_log_growth_zero_plus(rng):
     a = rng.choice([1, 2, 3])
-    return f"x**2/{a+1} + x - x*ln(x)", "0", {"a": a, "side": "+"}
+    return f"x**2/2 + {a}*x - x*ln(x)", "0", {"a": a, "side": "+"}
 
 def _sample_log_split_growth_oo(rng):
     a = rng.choice([3, 4, 5])

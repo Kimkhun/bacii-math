@@ -48,7 +48,7 @@ def _sample_expo_second_order(rng):
 
 def _sample_expo_tan_sinc(rng):
     k = rng.choice([1, 2])
-    denom = f"{k}*(x**3 + x)" if k != 1 else "(x**3 + x)"
+    denom = f"({k}*(x**3 + x))" if k != 1 else "(x**3 + x)"
     return f"(e**(-2*sin(x)) - e**tan(x))/{denom}", "0", {"k": k}
 
 def _sample_expo_cos_combo(rng):
@@ -60,7 +60,7 @@ def _sample_expo_sin_denom(rng):
     return f"(e**({k}*x) - e**(-{k}*x))/sin(2*x)", "0", {"k": k}
 
 def _sample_expo_sum_minus_n(rng):
-    n = rng.choice([2, 3, 4])
+    n = 3
     terms = " + ".join("e**x" if j == 1 else f"e**({j}*x)" for j in range(1, n + 1))
     return f"({terms} - {n})/x", "0", {"n": n}
 
@@ -176,8 +176,8 @@ def _sample_expo_ratio_standard(rng):
 
 
 def _sample_expo_sinc_sq_combo(rng):
-    k = rng.choice([1, 2])
-    return f"((e**(-x) + e**x)*sin(x)**2)/(2*x**2)" if k == 1 else f"((e**(-{k}*x) + e**({k}*x))*sin({k}*x)**2)/(2*x**2)", "0", {"k": k}
+    a = rng.choice([1, 2, 3])
+    return f"((e**(-x) + e**x)*sin({a}*x)**2)/(2*x**2)", "0", {"a": a, "k": a}
 
 
 

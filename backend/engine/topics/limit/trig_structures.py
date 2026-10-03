@@ -292,7 +292,7 @@ def _sample_tan_triple_angle(rng):
 
 TRIG_STRUCTURES = [
     {
-        "id": "limit:trig:sinc_standard",
+        "id": "limit:trig:sinc_kx",
         "question_type": "limit",
         "category": "trig",
         "subfamily": "sinc_standard",
@@ -307,7 +307,7 @@ TRIG_STRUCTURES = [
         "source_labels": ["2015c", "2016c", "2017b", "2018b", "2021b"],
     },
     {
-        "id": "limit:trig:half_angle",
+        "id": "limit:trig:one_minus_cos",
         "question_type": "limit",
         "category": "trig",
         "subfamily": "half_angle",
@@ -1101,11 +1101,11 @@ TRIG_STRUCTURES = [
         "point": "pi/3",
         "var": "x",
         "sampler": lambda rng: (
-            f"(sin(x) - sqrt(3)*cos(x))/({rng.choice([1, 2, 3])}*(pi - 3*x))"
-            if rng.choice([1, 2, 3]) != 1
-            else "(sin(x) - sqrt(3)*cos(x))/(pi - 3*x)",
-            "pi/3",
-            {"k": 2},
+            (lambda k: (
+                f"(sin(x) - sqrt(3)*cos(x))/({k}*(pi - 3*x))" if k != 1 else "(sin(x) - sqrt(3)*cos(x))/(pi - 3*x)",
+                "pi/3",
+                {"k": k},
+            ))(rng.choice([1, 2, 3]))
         ),
         "source_labels": ["2018c", "trig_45"],
     },
@@ -1121,7 +1121,7 @@ TRIG_STRUCTURES = [
         "pattern_latex": r"\lim_{x \to \frac{\pi}{3}} \dfrac{x - \frac{\pi}{3}}{\sin x - \sqrt{3}\cos x}",
         "point": "pi/3",
         "var": "x",
-        "sampler": lambda rng: ("(x - pi/3)/(sin(x) - sqrt(3)*cos(x))", "pi/3", {}),
+        "sampler": lambda rng: ("(x - pi/3)/(sin(x) - sqrt(3)*cos(x))", "pi/3", {"a": r"\frac{\pi}{3}", "b": r"\sqrt{3}"}),
         "source_labels": ["2025d", "trig_46"],
     },
     {
@@ -1136,7 +1136,13 @@ TRIG_STRUCTURES = [
         "pattern_latex": r"\lim_{x \to 0} \dfrac{\sin x - \sin x\cos x}{x^3}",
         "point": "0",
         "var": "x",
-        "sampler": lambda rng: ("(sin(x) - sin(x)*cos(x))/x**3", "0", {}),
+        "sampler": lambda rng: (
+            (lambda k: (
+                f"{k}*(sin(x) - sin(x)*cos(x))/x**3" if k != 1 else "(sin(x) - sin(x)*cos(x))/x**3",
+                "0",
+                {"k": k},
+            ))(rng.choice([1, 2, 3]))
+        ),
         "source_labels": ["2024d", "trig_47"],
     },
 ]

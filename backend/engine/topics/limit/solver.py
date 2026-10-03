@@ -1569,7 +1569,19 @@ def _solve_limit(params):
         deg_n = degree(num, x)
         deg_d = degree(den, x)
         if (deg_n > 6 or deg_d > 6) and num.subs(x, point) == 0 and den.subs(x, point) == 0:
-            result = diff(num, x).subs(x, point) / diff(den, x).subs(x, point)
+            cur_num, cur_den = num, den
+            for _ in range(10):
+                if cur_num.subs(x, point) == 0 and cur_den.subs(x, point) == 0:
+                    cur_num = diff(cur_num, x)
+                    cur_den = diff(cur_den, x)
+                else:
+                    break
+            den_val = cur_den.subs(x, point)
+            num_val = cur_num.subs(x, point)
+            if den_val != 0:
+                result = num_val / den_val
+            else:
+                result = limit(expr, x, point, **kwargs)
         else:
             result = limit(expr, x, point, **kwargs)
     else:
